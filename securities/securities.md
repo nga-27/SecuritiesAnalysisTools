@@ -1,0 +1,1 @@
+This directory is for securities (.csv) to live in!
