@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
-from libs import dual_plotting, higher_high, lower_low, bull_bear_th
+from .linear_regression import dual_plotting, higher_high, lower_low, bull_bear_th
+from .sat_utils import  print_hello, name_parser
 
 SELL_TH = 80.0
 BUY_TH = 20.0
@@ -11,7 +12,7 @@ LOW_TH = 30.0
 HIGH_TH = 70.0
 BULL_BEAR = 50.0
 
-def full_stochastic(position: pd.DataFrame, config: list=[14, 3, 3], plot_output=True) -> dict:
+def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], plot_output=True) -> dict:
     """ During a trend, increase config to avoid false signals:
         ex: downtrend, larger config will minimize false 'overbought' readings
 
@@ -83,12 +84,12 @@ def full_stochastic(position: pd.DataFrame, config: list=[14, 3, 3], plot_output
             stochastic.append(0)
             
     if plot_output:
-        dual_plotting(position['Close'], stochastic, 'Position Price', 'Oscillator Signal')
+        dual_plotting(position['Close'], stochastic, 'Position Price', 'Oscillator Signal', title=name)
 
     return full_stoch
 
 
-def ultimate_oscillator(position: pd.DataFrame, config: list=[7, 14, 28], plot_output=True) -> dict:
+def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28], plot_output=True) -> dict:
     """ Ultimate stoch: [(4 * Avg7 ) + (2 * Avg14) + (1 * Avg28)] / 7
 
             Avg(x) = BP(x) / TR(x)
@@ -213,8 +214,8 @@ def ultimate_oscillator(position: pd.DataFrame, config: list=[7, 14, 28], plot_o
 
 
     if plot_output:
-        dual_plotting(stats['Close'], ult_osc, 'price', 'ultimate oscillator', 'trading days')
-        dual_plotting(stats['Close'], plots, 'price', 'buy-sell signal', 'trading days')
+        dual_plotting(stats['Close'], ult_osc, 'price', 'ultimate oscillator', 'trading days', title=name)
+        dual_plotting(stats['Close'], plots, 'price', 'buy-sell signal', 'trading days', title=name)
 
     return ultimate
 
@@ -229,16 +230,25 @@ def trend_filter(osc: dict, position: pd.DataFrame) -> dict:
     return filtered 
 
 
-def cluster_oscs(position: pd.DataFrame, plot_output=True) -> list:
+def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter=7) -> list:
     """ 2-3-5-8 multiplier comparing several different osc lengths """
-    THRESH = 7
+    THRESH = filter
     clusters = []
+
     for i in range(len(position)):
         clusters.append(0)
 
-    fast = full_stochastic(position, config=[10,3,3], plot_output=False)
-    med = full_stochastic(position, config=[14,3,3], plot_output=False)
-    slow = full_stochastic(position, config=[20,5,5], plot_output=False)
+    if function == 'full_stochastic':
+        fast = full_stochastic(position, config=[10,3,3], plot_output=False)
+        med = full_stochastic(position, config=[14,3,3], plot_output=False)
+        slow = full_stochastic(position, config=[20,5,5], plot_output=False)
+    elif function == 'ultimate':
+        fast = ultimate_oscillator(position, config=[4,8,16], plot_output=False)
+        med = ultimate_oscillator(position, config=[5,10,20], plot_output=False)
+        slow = ultimate_oscillator(position, config=[7,14,28], plot_output=False)
+    else:
+        print(f'Warning: Unrecognized function input of {function} in cluster_oscs.')
+        return None
 
     clusters = clustering(clusters, fast)
     clusters = clustering(clusters, med)
@@ -249,7 +259,7 @@ def cluster_oscs(position: pd.DataFrame, plot_output=True) -> list:
             clusters[i] = 0
     
     if plot_output:
-        dual_plotting(position['Close'], clusters, 'price', 'clustered oscillator', 'trading days')
+        dual_plotting(position['Close'], clusters, 'price', 'clustered oscillator', 'trading days', title=name)
 
     return clusters 
 

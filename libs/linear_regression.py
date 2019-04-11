@@ -22,7 +22,7 @@ def linear_regression(x_list, y_list) -> list:
 
 
 
-def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str='trading days'):
+def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str='trading days', title=''):
     fig, ax1 = plt.subplots()
     color = 'tab:orange'
     ax1.set_xlabel(x_label)
@@ -42,6 +42,8 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str
 
     fig.tight_layout()
     plt.legend([y2_label])
+    if len(title) > 0:
+        plt.title(title)
     plt.show()
 
 

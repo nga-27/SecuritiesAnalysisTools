@@ -1,14 +1,19 @@
 import pandas as pd 
 import numpy as np 
 
-from libs import full_stochastic, ultimate_oscillator, cluster_oscs
+from libs import full_stochastic, ultimate_oscillator, cluster_oscs, name_parser
 
-fund = pd.read_csv("securities/AMD.csv")
+FILE = "securities/VHT.csv"
 
-std_sto = full_stochastic(fund)
-long_sto = full_stochastic(fund, config=[20,5,5])
+name = name_parser(FILE)
+fund = pd.read_csv(FILE)
 
-cluster_oscs(fund) 
+std_sto = full_stochastic(fund, name=name)
+long_sto = full_stochastic(fund, config=[20,5,5], name=name)
 
-ult = ultimate_oscillator(fund)
-ult = ultimate_oscillator(fund, config=[5,10,20])
+cluster_oscs(fund, name=name) 
+
+ult = ultimate_oscillator(fund, name=name)
+ult = ultimate_oscillator(fund, config=[5,10,20], name=name)
+
+cluster_oscs(fund, function='ultimate', filter=3, name=name)
