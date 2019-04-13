@@ -197,3 +197,5 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14):
 
     if plot_output:
         dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
+
+    # TODO: conditions of rsi (divergence, etc.)
