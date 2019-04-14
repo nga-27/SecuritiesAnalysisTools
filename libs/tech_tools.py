@@ -3,16 +3,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .linear_regression import dual_plotting, higher_high, lower_low, bull_bear_th
-from .sat_utils import  print_hello, name_parser
-from .rsi_tools import generate_rsi_signal
+from .sat_utils import  name_parser
+from .rsi_tools import generate_rsi_signal, determine_rsi_swing_rejection
 from .ult_osc_tools import generate_ultimate_osc_signal, ult_osc_find_triggers, ult_osc_output
+from .cluster_tools import clustering, cluster_filtering
+from .full_stoch_tools import generate_full_stoch_signal, get_full_stoch_features
+from .trend_tools import get_trend, get_trend_analysis
 
-SELL_TH = 80.0
-BUY_TH = 20.0
-
-LOW_TH = 30.0
-HIGH_TH = 70.0
-BULL_BEAR = 50.0
 
 def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], plot_output=True) -> dict:
     """ During a trend, increase config to avoid false signals:
@@ -24,66 +21,9 @@ def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], pl
         typical configs: [14,3,3], [10,3,3], [20, 5, 5]
     """
 
-    full_stoch = {}
-    full_stoch['bullish'] = []
-    full_stoch['bearish'] = []
+    feature_list = generate_full_stoch_signal(position, config=config) 
 
-    k1 = []
-    k2 = []
-    dd = []
-
-    for i in range(config[0]-1):
-        k1.append(50.0)
-        k2.append(50.0)
-        dd.append(50.0)
-
-    for i in range(config[0]-1, len(position['Close'])):
-
-        # Find first lookback of oscillator
-        lows = position['Low'][i-(config[0]-1):i+1]
-        highs = position['High'][i-(config[0]-1):i+1]
-        low = np.min(lows)
-        high = np.max(highs)
-
-        s = [low, high, position['Close'][i]]
-
-        K = (position['Close'][i] - low) / (high - low) * 100.0
-        k1.append(K)
-
-        # Smooth oscillator with config[1]
-        k2.append(np.average(k1[i-(config[1]-1):i+1]))
-
-        # Find 'Simple Moving Average' (SMA) of k2
-        dd.append(np.average(k2[i-(config[2]-1):i+1]))
-
-    stochastic = []
-    indicator = 0 # 0 is neutral, 1,2 is oversold, 3,4: is overbought
-    for i in range(len(position['Close'])):
-
-        if k2[i] > SELL_TH:
-            indicator = 3
-            stochastic.append(0)
-        elif (indicator == 3) and (k2[i] < dd[i]):
-            indicator = 4
-            stochastic.append(0)
-        elif (indicator == 4) and (k2[i] < SELL_TH):
-            indicator = 0
-            full_stoch['bearish'].append([position['Date'][i], position['Close'][i], i])
-            stochastic.append(1)
-
-        elif k2[i] < BUY_TH:
-            indicator = 1
-            stochastic.append(0)
-        elif (indicator == 1) and (k2[i] > dd[i]):
-            indicator = 2
-            stochastic.append(0)
-        elif (indicator == 2) and (k2[i] > BUY_TH):
-            indicator = 0
-            full_stoch['bullish'].append([position['Date'][i], position['Close'][i], i])
-            stochastic.append(-1)
-
-        else:
-            stochastic.append(0)
+    stochastic, full_stoch = get_full_stoch_features(position, feature_list)
             
     if plot_output:
         dual_plotting(position['Close'], stochastic, 'Position Price', 'Oscillator Signal', title=name)
@@ -105,6 +45,7 @@ def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28
     trigger = ult_osc_find_triggers(stats, ult_osc)
 
     plots, ultimate = ult_osc_output(trigger, len(stats['Close']))
+    ultimate['tabular'] = ult_osc
 
     if plot_output:
         dual_plotting(stats['Close'], ult_osc, 'price', 'ultimate oscillator', 'trading days', title=name)
@@ -125,9 +66,8 @@ def trend_filter(osc: dict, position: pd.DataFrame) -> dict:
 
 
 
-def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter=7) -> list:
+def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7) -> list:
     """ 2-3-5-8 multiplier comparing several different osc lengths """
-    THRESH = filter
     clusters = []
 
     for i in range(len(position)):
@@ -141,6 +81,20 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
         fast = ultimate_oscillator(position, config=[4,8,16], plot_output=False)
         med = ultimate_oscillator(position, config=[5,10,20], plot_output=False)
         slow = ultimate_oscillator(position, config=[7,14,28], plot_output=False)
+    elif function == 'rsi':
+        fast = RSI(position, plot_output=False, period=8)
+        med = RSI(position, plot_output=False, period=14)
+        slow = RSI(position, plot_output=False, period=20)
+    elif function == 'all':
+        fast = full_stochastic(position, config=[10,3,3], plot_output=False)
+        med = full_stochastic(position, config=[14,3,3], plot_output=False)
+        slow = full_stochastic(position, config=[20,5,5], plot_output=False)
+        fast1 = ultimate_oscillator(position, config=[4,8,16], plot_output=False)
+        med1 = ultimate_oscillator(position, config=[5,10,20], plot_output=False)
+        slow1 = ultimate_oscillator(position, config=[7,14,28], plot_output=False)
+        fast2 = RSI(position, plot_output=False, period=8)
+        med2 = RSI(position, plot_output=False, period=14)
+        slow2 = RSI(position, plot_output=False, period=20)
     else:
         print(f'Warning: Unrecognized function input of {function} in cluster_oscs.')
         return None
@@ -148,10 +102,16 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
     clusters = clustering(clusters, fast)
     clusters = clustering(clusters, med)
     clusters = clustering(clusters, slow)
+    
+    if function == 'all':
+        clusters = clustering(clusters, fast1)
+        clusters = clustering(clusters, med1)
+        clusters = clustering(clusters, slow1)
+        clusters = clustering(clusters, fast2)
+        clusters = clustering(clusters, med2)
+        clusters = clustering(clusters, slow2)
 
-    for i in range(len(clusters)):
-        if (clusters[i] < THRESH) and (clusters[i] > -THRESH):
-            clusters[i] = 0
+    clusters = cluster_filtering(clusters, filter_thresh)
     
     if plot_output:
         dual_plotting(position['Close'], clusters, 'price', 'clustered oscillator', 'trading days', title=name)
@@ -160,42 +120,18 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
 
 
 
-def clustering(updatable: list, evaluator: dict) -> list:
-    for bull in evaluator['bullish']:
-        index = bull[2]
-        updatable[index] += -8 if updatable[index] != 0 else -1
-        if index < len(updatable)-1:
-            updatable[index-1] += -5 if updatable[index-1] != 0 else 0
-            updatable[index+1] += -5 if updatable[index+1] != 0 else 0
-        if index < len(updatable)-2:
-            updatable[index-2] += -3 if updatable[index-2] != 0 else 0
-            updatable[index+2] += -3 if updatable[index+2] != 0 else 0
-        if index < len(updatable)-3:
-            updatable[index-3] += -2 if updatable[index-3] != 0 else 0
-            updatable[index+3] += -2 if updatable[index+3] != 0 else 0
-
-    for bear in evaluator['bearish']:
-        index = bear[2]
-        updatable[index] += 8 if updatable[index] != 0 else 1
-        if index < len(updatable)-1:
-            updatable[index-1] += 5 if updatable[index-1] != 0 else 0
-            updatable[index+1] += 5 if updatable[index+1] != 0 else 0
-        if index < len(updatable)-2:
-            updatable[index-2] += 3 if updatable[index-2] != 0 else 0
-            updatable[index+2] += 3 if updatable[index+2] != 0 else 0
-        if index < len(updatable)-3:
-            updatable[index-3] += 2 if updatable[index-3] != 0 else 0
-            updatable[index+3] += 2 if updatable[index+3] != 0 else 0
-
-    return updatable
-
-
-
-def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14):
+def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> dict:
     """ Relative Strength Indicator """
     RSI = generate_rsi_signal(position, period=period)
 
+    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI)
+    rsi_swings['tabular'] = RSI
+
     if plot_output:
         dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
+        dual_plotting(position['Close'], plotting, 'price', 'RSI indicators', 'trading days', title=name)
+       
 
     # TODO: conditions of rsi (divergence, etc.)
+
+    return rsi_swings
