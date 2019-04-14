@@ -1,4 +1,6 @@
 import pandas as pd 
+import numpy as np 
+from datetime import datetime
 
 def name_parser(name: str) -> str:
     """ parses file name to generate fund name """
@@ -8,6 +10,3 @@ def name_parser(name: str) -> str:
 
     return name 
 
-
-def print_hello():
-    print("hello")

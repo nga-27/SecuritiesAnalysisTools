@@ -43,3 +43,101 @@ def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
         RSI.append(np.round(rsi, 6))
     
     return RSI
+
+
+
+def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> dict:
+    """ Find bullish / bearish and RSI indicators:
+
+        1. go beyond threshold
+        2. go back within thresholds
+        3. have local minima/maxima inside thresholds
+        4. exceed max/min (bull/bear) of previous maxima/minima
+    """
+
+    LOW_TH = 30.0
+    HIGH_TH = 70.0
+
+    swings = {}
+    swings['bullish'] = []
+    swings['bearish'] = []
+    indicator = []
+
+    state = 0
+    minima = 0.0
+    maxima = 0.0
+    for i in range(len(rsi_signal)):
+        
+        if (state == 0) and (rsi_signal[i] < LOW_TH):
+            # Start of a bullish signal
+            state = 1
+            indicator.append(50.0)
+        elif (state == 1) and (rsi_signal[i] > LOW_TH):
+            state = 2
+            maxima = rsi_signal[i]
+            indicator.append(50.0)
+        elif (state == 2):
+            if rsi_signal[i] >= maxima:
+                maxima = rsi_signal[i]
+            else:
+                minima = rsi_signal[i]
+                state = 3
+            indicator.append(50.0)
+        elif (state == 3):
+            if rsi_signal[i] < LOW_TH:
+                # Failed attempted breakout
+                state = 1
+            if rsi_signal[i] < minima:
+                minima = rsi_signal[i]
+            else:
+                state = 4
+            indicator.append(50.0)
+        elif (state == 4):
+            if rsi_signal[i] > maxima:
+                # Have found a bullish breakout!
+                swings['bullish'].append([position['Date'][i], position['Close'][i], i])
+                state = 0
+                minima = 0.0
+                maxima = 0.0 
+                indicator.append(0.0)
+            else:
+                indicator.append(50.0)
+
+
+        elif (state == 0) and (rsi_signal[i] > HIGH_TH):
+            state = 5
+            indicator.append(50.0)
+        elif (state == 5) and (rsi_signal[i] < HIGH_TH):
+            state = 6
+            minima = rsi_signal[i]
+            indicator.append(50.0)
+        elif (state == 6):
+            if rsi_signal[i] <= minima:
+                minima = rsi_signal[i]
+            else:
+                maxima = rsi_signal[i]
+                state = 7
+            indicator.append(50.0)
+        elif (state == 7):
+            if rsi_signal[i] > HIGH_TH:
+                # Failed attempted breakout
+                state = 5
+            if rsi_signal[i] > maxima:
+                maxima = rsi_signal[i]
+            else:
+                state = 8
+            indicator.append(50.0)
+        elif (state == 8):
+            if rsi_signal[i] < minima:
+                swings['bearish'].append([position['Date'][i], position['Close'][i], i])
+                state = 0
+                minima = 0.0
+                maxima = 0.0
+                indicator.append(100.0)
+            else:
+                indicator.append(50.0)
+
+        else:
+            indicator.append(50.0)
+
+    return [indicator, swings]
