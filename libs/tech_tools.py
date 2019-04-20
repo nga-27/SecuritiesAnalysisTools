@@ -1,6 +1,7 @@
 import pandas as pd 
 import numpy as np 
 import matplotlib.pyplot as plt
+import os 
 
 from .linear_regression import dual_plotting, higher_high, lower_low, bull_bear_th
 from .sat_utils import  name_parser
@@ -9,6 +10,7 @@ from .ult_osc_tools import generate_ultimate_osc_signal, ult_osc_find_triggers, 
 from .cluster_tools import clustering, cluster_filtering
 from .full_stoch_tools import generate_full_stoch_signal, get_full_stoch_features
 from .trend_tools import get_trend, get_trend_analysis
+from .relative_strength import normalized_ratio, period_strength
 
 
 def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], plot_output=True) -> dict:
@@ -135,3 +137,15 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> di
     # TODO: conditions of rsi (divergence, etc.)
 
     return rsi_swings
+
+
+
+def relative_strength(positionA: pd.DataFrame, positionB: pd.DataFrame, sector: str='', plot_output=True):
+    rat = normalized_ratio(positionA, positionB)
+    st = period_strength(positionA, periods=[20, 50, 100], sector=sector)
+    
+    if plot_output:
+        plt.plot(rat)
+        plt.show()
+
+    return st 
