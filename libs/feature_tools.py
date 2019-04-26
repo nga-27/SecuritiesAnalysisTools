@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from .features import find_head_shoulders
-from .features import local_extrema, reconstruct_extrema, remove_duplicates, add_daterange, remove_empty_keys
+from .features import local_extrema, reconstruct_extrema, remove_duplicates, add_daterange, remove_empty_keys, plotter
 from .moving_average import exponential_ma
 
 
@@ -26,3 +26,4 @@ def feature_head_and_shoulders(fund: pd.DataFrame, FILTER_SIZE=10):
     hs = remove_empty_keys(hs) 
     
     return hs, ma
+

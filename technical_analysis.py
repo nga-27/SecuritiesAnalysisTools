@@ -8,32 +8,35 @@ from libs import feature_head_and_shoulders
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/SLB.csv"
-fileB = "securities/VDE.csv"
+FILE = "securities/AMD.csv"
+fileB = "securities/AMD.csv"
 
 name = name_parser(FILE)
 fund = pd.read_csv(FILE)
 fundB = pd.read_csv(fileB)
 
-#std_sto = full_stochastic(fund, name=name)
-#long_sto = full_stochastic(fund, config=[20,5,5], name=name)
+# Start of automated process
+analysis = {}
 
-#cluster_oscs(fund, name=name) 
+analysis['dates_covered'] = {'start': str(fund['Date'][0]), 'end': str(fund['Date'][len(fund['Date'])-1])}
+analysis['name'] = name
 
-#ult = ultimate_oscillator(fund, name=name)
-#ult = ultimate_oscillator(fund, config=[5,10,20], name=name)
-
-#cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name) 
-
-#RSI(fund, name=name)
-
-#cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
-#cluster_oscs(fund, function='all', filter_thresh=3, name=name)
+chart, dat = cluster_oscs(fund, function='full_stochastic', filter_thresh=3, name=name) 
+analysis['full_stochastic'] = dat
+chart, dat = cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name)
+analysis['ultimate'] = dat  
+chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
+analysis['rsi'] = dat
+chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
+analysis['weighted'] = dat
 
 #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
 #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
 
-pprint.pprint(relative_strength(fund, fundB, sector='VDE'))
+analysis['relative_strength'] = relative_strength(fund, fundB, sector='')
+analysis['features'] = {}
 
 hs, ma = feature_head_and_shoulders(fundB)
-#pprint.pprint(hs['features'])
+analysis['features']['head_shoulders'] = hs
+
+pprint.pprint(analysis)

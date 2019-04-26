@@ -7,7 +7,7 @@ from .linear_regression import dual_plotting, higher_high, lower_low, bull_bear_
 from .sat_utils import  name_parser
 from .rsi_tools import generate_rsi_signal, determine_rsi_swing_rejection
 from .ult_osc_tools import generate_ultimate_osc_signal, ult_osc_find_triggers, ult_osc_output
-from .cluster_tools import clustering, cluster_filtering
+from .cluster_tools import clustering, cluster_filtering, cluster_dates
 from .full_stoch_tools import generate_full_stoch_signal, get_full_stoch_features
 from .trend_tools import get_trend, get_trend_analysis
 from .relative_strength import normalized_ratio, period_strength
@@ -68,8 +68,9 @@ def trend_filter(osc: dict, position: pd.DataFrame) -> dict:
 
 
 
-def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7) -> list:
+def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7) -> dict:
     """ 2-3-5-8 multiplier comparing several different osc lengths """
+    cluster_oscs = {}
     clusters = []
 
     for i in range(len(position)):
@@ -91,34 +92,39 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
         fast = full_stochastic(position, config=[10,3,3], plot_output=False)
         med = full_stochastic(position, config=[14,3,3], plot_output=False)
         slow = full_stochastic(position, config=[20,5,5], plot_output=False)
-        fast1 = ultimate_oscillator(position, config=[4,8,16], plot_output=False)
-        med1 = ultimate_oscillator(position, config=[5,10,20], plot_output=False)
-        slow1 = ultimate_oscillator(position, config=[7,14,28], plot_output=False)
-        fast2 = RSI(position, plot_output=False, period=8)
-        med2 = RSI(position, plot_output=False, period=14)
-        slow2 = RSI(position, plot_output=False, period=20)
+        fastu = ultimate_oscillator(position, config=[4,8,16], plot_output=False)
+        medu = ultimate_oscillator(position, config=[5,10,20], plot_output=False)
+        slowu = ultimate_oscillator(position, config=[7,14,28], plot_output=False)
+        fastr = RSI(position, plot_output=False, period=8)
+        medr = RSI(position, plot_output=False, period=14)
+        slowr = RSI(position, plot_output=False, period=20)
     else:
         print(f'Warning: Unrecognized function input of {function} in cluster_oscs.')
         return None
-
-    clusters = clustering(clusters, fast)
-    clusters = clustering(clusters, med)
-    clusters = clustering(clusters, slow)
     
     if function == 'all':
-        clusters = clustering(clusters, fast1)
-        clusters = clustering(clusters, med1)
-        clusters = clustering(clusters, slow1)
-        clusters = clustering(clusters, fast2)
-        clusters = clustering(clusters, med2)
-        clusters = clustering(clusters, slow2)
+        clusters = clustering(clusters, fast, weight=1)
+        clusters = clustering(clusters, med, weight=2)
+        clusters = clustering(clusters, slow, weight=2)
+        clusters = clustering(clusters, fastr, weight=1)
+        clusters = clustering(clusters, medr, weight=2)
+        clusters = clustering(clusters, slowr, weight=3)
+        clusters = clustering(clusters, fastu, weight=2)
+        clusters = clustering(clusters, medu, weight=3)
+        clusters = clustering(clusters, slowu, weight=4)
+    else:
+        clusters = clustering(clusters, fast)
+        clusters = clustering(clusters, med)
+        clusters = clustering(clusters, slow)
 
     clusters = cluster_filtering(clusters, filter_thresh)
+    dates = cluster_dates(clusters, position) 
+    cluster_oscs[function] = dates
     
     if plot_output:
         dual_plotting(position['Close'], clusters, 'price', 'clustered oscillator', 'trading days', title=name)
 
-    return clusters 
+    return clusters, cluster_oscs
 
 
 
@@ -140,7 +146,7 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> di
 
 
 
-def relative_strength(positionA: pd.DataFrame, positionB: pd.DataFrame, sector: str='', plot_output=True):
+def relative_strength(positionA: pd.DataFrame, positionB: pd.DataFrame, sector: str='', plot_output=True) -> list:
     rat = normalized_ratio(positionA, positionB)
     st = period_strength(positionA, periods=[20, 50, 100], sector=sector)
     
