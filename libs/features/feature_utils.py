@@ -1,5 +1,6 @@
 import pandas as pd 
 import numpy as np 
+import matplotlib.pyplot as plt 
 
 def local_extrema(filtered: list) -> dict:
     extrema = {}
@@ -103,3 +104,10 @@ def remove_empty_keys(dictionary: dict) -> dict:
             new_dict['features'].append(feat)
 
     return new_dict        
+
+
+def plotter(a1, a2=[]):
+    plt.plot(a1)
+    if len(a2) > 0:
+        plt.plot(a2)
+    plt.show()
