@@ -10,7 +10,7 @@ from .ult_osc_tools import generate_ultimate_osc_signal, ult_osc_find_triggers, 
 from .cluster_tools import clustering, cluster_filtering, cluster_dates
 from .full_stoch_tools import generate_full_stoch_signal, get_full_stoch_features
 from .trend_tools import get_trend, get_trend_analysis
-from .relative_strength import normalized_ratio, period_strength, get_SP500
+from .relative_strength import normalized_ratio, period_strength, get_SP500, is_fund_match 
 from .moving_average import windowed_ma_list
 
 
@@ -142,9 +142,6 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> di
     if plot_output:
         dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
         dual_plotting(position['Close'], plotting, 'price', 'RSI indicators', 'trading days', title=name)
-       
-
-    # TODO: conditions of rsi (divergence, etc.)
 
     return rsi_swings
 
