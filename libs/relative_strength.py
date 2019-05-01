@@ -88,3 +88,22 @@ def period_strength(fund: pd.DataFrame, periods: list, sector: str='') -> list:
         ratio.append(entry)
 
     return ratio 
+
+
+def get_SP500() -> pd.DataFrame:
+    if os.path.exists(SP500_INDEX):
+        sp = pd.read_csv(SP500_INDEX)
+        return sp 
+    return None 
+
+
+def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
+    lenA = len(fundA['Close'])
+    lenB = len(fundB['Close'])
+    if lenA == lenB:
+        indCheck = int(np.floor(float(lenA)/3.0))
+        if fundA['Close'][indCheck] == fundB['Close'][indCheck]:
+            indCheck = int(np.floor(float(lenA) / 4.0 * 3.0))
+            if fundA['Open'][indCheck] == fundB['Open'][indCheck]:
+                return True
+    return False 
