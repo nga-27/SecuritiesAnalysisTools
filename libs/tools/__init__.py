@@ -1,8 +1,5 @@
-from .linear_regression import dual_plotting
-from .linear_regression import lower_low, higher_high, bull_bear_th
-from .linear_regression import trendline, trendline_deriv, local_minima
-from .linear_regression import support, resistance
-from .linear_regression import linear_regression
+from .math_functions import linear_regression, lower_low, higher_high, bull_bear_th, local_minima
+from .trends import trendline, trendline_deriv, support, resistance 
 
 from .clusters import cluster_dates
 from .trends import get_trend, get_trend_analysis

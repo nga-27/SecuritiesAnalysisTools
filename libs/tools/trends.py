@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 
+from .math_functions import linear_regression
+
+TREND_PTS = [2, 3, 6]
+
 def get_trend(position: pd.DataFrame, style: str='sma', ma_size: int=50, date_range: list=[]) -> dict:
     """ generates a trend of a given position and features of trend
 
@@ -115,4 +119,70 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 
         trend_analysis['report'] += ', falling from TOP'
 
     return trend_analysis
+
+
+def resistance(highs) -> list:
+    highs = list(highs)
+    if len(highs) <= 14:
+        points = TREND_PTS[1]
+    elif len(highs) <= 28:
+        points = TREND_PTS[2]
+    else:
+        points = TREND_PTS[0]
+
+    sortedList = sorted(highs, reverse=True)
+    
+    refs = []
+    indices = []
+    for i in range(points):
+        refs.append(sortedList[i])
+        indices.append(highs.index(refs[i]))
+    
+    trendslope = linear_regression(indices, refs)
+    resistance_level = trendslope[1] + trendslope[0] * len(highs)
+
+    return [trendslope, resistance_level]
+
+
+def support(lows) -> list:
+    lows = list(lows)
+    if len(lows) <= 14:
+        points = TREND_PTS[1]
+    elif len(lows) <= 28:
+        points = TREND_PTS[2]
+    else:
+        points = TREND_PTS[0]
+
+    sortedList = sorted(lows)
+    
+    refs = []
+    indices = []
+    for i in range(points):
+        refs.append(sortedList[i])
+        indices.append(lows.index(refs[i]))
+    
+    trendslope = linear_regression(indices, refs)
+    resistance_level = trendslope[1] + trendslope[0] * len(lows)
+
+    return [trendslope, resistance_level]
+
+
+def trendline(resistance, support) -> list:
+    trend_slope = (resistance[0][0] + support[0][0]) / 2.0
+    intercept = (resistance[0][1] + support[0][1]) / 2.0
+    final_val = intercept + trend_slope * len(resistance)
+    difference = resistance[0][0] - support[0][0]
+
+    return [[trend_slope, intercept], final_val, difference]
+
+
+def trendline_deriv(price) -> list:
+    price = list(price)
+    derivative = []
+    for val in range(1, len(price)):
+        derivative.append(price[val] - price[val-1])
+
+    deriv = np.sum(derivative)
+    deriv = deriv / float(len(derivative))
+    return deriv
 

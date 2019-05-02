@@ -7,13 +7,16 @@ from libs import relative_strength
 from libs import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis
-from libs.utils import name_parser
+from libs.utils import name_parser, dir_lister
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
 FILE = "securities/VTI.csv"
 #fileB = "securities/VNQ.csv"
 fileB = FILE
+
+sp500_index, files_to_parse = dir_lister()
+print(sp500_index)
 
 name = name_parser(FILE)
 fund = pd.read_csv(FILE)
