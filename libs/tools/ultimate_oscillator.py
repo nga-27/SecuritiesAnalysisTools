@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from .linear_regression import lower_low, higher_high, bull_bear_th
+from .math_functions import lower_low, higher_high, bull_bear_th
 
 def generate_ultimate_osc_signal(position: pd.DataFrame, config: list=[7, 14, 28]) -> list:
     """ Generate an ultimate oscillator signal from a position fund """

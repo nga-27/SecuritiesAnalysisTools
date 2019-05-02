@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import os 
 
 from libs.utils import name_parser
+from libs.utils import dual_plotting
 
-from libs.tools import dual_plotting, higher_high, lower_low, bull_bear_th
+from libs.tools import higher_high, lower_low, bull_bear_th
 from libs.tools import generate_rsi_signal, determine_rsi_swing_rejection 
 from libs.tools import generate_ultimate_osc_signal, ult_osc_find_triggers, ult_osc_output
 from libs.tools import clustering, cluster_filtering, cluster_dates

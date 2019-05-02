@@ -2,8 +2,6 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 
-TREND_PTS = [2, 3, 6]
-
 def linear_regression(x_list, y_list) -> list:
     """ returns [m_slope, intercept] """
     x = np.array(x_list)
@@ -20,97 +18,6 @@ def linear_regression(x_list, y_list) -> list:
 
     return [m_slope, intercept]
 
-
-
-def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str='trading days', title=''):
-    fig, ax1 = plt.subplots()
-    color = 'tab:orange'
-    ax1.set_xlabel(x_label)
-    ax1.set_ylabel(y1_label, color=color)
-    ax1.plot(y1, color=color)
-    ax1.tick_params(axis='y', labelcolor=color)
-    ax1.grid(linestyle=':')
-    plt.legend([y1_label])
-
-    ax2 = ax1.twinx()
-
-    color = 'tab:blue'
-    ax2.set_ylabel(y2_label, color=color)
-    ax2.plot(y2, color=color)
-    ax2.tick_params(axis='y', labelcolor=color)
-    ax2.grid()
-
-    fig.tight_layout()
-    plt.legend([y2_label])
-    if len(title) > 0:
-        plt.title(title)
-    plt.show()
-
-
-def resistance(highs) -> list:
-    highs = list(highs)
-    if len(highs) <= 14:
-        points = TREND_PTS[1]
-    elif len(highs) <= 28:
-        points = TREND_PTS[2]
-    else:
-        points = TREND_PTS[0]
-
-    sortedList = sorted(highs, reverse=True)
-    
-    refs = []
-    indices = []
-    for i in range(points):
-        refs.append(sortedList[i])
-        indices.append(highs.index(refs[i]))
-    
-    trendslope = linear_regression(indices, refs)
-    resistance_level = trendslope[1] + trendslope[0] * len(highs)
-
-    return [trendslope, resistance_level]
-
-
-def support(lows) -> list:
-    lows = list(lows)
-    if len(lows) <= 14:
-        points = TREND_PTS[1]
-    elif len(lows) <= 28:
-        points = TREND_PTS[2]
-    else:
-        points = TREND_PTS[0]
-
-    sortedList = sorted(lows)
-    
-    refs = []
-    indices = []
-    for i in range(points):
-        refs.append(sortedList[i])
-        indices.append(lows.index(refs[i]))
-    
-    trendslope = linear_regression(indices, refs)
-    resistance_level = trendslope[1] + trendslope[0] * len(lows)
-
-    return [trendslope, resistance_level]
-
-
-def trendline(resistance, support) -> list:
-    trend_slope = (resistance[0][0] + support[0][0]) / 2.0
-    intercept = (resistance[0][1] + support[0][1]) / 2.0
-    final_val = intercept + trend_slope * len(resistance)
-    difference = resistance[0][0] - support[0][0]
-
-    return [[trend_slope, intercept], final_val, difference]
-
-
-def trendline_deriv(price) -> list:
-    price = list(price)
-    derivative = []
-    for val in range(1, len(price)):
-        derivative.append(price[val] - price[val-1])
-
-    deriv = np.sum(derivative)
-    deriv = deriv / float(len(derivative))
-    return deriv
 
 
 def local_minima(pricing) -> list:
