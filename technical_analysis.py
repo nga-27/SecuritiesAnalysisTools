@@ -8,8 +8,8 @@ from libs import feature_head_and_shoulders
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/AMD.csv"
-fileB = "securities/AMD.csv"
+FILE = "securities/VNQ.csv"
+fileB = "securities/VNQ.csv"
 
 name = name_parser(FILE)
 fund = pd.read_csv(FILE)
