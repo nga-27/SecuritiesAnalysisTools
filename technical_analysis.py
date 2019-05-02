@@ -2,14 +2,18 @@ import pandas as pd
 import numpy as np 
 import pprint 
 
-from libs import full_stochastic, ultimate_oscillator, cluster_oscs, name_parser, RSI, get_trend_analysis
+from libs import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs import relative_strength
 from libs import feature_head_and_shoulders
 
+from libs.tools import get_trend_analysis
+from libs.utils import name_parser
+
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/VNQ.csv"
-fileB = "securities/VNQ.csv"
+FILE = "securities/VTI.csv"
+#fileB = "securities/VNQ.csv"
+fileB = FILE
 
 name = name_parser(FILE)
 fund = pd.read_csv(FILE)
@@ -30,6 +34,8 @@ analysis['rsi'] = dat
 chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
 analysis['weighted'] = dat
 
+RSI(fund, name=name)
+
 #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
 #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
 
@@ -39,4 +45,4 @@ analysis['features'] = {}
 hs, ma = feature_head_and_shoulders(fundB)
 analysis['features']['head_shoulders'] = hs
 
-pprint.pprint(analysis)
+pprint.pprint(analysis['features'])

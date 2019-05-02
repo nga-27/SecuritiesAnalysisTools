@@ -1,9 +1,9 @@
 import pandas as pd 
 import numpy as np 
 
-from .features import find_head_shoulders
-from .features import local_extrema, reconstruct_extrema, remove_duplicates, add_daterange, remove_empty_keys, plotter
-from .moving_average import exponential_ma
+from libs.features import find_head_shoulders
+from libs.features import local_extrema, reconstruct_extrema, remove_duplicates, add_daterange, remove_empty_keys, plotter
+from libs.tools import exponential_ma
 
 
 def feature_head_and_shoulders(fund: pd.DataFrame, FILTER_SIZE=10, sanitize_dict=True):

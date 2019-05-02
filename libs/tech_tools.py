@@ -3,15 +3,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os 
 
-from .linear_regression import dual_plotting, higher_high, lower_low, bull_bear_th
-from .sat_utils import  name_parser
-from .rsi_tools import generate_rsi_signal, determine_rsi_swing_rejection
-from .ult_osc_tools import generate_ultimate_osc_signal, ult_osc_find_triggers, ult_osc_output
-from .cluster_tools import clustering, cluster_filtering, cluster_dates
-from .full_stoch_tools import generate_full_stoch_signal, get_full_stoch_features
-from .trend_tools import get_trend, get_trend_analysis
-from .relative_strength import normalized_ratio, period_strength, get_SP500, is_fund_match 
-from .moving_average import windowed_ma_list
+from libs.utils import name_parser
+
+from libs.tools import dual_plotting, higher_high, lower_low, bull_bear_th
+from libs.tools import generate_rsi_signal, determine_rsi_swing_rejection 
+from libs.tools import generate_ultimate_osc_signal, ult_osc_find_triggers, ult_osc_output
+from libs.tools import clustering, cluster_filtering, cluster_dates
+from libs.tools import generate_full_stoch_signal, get_full_stoch_features
+from libs.tools import get_trend, get_trend_analysis
+from libs.tools import normalized_ratio, period_strength, get_SP500, is_fund_match
+from libs.tools import windowed_ma_list
 
 
 def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], plot_output=True) -> dict:
