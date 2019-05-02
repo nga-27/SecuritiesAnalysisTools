@@ -25,3 +25,39 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str
     if len(title) > 0:
         plt.title(title)
     plt.show()
+
+
+def generic_plotting(list_of_plots: list, title=''):
+    for fig in list_of_plots:
+        plt.plot(fig)
+    plt.title(title)
+    plt.show()
+
+
+def histogram(data: list, bins=None):
+    """ Currently unused - Primarily used for MACD """
+    if bins is None:
+        bins = len(data)
+    plt.hist(data, bins=bins)
+    plt.show()
+
+
+def bar_chart(data: list, name=''):
+    """ Exclusively used for MACD """
+    x = list(range(len(data)))
+    colors = []
+    for bar in data:
+        if bar > 0.0:
+            colors.append('green')
+        else:
+            colors.append('red')
+    barlist = plt.bar(x, data, width=1, color=colors)
+    for i in range(1,len(data)):
+        if data[i] > 0.0:
+            if data[i] < data[i-1]:
+                barlist[i].set_alpha(0.3)
+        else:
+            if data[i] > data[i-1]:
+                barlist[i].set_alpha(0.3)
+    plt.title(name)
+    plt.show()
