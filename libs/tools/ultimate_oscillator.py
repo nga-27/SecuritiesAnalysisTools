@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from .math_functions import lower_low, higher_high, bull_bear_th
+from libs.utils import dual_plotting
 
 def generate_ultimate_osc_signal(position: pd.DataFrame, config: list=[7, 14, 28]) -> list:
     """ Generate an ultimate oscillator signal from a position fund """
@@ -147,3 +148,26 @@ def ult_osc_output(trigger: list, len_of_position: int) -> list:
         present = False 
 
     return [plots, ultimate]
+
+
+
+def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28], plot_output=True) -> dict:
+    """ Ultimate stoch: [(4 * Avg7 ) + (2 * Avg14) + (1 * Avg28)] / 7
+
+            Avg(x) = BP(x) / TR(x)
+            BP(x) = sum(close - floor[period low OR prior close]) for x days
+            TR(x) = sum()
+    """
+    stats = position
+    ult_osc = generate_ultimate_osc_signal(stats, config=config)
+
+    trigger = ult_osc_find_triggers(stats, ult_osc)
+
+    plots, ultimate = ult_osc_output(trigger, len(stats['Close']))
+    ultimate['tabular'] = ult_osc
+
+    if plot_output:
+        dual_plotting(stats['Close'], ult_osc, 'price', 'ultimate oscillator', 'trading days', title=name)
+        dual_plotting(stats['Close'], plots, 'price', 'buy-sell signal', 'trading days', title=name)
+
+    return ultimate

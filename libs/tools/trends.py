@@ -186,3 +186,13 @@ def trendline_deriv(price) -> list:
     deriv = deriv / float(len(derivative))
     return deriv
 
+
+def trend_filter(osc: dict, position: pd.DataFrame) -> dict:
+    """ Filters oscillator dict to remove trend bias.
+
+        Ex: strong upward trend -> removes weaker drops in oscillators
+    """
+    filtered = {}
+
+    return filtered 
+

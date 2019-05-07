@@ -1,6 +1,8 @@
 import pandas as pd 
 import numpy as np 
 
+from libs.utils import dual_plotting
+
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
     """ Generates a list of relative strength indicators """
@@ -141,3 +143,18 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
             indicator.append(50.0)
 
     return [indicator, swings]
+
+
+
+def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> dict:
+    """ Relative Strength Indicator """
+    RSI = generate_rsi_signal(position, period=period)
+
+    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI)
+    rsi_swings['tabular'] = RSI
+
+    if plot_output:
+        dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
+        dual_plotting(position['Close'], plotting, 'price', 'RSI indicators', 'trading days', title=name)
+
+    return rsi_swings

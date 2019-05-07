@@ -1,6 +1,8 @@
 import pandas as pd 
 import numpy as np 
 
+from libs.utils import dual_plotting
+
 def generate_full_stoch_signal(position: pd.DataFrame, config=[14, 3, 3]) -> list:
     """ Generates signal
     
@@ -90,3 +92,24 @@ def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
             stochastic.append(0)
 
     return [stochastic, full_stoch]
+
+
+
+def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], plot_output=True) -> dict:
+    """ During a trend, increase config to avoid false signals:
+        ex: downtrend, larger config will minimize false 'overbought' readings
+
+        position:
+            pd.DataFrame - ['Date', 'Open', 'Close', 'High', 'Low', 'Adj Close']
+
+        typical configs: [14,3,3], [10,3,3], [20, 5, 5]
+    """
+
+    feature_list = generate_full_stoch_signal(position, config=config) 
+
+    stochastic, full_stoch = get_full_stoch_features(position, feature_list)
+            
+    if plot_output:
+        dual_plotting(position['Close'], stochastic, 'Position Price', 'Oscillator Signal', title=name)
+
+    return full_stoch

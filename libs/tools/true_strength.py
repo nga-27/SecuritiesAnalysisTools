@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np 
 import os
 
+from libs.utils import generic_plotting
+
 # Relative strength ratio 
 SP500_INDEX = 'securities/^GSPC.csv'
 
@@ -107,3 +109,20 @@ def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
             if fundA['Open'][indCheck] == fundB['Open'][indCheck]:
                 return True
     return False 
+
+
+def relative_strength(positionA: pd.DataFrame, positionB: pd.DataFrame, sector: str='', plot_output=True) -> list:
+    if sector == '':
+        sp = get_SP500()
+        if sp is not None and is_fund_match(positionA, positionB):
+            positionB = sp 
+    rat = normalized_ratio(positionA, positionB)
+    st = period_strength(positionA, periods=[20, 50, 100], sector=sector)
+    
+    if plot_output:
+        generic_plotting([rat], 'Strength of Fund')
+        #plt.plot(rat)
+        #plt.title('Strength of Fund')
+        #plt.show()
+
+    return st

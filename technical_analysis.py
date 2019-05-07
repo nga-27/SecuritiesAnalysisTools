@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np 
 import pprint 
 
-from libs import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
-from libs import relative_strength
-from libs import feature_head_and_shoulders
+from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
+from libs.tools import relative_strength
+from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence
 from libs.utils import name_parser, dir_lister
