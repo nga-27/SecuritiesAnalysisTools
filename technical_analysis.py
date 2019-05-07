@@ -6,12 +6,12 @@ from libs import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs import relative_strength
 from libs import feature_head_and_shoulders
 
-from libs.tools import get_trend_analysis, generate_macd_signal
+from libs.tools import get_trend_analysis, mov_avg_convergence_divergence
 from libs.utils import name_parser, dir_lister
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/VCR.csv"
+FILE = "securities/VWO.csv"
 #fileB = "securities/VNQ.csv"
 fileB = FILE
 
@@ -28,18 +28,18 @@ analysis = {}
 analysis['dates_covered'] = {'start': str(fund['Date'][0]), 'end': str(fund['Date'][len(fund['Date'])-1])}
 analysis['name'] = name
 
-chart, dat = cluster_oscs(fund, function='full_stochastic', filter_thresh=3, name=name) 
-analysis['full_stochastic'] = dat
-chart, dat = cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name)
-analysis['ultimate'] = dat  
-chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
-analysis['rsi'] = dat
+#chart, dat = cluster_oscs(fund, function='full_stochastic', filter_thresh=3, name=name) 
+#analysis['full_stochastic'] = dat
+#chart, dat = cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name)
+#analysis['ultimate'] = dat  
+#chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
+#analysis['rsi'] = dat
 chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
 analysis['weighted'] = dat
 
-RSI(fund, name=name)
+#RSI(fund, name=name)
 
-generate_macd_signal(fund)
+analysis['macd'] = mov_avg_convergence_divergence(fund)
 
 #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
 #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
@@ -50,4 +50,5 @@ analysis['features'] = {}
 hs, ma = feature_head_and_shoulders(fundB)
 analysis['features']['head_shoulders'] = hs
 
-pprint.pprint(analysis['features'])
+#pprint.pprint(analysis['features'])
+pprint.pprint(analysis['macd'])
