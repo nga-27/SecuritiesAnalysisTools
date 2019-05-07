@@ -13,4 +13,4 @@ from .full_stochastic import generate_full_stoch_signal, get_full_stoch_features
 from .trends import get_trend, get_trend_analysis
 from .clusters import clustering, cluster_filtering, cluster_dates
 
-from .macd import generate_macd_signal
+from .macd import mov_avg_convergence_divergence 
