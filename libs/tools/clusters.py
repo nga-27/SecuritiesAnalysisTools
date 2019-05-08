@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting
+from libs.utils import dual_plotting, nasit_cluster_signal, nasit_cluster_score
 
 from .ultimate_oscillator import ultimate_oscillator
 from .rsi import RSI
@@ -107,14 +107,18 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
         clusters = clustering(clusters, med)
         clusters = clustering(clusters, slow)
 
-    clusters = cluster_filtering(clusters, filter_thresh)
+    clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = windowed_ma_list(clusters, interval=3)
-    dates = cluster_dates(clusters, position) 
+    dates = cluster_dates(clusters_wma, position) 
     cluster_oscs[function] = dates
+
+    nasit_signal = nasit_cluster_signal(clusters)
+    cluster_oscs['nasit'] = nasit_cluster_score(clusters)
     
     if plot_output:
         name = name + ' - ' + function
         dual_plotting(position['Close'], clusters, 'price', 'clustered oscillator', 'trading days', title=name)
         dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
+        dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
 
-    return clusters, cluster_oscs
+    return clusters_wma, cluster_oscs
