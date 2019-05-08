@@ -9,7 +9,6 @@ def name_parser(name: str) -> str:
     name = name.split('.')[0]
     name = name.split('/')
     name = name[len(name)-1]
-
     return name 
 
 
@@ -18,8 +17,12 @@ def dir_lister(sp_index: str='^GSPC.csv', directory: str='securities/'):
     directory = directory + file_ext
     items = glob.glob(directory)
     index_file = None
+
     for item in items:
         if sp_index in item:
-            index_file = item 
+            index_file = item
+    if index_file is not None:
+        items.remove(index_file)
+
     return index_file, items
     
