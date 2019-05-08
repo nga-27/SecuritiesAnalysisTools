@@ -57,10 +57,8 @@ def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
     return dates 
 
 
-
-def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7) -> dict:
-    """ 2-3-5-8 multiplier comparing several different osc lengths """
-    cluster_oscs = {}
+def generate_cluster(position: pd.DataFrame, function: str) -> list:
+    """ subfunction to do clustering (removed from main for flexibility) """
     clusters = []
 
     for i in range(len(position)):
@@ -97,17 +95,32 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
         clusters = clustering(clusters, med, weight=2)
         clusters = clustering(clusters, slow, weight=2)
         clusters = clustering(clusters, fastr, weight=2)
-        clusters = clustering(clusters, medr, weight=3)
-        clusters = clustering(clusters, slowr, weight=4)
+        clusters = clustering(clusters, medr, weight=4)
+        clusters = clustering(clusters, slowr, weight=3)
         clusters = clustering(clusters, fastu, weight=1)
-        clusters = clustering(clusters, medu, weight=2)
-        clusters = clustering(clusters, slowu, weight=3)
+        clusters = clustering(clusters, medu, weight=3)
+        clusters = clustering(clusters, slowu, weight=2)
     else:
         clusters = clustering(clusters, fast)
         clusters = clustering(clusters, med)
         clusters = clustering(clusters, slow)
 
-    clusters_filtered = cluster_filtering(clusters, filter_thresh)
+    return clusters
+
+
+def export_cluster_nasit_signal(position: pd.DataFrame, function: str='full_stochastic') -> list:
+    clusters = generate_cluster(position, function)
+    nasit_signal = nasit_cluster_signal(clusters)
+    return nasit_signal
+
+
+def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7) -> dict:
+    """ 2-3-5-8 multiplier comparing several different osc lengths """
+    cluster_oscs = {}
+    
+    clusters = generate_cluster(position, function)
+
+    #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = windowed_ma_list(clusters, interval=3)
     dates = cluster_dates(clusters_wma, position) 
     cluster_oscs[function] = dates
