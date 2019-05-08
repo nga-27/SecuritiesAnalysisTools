@@ -64,11 +64,3 @@ def nasit_cluster_score(cl_signal: list) -> dict:
 
     return {'true': signal[len(signal)-1], 'normalized': sig_norm}
 
-
-def nasit_composite_index(fund: pd.DataFrame) -> list:
-    """ weighted? index of all nasit scores """
-    from libs.tools import export_macd_nasit_signal
-    composite = []
-
-
-    return composite
