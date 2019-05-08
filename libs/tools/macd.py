@@ -4,7 +4,7 @@ import numpy as np
 from .moving_average import exponential_ma, exponential_ma_list
 from libs.utils import generic_plotting, bar_chart, dual_plotting
 
-def generate_macd_signal(fund: pd.DataFrame) -> list:
+def generate_macd_signal(fund: pd.DataFrame, plotting=True) -> list:
     """
     macd = ema(12) - ema(26)
     'signal' = macd(ema(9))
@@ -17,7 +17,8 @@ def generate_macd_signal(fund: pd.DataFrame) -> list:
         macd.append(emaTw[i] - emaTs[i])
 
     macd_ema = exponential_ma_list(macd, interval=9)
-    bar_chart(macd, 'MACD')
+    if plotting:
+        bar_chart(macd, 'MACD')
 
     return macd, macd_ema
 
@@ -249,8 +250,8 @@ def get_nasit_signal(signal: list, interval=6) -> list:
     return nasit_ema
 
 
-def export_macd_nasit_signal(fund: pd.DataFrame) -> list: 
-    macd_sig, _ = generate_macd_signal(fund)
+def export_macd_nasit_signal(fund: pd.DataFrame, plotting=False) -> list: 
+    macd_sig, _ = generate_macd_signal(fund, plotting=False)
     nasit = get_nasit_signal(macd_sig)
     return nasit 
 
