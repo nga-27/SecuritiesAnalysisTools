@@ -1,7 +1,8 @@
 import pandas as pd 
 import numpy as np 
+
 from .moving_average import exponential_ma, exponential_ma_list
-from libs.utils import generic_plotting, bar_chart 
+from libs.utils import generic_plotting, bar_chart, dual_plotting
 
 def generate_macd_signal(fund: pd.DataFrame) -> list:
     """
@@ -73,7 +74,9 @@ def get_macd_value(macd: list, value_type='current', index=-1) -> float:
         return macd[len(macd)-1] / macd_max * 100.0
     
     elif value_type == 'group':
-        macd_max = get_group_max(macd)
+        macd_max = get_group_max(macd, index=index)
+        if macd_max == 0.0:
+            return 0.0
         if index == -1:
             index = len(macd)-1
         return macd[index] / np.abs(macd_max) * 100.0
@@ -81,34 +84,89 @@ def get_macd_value(macd: list, value_type='current', index=-1) -> float:
     elif value_type == 'change':
         macd_ema = exponential_ma_list(macd, interval=3)
         macd_max = get_group_max(macd)
+        if macd_max == 0.0:
+            return 0.0
         val = (macd[len(macd)-1] - macd_ema[len(macd_ema)-1]) / macd_max * 100.0
         return val 
     
     else: 
         return None
+
+
+def get_group_range(signal: list, index: int) -> list:
+    """ [start_index, end_index] """
+    if signal[index] > 0.0:
+        state = 1
+    else: 
+        state = 0
+
+    start = index
+    while (start >= 0):
+        if state == 1:
+            if signal[start] < 0.0:
+                start += 1
+                break
+            else:
+                start -= 1
+        else:
+            if signal[start] > 0.0:
+                start += 1
+                break
+            else:
+                start -= 1
+    if start == -1:
+        start = 0
+
+    end = index
+    while (end < len(signal)):
+        if state == 1:
+            if signal[end] < 0.0:
+                end -= 1
+                break
+            else:
+                end += 1
+        else:
+            if signal[end] > 0.0:
+                end -= 1
+                break
+            else:
+                end += 1
+
+    return [start, end, (end-start+1)]
         
 
 def get_group_max(signal: list, index=-1) -> float:
     if index == -1:
-        index == len(signal)-1
-    if signal[len(signal)-1] > 0.0:
-        state = 1
-    else: 
-        state = 0
-    macd_max = 0.0
-    if state == 1:
-        i = len(signal)-1
-        while (i >= 0) and (signal[i] > 0.0):
-            if signal[i] > macd_max:
-                macd_max = signal[i]
-            i -= 1
+        index = len(signal)-1
+    start, end, _ = get_group_range(signal, index)
+    macd_max = np.max(np.abs(signal[start:end+1]))
+    return macd_max
+
+
+def get_group_duration_factor(signal: list, index: int, f_type='signal') -> float:
+    """ normalization to crossovers of different sizes """
+    if index - 2 > 0:
+        index -= 2
     else:
-        i = len(signal)-1
-        while (i >= 0) and (signal[i] <= 0.0):
-            if signal[i] < macd_max:
-                macd_max = signal[i]
-            i -= 1
-    return np.abs(macd_max)
+        return 1.25
+    d1 = get_group_range(signal, index)
+    if d1[0] - 2 > 0:
+        # 'start' variable
+        d2 = get_group_range(signal, d1[0]-2)
+    else:
+        return 1.25
+
+    d_max = np.max([d1[2], d2[2]])
+    if f_type == 'signal':
+        factor = 1.25 - (d1[2] / d_max) * 0.25
+    elif f_type == 'score':
+        factor = 1.1 - (d1[2] / d_max) * 0.1
+    elif f_type == 'state':
+        factor = 1.5 - (d1[2] / d_max) * 0.5
+    else:
+        return 1.0
+    return factor
+    
 
 
 def has_crossover(signal: list, interval=3) -> str:
@@ -128,7 +186,9 @@ def get_macd_state(macd: list) -> str:
     if cross is not None:
         return cross 
     intensity = get_macd_value(macd, value_type='group')
-    if np.abs(intensity) > 50.0:
+    factor = get_group_duration_factor(macd, len(macd)-1, f_type='state')
+    intensity = intensity / factor
+    if np.abs(intensity) > 70.0:
         if intensity > 0.0:
             return 'strongly_bullish'
         else:
@@ -140,18 +200,22 @@ def get_macd_state(macd: list) -> str:
             return 'weakly_bearish'
 
 
-def get_macd_nasit_score(signal: list, macd: dict) -> float:
+def get_macd_nasit_score(signal: list, macd: dict) -> dict:
     """ NASIT score """
+    factor = get_group_duration_factor(signal, len(signal)-1, f_type='score')
     if macd['state'] == 'crossover_bullish':
-        return 1.0
+        return {'true': 1.0/factor, 'normalized': 1.0/factor}
     if macd['state'] == 'crossover_bearish':
-        return -1.0
+        return {'true': -1.0/factor, 'normalized': -1.0/factor}
 
-    nasit = plot_nasit_score(signal)
-    return nasit[len(nasit)-1] / 100.0
+    nasit = get_nasit_signal(signal) 
+    #print(nasit)
+    na_max = np.max(np.abs(nasit))
+    na_norm = nasit[len(nasit)-1] / na_max
+    return {'true': nasit[len(nasit)-1] / 100.0, 'normalized': na_norm}
 
 
-def plot_nasit_score(signal: list, interval=6) -> list:
+def get_nasit_signal(signal: list, interval=6) -> list:
     nasit = []
     tick_count = [0, 0.0]
     for i in range(interval-1):
@@ -159,16 +223,16 @@ def plot_nasit_score(signal: list, interval=6) -> list:
     for i in range(interval-1, len(signal)):
         if (signal[i] > 0.0) and (signal[i-1] < 0.0):
             nasit.append(100.0)
-            tick_count = [interval-1, 100.0]
+            tick_count = [interval-1, 100.0, get_group_duration_factor(signal, i, f_type='signal')]
         elif (signal[i] < 0.0) and (signal[i-1] > 0.0):
             nasit.append(-100.0)
-            tick_count = [interval-1, -100.0]
+            tick_count = [interval-1, -100.0, get_group_duration_factor(signal, i, f_type='signal')]
         else:
             val = get_macd_value(signal, value_type='group', index=i)
             val = val / 100.0 * 50.0
             m_ema = []
             for j in range(tick_count[0]):
-                m_ema.append(tick_count[1])
+                m_ema.append(tick_count[1] / tick_count[2])
             for j in range(tick_count[0], interval-1):
                 m_ema.append(nasit[len(nasit)-1-(interval-1-j)])
             m_ema.append(val)
@@ -180,11 +244,18 @@ def plot_nasit_score(signal: list, interval=6) -> list:
 
     #generic_plotting([nasit], title='NASIT for MACD')
     nasit_ema = exponential_ma_list(nasit, interval=3)
-    generic_plotting([nasit_ema], title='NASIT for MACD')
+    #print(nasit_ema)
+    #generic_plotting([nasit_ema], title='NASIT for MACD')
     return nasit_ema
 
 
-def mov_avg_convergence_divergence(fund: pd.DataFrame) -> dict:
+def export_macd_nasit_signal(fund: pd.DataFrame) -> list: 
+    macd_sig, _ = generate_macd_signal(fund)
+    nasit = get_nasit_signal(macd_sig)
+    return nasit 
+
+
+def mov_avg_convergence_divergence(fund: pd.DataFrame, plotting=True) -> dict:
     macd_sig, _ = generate_macd_signal(fund) 
 
     macd = {}
@@ -200,6 +271,10 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame) -> dict:
     macd['change'] = get_macd_value(macd_sig, value_type='change')
 
     macd['nasit'] = get_macd_nasit_score(macd_sig, macd)
+
+    if plotting:
+        nasit = get_nasit_signal(macd_sig)
+        dual_plotting(fund['Close'], nasit, 'Price', 'Nasit score', 'trading')
 
     return macd
 
