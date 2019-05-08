@@ -1,6 +1,8 @@
 import pandas as pd 
 import numpy as np 
 
+from libs.utils import dual_plotting, nasit_oscillator_score, nasit_oscillator_signal
+
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
     """ Generates a list of relative strength indicators """
@@ -71,18 +73,18 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
         if (state == 0) and (rsi_signal[i] < LOW_TH):
             # Start of a bullish signal
             state = 1
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 1) and (rsi_signal[i] > LOW_TH):
             state = 2
             maxima = rsi_signal[i]
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 2):
             if rsi_signal[i] >= maxima:
                 maxima = rsi_signal[i]
             else:
                 minima = rsi_signal[i]
                 state = 3
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 3):
             if rsi_signal[i] < LOW_TH:
                 # Failed attempted breakout
@@ -91,7 +93,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
                 minima = rsi_signal[i]
             else:
                 state = 4
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 4):
             if rsi_signal[i] > maxima:
                 # Have found a bullish breakout!
@@ -99,25 +101,25 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
                 state = 0
                 minima = 0.0
                 maxima = 0.0 
-                indicator.append(0.0)
+                indicator.append(-1.0)
             else:
-                indicator.append(50.0)
+                indicator.append(0.0)
 
 
         elif (state == 0) and (rsi_signal[i] > HIGH_TH):
             state = 5
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 5) and (rsi_signal[i] < HIGH_TH):
             state = 6
             minima = rsi_signal[i]
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 6):
             if rsi_signal[i] <= minima:
                 minima = rsi_signal[i]
             else:
                 maxima = rsi_signal[i]
                 state = 7
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 7):
             if rsi_signal[i] > HIGH_TH:
                 # Failed attempted breakout
@@ -126,18 +128,38 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
                 maxima = rsi_signal[i]
             else:
                 state = 8
-            indicator.append(50.0)
+            indicator.append(0.0)
         elif (state == 8):
             if rsi_signal[i] < minima:
                 swings['bearish'].append([position['Date'][i], position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0
-                indicator.append(100.0)
+                indicator.append(1.0)
             else:
-                indicator.append(50.0)
+                indicator.append(0.0)
 
         else:
-            indicator.append(50.0)
+            indicator.append(0.0)
 
     return [indicator, swings]
+
+
+
+def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> dict:
+    """ Relative Strength Indicator """
+    RSI = generate_rsi_signal(position, period=period)
+
+    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI)
+    rsi_swings['tabular'] = RSI
+
+    #print(plotting)
+    nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
+    rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
+
+    if plot_output:
+        dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
+        dual_plotting(position['Close'], plotting, 'price', 'RSI indicators', 'trading days', title=name)
+        dual_plotting(position['Close'], nasit_signal, 'price', 'RSI indicators', 'trading days', title=name)
+
+    return rsi_swings

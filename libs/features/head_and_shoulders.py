@@ -1,6 +1,11 @@
 import pandas as pd 
 import numpy as np 
 
+from libs.tools import exponential_ma
+
+from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
+from .feature_utils import local_extrema
+
 def find_head_shoulders(extrema: dict) -> dict:
     extrema['features'] = []
     lmax = len(extrema['max'])
@@ -95,3 +100,30 @@ def feature_detection(features: list) -> dict:
                 detected['stats']['percent'] = np.round(100.0 * np.std(f) / np.mean(f), 3)
 
     return detected
+
+
+
+def feature_head_and_shoulders(fund: pd.DataFrame, FILTER_SIZE=10, sanitize_dict=True):
+    """ 
+    Find head and shoulders feature of a reversal 
+    Args:
+        fund - pd.DataFrame of fund over a period
+        FILTER_SIZE - (int) period of ema filter
+    Returns:
+        hs - dict of head and shoulders features
+        ma - (list) fund filtered with ema
+    """
+
+    ma = exponential_ma(fund, FILTER_SIZE)
+    ex = local_extrema(ma)
+    r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE)
+    r = remove_duplicates(r)
+    hs = find_head_shoulders(r) 
+    hs = add_daterange(fund, hs, 5)
+    hs = remove_empty_keys(hs) 
+    
+    if sanitize_dict:
+        hs.pop('max')
+        hs.pop('min')
+    
+    return hs, ma

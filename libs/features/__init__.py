@@ -1,2 +1,2 @@
 from .feature_utils import local_extrema, reconstruct_extrema, remove_duplicates, add_daterange, remove_empty_keys, plotter
-from .head_and_shoulders import find_head_shoulders
+from .head_and_shoulders import feature_head_and_shoulders
