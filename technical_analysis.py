@@ -7,11 +7,11 @@ from libs.tools import relative_strength
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence
-from libs.utils import name_parser, dir_lister
+from libs.utils import name_parser, dir_lister, nasit_composite_index
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/VWO.csv"
+FILE = "securities/VPU.csv"
 #fileB = "securities/VNQ.csv"
 fileB = FILE
 
@@ -28,6 +28,8 @@ analysis = {}
 analysis['dates_covered'] = {'start': str(fund['Date'][0]), 'end': str(fund['Date'][len(fund['Date'])-1])}
 analysis['name'] = name
 
+#full_stochastic(fund, name=name)
+
 #chart, dat = cluster_oscs(fund, function='full_stochastic', filter_thresh=3, name=name) 
 #analysis['full_stochastic'] = dat
 #chart, dat = cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name)
@@ -37,7 +39,8 @@ analysis['name'] = name
 chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
 analysis['weighted'] = dat
 
-#RSI(fund, name=name)
+#analysis['rsi'] = RSI(fund, name=name)
+#analysis['ultimate'] = ultimate_oscillator(fund, name=name)
 
 analysis['macd'] = mov_avg_convergence_divergence(fund)
 
@@ -47,8 +50,12 @@ analysis['macd'] = mov_avg_convergence_divergence(fund)
 analysis['relative_strength'] = relative_strength(fund, fundB, sector='')
 analysis['features'] = {}
 
-hs, ma = feature_head_and_shoulders(fundB)
+hs, ma = feature_head_and_shoulders(fund)
 analysis['features']['head_shoulders'] = hs
 
-#pprint.pprint(analysis['features'])
+print("")
+pprint.pprint(analysis['features'])
 pprint.pprint(analysis['macd'])
+print(analysis['weighted']['nasit'])
+print(analysis['macd']['nasit'])
+print(nasit_composite_index(fund))
