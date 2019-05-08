@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from libs.utils import dual_plotting
+from libs.utils import nasit_oscillator_score, nasit_oscillator_signal 
 
 def generate_full_stoch_signal(position: pd.DataFrame, config=[14, 3, 3]) -> list:
     """ Generates signal
@@ -108,8 +109,12 @@ def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], pl
     feature_list = generate_full_stoch_signal(position, config=config) 
 
     stochastic, full_stoch = get_full_stoch_features(position, feature_list)
+    
+    nasit_signal = nasit_oscillator_signal(full_stoch, stochastic)
+    full_stoch['nasit'] = nasit_oscillator_score(full_stoch, stochastic)
             
     if plot_output:
         dual_plotting(position['Close'], stochastic, 'Position Price', 'Oscillator Signal', title=name)
+        dual_plotting(position['Close'], nasit_signal, 'Position Price', 'Oscillator Signal', title='nasit_stoch')
 
     return full_stoch
