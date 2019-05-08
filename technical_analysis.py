@@ -7,7 +7,8 @@ from libs.tools import relative_strength
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence
-from libs.utils import name_parser, dir_lister, nasit_composite_index
+from libs.utils import name_parser, dir_lister
+from libs.metrics import nasit_composite_index
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
@@ -16,46 +17,53 @@ FILE = "securities/VPU.csv"
 fileB = FILE
 
 sp500_index, files_to_parse = dir_lister()
-print(sp500_index)
 
-name = name_parser(FILE)
-fund = pd.read_csv(FILE)
-fundB = pd.read_csv(fileB)
+for FILE in files_to_parse:
 
-# Start of automated process
-analysis = {}
+    name = name_parser(FILE)
+    fund = pd.read_csv(FILE)
+    fundB = pd.read_csv(fileB)
 
-analysis['dates_covered'] = {'start': str(fund['Date'][0]), 'end': str(fund['Date'][len(fund['Date'])-1])}
-analysis['name'] = name
+    # Start of automated process
+    analysis = {}
 
-#full_stochastic(fund, name=name)
+    analysis['dates_covered'] = {'start': str(fund['Date'][0]), 'end': str(fund['Date'][len(fund['Date'])-1])}
+    analysis['name'] = name
 
-#chart, dat = cluster_oscs(fund, function='full_stochastic', filter_thresh=3, name=name) 
-#analysis['full_stochastic'] = dat
-#chart, dat = cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name)
-#analysis['ultimate'] = dat  
-#chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
-#analysis['rsi'] = dat
-chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
-analysis['weighted'] = dat
+    #full_stochastic(fund, name=name)
 
-#analysis['rsi'] = RSI(fund, name=name)
-#analysis['ultimate'] = ultimate_oscillator(fund, name=name)
+    #chart, dat = cluster_oscs(fund, function='full_stochastic', filter_thresh=3, name=name) 
+    #analysis['full_stochastic'] = dat
+    #chart, dat = cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name)
+    #analysis['ultimate'] = dat  
+    #chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
+    #analysis['rsi'] = dat
+    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
+    analysis['weighted'] = dat
 
-analysis['macd'] = mov_avg_convergence_divergence(fund)
+    #analysis['rsi'] = RSI(fund, name=name)
+    #analysis['ultimate'] = ultimate_oscillator(fund, name=name)
 
-#print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
-#print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
+    analysis['macd'] = mov_avg_convergence_divergence(fund)
 
-analysis['relative_strength'] = relative_strength(fund, fundB, sector='')
-analysis['features'] = {}
+    #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
+    #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
 
-hs, ma = feature_head_and_shoulders(fund)
-analysis['features']['head_shoulders'] = hs
+    analysis['relative_strength'] = relative_strength(fund, fundB, sector='')
+    analysis['features'] = {}
 
-print("")
-pprint.pprint(analysis['features'])
-pprint.pprint(analysis['macd'])
-print(analysis['weighted']['nasit'])
-print(analysis['macd']['nasit'])
-print(nasit_composite_index(fund))
+    hs, ma = feature_head_and_shoulders(fund)
+    analysis['features']['head_shoulders'] = hs
+
+    print("")
+    print("")
+    print(f"{name} for {fund['Date'][len(fund['Date'])-1]}")
+    print("")
+    pprint.pprint(analysis['features'])
+    pprint.pprint(analysis['macd'])
+    print(analysis['weighted']['nasit'])
+    print(analysis['macd']['nasit'])
+    #print(nasit_composite_index(fund))
+    nasit_composite_index(fund)
+
+print('Done.')
