@@ -17,12 +17,15 @@ def exponential_ma(fund: pd.DataFrame, interval: int) -> list:
 def exponential_ma_list(item: list, interval: int) -> list:
     ema = []
     k = 2.0 / (float(interval) + 1.0)
-    for i in range(interval-1):
-        ema.append(item[i])
-    for i in range(interval-1, len(item)):
-        ema.append(np.mean(item[i-(interval-1):i+1]))
-        if i != interval-1:
-            ema[i] = ema[i-1] * (1.0 - k) + item[i] * k
+    if len(item) > interval:
+        for i in range(interval-1):
+            ema.append(item[i])
+        for i in range(interval-1, len(item)):
+            ema.append(np.mean(item[i-(interval-1):i+1]))
+            if i != interval-1:
+                ema[i] = ema[i-1] * (1.0 - k) + item[i] * k
+    else:
+        ema = item
 
     return ema 
 
