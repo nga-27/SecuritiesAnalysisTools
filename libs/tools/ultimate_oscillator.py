@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from .math_functions import lower_low, higher_high, bull_bear_th
-from libs.utils import dual_plotting
+from libs.utils import dual_plotting, nasit_oscillator_score, nasit_oscillator_signal
 
 def generate_ultimate_osc_signal(position: pd.DataFrame, config: list=[7, 14, 28]) -> list:
     """ Generate an ultimate oscillator signal from a position fund """
@@ -131,7 +131,7 @@ def ult_osc_output(trigger: list, len_of_position: int) -> list:
     simplified = []
     plots = []
     for i in range(len_of_position):
-        plots.append(50.0)
+        plots.append(0.0)
     present = False
     for i in range(len(trigger)):
         for j in range(len(simplified)):
@@ -140,10 +140,10 @@ def ult_osc_output(trigger: list, len_of_position: int) -> list:
         if not present:
             simplified.append(trigger[i])
             if trigger[i][0] == "BEARISH":
-                plots[trigger[i][3]] = 100.0
+                plots[trigger[i][3]] = 1.0 
                 ultimate['bearish'].append([trigger[i][1], trigger[i][2], trigger[i][3]])
             else:
-                plots[trigger[i][3]] = 0.0
+                plots[trigger[i][3]] = -1.0
                 ultimate['bullish'].append([trigger[i][1], trigger[i][2], trigger[i][3]])
         present = False 
 
@@ -166,8 +166,12 @@ def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28
     plots, ultimate = ult_osc_output(trigger, len(stats['Close']))
     ultimate['tabular'] = ult_osc
 
+    nasit_signal = nasit_oscillator_signal(ultimate, plots)
+    ultimate['nasit'] = nasit_oscillator_score(ultimate, plots)
+
     if plot_output:
         dual_plotting(stats['Close'], ult_osc, 'price', 'ultimate oscillator', 'trading days', title=name)
         dual_plotting(stats['Close'], plots, 'price', 'buy-sell signal', 'trading days', title=name)
+        dual_plotting(stats['Close'], nasit_signal, 'price', 'nasit score', 'trading days', title=name)
 
     return ultimate
