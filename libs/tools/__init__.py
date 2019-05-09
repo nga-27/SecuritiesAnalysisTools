@@ -11,7 +11,7 @@ from .ultimate_oscillator import ultimate_oscillator
 from .full_stochastic import full_stochastic
 
 from .trends import get_trend, get_trend_analysis
-from .clusters import cluster_oscs
+from .clusters import cluster_oscs, export_cluster_nasit_signal
 
 from .macd import mov_avg_convergence_divergence 
 from .macd import export_macd_nasit_signal

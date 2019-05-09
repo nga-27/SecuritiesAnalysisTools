@@ -4,6 +4,16 @@ import numpy as np
 from .moving_average import exponential_ma, exponential_ma_list
 from libs.utils import generic_plotting, bar_chart, dual_plotting
 
+"""
+Moving Average Convergence / Divergence (MACD)
+    * macd = EMA(12) - EMA(26)
+    * macd_val = macd - macd_EMA(9)
+    
+    * "trend-following momentum indicator"
+
+    TODO: speed of crossovers can be a signal of overbought / oversold 
+"""
+
 def generate_macd_signal(fund: pd.DataFrame, plotting=True) -> list:
     """
     macd = ema(12) - ema(26)

@@ -64,6 +64,6 @@ for FILE in files_to_parse:
     print(analysis['weighted']['nasit'])
     print(analysis['macd']['nasit'])
     #print(nasit_composite_index(fund))
-    nasit_composite_index(fund)
+    #nasit_composite_index(fund)
 
 print('Done.')
