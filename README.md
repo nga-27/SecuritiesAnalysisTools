@@ -10,3 +10,7 @@ Run `pip install -r requirements.txt`
 
 Run the top-level job file.  For example, `technical_analysis.py`
 Run `python technical_analysis.py`
+
+### Matplotlib & OSX errors
+If matplotlib.backend has issues with OSX, try running `conda install matplotlib` to solve issue.
+If that does not solve issue, see [StackOverFlow Solution](https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python) for other ways of solving issue.
