@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting, nasit_oscillator_score, nasit_oscillator_signal
+from libs.utils import dual_plotting #nasit_oscillator_score, nasit_oscillator_signal
 
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
@@ -154,12 +154,12 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> di
     rsi_swings['tabular'] = RSI
 
     #print(plotting)
-    nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
-    rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
+    #nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
+    #rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
 
     if plot_output:
         dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
         dual_plotting(position['Close'], plotting, 'price', 'RSI indicators', 'trading days', title=name)
-        dual_plotting(position['Close'], nasit_signal, 'price', 'RSI indicators', 'trading days', title=name)
+        #dual_plotting(position['Close'], nasit_signal, 'price', 'RSI indicators', 'trading days', title=name)
 
     return rsi_swings
