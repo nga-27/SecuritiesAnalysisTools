@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from libs.tools import exponential_ma_list, windowed_ma_list
-from .plotting import generic_plotting
+#from .plotting import generic_plotting
 
 def nasit_oscillator_signal(osc_obj: dict, osc_signal: list, interval=4) -> list:
     """ Generates nasit signal from an oscillator object """
@@ -30,8 +30,7 @@ def nasit_oscillator_signal(osc_obj: dict, osc_signal: list, interval=4) -> list
                 tick_count[0] = 0
 
     nasit_flip = [x*-1.0 for x in nasit]
-    nasit_ema = exponential_ma_list(nasit_flip, interval=3)
-    #generic_plotting([nasit_ema], title='Nasit of osc') 
+    nasit_ema = exponential_ma_list(nasit_flip, interval=3) 
     return nasit_ema
 
 
@@ -53,7 +52,6 @@ def nasit_cluster_signal(cl_signal: list, interval=3) -> list:
     signal = [-1.0 * x for x in signal]
 
     nasit = windowed_ma_list(signal, interval=interval)
-    #generic_plotting(nasit)
     return nasit
 
 

@@ -41,3 +41,47 @@ def windowed_ma_list(item: list, interval: int) -> list:
         wma.append(item[i])
 
     return wma 
+
+
+def simple_ma_list(item: list, interval: int) -> list:
+    ma = []
+    for i in range(interval-1):
+        ma.append(item[i])
+    for i in range(interval-1, len(item)):
+        av = np.mean(item[i-(interval-1):i+1])
+        ma.append(av)
+
+    return ma 
+
+
+
+def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plotting=True) -> list:
+    from libs.utils import generic_plotting
+
+    tshort = []
+    tmed = []
+    tlong = []
+
+    tot_len = len(fund['Close'])
+
+    for i in range(config[0]):
+        tshort.append(fund['Close'][i])
+        tmed.append(fund['Close'][i])
+        tlong.append(fund['Close'][i])
+    for i in range(config[0], config[1]):
+        tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
+        tmed.append(fund['Close'][i])
+        tlong.append(fund['Close'][i])
+    for i in range(config[1], config[2]):
+        tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
+        tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
+        tlong.append(fund['Close'][i])
+    for i in range(config[2], tot_len):
+        tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
+        tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
+        tlong.append(np.mean(fund['Close'][i-config[2]:i+1]))
+
+    if plotting:
+        generic_plotting([fund['Close'], tshort, tmed, tlong])
+
+    return tshort, tmed, tlong
