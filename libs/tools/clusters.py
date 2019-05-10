@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting, nasit_cluster_signal, nasit_cluster_score
+from libs.utils import dual_plotting # nasit_cluster_signal, nasit_cluster_score
 
 from .ultimate_oscillator import ultimate_oscillator
 from .rsi import RSI
@@ -110,8 +110,8 @@ def generate_cluster(position: pd.DataFrame, function: str) -> list:
 
 def export_cluster_nasit_signal(position: pd.DataFrame, function: str='full_stochastic') -> list:
     clusters = generate_cluster(position, function)
-    nasit_signal = nasit_cluster_signal(clusters)
-    return nasit_signal
+    #nasit_signal = nasit_cluster_signal(clusters)
+    return clusters
 
 
 def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7) -> dict:
@@ -125,13 +125,13 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
     dates = cluster_dates(clusters_wma, position) 
     cluster_oscs[function] = dates
 
-    nasit_signal = nasit_cluster_signal(clusters)
-    cluster_oscs['nasit'] = nasit_cluster_score(clusters)
+    #nasit_signal = nasit_cluster_signal(clusters)
+    #cluster_oscs['nasit'] = nasit_cluster_score(clusters)
     
     if plot_output:
         name = name + ' - ' + function
         dual_plotting(position['Close'], clusters, 'price', 'clustered oscillator', 'trading days', title=name)
         dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
-        dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
+        #dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
 
     return clusters_wma, cluster_oscs
