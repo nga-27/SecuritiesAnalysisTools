@@ -10,6 +10,8 @@ from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_ba
 from libs.utils import name_parser, dir_lister
 from libs.metrics import nasit_composite_index
 
+from libs.utils import ProgressBar
+
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
 FILE = "securities/VGT.csv"
@@ -18,13 +20,20 @@ fileB = FILE
 
 sp500_index, files_to_parse = dir_lister()
 
-files_to_parse = [FILE]
+#files_to_parse = [FILE]
 
 for FILE in files_to_parse:
 
+
     name = name_parser(FILE)
+
+    p = ProgressBar(8, name=name)
+    p.start()
+
     fund = pd.read_csv(FILE)
+    p.uptick()
     fundB = pd.read_csv(fileB)
+    p.uptick()
 
     # Start of automated process
     analysis = {}
@@ -40,36 +49,39 @@ for FILE in files_to_parse:
     #analysis['ultimate'] = dat  
     #chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
     #analysis['rsi'] = dat
-    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
+    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=False)
     analysis['weighted'] = dat
+    p.uptick()
 
-    on_balance_volume(fund)
+    on_balance_volume(fund, plotting=False)
+    p.uptick()
 
-    triple_moving_average(fund)
+    triple_moving_average(fund, plotting=False)
+    p.uptick()
 
     #analysis['rsi'] = RSI(fund, name=name)
     #analysis['ultimate'] = ultimate_oscillator(fund, name=name)
 
-    analysis['macd'] = mov_avg_convergence_divergence(fund)
+    analysis['macd'] = mov_avg_convergence_divergence(fund, plotting=False)
+    p.uptick()
 
     #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
     #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
 
-    analysis['relative_strength'] = relative_strength(fund, fundB, sector='')
+    analysis['relative_strength'] = relative_strength(fund, fundB, sector='', plot_output=False)
     analysis['features'] = {}
+
+    p.uptick()
 
     hs, ma = feature_head_and_shoulders(fund)
     analysis['features']['head_shoulders'] = hs
+    p.uptick()
 
-    print("")
-    print("")
-    print(f"{name} for {fund['Date'][len(fund['Date'])-1]}")
-    print("")
-    pprint.pprint(analysis['features'])
-    pprint.pprint(analysis['macd'])
-    print(analysis['weighted']['nasit'])
-    print(analysis['macd']['nasit'])
-    #print(nasit_composite_index(fund))
-    #nasit_composite_index(fund)
+    #print("")
+    #print("")
+    #print(f"{name} for {fund['Date'][len(fund['Date'])-1]}")
+    #print("")
+    #pprint.pprint(analysis['features'])
+    #pprint.pprint(analysis['macd'])
 
 print('Done.')
