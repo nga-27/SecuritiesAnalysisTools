@@ -51,14 +51,15 @@ def generate_obv_signal(fund: pd.DataFrame, plotting=True, filter_factor: float=
 
 
 def on_balance_volume(fund: pd.DataFrame, plotting=True, filter_factor: float=2.5) -> list:
-    obv, ofilter = generate_obv_signal(fund, plotting=True, filter_factor=filter_factor)
+    obv, ofilter = generate_obv_signal(fund, plotting=plotting, filter_factor=filter_factor)
 
     fund_wma = windowed_ma_list(list(fund['Close']), interval=6)
     obv_wma = windowed_ma_list(obv, interval=6)
 
     # TODO: (?) apply trend analysis to find divergences
 
-    dual_plotting(fund_wma, obv_wma, 'price', 'window', 'trading')
+    if plotting:
+        dual_plotting(fund_wma, obv_wma, 'price', 'window', 'trading')
     return obv, ofilter 
 
 
