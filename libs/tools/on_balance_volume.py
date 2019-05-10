@@ -4,7 +4,7 @@ import numpy as np
 from .moving_average import simple_ma_list, exponential_ma_list
 from libs.utils import generic_plotting, dual_plotting
 
-def generate_obv_signal(fund: pd.DataFrame, plotting=True) -> list:
+def generate_obv_signal(fund: pd.DataFrame, plotting=True, filter_factor: float=2.5) -> list:
 
     obv = []
 
@@ -27,9 +27,9 @@ def generate_obv_signal(fund: pd.DataFrame, plotting=True) -> list:
     omax = np.max(np.abs(obv_diff))
     ofilter = []
     for i in range(len(obv_diff)):
-        if obv_diff[i] > omax / 2.0:
+        if obv_diff[i] > omax / filter_factor:
             ofilter.append(obv_diff[i])
-        elif obv_diff[i] < (-1 * omax) / 2.0:
+        elif obv_diff[i] < (-1 * omax) / filter_factor:
             ofilter.append(obv_diff[i])
         else:
             ofilter.append(0.0)
