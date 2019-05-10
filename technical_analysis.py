@@ -3,10 +3,10 @@ import numpy as np
 import pprint 
 
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
-from libs.tools import relative_strength
+from libs.tools import relative_strength, triple_moving_average
 from libs.features import feature_head_and_shoulders
 
-from libs.tools import get_trend_analysis, mov_avg_convergence_divergence
+from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, generate_obv_signal
 from libs.utils import name_parser, dir_lister
 from libs.metrics import nasit_composite_index
 
@@ -17,6 +17,8 @@ FILE = "securities/VPU.csv"
 fileB = FILE
 
 sp500_index, files_to_parse = dir_lister()
+
+files_to_parse = [FILE]
 
 for FILE in files_to_parse:
 
@@ -40,6 +42,10 @@ for FILE in files_to_parse:
     #analysis['rsi'] = dat
     chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
     analysis['weighted'] = dat
+
+    generate_obv_signal(fund)
+
+    triple_moving_average(fund)
 
     #analysis['rsi'] = RSI(fund, name=name)
     #analysis['ultimate'] = ultimate_oscillator(fund, name=name)

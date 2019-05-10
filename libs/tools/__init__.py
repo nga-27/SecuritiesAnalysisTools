@@ -1,5 +1,5 @@
 from .math_functions import linear_regression, lower_low, higher_high, bull_bear_th, local_minima
-from .moving_average import exponential_ma, windowed_ma_list, exponential_ma_list
+from .moving_average import exponential_ma, windowed_ma_list, exponential_ma_list, simple_ma_list, triple_moving_average
 
 from .trends import trendline, trendline_deriv, support, resistance 
 from .trends import get_trend, get_trend_analysis, trend_filter
@@ -15,3 +15,5 @@ from .clusters import cluster_oscs, export_cluster_nasit_signal
 
 from .macd import mov_avg_convergence_divergence 
 from .macd import export_macd_nasit_signal
+
+from .on_balance_volume import generate_obv_signal

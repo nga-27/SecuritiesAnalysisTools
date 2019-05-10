@@ -266,7 +266,7 @@ def export_macd_nasit_signal(fund: pd.DataFrame, plotting=False) -> list:
     return nasit 
 
 
-def mov_avg_convergence_divergence(fund: pd.DataFrame, plotting=True) -> dict:
+def mov_avg_convergence_divergence(fund: pd.DataFrame, plotting=False) -> dict:
     macd_sig, _ = generate_macd_signal(fund) 
 
     macd = {}
