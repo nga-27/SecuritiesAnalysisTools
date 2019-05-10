@@ -12,7 +12,7 @@ from libs.metrics import nasit_composite_index
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/VPU.csv"
+FILE = "securities/VGT.csv"
 #fileB = "securities/VNQ.csv"
 fileB = FILE
 

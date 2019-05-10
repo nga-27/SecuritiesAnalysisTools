@@ -23,6 +23,17 @@ def generate_obv_signal(fund: pd.DataFrame, plotting=True) -> list:
 
     for i in range(len(obv)):
         obv_diff.append(obv[i] - obv_sig[i])
+        
+    omax = np.max(np.abs(obv_diff))
+    ofilter = []
+    for i in range(len(obv_diff)):
+        if obv_diff[i] > omax / 2.0:
+            ofilter.append(obv_diff[i])
+        elif obv_diff[i] < (-1 * omax) / 2.0:
+            ofilter.append(obv_diff[i])
+        else:
+            ofilter.append(0.0)
+
     obv_slope.append(0.0)
     for i in range(1, len(obv)):
         obv_slope.append(obv[i] - obv[i-1])
@@ -34,9 +45,9 @@ def generate_obv_signal(fund: pd.DataFrame, plotting=True) -> list:
 
     if plotting:
         generic_plotting([obv, obv_sig], title='OBV')
-        dual_plotting(fund['Close'], slope_diff, 'price', 'OBV-DIFF', 'trading days')
+        dual_plotting(fund['Close'], ofilter, 'price', 'OBV-DIFF', 'trading days')
 
-    return obv, obv_sig 
+    return obv, ofilter
 
 
 

@@ -9,17 +9,17 @@ SP500_INDEX = 'securities/^GSPC.csv'
 
 def basic_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
     ratio = []
-    for close in range(len(fundA['Close'])):
-        ratio.append(np.round(fundA['Close'][close] / fundB['Close'][close], 6))
+    for close in range(len(fundA['Adj Close'])):
+        ratio.append(np.round(fundA['Adj Close'][close] / fundB['Adj Close'][close], 6))
 
     return ratio 
 
 
 def normalized_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
     ratio = []
-    divisor = np.round(fundA['Close'][0] / fundB['Close'][0], 6)
-    for close in range(len(fundA['Close'])):
-        ratio.append(np.round((fundA['Close'][close] / fundB['Close'][close] / divisor) - 1.0, 6))
+    divisor = np.round(fundA['Adj Close'][0] / fundB['Adj Close'][0], 6)
+    for close in range(len(fundA['Adj Close'])):
+        ratio.append(np.round((fundA['Adj Close'][close] / fundB['Adj Close'][close] / divisor) - 1.0, 6))
 
     return ratio 
 
@@ -62,9 +62,9 @@ def period_strength(fund: pd.DataFrame, periods: list, sector: str='') -> list:
         entry['dates'] = str(fund['Date'][len(fund['Date'])-period]) + " : " + str(fund['Date'][len(fund['Date'])-1]) 
         if hasSP:
             entry['sp500'] = {}
-            sp_temp = list(sp['Close'])
+            sp_temp = list(sp['Adj Close'])
             sp_temp = sp_temp[len(sp_temp)-period:len(sp_temp)+1]
-            f_temp = list(fund['Close'])
+            f_temp = list(fund['Adj Close'])
             f_temp = f_temp[len(f_temp)-period:len(f_temp)+1]
             r = normalized_ratio_lists(f_temp, sp_temp)
             entry['sp500']['avg'] = np.round(np.mean(r), 6)
@@ -76,9 +76,9 @@ def period_strength(fund: pd.DataFrame, periods: list, sector: str='') -> list:
         if hasSector:
             entry['sector'] = {}
             entry['sector']['name'] = sector
-            sp_temp = list(sec['Close'])
+            sp_temp = list(sec['Adj Close'])
             sp_temp = sp_temp[len(sp_temp)-period:len(sp_temp)+1]
-            f_temp = list(fund['Close'])
+            f_temp = list(fund['Adj Close'])
             f_temp = f_temp[len(f_temp)-period:len(f_temp)+1]
             r = normalized_ratio_lists(f_temp, sp_temp)
             entry['sector']['avg'] = np.round(np.mean(r), 6)
