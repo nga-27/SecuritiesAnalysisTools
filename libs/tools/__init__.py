@@ -16,4 +16,4 @@ from .clusters import cluster_oscs, export_cluster_nasit_signal
 from .macd import mov_avg_convergence_divergence 
 from .macd import export_macd_nasit_signal
 
-from .on_balance_volume import generate_obv_signal
+from .on_balance_volume import on_balance_volume
