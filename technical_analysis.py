@@ -49,20 +49,20 @@ for FILE in files_to_parse:
     #analysis['ultimate'] = dat  
     #chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
     #analysis['rsi'] = dat
-    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=False)
+    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=True)
     analysis['weighted'] = dat
     p.uptick()
 
-    on_balance_volume(fund, plotting=False)
+    on_balance_volume(fund, plotting=True)
     p.uptick()
 
-    triple_moving_average(fund, plotting=False)
+    triple_moving_average(fund, plotting=True)
     p.uptick()
 
     #analysis['rsi'] = RSI(fund, name=name)
     #analysis['ultimate'] = ultimate_oscillator(fund, name=name)
 
-    analysis['macd'] = mov_avg_convergence_divergence(fund, plotting=False)
+    analysis['macd'] = mov_avg_convergence_divergence(fund, plotting=True)
     p.uptick()
 
     #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
