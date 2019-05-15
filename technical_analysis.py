@@ -2,43 +2,49 @@ import pandas as pd
 import numpy as np 
 import pprint 
 
+import fix_yahoo_finance as yf 
+
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import relative_strength, triple_moving_average
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.utils import name_parser, dir_lister
+from libs.utils import name_parser, dir_lister, fund_list_extractor, index_extractor
 from libs.metrics import nasit_composite_index
 
 from libs.utils import ProgressBar
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/VGT.csv"
-#fileB = "securities/VNQ.csv"
-fileB = FILE
+tickers = '^GSPC MMM TSLA'
+sp500_index = index_extractor(tickers)
 
-sp500_index, files_to_parse = dir_lister()
+data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+funds = fund_list_extractor(data)
+#data = add_date_columns(data)
+
+print(data['MMM'].keys())
+#sp500_index, files_to_parse = dir_lister()
 
 #files_to_parse = [FILE]
 
-for FILE in files_to_parse:
+for FILE in funds:
 
-
-    name = name_parser(FILE)
+    name = FILE
 
     p = ProgressBar(8, name=name)
     p.start()
 
-    fund = pd.read_csv(FILE)
+    #fund = pd.read_csv(FILE)
+    fund = data[FILE]
     p.uptick()
-    fundB = pd.read_csv(fileB)
+    fundB = fund #pd.read_csv(fileB)
     p.uptick()
 
     # Start of automated process
     analysis = {}
 
-    analysis['dates_covered'] = {'start': str(fund['Date'][0]), 'end': str(fund['Date'][len(fund['Date'])-1])}
+    analysis['dates_covered'] = {'start': str(fund.index[0]), 'end': str(fund.index[len(fund['Close'])-1])}
     analysis['name'] = name
 
     #full_stochastic(fund, name=name)
