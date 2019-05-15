@@ -59,7 +59,7 @@ def period_strength(fund: pd.DataFrame, periods: list, sector: str='') -> list:
     for period in periods:
         entry = {}
         entry['period'] = period
-        entry['dates'] = str(fund['Date'][len(fund['Date'])-period]) + " : " + str(fund['Date'][len(fund['Date'])-1]) 
+        entry['dates'] = str(fund.index[len(fund.index)-period]) + " : " + str(fund.index[len(fund.index)-1]) 
         if hasSP:
             entry['sp500'] = {}
             sp_temp = list(sp['Adj Close'])
