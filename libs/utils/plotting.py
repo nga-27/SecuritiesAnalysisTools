@@ -1,22 +1,34 @@
 import pandas as pd 
 import numpy as np 
 import matplotlib.pyplot as plt 
+from datetime import datetime
+from pandas.plotting import register_matplotlib_converters
+
+from .formatting import dates_extractor_list
 
 def dual_plotting(
     y1: list, 
     y2: list, 
     y1_label: str, 
     y2_label: str, 
-    x_label: str='trading days', 
+    x_label: str='trading days',
+    x=[],
     title='', 
     saveFig=False,
     filename='temp.png'):
+
+    register_matplotlib_converters()
+    if len(x) < 1:
+        for i in range(len(y1)):
+            datestr = str(y1.index[i])
+            datestr = datestr.split(' ')[0]
+            x.append(datetime.strptime(datestr, '%Y-%m-%d'))
 
     fig, ax1 = plt.subplots()
     color = 'tab:orange'
     ax1.set_xlabel(x_label)
     ax1.set_ylabel(y1_label, color=color)
-    ax1.plot(y1, color=color)
+    ax1.plot(x, y1, color=color)
     ax1.tick_params(axis='y', labelcolor=color)
     ax1.grid(linestyle=':')
     plt.legend([y1_label])
@@ -25,7 +37,7 @@ def dual_plotting(
 
     color = 'tab:blue'
     ax2.set_ylabel(y2_label, color=color)
-    ax2.plot(y2, color=color)
+    ax2.plot(x, y2, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
     ax2.grid()
 
@@ -41,8 +53,10 @@ def dual_plotting(
 
 
 def generic_plotting(list_of_plots: list, title='', saveFig=False, filename=''):
+    register_matplotlib_converters()
+    x = dates_extractor_list(list_of_plots[0])
     for fig in list_of_plots:
-        plt.plot(fig)
+        plt.plot(x, fig)
     plt.title(title)
 
     if saveFig:
@@ -63,9 +77,13 @@ def histogram(data: list, bins=None, saveFig=False, filename=''):
         plt.show()
 
 
-def bar_chart(data: list, name='', saveFig=False, filename=''):
+def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
     """ Exclusively used for MACD """
-    x = list(range(len(data)))
+    if len(x_) < 1:
+        x = list(range(len(data)))
+    else:
+        x = x_
+    
     colors = []
     for bar in data:
         if bar > 0.0:
