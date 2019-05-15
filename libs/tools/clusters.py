@@ -53,7 +53,7 @@ def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
     dates = []
     for i in range(len(cluster_list)):
         if cluster_list[i] != 0:
-            dates.append([fund['Date'][i], fund['Close'][i], cluster_list[i], i])
+            dates.append([fund.index[i], fund['Close'][i], cluster_list[i], i])
     return dates 
 
 
