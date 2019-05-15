@@ -94,7 +94,7 @@ def ult_osc_find_triggers(position: pd.DataFrame, ult_osc_signal: list, thresh_l
                     interval = np.max(ult_osc[i:start_ind+1])
                     start_ind = bull_bear_th(ult_osc, start_ind, interval, bull_bear='bull')
                     if start_ind is not None:
-                        trigger.append(["BULLISH", stats['Date'][start_ind], stats['Close'][start_ind], start_ind])
+                        trigger.append(["BULLISH", stats.index[start_ind], stats['Close'][start_ind], start_ind])
         
         # Find bearish signal
         if ult_osc[i] > HIGH_TH:
@@ -110,7 +110,7 @@ def ult_osc_find_triggers(position: pd.DataFrame, ult_osc_signal: list, thresh_l
                     interval = np.min(ult_osc[i:start_ind+1])
                     start_ind = bull_bear_th(ult_osc, start_ind, interval, bull_bear='bear')
                     if start_ind is not None:
-                        trigger.append(["BEARISH", stats['Date'][start_ind], stats['Close'][start_ind], start_ind])
+                        trigger.append(["BEARISH", stats.index[start_ind], stats['Close'][start_ind], start_ind])
 
     return trigger
 
