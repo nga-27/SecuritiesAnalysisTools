@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from .moving_average import exponential_ma, exponential_ma_list
-from libs.utils import generic_plotting, bar_chart, dual_plotting
+from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 
 """
 Moving Average Convergence / Divergence (MACD)
@@ -28,7 +28,8 @@ def generate_macd_signal(fund: pd.DataFrame, plotting=True) -> list:
 
     macd_ema = exponential_ma_list(macd, interval=9)
     if plotting:
-        bar_chart(macd, 'MACD')
+        x = dates_extractor_list(fund)
+        bar_chart(macd, x_=x, name='MACD')
 
     return macd, macd_ema
 
