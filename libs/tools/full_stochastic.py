@@ -75,7 +75,7 @@ def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
             stochastic.append(0)
         elif (indicator == 4) and (k_smooth[i] < SELL_TH):
             indicator = 0
-            full_stoch['bearish'].append([position['Date'][i], position['Close'][i], i])
+            full_stoch['bearish'].append([position.index[i], position['Close'][i], i])
             stochastic.append(1)
 
         elif k_smooth[i] < BUY_TH:
@@ -86,7 +86,7 @@ def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
             stochastic.append(0)
         elif (indicator == 2) and (k_smooth[i] > BUY_TH):
             indicator = 0
-            full_stoch['bullish'].append([position['Date'][i], position['Close'][i], i])
+            full_stoch['bullish'].append([position.index[i], position['Close'][i], i])
             stochastic.append(-1)
 
         else:
