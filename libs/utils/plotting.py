@@ -2,7 +2,16 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str='trading days', title=''):
+def dual_plotting(
+    y1: list, 
+    y2: list, 
+    y1_label: str, 
+    y2_label: str, 
+    x_label: str='trading days', 
+    title='', 
+    saveFig=False,
+    filename='temp.png'):
+
     fig, ax1 = plt.subplots()
     color = 'tab:orange'
     ax1.set_xlabel(x_label)
@@ -24,25 +33,37 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str
     plt.legend([y2_label])
     if len(title) > 0:
         plt.title(title)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
-def generic_plotting(list_of_plots: list, title=''):
+def generic_plotting(list_of_plots: list, title='', saveFig=False, filename=''):
     for fig in list_of_plots:
         plt.plot(fig)
     plt.title(title)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
-def histogram(data: list, bins=None):
+def histogram(data: list, bins=None, saveFig=False, filename=''):
     """ Currently unused - Primarily used for MACD """
     if bins is None:
         bins = len(data)
     plt.hist(data, bins=bins)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
-def bar_chart(data: list, name=''):
+def bar_chart(data: list, name='', saveFig=False, filename=''):
     """ Exclusively used for MACD """
     x = list(range(len(data)))
     colors = []
@@ -60,4 +81,8 @@ def bar_chart(data: list, name=''):
             if data[i] > data[i-1]:
                 barlist[i].set_alpha(0.3)
     plt.title(name)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
