@@ -97,7 +97,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
         elif (state == 4):
             if rsi_signal[i] > maxima:
                 # Have found a bullish breakout!
-                swings['bullish'].append([position['Date'][i], position['Close'][i], i])
+                swings['bullish'].append([position.index[i], position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0 
@@ -131,7 +131,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
             indicator.append(0.0)
         elif (state == 8):
             if rsi_signal[i] < minima:
-                swings['bearish'].append([position['Date'][i], position['Close'][i], i])
+                swings['bearish'].append([position.index[i], position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0
