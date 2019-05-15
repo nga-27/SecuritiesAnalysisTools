@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from .moving_average import simple_ma_list, exponential_ma_list, windowed_ma_list
-from libs.utils import generic_plotting, dual_plotting
+from libs.utils import generic_plotting, dual_plotting, dates_extractor_list
 
 def generate_obv_signal(fund: pd.DataFrame, plotting=True, filter_factor: float=2.5) -> list:
 
@@ -52,14 +52,15 @@ def generate_obv_signal(fund: pd.DataFrame, plotting=True, filter_factor: float=
 
 def on_balance_volume(fund: pd.DataFrame, plotting=True, filter_factor: float=2.5) -> list:
     obv, ofilter = generate_obv_signal(fund, plotting=plotting, filter_factor=filter_factor)
-
+    dates = dates_extractor_list(fund) 
+    
     fund_wma = windowed_ma_list(list(fund['Close']), interval=6)
     obv_wma = windowed_ma_list(obv, interval=6)
 
     # TODO: (?) apply trend analysis to find divergences
 
     if plotting:
-        dual_plotting(fund_wma, obv_wma, 'price', 'window', 'trading')
+        dual_plotting(fund_wma, obv_wma, 'price', 'window', 'trading', x=dates)
     return obv, ofilter 
 
 
