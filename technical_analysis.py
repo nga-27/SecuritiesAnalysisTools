@@ -16,6 +16,8 @@ from libs.utils import ProgressBar
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
+
+# TODO: pull ^GSPC directly (without it originally being part of input string)
 tickers = '^GSPC MMM TSLA'
 sp500_index = index_extractor(tickers)
 
