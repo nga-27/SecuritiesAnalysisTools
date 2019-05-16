@@ -27,7 +27,7 @@ def dir_lister(sp_index: str='^GSPC.csv', directory: str='securities/'):
     return index_file, items
     
 
-def index_extractor(tickers: str) -> str:
+def index_extractor(tickers) -> str:
     """ tickers is a str of tickers, separated by a space """
     potential_indexes = ['SPY', '^GSPC']
 
