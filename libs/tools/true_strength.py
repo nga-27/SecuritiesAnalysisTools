@@ -3,9 +3,9 @@ import numpy as np
 import os
 
 from libs.utils import generic_plotting
+from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list
 
 # Relative strength ratio 
-SP500_INDEX = 'securities/^GSPC.csv'
 
 def basic_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
     ratio = []
@@ -34,7 +34,7 @@ def normalized_ratio_lists(fundA: list, fundB: list) -> list:
 
 
 
-def period_strength(fund: pd.DataFrame, periods: list, sector: str='') -> list:
+def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector: str='') -> list:
     """
     Try to provide ratio evaluations of 'fund' vs. market and sector
     Args:
@@ -47,14 +47,15 @@ def period_strength(fund: pd.DataFrame, periods: list, sector: str='') -> list:
     hasSP = False
     hasSector = False
 
-    if os.path.exists(SP500_INDEX):
-        sp = pd.read_csv(SP500_INDEX)
+    sp = get_SP500(tickers)
+    if sp is not None:
         hasSP = True
-    if len(sector) > 0:
-        filename = 'securities/' + sector + '.csv'
-        if os.path.exists(filename):
-            sec = pd.read_csv(filename)
+    if sector != '':
+        if sector in tickers.keys():
+            sec = tickers[sector]
             hasSector = True 
+
+    fund = tickers[fund_name]
 
     for period in periods:
         entry = {}
@@ -92,10 +93,14 @@ def period_strength(fund: pd.DataFrame, periods: list, sector: str='') -> list:
     return ratio 
 
 
-def get_SP500() -> pd.DataFrame:
+def get_SP500(tickers: pd.DataFrame) -> pd.DataFrame:
+    SP500_INDEX = 'securities/^GSPC.csv'
     if os.path.exists(SP500_INDEX):
         sp = pd.read_csv(SP500_INDEX)
         return sp 
+    sp = index_extractor(fund_list_extractor(tickers))
+    if sp is not None:
+        return tickers[sp]
     return None 
 
 
@@ -111,16 +116,23 @@ def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
     return False 
 
 
-def relative_strength(positionA: pd.DataFrame, positionB: pd.DataFrame, sector: str='', plot_output=True) -> list:
+def relative_strength( fundA_name: str, 
+    fundB_name: str, 
+    tickers: pd.DataFrame,
+    sector: str='', 
+    plot_output=True ) -> list:
+
+    positionB = tickers[fundB_name]
     if sector == '':
-        sp = get_SP500()
-        if sp is not None and is_fund_match(positionA, positionB):
+        sp = get_SP500(tickers)
+        if sp is not None and is_fund_match(tickers[fundA_name], tickers[fundB_name]):
             positionB = sp 
-    rat = normalized_ratio(positionA, positionB)
-    st = period_strength(positionA, periods=[20, 50, 100], sector=sector)
+    rat = normalized_ratio(tickers[fundA_name], positionB)
+    st = period_strength(fundA_name, tickers, periods=[20, 50, 100], sector=sector)
     
     if plot_output:
-        generic_plotting([rat], 'Strength of Fund')
+        dates = dates_extractor_list(tickers)
+        generic_plotting([rat], x_=dates, title='Strength of Fund')
         #plt.plot(rat)
         #plt.title('Strength of Fund')
         #plt.show()
