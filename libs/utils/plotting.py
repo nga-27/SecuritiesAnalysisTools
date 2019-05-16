@@ -19,10 +19,7 @@ def dual_plotting(
 
     register_matplotlib_converters()
     if len(x) < 1:
-        for i in range(len(y1)):
-            datestr = str(y1.index[i])
-            datestr = datestr.split(' ')[0]
-            x.append(datetime.strptime(datestr, '%Y-%m-%d'))
+        x = dates_extractor_list(y1)
 
     fig, ax1 = plt.subplots()
     color = 'tab:orange'
@@ -52,9 +49,11 @@ def dual_plotting(
         plt.show()
 
 
-def generic_plotting(list_of_plots: list, title='', saveFig=False, filename=''):
+def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filename=''):
     register_matplotlib_converters()
-    x = dates_extractor_list(list_of_plots[0])
+    x = x_
+    if len(x_) < 1:
+        x = dates_extractor_list(list_of_plots[0])
     for fig in list_of_plots:
         plt.plot(x, fig)
     plt.title(title)
