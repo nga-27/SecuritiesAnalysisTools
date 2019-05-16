@@ -2,34 +2,51 @@ import pandas as pd
 import numpy as np 
 import pprint 
 
+import fix_yahoo_finance as yf 
+
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import relative_strength, triple_moving_average
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.utils import name_parser, dir_lister
+from libs.utils import name_parser, dir_lister, fund_list_extractor, index_extractor
 from libs.metrics import nasit_composite_index
+
+from libs.utils import ProgressBar
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
-FILE = "securities/VGT.csv"
-#fileB = "securities/VNQ.csv"
-fileB = FILE
 
-sp500_index, files_to_parse = dir_lister()
+# TODO: pull ^GSPC directly (without it originally being part of input string)
+tickers = '^GSPC MMM TSLA'
+sp500_index = index_extractor(tickers)
 
-files_to_parse = [FILE]
+data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+funds = fund_list_extractor(data)
+#data = add_date_columns(data)
 
-for FILE in files_to_parse:
+print(data['MMM'].keys())
+#sp500_index, files_to_parse = dir_lister()
 
-    name = name_parser(FILE)
-    fund = pd.read_csv(FILE)
-    fundB = pd.read_csv(fileB)
+#files_to_parse = [FILE]
+
+for fund_name in funds:
+
+    name = fund_name
+
+    p = ProgressBar(8, name=name)
+    p.start()
+
+    #fund = pd.read_csv(FILE)
+    fund = data[fund_name]
+    p.uptick()
+    fundB = fund #pd.read_csv(fileB)
+    p.uptick()
 
     # Start of automated process
     analysis = {}
 
-    analysis['dates_covered'] = {'start': str(fund['Date'][0]), 'end': str(fund['Date'][len(fund['Date'])-1])}
+    analysis['dates_covered'] = {'start': str(fund.index[0]), 'end': str(fund.index[len(fund['Close'])-1])}
     analysis['name'] = name
 
     #full_stochastic(fund, name=name)
@@ -40,36 +57,39 @@ for FILE in files_to_parse:
     #analysis['ultimate'] = dat  
     #chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
     #analysis['rsi'] = dat
-    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name)
+    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=True)
     analysis['weighted'] = dat
+    p.uptick()
 
-    on_balance_volume(fund)
+    on_balance_volume(fund, plotting=True)
+    p.uptick()
 
-    triple_moving_average(fund)
+    triple_moving_average(fund, plotting=True)
+    p.uptick()
 
     #analysis['rsi'] = RSI(fund, name=name)
     #analysis['ultimate'] = ultimate_oscillator(fund, name=name)
 
-    analysis['macd'] = mov_avg_convergence_divergence(fund)
+    analysis['macd'] = mov_avg_convergence_divergence(fund, plotting=True)
+    p.uptick()
 
     #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
     #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
 
-    analysis['relative_strength'] = relative_strength(fund, fundB, sector='')
+    analysis['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=True)
     analysis['features'] = {}
+
+    p.uptick()
 
     hs, ma = feature_head_and_shoulders(fund)
     analysis['features']['head_shoulders'] = hs
+    p.uptick()
 
-    print("")
-    print("")
-    print(f"{name} for {fund['Date'][len(fund['Date'])-1]}")
-    print("")
-    pprint.pprint(analysis['features'])
-    pprint.pprint(analysis['macd'])
-    print(analysis['weighted']['nasit'])
-    print(analysis['macd']['nasit'])
-    #print(nasit_composite_index(fund))
-    #nasit_composite_index(fund)
+    #print("")
+    #print("")
+    #print(f"{name} for {fund['Date'][len(fund['Date'])-1]}")
+    #print("")
+    #pprint.pprint(analysis['features'])
+    #pprint.pprint(analysis['macd'])
 
 print('Done.')

@@ -83,8 +83,8 @@ def add_daterange(original: pd.DataFrame, extrema: dict, num_feature_points: int
         if feat:
             first_ind = feat['indexes'][0][0]
             last_ind = feat['indexes'][num_feature_points-1][0]
-            start = str(original['Date'][first_ind])
-            end = str(original['Date'][last_ind])
+            start = str(original.index[first_ind])
+            end = str(original.index[last_ind])
             feat['daterange'] = start + ' : ' + end
 
     return extrema

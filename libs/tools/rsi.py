@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting, nasit_oscillator_score, nasit_oscillator_signal
+from libs.utils import dual_plotting #nasit_oscillator_score, nasit_oscillator_signal
 
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
@@ -97,7 +97,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
         elif (state == 4):
             if rsi_signal[i] > maxima:
                 # Have found a bullish breakout!
-                swings['bullish'].append([position['Date'][i], position['Close'][i], i])
+                swings['bullish'].append([position.index[i], position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0 
@@ -131,7 +131,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
             indicator.append(0.0)
         elif (state == 8):
             if rsi_signal[i] < minima:
-                swings['bearish'].append([position['Date'][i], position['Close'][i], i])
+                swings['bearish'].append([position.index[i], position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0
@@ -154,12 +154,12 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> di
     rsi_swings['tabular'] = RSI
 
     #print(plotting)
-    nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
-    rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
+    #nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
+    #rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
 
     if plot_output:
         dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
         dual_plotting(position['Close'], plotting, 'price', 'RSI indicators', 'trading days', title=name)
-        dual_plotting(position['Close'], nasit_signal, 'price', 'RSI indicators', 'trading days', title=name)
+        #dual_plotting(position['Close'], nasit_signal, 'price', 'RSI indicators', 'trading days', title=name)
 
     return rsi_swings

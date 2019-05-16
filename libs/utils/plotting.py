@@ -1,13 +1,31 @@
 import pandas as pd 
 import numpy as np 
 import matplotlib.pyplot as plt 
+from datetime import datetime
+from pandas.plotting import register_matplotlib_converters
 
-def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str='trading days', title=''):
+from .formatting import dates_extractor_list
+
+def dual_plotting(
+    y1: list, 
+    y2: list, 
+    y1_label: str, 
+    y2_label: str, 
+    x_label: str='trading days',
+    x=[],
+    title='', 
+    saveFig=False,
+    filename='temp.png'):
+
+    register_matplotlib_converters()
+    if len(x) < 1:
+        x = dates_extractor_list(y1)
+
     fig, ax1 = plt.subplots()
     color = 'tab:orange'
     ax1.set_xlabel(x_label)
     ax1.set_ylabel(y1_label, color=color)
-    ax1.plot(y1, color=color)
+    ax1.plot(x, y1, color=color)
     ax1.tick_params(axis='y', labelcolor=color)
     ax1.grid(linestyle=':')
     plt.legend([y1_label])
@@ -16,7 +34,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str
 
     color = 'tab:blue'
     ax2.set_ylabel(y2_label, color=color)
-    ax2.plot(y2, color=color)
+    ax2.plot(x, y2, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
     ax2.grid()
 
@@ -24,27 +42,47 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, x_label: str
     plt.legend([y2_label])
     if len(title) > 0:
         plt.title(title)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
-def generic_plotting(list_of_plots: list, title=''):
+def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filename=''):
+    register_matplotlib_converters()
+    x = x_
+    if len(x_) < 1:
+        x = dates_extractor_list(list_of_plots[0])
     for fig in list_of_plots:
-        plt.plot(fig)
+        plt.plot(x, fig)
     plt.title(title)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
-def histogram(data: list, bins=None):
+def histogram(data: list, bins=None, saveFig=False, filename=''):
     """ Currently unused - Primarily used for MACD """
     if bins is None:
         bins = len(data)
     plt.hist(data, bins=bins)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 
-def bar_chart(data: list, name=''):
+def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
     """ Exclusively used for MACD """
-    x = list(range(len(data)))
+    if len(x_) < 1:
+        x = list(range(len(data)))
+    else:
+        x = x_
+    
     colors = []
     for bar in data:
         if bar > 0.0:
@@ -60,4 +98,8 @@ def bar_chart(data: list, name=''):
             if data[i] > data[i-1]:
                 barlist[i].set_alpha(0.3)
     plt.title(name)
-    plt.show()
+
+    if saveFig:
+        plt.savefig(filename)
+    else:
+        plt.show()
