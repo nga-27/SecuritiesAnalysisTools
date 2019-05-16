@@ -28,15 +28,15 @@ print(data['MMM'].keys())
 
 #files_to_parse = [FILE]
 
-for FILE in funds:
+for fund_name in funds:
 
-    name = FILE
+    name = fund_name
 
     p = ProgressBar(8, name=name)
     p.start()
 
     #fund = pd.read_csv(FILE)
-    fund = data[FILE]
+    fund = data[fund_name]
     p.uptick()
     fundB = fund #pd.read_csv(fileB)
     p.uptick()
@@ -74,7 +74,7 @@ for FILE in funds:
     #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
     #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
 
-    analysis['relative_strength'] = relative_strength(fund, fundB, sector='', plot_output=False)
+    analysis['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=True)
     analysis['features'] = {}
 
     p.uptick()
