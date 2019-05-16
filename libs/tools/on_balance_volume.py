@@ -44,8 +44,9 @@ def generate_obv_signal(fund: pd.DataFrame, plotting=True, filter_factor: float=
         slope_diff.append(obv_slope[i] - slope_ma[i])
 
     if plotting:
-        generic_plotting([obv, obv_sig], title='OBV')
-        dual_plotting(fund['Close'], ofilter, 'price', 'OBV-DIFF', 'trading days')
+        x = dates_extractor_list(fund)
+        generic_plotting([obv, obv_sig], x_=x, title='OBV')
+        dual_plotting(fund['Close'], ofilter, x=x, y1_label='price', y2_label='OBV-DIFF', x_label='trading days')
 
     return obv, ofilter
 
@@ -63,6 +64,3 @@ def on_balance_volume(fund: pd.DataFrame, plotting=True, filter_factor: float=2.
         dual_plotting(fund_wma, obv_wma, 'price', 'window', 'trading', x=dates)
     return obv, ofilter 
 
-
-
-    
