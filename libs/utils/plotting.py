@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 from datetime import datetime
+import os
 from pandas.plotting import register_matplotlib_converters
 
 from .formatting import dates_extractor_list
@@ -44,9 +45,13 @@ def dual_plotting(
         plt.title(title)
 
     if saveFig:
+        filename = 'output/temp/' + filename
+        if os.path.exists(filename):
+            os.remove(filename)
         plt.savefig(filename)
     else:
         plt.show()
+    plt.clf()
 
 
 def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filename=''):
@@ -59,9 +64,13 @@ def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filena
     plt.title(title)
 
     if saveFig:
+        filename = 'output/temp/' + filename
+        if os.path.exists(filename):
+            os.remove(filename)
         plt.savefig(filename)
     else:
         plt.show()
+    plt.clf()
 
 
 def histogram(data: list, bins=None, saveFig=False, filename=''):
@@ -71,9 +80,13 @@ def histogram(data: list, bins=None, saveFig=False, filename=''):
     plt.hist(data, bins=bins)
 
     if saveFig:
+        filename = 'output/temp/' + filename
+        if os.path.exists(filename):
+            os.remove(filename)
         plt.savefig(filename)
     else:
         plt.show()
+    plt.clf()
 
 
 def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
@@ -100,6 +113,10 @@ def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
     plt.title(name)
 
     if saveFig:
+        filename = 'output/temp/' + filename
+        if os.path.exists(filename):
+            os.remove(filename)
         plt.savefig(filename)
     else:
         plt.show()
+    plt.clf()

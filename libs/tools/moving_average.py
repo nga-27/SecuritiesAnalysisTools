@@ -55,7 +55,7 @@ def simple_ma_list(item: list, interval: int) -> list:
 
 
 
-def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plotting=True) -> list:
+def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plot_output=True, name='') -> list:
     from libs.utils import generic_plotting
 
     tshort = []
@@ -81,7 +81,11 @@ def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plotting=Tru
         tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
         tlong.append(np.mean(fund['Close'][i-config[2]:i+1]))
 
-    if plotting:
-        generic_plotting([fund['Close'], tshort, tmed, tlong])
+    name2 = name + ' - Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
+    if plot_output:
+        generic_plotting([fund['Close'], tshort, tmed, tlong], title=name2)
+    else:
+        filename = name +'/moving_averages_{}.png'.format(name)
+        generic_plotting([fund['Close'], tshort, tmed, tlong], title=name2, saveFig=True, filename=filename)
 
     return tshort, tmed, tlong

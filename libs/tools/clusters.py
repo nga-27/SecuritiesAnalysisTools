@@ -3,7 +3,7 @@ import numpy as np
 
 from libs.utils import dual_plotting # nasit_cluster_signal, nasit_cluster_score
 
-from .ultimate_oscillator import ultimate_oscillator
+from .ultimate_oscillator import ultimate_oscillator 
 from .rsi import RSI
 from .full_stochastic import full_stochastic
 from .moving_average import windowed_ma_list
@@ -57,7 +57,7 @@ def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
     return dates 
 
 
-def generate_cluster(position: pd.DataFrame, function: str) -> list:
+def generate_cluster(position: pd.DataFrame, function: str, name='') -> list:
     """ subfunction to do clustering (removed from main for flexibility) """
     clusters = []
 
@@ -65,27 +65,27 @@ def generate_cluster(position: pd.DataFrame, function: str) -> list:
         clusters.append(0)
 
     if function == 'full_stochastic':
-        fast = full_stochastic(position, config=[10,3,3], plot_output=False)
-        med = full_stochastic(position, config=[14,3,3], plot_output=False)
-        slow = full_stochastic(position, config=[20,5,5], plot_output=False)
+        fast = full_stochastic(position, config=[10,3,3], plot_output=False, name=name)
+        med = full_stochastic(position, config=[14,3,3], plot_output=False, name=name)
+        slow = full_stochastic(position, config=[20,5,5], plot_output=False, name=name)
     elif function == 'ultimate':
-        fast = ultimate_oscillator(position, config=[4,8,16], plot_output=False)
-        med = ultimate_oscillator(position, config=[5,10,20], plot_output=False)
-        slow = ultimate_oscillator(position, config=[7,14,28], plot_output=False)
+        fast = ultimate_oscillator(position, config=[4,8,16], plot_output=False, name=name)
+        med = ultimate_oscillator(position, config=[5,10,20], plot_output=False, name=name)
+        slow = ultimate_oscillator(position, config=[7,14,28], plot_output=False, name=name)
     elif function == 'rsi':
-        fast = RSI(position, plot_output=False, period=8)
-        med = RSI(position, plot_output=False, period=14)
+        fast = RSI(position, plot_output=False, period=8, name=name)
+        med = RSI(position, plot_output=False, period=14, name=name)
         slow = RSI(position, plot_output=False, period=20)
     elif function == 'all':
-        fast = full_stochastic(position, config=[10,3,3], plot_output=False)
-        med = full_stochastic(position, config=[14,3,3], plot_output=False)
-        slow = full_stochastic(position, config=[20,5,5], plot_output=False)
-        fastu = ultimate_oscillator(position, config=[4,8,16], plot_output=False)
-        medu = ultimate_oscillator(position, config=[5,10,20], plot_output=False)
-        slowu = ultimate_oscillator(position, config=[7,14,28], plot_output=False)
-        fastr = RSI(position, plot_output=False, period=8)
-        medr = RSI(position, plot_output=False, period=14)
-        slowr = RSI(position, plot_output=False, period=20)
+        fast = full_stochastic(position, config=[10,3,3], plot_output=False, name=name)
+        med = full_stochastic(position, config=[14,3,3], plot_output=False, name=name)
+        slow = full_stochastic(position, config=[20,5,5], plot_output=False, name=name)
+        fastu = ultimate_oscillator(position, config=[4,8,16], plot_output=False, name=name)
+        medu = ultimate_oscillator(position, config=[5,10,20], plot_output=False, name=name)
+        slowu = ultimate_oscillator(position, config=[7,14,28], plot_output=False, name=name)
+        fastr = RSI(position, plot_output=False, period=8, name=name)
+        medr = RSI(position, plot_output=False, period=14, name=name)
+        slowr = RSI(position, plot_output=False, period=20, name=name)
     else:
         print(f'Warning: Unrecognized function input of {function} in cluster_oscs.')
         return None
@@ -124,14 +124,14 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
     clusters_wma = windowed_ma_list(clusters, interval=3)
     dates = cluster_dates(clusters_wma, position) 
     cluster_oscs[function] = dates
-
-    #nasit_signal = nasit_cluster_signal(clusters)
-    #cluster_oscs['nasit'] = nasit_cluster_score(clusters)
     
+    name2 = name + ' - Clustering: ' + function
     if plot_output:
-        name = name + ' - ' + function
-        dual_plotting(position['Close'], clusters, 'price', 'clustered oscillator', 'trading days', title=name)
-        dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
+        dual_plotting(position['Close'], clusters, 'Position Price', 'Clustered Oscillator', 'Trading Days', title=name2)
+        #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
         #dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
+    else:
+        filename = name +'/clustering_{}_{}.png'.format(name, function)
+        dual_plotting(position['Close'], clusters, 'Price', 'Clustered Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)
 
     return clusters_wma, cluster_oscs

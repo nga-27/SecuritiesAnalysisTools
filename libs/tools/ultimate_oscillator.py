@@ -151,7 +151,7 @@ def ult_osc_output(trigger: list, len_of_position: int) -> list:
 
 
 
-def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28], plot_output=True) -> dict:
+def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28], plot_output=True, out_suppress=True) -> dict:
     """ Ultimate stoch: [(4 * Avg7 ) + (2 * Avg14) + (1 * Avg28)] / 7
 
             Avg(x) = BP(x) / TR(x)
@@ -169,9 +169,16 @@ def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28
     #nasit_signal = nasit_oscillator_signal(ultimate, plots)
     #ultimate['nasit'] = nasit_oscillator_score(ultimate, plots)
 
-    if plot_output:
-        dual_plotting(stats['Close'], ult_osc, 'price', 'ultimate oscillator', 'trading days', title=name)
-        dual_plotting(stats['Close'], plots, 'price', 'buy-sell signal', 'trading days', title=name)
-        #dual_plotting(stats['Close'], nasit_signal, 'price', 'nasit score', 'trading days', title=name)
+    if not out_suppress:
+        name2 = name + ' - Ultimate Oscillator'
+        if plot_output:
+            dual_plotting(stats['Close'], ult_osc, 'Position Price', 'Ultimate Oscillator', 'Trading Days', title=name2)
+            dual_plotting(stats['Close'], plots, 'Position Price', 'Buy-Sell Signal', 'Trading Days', title=name2)
+            #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
+            #dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
+        else:
+            filename = name +'/ultimate_osc_{}.png'.format(name)
+            dual_plotting(stats['Close'], ult_osc, 'Position Price', 'Ultimate Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)
+            dual_plotting(stats['Close'], plots, 'Position Price', 'Buy-Sell Signal', 'Trading Days', title=name2, saveFig=True, filename=filename)
 
     return ultimate
