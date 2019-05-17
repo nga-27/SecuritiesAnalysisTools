@@ -29,13 +29,20 @@ def dir_lister(sp_index: str='^GSPC.csv', directory: str='securities/'):
 
 def index_extractor(tickers) -> str:
     """ tickers is a str of tickers, separated by a space """
-    potential_indexes = ['SPY', '^GSPC']
+    potential_indexes = ['^GSPC']
+    ind = None
 
     for key in potential_indexes:
         if key in tickers:
-            return key 
+            ind = key 
 
-    return None 
+    return ind 
+
+
+def index_appender(tickers: str) -> str:
+    """ appends ^GSPC to ticker string """
+    tickers = tickers + ' ' + '^GSPC'
+    return tickers
 
 
 def fund_list_extractor(ticker_df: pd.DataFrame) -> list:

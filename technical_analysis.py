@@ -9,23 +9,24 @@ from libs.tools import relative_strength, triple_moving_average
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.utils import name_parser, dir_lister, fund_list_extractor, index_extractor
+from libs.utils import name_parser, dir_lister, fund_list_extractor, index_extractor, index_appender
 from libs.metrics import nasit_composite_index
 
 from libs.utils import ProgressBar
+from libs.outputs import slide_creator
 
 # https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
 
 
-# TODO: pull ^GSPC directly (without it originally being part of input string)
-tickers = '^GSPC MMM TSLA'
+# DO NOT INCLUDE ^GSPC IN 'tickers' STRING
+tickers = 'VTI'
+tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
 
 data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
 funds = fund_list_extractor(data)
 #data = add_date_columns(data)
 
-print(data['MMM'].keys())
 #sp500_index, files_to_parse = dir_lister()
 
 #files_to_parse = [FILE]
@@ -37,7 +38,7 @@ for fund_name in funds:
     p = ProgressBar(8, name=name)
     p.start()
 
-    #fund = pd.read_csv(FILE)
+    print(fund_name)
     fund = data[fund_name]
     p.uptick()
     fundB = fund #pd.read_csv(fileB)
@@ -91,5 +92,7 @@ for fund_name in funds:
     #print("")
     #pprint.pprint(analysis['features'])
     #pprint.pprint(analysis['macd'])
+
+slide_creator('2019')
 
 print('Done.')

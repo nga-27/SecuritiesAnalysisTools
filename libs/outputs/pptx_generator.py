@@ -1,7 +1,9 @@
 from pptx import Presentation
 from pptx.util import Inches, Pt
 import pandas as pd 
-import numpy as np
+import numpy as np 
+from datetime import datetime
+import os 
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -19,7 +21,9 @@ def title_presentation(year: str):
     prs = Presentation()
     slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
     title = slide.shapes.title
-    title.text = f'Inventor Recognition Celebration {year}'
+    title.text = f'Financial Analysis'
+    stitle = slide.placeholders[1]
+    stitle.text = f'Generated: {datetime.now()}'
 
     return prs 
 
@@ -43,43 +47,6 @@ def template_3M(prs):
     return prs 
 
 
-def template_InventorRecognition(prs, slides_to_skip: list=[]):
-    """ takes in a Presentation object and applies inventor recognition images to all selected slides """
-    
-    for slide in range(len(prs.slides)):
-        if slide not in slides_to_skip:
-            left = Inches(1)
-            top = Inches(6.22)
-            height = Inches(.79)
-            width = Inches(2.5)
-            prs.slides[slide].shapes.add_picture('ppt-content/ir-content/ir_mcknight.png', left, top, height=height, width=width)
-
-            left = Inches(5.5)
-            top = Inches(6.22)
-            height = Inches(.79)
-            width = Inches(1.91)
-            prs.slides[slide].shapes.add_picture('ppt-content/ir-content/ir_plad.png', left, top, height=height, width=width)
-
-            left = Inches(8.05)
-            top = Inches(5.83)
-            height = Inches(1.09)
-            width = Inches(1.91)
-            prs.slides[slide].shapes.add_picture('ppt-content/ir-content/ir_sandpaper.png', left, top, height=height, width=width)
-
-            left = Inches(8.6)
-            top = Inches(2.97)
-            height = Inches(2)
-            width = Inches(1.4)
-            prs.slides[slide].shapes.add_picture('ppt-content/ir-content/ir_jackplane.png', left, top, height=height, width=width)
-
-            left = Inches(6.86)
-            top = Inches(.22)
-            height = Inches(1.09)
-            width = Inches(1.91)
-            prs.slides[slide].shapes.add_picture('ppt-content/ir-content/ir_cheesecloth.png', left, top, height=height, width=width)
-
-    return prs 
-
 
 def template_header(prs, title: str, slides_to_skip: list=[]):
     """ Inserts Inventor Recognition title header to slides """
@@ -96,7 +63,7 @@ def template_header(prs, title: str, slides_to_skip: list=[]):
             p.text = title 
             p.font.bold = False 
             p.font.size = Pt(30)
-            p.font.name = '3M Circular TT Bold'
+            p.font.name = 'Times New Roman'
 
     return prs 
 
@@ -113,7 +80,7 @@ def subtitle_header(slide, title: str):
     p.text = title 
     p.font.bold = False 
     p.font.size = Pt(22)
-    p.font.name = '3M Circular TT Book'
+    p.font.name = 'Times New Roman'
 
     return slide
 
@@ -149,58 +116,17 @@ def names_textbox(slide, box_num: int, names: list):
     return slide 
 
 
-def lab_slide_creator(prs, inventor_lab: dict):
-    """ subfunction and logic to create slides with names on them """
 
-    # We can only fit 27 on a slide, so figure out if needing extra slides.
-    num_inventors = len(inventor_lab['lab']['Name'])
-    num_slides = int(np.ceil(num_inventors / 27))
-    boxes = [0, 0, 0]
-    start = 0
-    
-    for i in range(num_slides):
-
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = subtitle_header(slide, inventor_lab['name'])
-
-        sub_num_inventors = num_inventors - (i * 27)
-        if sub_num_inventors > 27:
-            sub_num_inventors = 27
-
-        each_box = int(np.floor(sub_num_inventors / 3))
-        extras = np.mod(sub_num_inventors, 3)
-
-        for j in range(3):
-            boxes[j] = each_box
-        if extras > 0:
-            boxes[0] += 1
-            extras -= 1
-        if extras > 0:
-            boxes[1] += 1
-
-        for j in range(3):
-            end = start + boxes[j]
-            names = name_conversion(inventor_lab['lab']['Name'][start:end], is_new_inventor=inventor_lab['lab']['New Inventor'][start:end])
-            slide = names_textbox(slide=slide, box_num=j, names=names)
-            start = end
-
-    return prs 
-
-
-
-
-def slide_creator(year: str, inventors: dict):
+def slide_creator(year: str):
     """ High-level function for converting inventors spreadsheet to slides """
 
     print("Starting presentation creation.")
     prs = title_presentation(year)
 
-    for lab in inventors.keys():
+    #prs = template_3M(prs)
+    #prs = template_header(prs, f'Recognized Inventors of {year}', slides_to_skip=[0])
 
-       prs = lab_slide_creator(prs, inventors[lab])
-
-    prs = template_3M(prs)
-    prs = template_InventorRecognition(prs, slides_to_skip=[0])
-    prs = template_header(prs, f'Recognized Inventors of {year}', slides_to_skip=[0])
+    if not os.path.exists('output/'):
+        os.mkdir('output/')
         
-    prs.save(f'output/Inventor_Recognition_Event_{year}.pptx')
+    prs.save(f'output/Financial_Analysis_{year}.pptx')
