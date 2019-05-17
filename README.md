@@ -6,6 +6,8 @@ Run `pip install -r requirements.txt`
 
 Run `pip install fix_yahoo_finance --upgrade --no-cache-dir` (note: 'upgrade' and 'no-cache...' might be omitted)
 
+Run `pip install python-pptx`
+
 Run the top-level job file.  For example, `technical_analysis.py`
 
 Run `python technical_analysis.py`
