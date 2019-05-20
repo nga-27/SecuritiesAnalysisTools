@@ -51,6 +51,7 @@ def dual_plotting(
         plt.savefig(filename)
     else:
         plt.show()
+    plt.close()
     plt.clf()
 
 
@@ -70,6 +71,7 @@ def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filena
         plt.savefig(filename)
     else:
         plt.show()
+    plt.close()
     plt.clf()
 
 
@@ -86,6 +88,7 @@ def histogram(data: list, bins=None, saveFig=False, filename=''):
         plt.savefig(filename)
     else:
         plt.show()
+    plt.close()
     plt.clf()
 
 
@@ -119,4 +122,5 @@ def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
         plt.savefig(filename)
     else:
         plt.show()
+    plt.close()
     plt.clf()
