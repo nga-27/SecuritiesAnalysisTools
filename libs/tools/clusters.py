@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting # nasit_cluster_signal, nasit_cluster_score
+from libs.utils import dual_plotting, date_extractor
 
 from .ultimate_oscillator import ultimate_oscillator 
 from .rsi import RSI
@@ -53,7 +53,7 @@ def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
     dates = []
     for i in range(len(cluster_list)):
         if cluster_list[i] != 0:
-            dates.append([fund.index[i], fund['Close'][i], cluster_list[i], i])
+            dates.append([date_extractor(fund.index[i], _format='str'), fund['Close'][i], cluster_list[i], i])
     return dates 
 
 
@@ -123,6 +123,7 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = windowed_ma_list(clusters, interval=3)
     dates = cluster_dates(clusters_wma, position) 
+    cluster_oscs['clustered type'] = function
     cluster_oscs[function] = dates
     
     name2 = name + ' - Clustering: ' + function
