@@ -58,6 +58,19 @@ def dates_extractor_list(df) -> list:
     return dates
 
 
+def date_extractor(date, _format=None):
+    date = str(date)
+    date1 = date.split(' ')[0]
+    date2 = datetime.strptime(date1, '%Y-%m-%d')
+    if _format == 'str':
+        dateX = date1
+    elif _format == 'iso':
+        dateX = date2.isoformat()
+    else:
+        dateX = date2 
+    return dateX
+
+
 def configure_temp_dir():
     """ for outputting, as well as temp files """
     if not os.path.exists('output/temp/'):
