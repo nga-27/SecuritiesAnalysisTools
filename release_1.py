@@ -29,19 +29,19 @@ from libs.tools import relative_strength, triple_moving_average
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender
+from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.metrics import nasit_composite_index
 
 from libs.utils import ProgressBar
-from libs.outputs import slide_creator
+from libs.outputs import slide_creator, output_to_json
 
 
 PROCESS_STEPS = 8
 
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
-tickers = 'PFE'
+tickers = 'VTI' # VHT VGT VOX VWO MMM VNQ VXUS VDC VWINX'
 tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
 
@@ -69,11 +69,14 @@ for fund_name in funds:
     fundB = fund #pd.read_csv(fileB)
     p.uptick()
 
-    analysis[name]['dates_covered'] = {'start': str(fund.index[0]), 'end': str(fund.index[len(fund['Close'])-1])} 
+    start = date_extractor(fund.index[0], _format='str')
+    end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
+
+    analysis[name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
     analysis[name]['name'] = name
 
     chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=False)
-    analysis[name]['weighted'] = dat
+    analysis[name]['clustered_osc'] = dat
     p.uptick()
 
     on_balance_volume(fund, plot_output=False, name=name)
@@ -96,6 +99,8 @@ for fund_name in funds:
 
 
 slide_creator('2019', analysis)
+output_to_json(analysis)
+#pprint.pprint(analysis)
 
 #remove_temp_dir()
 print('Done.')
