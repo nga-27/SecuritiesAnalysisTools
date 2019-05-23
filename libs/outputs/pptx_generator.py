@@ -117,7 +117,7 @@ def names_textbox(slide, box_num: int, names: list):
 
 
 
-def slide_creator(year: str):
+def slide_creator(year: str, analysis: dict):
     """ High-level function for converting inventors spreadsheet to slides """
 
     print("Starting presentation creation.")

@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 from libs.utils import generic_plotting
-from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list
+from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list, date_extractor
 
 # Relative strength ratio 
 
@@ -60,7 +60,7 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
     for period in periods:
         entry = {}
         entry['period'] = period
-        entry['dates'] = str(fund.index[len(fund.index)-period]) + " : " + str(fund.index[len(fund.index)-1]) 
+        entry['dates'] = date_extractor(fund.index[len(fund.index)-period], _format='str') + " : " + date_extractor(fund.index[len(fund.index)-1], _format='str')
         if hasSP:
             entry['sp500'] = {}
             sp_temp = list(sp['Adj Close'])
@@ -130,11 +130,12 @@ def relative_strength( fundA_name: str,
     rat = normalized_ratio(tickers[fundA_name], positionB)
     st = period_strength(fundA_name, tickers, periods=[20, 50, 100], sector=sector)
     
+    title = 'Strength: {} - {}'.format(fundA_name, fundB_name)
+    dates = dates_extractor_list(tickers)
     if plot_output:
-        dates = dates_extractor_list(tickers)
-        generic_plotting([rat], x_=dates, title='Strength of Fund')
-        #plt.plot(rat)
-        #plt.title('Strength of Fund')
-        #plt.show()
+        generic_plotting([rat], x_=dates, title=title)
+    else:
+        filename = fundA_name +'/relative_strength_{}.png'.format(fundA_name)
+        generic_plotting([rat], x_=dates, title=title, saveFig=True, filename=filename)
 
     return st

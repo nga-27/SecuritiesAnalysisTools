@@ -3,6 +3,7 @@ import numpy as np
 from datetime import datetime
 
 from .math_functions import linear_regression
+from .moving_average import simple_ma_list
 
 TREND_PTS = [2, 3, 6]
 
@@ -19,31 +20,12 @@ def get_trend(position: pd.DataFrame, style: str='sma', ma_size: int=50, date_ra
     trend = {}
 
     if style == 'sma':
-        trend['tabular'] = simple_moving_average(position, ma_size)
+        trend['tabular'] = simple_ma_list(position, ma_size)
         trend['difference'] = difference_from_trend(position, trend['tabular'])
         trend['magnitude'] = trend_of_dates(position, trend_difference=trend['difference'], dates=date_range)
         trend['method'] = f'SMA-{ma_size}'
 
     return trend
-
-
-
-def simple_moving_average(position: pd.DataFrame, ma_size: int) -> list:
-    """ average of last 'ma_size' closes 
-
-        Note - values from 0:ma_size-1 are simply the average of each lookback period
-    """
-    sma = []
-    for i in range(ma_size):
-        ma = np.round(np.average(position['Close'][0:i+1]), 6)
-        sma.append(ma)
-
-    for i in range(ma_size, len(position['Close'])):
-        ma = np.round(np.average(position['Close'][i-ma_size:i]), 6)
-        sma.append(ma)
-
-    return sma
-
 
 
 def difference_from_trend(position: pd.DataFrame, trend: list) -> list:

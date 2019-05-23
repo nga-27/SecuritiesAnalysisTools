@@ -14,7 +14,7 @@ Moving Average Convergence / Divergence (MACD)
     TODO: speed of crossovers can be a signal of overbought / oversold 
 """
 
-def generate_macd_signal(fund: pd.DataFrame, plotting=True) -> list:
+def generate_macd_signal(fund: pd.DataFrame, plotting=True, name='') -> list:
     """
     macd = ema(12) - ema(26)
     'signal' = macd(ema(9))
@@ -27,9 +27,13 @@ def generate_macd_signal(fund: pd.DataFrame, plotting=True) -> list:
         macd.append(emaTw[i] - emaTs[i])
 
     macd_ema = exponential_ma_list(macd, interval=9)
+    x = dates_extractor_list(fund)
+    name2 = name + ' - MACD'
     if plotting:
-        x = dates_extractor_list(fund)
-        bar_chart(macd, x_=x, name='MACD')
+        bar_chart(macd, x_=x, name=name2)
+    else:
+        filename = name + '/macd_bar_{}.png'.format(name)
+        bar_chart(macd, x_=x, name=name2, saveFig=True, filename=filename)
 
     return macd, macd_ema
 
@@ -267,8 +271,8 @@ def export_macd_nasit_signal(fund: pd.DataFrame, plotting=False) -> list:
     return nasit 
 
 
-def mov_avg_convergence_divergence(fund: pd.DataFrame, plotting=False) -> dict:
-    macd_sig, _ = generate_macd_signal(fund, plotting=plotting) 
+def mov_avg_convergence_divergence(fund: pd.DataFrame, plot_output=False, name='') -> dict:
+    macd_sig, _ = generate_macd_signal(fund, plotting=plot_output, name=name) 
 
     macd = {}
 
@@ -284,9 +288,18 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, plotting=False) -> dict:
 
     macd['nasit'] = get_macd_nasit_score(macd_sig, macd)
 
-    if plotting:
-        nasit = get_nasit_signal(macd_sig)
-        dual_plotting(fund['Close'], nasit, 'Price', 'Nasit score', 'trading')
+    # if plot_output:
+    #     #nasit = get_nasit_signal(macd_sig)
+    #     #dual_plotting(fund['Close'], nasit, 'Price', 'Nasit score', 'trading')
+
+    name2 = name + ' - MACD: '
+    if plot_output:
+        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2)
+        #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
+        #dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
+    else:
+        filename = name +'/macd_{}.png'.format(name)
+        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2, saveFig=True, filename=filename)
 
     return macd
 

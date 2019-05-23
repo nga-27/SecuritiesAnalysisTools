@@ -4,7 +4,7 @@ import numpy as np
 from .moving_average import simple_ma_list, exponential_ma_list, windowed_ma_list
 from libs.utils import generic_plotting, dual_plotting, dates_extractor_list
 
-def generate_obv_signal(fund: pd.DataFrame, plotting=True, filter_factor: float=2.5) -> list:
+def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: float=2.5, name='') -> list:
 
     obv = []
 
@@ -43,16 +43,21 @@ def generate_obv_signal(fund: pd.DataFrame, plotting=True, filter_factor: float=
     for i in range(len(slope_ma)):
         slope_diff.append(obv_slope[i] - slope_ma[i])
 
-    if plotting:
-        x = dates_extractor_list(fund)
-        generic_plotting([obv, obv_sig], x_=x, title='OBV')
-        dual_plotting(fund['Close'], ofilter, x=x, y1_label='price', y2_label='OBV-DIFF', x_label='trading days')
+    x = dates_extractor_list(fund)
+    name2 = name + ' - OBV'
+    if plot_output:
+        #generic_plotting([obv, obv_sig], x_=x, title=name2)
+        dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2)
+    else:
+        filename = name +'/obv_{}.png'.format(name)
+        dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
     return obv, ofilter
 
 
-def on_balance_volume(fund: pd.DataFrame, plotting=True, filter_factor: float=2.5) -> list:
-    obv, ofilter = generate_obv_signal(fund, plotting=plotting, filter_factor=filter_factor)
+
+def on_balance_volume(fund: pd.DataFrame, plot_output=True, filter_factor: float=2.5, name='') -> list:
+    obv, ofilter = generate_obv_signal(fund, plot_output=plot_output, filter_factor=filter_factor, name=name)
     dates = dates_extractor_list(fund) 
     
     fund_wma = windowed_ma_list(list(fund['Close']), interval=6)
@@ -60,7 +65,7 @@ def on_balance_volume(fund: pd.DataFrame, plotting=True, filter_factor: float=2.
 
     # TODO: (?) apply trend analysis to find divergences
 
-    if plotting:
-        dual_plotting(fund_wma, obv_wma, 'price', 'window', 'trading', x=dates)
+    # if plot_output:
+    #     dual_plotting(fund_wma, obv_wma, 'price', 'window', 'trading', x=dates)
     return obv, ofilter 
 

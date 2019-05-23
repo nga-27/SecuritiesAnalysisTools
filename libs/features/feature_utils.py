@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 
+from libs.utils import date_extractor
+
 def local_extrema(filtered: list) -> dict:
     extrema = {}
     extrema['max'] = []
@@ -83,8 +85,8 @@ def add_daterange(original: pd.DataFrame, extrema: dict, num_feature_points: int
         if feat:
             first_ind = feat['indexes'][0][0]
             last_ind = feat['indexes'][num_feature_points-1][0]
-            start = str(original.index[first_ind])
-            end = str(original.index[last_ind])
+            start = date_extractor(original.index[first_ind], _format='str')
+            end = date_extractor(original.index[last_ind], _format='str')
             feat['daterange'] = start + ' : ' + end
 
     return extrema

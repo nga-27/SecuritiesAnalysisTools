@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting #nasit_oscillator_score, nasit_oscillator_signal
+from libs.utils import dual_plotting, date_extractor
 
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
@@ -97,7 +97,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
         elif (state == 4):
             if rsi_signal[i] > maxima:
                 # Have found a bullish breakout!
-                swings['bullish'].append([position.index[i], position['Close'][i], i])
+                swings['bullish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0 
@@ -131,7 +131,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
             indicator.append(0.0)
         elif (state == 8):
             if rsi_signal[i] < minima:
-                swings['bearish'].append([position.index[i], position['Close'][i], i])
+                swings['bearish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0
@@ -146,7 +146,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
 
 
 
-def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> dict:
+def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14, out_suppress=True) -> dict:
     """ Relative Strength Indicator """
     RSI = generate_rsi_signal(position, period=period)
 
@@ -157,9 +157,15 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14) -> di
     #nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
     #rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
 
-    if plot_output:
-        dual_plotting(position['Close'], RSI, 'price', 'RSI', 'trading days', title=name)
-        dual_plotting(position['Close'], plotting, 'price', 'RSI indicators', 'trading days', title=name)
-        #dual_plotting(position['Close'], nasit_signal, 'price', 'RSI indicators', 'trading days', title=name)
-
+    if not out_suppress:
+        name2 = name + ' - RSI'
+        if plot_output:
+            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2)
+            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2)
+        else:
+            filename1 = name +'/RSI_{}.png'.format(name)
+            filename2 = name +'/RSI_indicator_{}.png'.format(name)
+            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2, saveFig=True, filename=filename1)
+            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2, saveFig=True, filename=filename2)
+        
     return rsi_swings

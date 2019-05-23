@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 import os 
+import shutil
 import glob
 
 def name_parser(name: str) -> str:
@@ -10,21 +11,6 @@ def name_parser(name: str) -> str:
     name = name.split('/')
     name = name[len(name)-1]
     return name 
-
-
-def dir_lister(sp_index: str='^GSPC.csv', directory: str='securities/'):
-    file_ext = '*.csv'
-    directory = directory + file_ext
-    items = glob.glob(directory)
-    index_file = None
-
-    for item in items:
-        if sp_index in item:
-            index_file = item
-    if index_file is not None:
-        items.remove(index_file)
-
-    return index_file, items
     
 
 def index_extractor(tickers) -> str:
@@ -70,3 +56,35 @@ def dates_extractor_list(df) -> list:
             dates.append(date)
 
     return dates
+
+
+def date_extractor(date, _format=None):
+    date = str(date)
+    date1 = date.split(' ')[0]
+    date2 = datetime.strptime(date1, '%Y-%m-%d')
+    if _format == 'str':
+        dateX = date1
+    elif _format == 'iso':
+        dateX = date2.isoformat()
+    else:
+        dateX = date2 
+    return dateX
+
+
+def configure_temp_dir():
+    """ for outputting, as well as temp files """
+    if not os.path.exists('output/temp/'):
+        if not os.path.exists('output/'):
+            os.mkdir('output/')
+        os.mkdir('output/temp/')
+
+
+def remove_temp_dir():
+    if os.path.exists('output/temp/'):
+        shutil.rmtree('output/temp/')
+
+
+def create_sub_temp_dir(name):
+    if not os.path.exists('output/temp/' + name + '/'):
+        os.mkdir('output/temp/' + name + '/')
+
