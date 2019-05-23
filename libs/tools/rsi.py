@@ -1,180 +1,171 @@
 import pandas as pd 
 import numpy as np 
-from datetime import datetime
 
-from .math_functions import linear_regression
-from .moving_average import simple_ma_list
+from libs.utils import dual_plotting, date_extractor
 
-TREND_PTS = [2, 3, 6]
 
-def get_trend(position: pd.DataFrame, style: str='sma', ma_size: int=50, date_range: list=[]) -> dict:
-    """ generates a trend of a given position and features of trend
+def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
+    """ Generates a list of relative strength indicators """
+    PERIOD = period
+    change = []
+    change.append(0.0)
+    for i in range(1, len(position['Close'])):
+        per = (position['Close'][i] - position['Close'][i-1]) / position['Close'][i-1] * 100.0
+        change.append(np.round(per, 6))
 
-    Styles:
-        'sma' - small moving average (uses 'ma_size')
-        'ema' - exponential moving average (uses 'ma_size')
-    Date_range:
-        list -> [start_date, end_date] -> ['2018-04-18', '2019-01-20']
+    RSI = []
+    # gains, losses, rs
+    RS = []
 
+    for i in range(0, PERIOD):
+        RSI.append(50.0)
+        RS.append([0.0, 0.0, 1.0])
+
+    # Calculate RS for all future points
+    for i in range(PERIOD, len(change)):
+        pos = 0.0
+        neg = 0.0
+        for j in range(i-PERIOD, i):
+            if change[j] > 0.0:
+                pos += change[j]
+            else:
+                neg += np.abs(change[j])
+        
+        if i == PERIOD:
+            rs = np.round(pos / neg, 6)
+            RS.append([np.round(pos/float(PERIOD), 6), np.round(neg/float(PERIOD), 6), rs])
+        else:
+            if change[i] > 0.0:
+                rs = (((RS[i-1][0] * float(PERIOD-1)) + change[i]) / float(PERIOD)) / (((RS[i-1][1] * float(PERIOD-1)) + 0.0) / float(PERIOD))
+            else:
+                rs = (((RS[i-1][0] * float(PERIOD-1)) + 0.00) / float(PERIOD)) / (((RS[i-1][1] * float(PERIOD-1)) + np.abs(change[i])) / float(PERIOD))
+            RS.append([np.round(pos/float(PERIOD), 6), np.round(neg/float(PERIOD), 6), rs])
+
+        rsi = 100.0 - (100.0 / (1.0 + RS[i][2]))
+        RSI.append(np.round(rsi, 6))
+    
+    return RSI
+
+
+
+def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> dict:
+    """ Find bullish / bearish and RSI indicators:
+
+        1. go beyond threshold
+        2. go back within thresholds
+        3. have local minima/maxima inside thresholds
+        4. exceed max/min (bull/bear) of previous maxima/minima
     """
-    trend = {}
 
-    if style == 'sma':
-        trend['tabular'] = simple_ma_list(position, ma_size)
-        trend['difference'] = difference_from_trend(position, trend['tabular'])
-        trend['magnitude'] = trend_of_dates(position, trend_difference=trend['difference'], dates=date_range)
-        trend['method'] = f'SMA-{ma_size}'
+    LOW_TH = 30.0
+    HIGH_TH = 70.0
 
-    return trend
+    swings = {}
+    swings['bullish'] = []
+    swings['bearish'] = []
+    indicator = []
 
-
-def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
-    diff_from_trend = []
-    for i in range(len(trend)):
-        diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
-
-    return diff_from_trend
-
-
-
-def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) -> float:
-    overall_trend = 0.0
-
-    if len(dates) == 0:
-        # Trend of entire period provided
-        trend = np.round(np.average(trend_difference), 6)
-        overall_trend = trend
-    else:
-        i = 0
-        d_start = datetime.strptime(dates[0], '%Y-%m-%d')
-        d_match = datetime.strptime(position['Date'][0], '%Y-%m-%d')
-        while ((i < len(position['Date'])) and (d_start > d_match)):
-            i += 1
-            d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
-
-        start = i
-        d_end = datetime.strptime(dates[1], '%Y-%m-%d')
-        d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
-        while ((i < len(position['Date'])) and (d_end > d_match)):
-            i += 1
-            if i < len(position['Date']):
-                d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
-
-        end = i
-
-        trend = np.round(np.average(trend_difference[start:end+1]), 6)
-        overall_trend = trend
-
-    return overall_trend
-
+    state = 0
+    minima = 0.0
+    maxima = 0.0
+    for i in range(len(rsi_signal)):
+        
+        if (state == 0) and (rsi_signal[i] < LOW_TH):
+            # Start of a bullish signal
+            state = 1
+            indicator.append(0.0)
+        elif (state == 1) and (rsi_signal[i] > LOW_TH):
+            state = 2
+            maxima = rsi_signal[i]
+            indicator.append(0.0)
+        elif (state == 2):
+            if rsi_signal[i] >= maxima:
+                maxima = rsi_signal[i]
+            else:
+                minima = rsi_signal[i]
+                state = 3
+            indicator.append(0.0)
+        elif (state == 3):
+            if rsi_signal[i] < LOW_TH:
+                # Failed attempted breakout
+                state = 1
+            if rsi_signal[i] < minima:
+                minima = rsi_signal[i]
+            else:
+                state = 4
+            indicator.append(0.0)
+        elif (state == 4):
+            if rsi_signal[i] > maxima:
+                # Have found a bullish breakout!
+                swings['bullish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                state = 0
+                minima = 0.0
+                maxima = 0.0 
+                indicator.append(-1.0)
+            else:
+                indicator.append(0.0)
 
 
-def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 25, 12]) -> dict:
-    """ Determines long, med, and short trend of a position """
-    tlong = get_trend(position, style='sma', ma_size=config[0])
-    tmed = get_trend(position, style='sma', ma_size=config[1])
-    tshort = get_trend(position, style='sma', ma_size=config[2])
+        elif (state == 0) and (rsi_signal[i] > HIGH_TH):
+            state = 5
+            indicator.append(0.0)
+        elif (state == 5) and (rsi_signal[i] < HIGH_TH):
+            state = 6
+            minima = rsi_signal[i]
+            indicator.append(0.0)
+        elif (state == 6):
+            if rsi_signal[i] <= minima:
+                minima = rsi_signal[i]
+            else:
+                maxima = rsi_signal[i]
+                state = 7
+            indicator.append(0.0)
+        elif (state == 7):
+            if rsi_signal[i] > HIGH_TH:
+                # Failed attempted breakout
+                state = 5
+            if rsi_signal[i] > maxima:
+                maxima = rsi_signal[i]
+            else:
+                state = 8
+            indicator.append(0.0)
+        elif (state == 8):
+            if rsi_signal[i] < minima:
+                swings['bearish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                state = 0
+                minima = 0.0
+                maxima = 0.0
+                indicator.append(1.0)
+            else:
+                indicator.append(0.0)
 
-    trend_analysis = {}
-    trend_analysis['long'] = tlong['magnitude']
-    trend_analysis['medium'] = tmed['magnitude']
-    trend_analysis['short'] = tshort['magnitude']
+        else:
+            indicator.append(0.0)
 
-    if trend_analysis['long'] > 0.0:
-        trend_analysis['report'] = 'Overall UPWARD, '
-    else:
-        trend_analysis['report'] = 'Overall DOWNWARD, '
-
-    if np.abs(trend_analysis['short']) > np.abs(trend_analysis['medium']):
-        trend_analysis['report'] += 'accelerating '
-    else:
-        trend_analysis['report'] += 'slowing '
-    if trend_analysis['short'] > trend_analysis['medium']:
-        trend_analysis['report'] += 'UPWARD'
-    else:
-        trend_analysis['report'] += 'DOWNWARD'
-
-    if ((trend_analysis['short'] > 0.0) and (trend_analysis['medium'] > 0.0) and (trend_analysis['long'] < 0.0)):
-        trend_analysis['report'] += ', rebounding from BOTTOM'
-
-    if ((trend_analysis['short'] < 0.0) and (trend_analysis['medium'] < 0.0) and (trend_analysis['long'] > 0.0)):
-        trend_analysis['report'] += ', falling from TOP'
-
-    return trend_analysis
-
-
-def resistance(highs) -> list:
-    highs = list(highs)
-    if len(highs) <= 14:
-        points = TREND_PTS[1]
-    elif len(highs) <= 28:
-        points = TREND_PTS[2]
-    else:
-        points = TREND_PTS[0]
-
-    sortedList = sorted(highs, reverse=True)
-    
-    refs = []
-    indices = []
-    for i in range(points):
-        refs.append(sortedList[i])
-        indices.append(highs.index(refs[i]))
-    
-    trendslope = linear_regression(indices, refs)
-    resistance_level = trendslope[1] + trendslope[0] * len(highs)
-
-    return [trendslope, resistance_level]
+    return [indicator, swings]
 
 
-def support(lows) -> list:
-    lows = list(lows)
-    if len(lows) <= 14:
-        points = TREND_PTS[1]
-    elif len(lows) <= 28:
-        points = TREND_PTS[2]
-    else:
-        points = TREND_PTS[0]
 
-    sortedList = sorted(lows)
-    
-    refs = []
-    indices = []
-    for i in range(points):
-        refs.append(sortedList[i])
-        indices.append(lows.index(refs[i]))
-    
-    trendslope = linear_regression(indices, refs)
-    resistance_level = trendslope[1] + trendslope[0] * len(lows)
+def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14, out_suppress=True) -> dict:
+    """ Relative Strength Indicator """
+    RSI = generate_rsi_signal(position, period=period)
 
-    return [trendslope, resistance_level]
+    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI)
+    rsi_swings['tabular'] = RSI
 
+    #print(plotting)
+    #nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
+    #rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
 
-def trendline(resistance, support) -> list:
-    trend_slope = (resistance[0][0] + support[0][0]) / 2.0
-    intercept = (resistance[0][1] + support[0][1]) / 2.0
-    final_val = intercept + trend_slope * len(resistance)
-    difference = resistance[0][0] - support[0][0]
-
-    return [[trend_slope, intercept], final_val, difference]
-
-
-def trendline_deriv(price) -> list:
-    price = list(price)
-    derivative = []
-    for val in range(1, len(price)):
-        derivative.append(price[val] - price[val-1])
-
-    deriv = np.sum(derivative)
-    deriv = deriv / float(len(derivative))
-    return deriv
-
-
-def trend_filter(osc: dict, position: pd.DataFrame) -> dict:
-    """ Filters oscillator dict to remove trend bias.
-
-        Ex: strong upward trend -> removes weaker drops in oscillators
-    """
-    filtered = {}
-
-    return filtered 
-
+    if not out_suppress:
+        name2 = name + ' - RSI'
+        if plot_output:
+            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2)
+            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2)
+        else:
+            filename1 = name +'/RSI_{}.png'.format(name)
+            filename2 = name +'/RSI_indicator_{}.png'.format(name)
+            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2, saveFig=True, filename=filename1)
+            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2, saveFig=True, filename=filename2)
+        
+    return rsi_swings
