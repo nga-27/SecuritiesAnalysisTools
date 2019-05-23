@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting #nasit_oscillator_score, nasit_oscillator_signal
+from libs.utils import dual_plotting, date_extractor
 
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
@@ -97,7 +97,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
         elif (state == 4):
             if rsi_signal[i] > maxima:
                 # Have found a bullish breakout!
-                swings['bullish'].append([position.index[i], position['Close'][i], i])
+                swings['bullish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0 
@@ -131,7 +131,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
             indicator.append(0.0)
         elif (state == 8):
             if rsi_signal[i] < minima:
-                swings['bearish'].append([position.index[i], position['Close'][i], i])
+                swings['bearish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
                 state = 0
                 minima = 0.0
                 maxima = 0.0
