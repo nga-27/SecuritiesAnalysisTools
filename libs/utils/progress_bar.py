@@ -8,6 +8,7 @@ class ProgressBar(object):
         self.total = total_items
         self.name = name + ' Progress'
         self.iteration = 0
+        self.length_of_bar = 0
 
 
     def start(self):
@@ -21,6 +22,16 @@ class ProgressBar(object):
     def uptick(self):
         self.iteration += 1
         self.printProgressBar(self.iteration, self.total, prefix=self.name)
+
+    
+    def interrupt(self, message: str=''):
+        clearBar = ''
+        for i in range(self.length_of_bar):
+            clearBar += ' '
+        clearBar += '\r'
+        print(clearBar)
+        print(message)
+
 
 
     # Print iterations progress - courtesy of Greenstick (stackoverflow: https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
@@ -39,7 +50,9 @@ class ProgressBar(object):
         percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
         filledLength = int(length * iteration // total)
         bar = fill * filledLength + '-' * (length - filledLength)
-        print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end = '\r')
+        pBar = '\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix)
+        self.length_of_bar = len(pBar)
+        print(pBar, end = '\r')
         # Print New Line on Complete
         if iteration == total: 
             print()
