@@ -35,7 +35,7 @@ from libs.metrics import nasit_composite_index
 
 from libs.utils import ProgressBar
 from libs.outputs import slide_creator, output_to_json
-
+from libs.metrics import market_composite_index
 
 PROCESS_STEPS = 8
 
@@ -101,6 +101,8 @@ for fund_name in funds:
 slide_creator('2019', analysis)
 output_to_json(analysis)
 #pprint.pprint(analysis)
+
+market_composite_index()
 
 #remove_temp_dir()
 print('Done.')
