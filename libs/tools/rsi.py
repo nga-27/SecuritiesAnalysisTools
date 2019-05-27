@@ -36,8 +36,10 @@ def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
             RS.append([np.round(pos/float(PERIOD), 6), np.round(neg/float(PERIOD), 6), rs])
         else:
             if change[i] > 0.0:
+                # TODO: p.interrupt() on RS[i-1][1] == 0.0?
                 rs = (((RS[i-1][0] * float(PERIOD-1)) + change[i]) / float(PERIOD)) / (((RS[i-1][1] * float(PERIOD-1)) + 0.0) / float(PERIOD))
             else:
+                # TODO: p.interrupt() on RS[i-1][1] == 0.0?
                 rs = (((RS[i-1][0] * float(PERIOD-1)) + 0.00) / float(PERIOD)) / (((RS[i-1][1] * float(PERIOD-1)) + np.abs(change[i])) / float(PERIOD))
             RS.append([np.round(pos/float(PERIOD), 6), np.round(neg/float(PERIOD), 6), rs])
 

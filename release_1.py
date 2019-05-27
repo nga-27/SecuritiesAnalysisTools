@@ -102,7 +102,7 @@ slide_creator('2019', analysis)
 output_to_json(analysis)
 #pprint.pprint(analysis)
 
-market_composite_index()
+market_composite_index(plot_output=False)
 
 #remove_temp_dir()
 print('Done.')

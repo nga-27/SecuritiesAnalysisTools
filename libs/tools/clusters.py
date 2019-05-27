@@ -68,14 +68,17 @@ def generate_cluster(position: pd.DataFrame, function: str, name='') -> list:
         fast = full_stochastic(position, config=[10,3,3], plot_output=False, name=name)
         med = full_stochastic(position, config=[14,3,3], plot_output=False, name=name)
         slow = full_stochastic(position, config=[20,5,5], plot_output=False, name=name)
+
     elif function == 'ultimate':
         fast = ultimate_oscillator(position, config=[4,8,16], plot_output=False, name=name)
         med = ultimate_oscillator(position, config=[5,10,20], plot_output=False, name=name)
         slow = ultimate_oscillator(position, config=[7,14,28], plot_output=False, name=name)
+
     elif function == 'rsi':
         fast = RSI(position, plot_output=False, period=8, name=name)
         med = RSI(position, plot_output=False, period=14, name=name)
         slow = RSI(position, plot_output=False, period=20)
+
     elif function == 'all':
         fast = full_stochastic(position, config=[10,3,3], plot_output=False, name=name)
         med = full_stochastic(position, config=[14,3,3], plot_output=False, name=name)
@@ -86,6 +89,12 @@ def generate_cluster(position: pd.DataFrame, function: str, name='') -> list:
         fastr = RSI(position, plot_output=False, period=8, name=name)
         medr = RSI(position, plot_output=False, period=14, name=name)
         slowr = RSI(position, plot_output=False, period=20, name=name)
+
+    elif function == 'market':
+        fast = full_stochastic(position, config=[14,3,3], plot_output=False, name=name)
+        med = ultimate_oscillator(position, config=[5,10,20], plot_output=False, name=name)
+        slow = RSI(position, plot_output=False, period=14, name=name)
+
     else:
         print(f'Warning: Unrecognized function input of {function} in cluster_oscs.')
         return None
@@ -114,7 +123,7 @@ def export_cluster_nasit_signal(position: pd.DataFrame, function: str='full_stoc
     return clusters
 
 
-def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7) -> dict:
+def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7, wma=True) -> dict:
     """ 2-3-5-8 multiplier comparing several different osc lengths """
     cluster_oscs = {}
     
@@ -135,4 +144,7 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
         filename = name +'/clustering_{}_{}.png'.format(name, function)
         dual_plotting(position['Close'], clusters, 'Price', 'Clustered Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)
 
-    return clusters_wma, cluster_oscs
+    if wma:
+        return clusters_wma, cluster_oscs
+    else:
+        return clusters, cluster_oscs
