@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 import os 
+import glob 
+
+from libs.utils import fund_list_extractor
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -24,25 +27,6 @@ def title_presentation(year: str):
     title.text = f'Financial Analysis'
     stitle = slide.placeholders[1]
     stitle.text = f'Generated: {datetime.now()}'
-
-    return prs 
-
-
-def template_3M(prs):
-    """ takes in a Presentation object and applies 3M footer on slides """
-
-    for slide in range(len(prs.slides)):
-        left = Inches(0.1)
-        top = Inches(7.25)
-        height = Inches(.24)
-        width = Inches(2.6)
-        prs.slides[slide].shapes.add_picture('ppt-content/copywrite_2019.png', left, top, height=height, width=width)
-
-        left = Inches(4.76)
-        top = Inches(7.25)
-        height = Inches(.24)
-        width = Inches(.48)
-        prs.slides[slide].shapes.add_picture('ppt-content/3M_logo.png', left, top, height=height, width=width)
 
     return prs 
 
@@ -116,12 +100,68 @@ def names_textbox(slide, box_num: int, names: list):
     return slide 
 
 
+def make_fund_slides(prs, analysis: dict):
+    funds = analysis.keys()
+    for fund in funds:
+        prs = add_fund_content(prs, fund)
+
+    return prs
+
+
+def add_fund_content(prs, fund: str):
+    left = Inches(0) #Inches(3.86)
+    top = Inches(0)
+    width = height = Inches(0.5)
+
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+
+    txbox = slide.shapes.add_textbox(left, top, width, height)
+    tf = txbox.text_frame
+    #p = tf.add_paragraph()
+    p = tf.paragraphs[0]
+    p.text = fund 
+    p.font.size = Pt(36)
+    p.font.name = 'Arial'
+    p.font.bold = True
+
+    p = tf.add_paragraph()
+    p.font.size = Pt(16)
+    p.font.bold = False
+    p.text = str(datetime.now())
+
+    content_dir = f'output/temp/{fund}/'
+    if os.path.exists(content_dir):
+        content = content_dir + '*.png'
+        pics = glob.glob(content)
+        slide = format_plots(slide, pics)
+
+    return prs
+
+
+def format_plots(slide, globs: list):
+    print(globs)
+    parts = globs[0].split('/')
+    header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/'
+
+    for globber in globs:
+        part = globber.split('/')[3]
+
+        if 'clustered' in part:
+            left = Inches(0)
+            top = Inches(2.0)
+            height = Inches(2.0)
+            width = Inches(3.0)
+            #slide.shapes.
+    return slide 
+
 
 def slide_creator(year: str, analysis: dict):
     """ High-level function for converting inventors spreadsheet to slides """
 
     print("Starting presentation creation.")
     prs = title_presentation(year)
+
+    prs = make_fund_slides(prs, analysis)
 
     #prs = template_3M(prs)
     #prs = template_header(prs, f'Recognized Inventors of {year}', slides_to_skip=[0])
