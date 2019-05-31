@@ -22,14 +22,14 @@ import pandas as pd
 import numpy as np 
 import pprint 
 
-import fix_yahoo_finance as yf 
+import yfinance as yf 
 
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import relative_strength, triple_moving_average
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
+from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor, get_daterange
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.metrics import nasit_composite_index
 
@@ -41,14 +41,20 @@ PROCESS_STEPS = 8
 
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
-tickers = 'VTI' # VHT VGT VOX VWO MMM VNQ VXUS VDC VWINX'
+tickers = 'VTI VWINX' # VHT VGT VOX VWO MMM VNQ VXUS VDC VWINX'
 tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
 
 remove_temp_dir()
 configure_temp_dir()
 
-data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+daterange = get_daterange()
+
+if daterange is None:
+    data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+else: 
+    data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker', start=daterange[0], end=daterange[1])
+    
 funds = fund_list_extractor(data)
 
 # Start of automated process
@@ -98,13 +104,12 @@ for fund_name in funds:
     p.uptick()
 
 
-slide_creator('2019', analysis)
-output_to_json(analysis)
-#pprint.pprint(analysis)
-
 data, sectors = metrics_initializer()
 market_composite_index(data, sectors, plot_output=False) 
 
-#remove_temp_dir()
+slide_creator('2019', analysis)
+output_to_json(analysis)
+
+remove_temp_dir()
 print('Done.')
 
