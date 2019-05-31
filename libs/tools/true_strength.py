@@ -123,14 +123,16 @@ def relative_strength( fundA_name: str,
     plot_output=True ) -> list:
 
     positionB = tickers[fundB_name]
+    title = 'Strength: {} - {}'.format(fundA_name, fundB_name)
     if sector == '':
         sp = get_SP500(tickers)
         if sp is not None and is_fund_match(tickers[fundA_name], tickers[fundB_name]):
             positionB = sp 
+            title = 'Strength: {} - ^GSPC'.format(fundA_name)
+            
     rat = normalized_ratio(tickers[fundA_name], positionB)
     st = period_strength(fundA_name, tickers, periods=[20, 50, 100], sector=sector)
     
-    title = 'Strength: {} - {}'.format(fundA_name, fundB_name)
     dates = dates_extractor_list(tickers)
     if plot_output:
         generic_plotting([rat], x_=dates, title=title)
