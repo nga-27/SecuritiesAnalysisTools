@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 import os 
+import glob 
+
+from libs.utils import fund_list_extractor
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -28,46 +31,6 @@ def title_presentation(year: str):
     return prs 
 
 
-def template_3M(prs):
-    """ takes in a Presentation object and applies 3M footer on slides """
-
-    for slide in range(len(prs.slides)):
-        left = Inches(0.1)
-        top = Inches(7.25)
-        height = Inches(.24)
-        width = Inches(2.6)
-        prs.slides[slide].shapes.add_picture('ppt-content/copywrite_2019.png', left, top, height=height, width=width)
-
-        left = Inches(4.76)
-        top = Inches(7.25)
-        height = Inches(.24)
-        width = Inches(.48)
-        prs.slides[slide].shapes.add_picture('ppt-content/3M_logo.png', left, top, height=height, width=width)
-
-    return prs 
-
-
-
-def template_header(prs, title: str, slides_to_skip: list=[]):
-    """ Inserts Inventor Recognition title header to slides """
-
-    for slide in range(len(prs.slides)):
-        if slide not in slides_to_skip:
-            left = Inches(0.42)
-            top = Inches(0.13)
-            width = height = Inches(0.6)
-            txtbox = prs.slides[slide].shapes.add_textbox(left, top, width, height)
-            text_frame = txtbox.text_frame 
-
-            p = text_frame.paragraphs[0]
-            p.text = title 
-            p.font.bold = False 
-            p.font.size = Pt(30)
-            p.font.name = 'Times New Roman'
-
-    return prs 
-
-
 def subtitle_header(slide, title: str):
     """ Creates subtitle under main slide title """
     top = Inches(0.61)
@@ -85,35 +48,112 @@ def subtitle_header(slide, title: str):
     return slide
 
 
-def names_textbox(slide, box_num: int, names: list):
-    """ Take a list of names and format them into a fixed box """
-    top = Inches(0.68)
-    width = Inches(3)
-    height = Inches(7)
-    if box_num == 0:
-        # left-most textbox
-        left = Inches(0.42)
-    elif box_num == 1:
-        # middle textbox
-        left = Inches(3.3)
-    elif box_num == 2:
-        # right-most textbox
-        left = Inches(6.3)
-    else:
-        print("WARNING: names_textbox only adds 3 boxes (box_num == 0:2)")
-        return slide
+def make_MCI_slides(prs):
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = fund_title_header(slide, 'Market Composite Index')
     
+    content = f'output/temp/MCI.png'
+    if os.path.exists(content):
+        left = Inches(1.5)
+        top = Inches(1.27)
+        height = Inches(5.6)
+        width = Inches(7.0)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+    return prs
+
+
+def make_fund_slides(prs, analysis: dict):
+    funds = analysis.keys()
+    for fund in funds:
+        prs = add_fund_content(prs, fund)
+
+    return prs
+
+
+def add_fund_content(prs, fund: str):
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    indexes = []
+    indexes.append(len(prs.slides) - 1)
+
+    slide = fund_title_header(slide, fund)
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = fund_title_header(slide, fund)
+    indexes.append(len(prs.slides)-1)
+
+    content_dir = f'output/temp/{fund}/'
+    if os.path.exists(content_dir):
+        content = content_dir + '*.png'
+        pics = glob.glob(content)
+        prs = format_plots(prs, indexes, pics)
+
+    return prs
+
+
+def fund_title_header(slide, fund: str):
+    left = Inches(0) #Inches(3.86)
+    top = Inches(0)
+    width = height = Inches(0.5)
     txbox = slide.shapes.add_textbox(left, top, width, height)
     tf = txbox.text_frame
-    for name in names:
-        p = tf.add_paragraph()
-        p = tf.add_paragraph()
-        p.text = name 
-        p.font.bold = False
-        p.font.name = '3M Circular TT Book'
-        p.font.size = Pt(16)
+    #p = tf.add_paragraph()
+    p = tf.paragraphs[0]
+    p.text = fund 
+    p.font.size = Pt(36)
+    p.font.name = 'Arial'
+    p.font.bold = True
 
-    return slide 
+    p = tf.add_paragraph()
+    p.font.size = Pt(16)
+    p.font.bold = False
+    p.text = str(datetime.now())
+
+    return slide
+
+
+def format_plots(prs, slide_indices: list, globs: list):
+    parts = globs[0].split('/')
+    header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/'
+
+    for globber in globs:
+        part = globber.split('/')[3]
+
+        if 'cluster' in part:
+            left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'macd_bar' in part:
+            left = Inches(4.5)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'moving_averages' in part:
+            left = Inches(0.0)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'obv' in part:
+            left = Inches(4.5)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'relative_strength' in part:
+            left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+    return prs 
 
 
 
@@ -121,12 +161,13 @@ def slide_creator(year: str, analysis: dict):
     """ High-level function for converting inventors spreadsheet to slides """
 
     print("Starting presentation creation.")
-    prs = title_presentation(year)
 
-    #prs = template_3M(prs)
-    #prs = template_header(prs, f'Recognized Inventors of {year}', slides_to_skip=[0])
+    prs = title_presentation(year)
+    prs = make_MCI_slides(prs)
+    prs = make_fund_slides(prs, analysis)
 
     if not os.path.exists('output/'):
         os.mkdir('output/')
         
     prs.save(f'output/Financial_Analysis_{year}.pptx')
+    print("Presentation created.")

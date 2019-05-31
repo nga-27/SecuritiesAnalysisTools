@@ -4,7 +4,7 @@ Analysis tools for securities (funds, stocks, bonds, equities).
 ### To Use:
 Run `pip install -r requirements.txt`
 
-Run `pip install fix_yahoo_finance --upgrade --no-cache-dir` (note: 'upgrade' and 'no-cache...' might be omitted)
+Run `pip install yfinance --upgrade --no-cache-dir` (note: 'upgrade' and 'no-cache...' might be omitted)
 
 Run `pip install python-pptx`
 
