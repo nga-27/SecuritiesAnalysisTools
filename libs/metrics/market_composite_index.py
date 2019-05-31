@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-import fix_yahoo_finance as yf 
+import yfinance as yf 
 
 from libs.tools import cluster_oscs
 from libs.utils import dual_plotting, ProgressBar, index_appender
