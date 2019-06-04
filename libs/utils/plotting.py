@@ -41,6 +41,7 @@ def dual_plotting(
 
     fig.tight_layout()
     plt.legend([y2_label])
+
     if len(title) > 0:
         plt.title(title)
 
@@ -55,7 +56,7 @@ def dual_plotting(
     plt.clf()
 
 
-def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filename=''):
+def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=False, filename=''):
     register_matplotlib_converters()
     x = x_
     if len(x_) < 1:
@@ -63,6 +64,8 @@ def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filena
     for fig in list_of_plots:
         plt.plot(x, fig)
     plt.title(title)
+    if len(legend) > 0:
+        plt.legend(legend)
 
     if saveFig:
         filename = 'output/temp/' + filename
@@ -75,12 +78,15 @@ def generic_plotting(list_of_plots: list, x_=[], title='', saveFig=False, filena
     plt.clf()
 
 
-def histogram(data: list, bins=None, saveFig=False, filename=''):
+def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, filename=''):
     """ Currently unused - Primarily used for MACD """
     if bins is None:
         bins = len(data)
     plt.hist(data, bins=bins)
 
+    if len(position) > 0:
+        plt.plot(position['Close'])
+
     if saveFig:
         filename = 'output/temp/' + filename
         if os.path.exists(filename):
@@ -92,7 +98,7 @@ def histogram(data: list, bins=None, saveFig=False, filename=''):
     plt.clf()
 
 
-def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
+def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=False, filename=''):
     """ Exclusively used for MACD """
     if len(x_) < 1:
         x = list(range(len(data)))
@@ -105,7 +111,9 @@ def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
             colors.append('green')
         else:
             colors.append('red')
-    barlist = plt.bar(x, data, width=1, color=colors)
+
+    fig, ax1 = plt.subplots()
+    barlist = ax1.bar(x, data, width=1, color=colors)
     for i in range(1,len(data)):
         if data[i] > 0.0:
             if data[i] < data[i-1]:
@@ -114,6 +122,10 @@ def bar_chart(data: list, x_=[], name='', saveFig=False, filename=''):
             if data[i] > data[i-1]:
                 barlist[i].set_alpha(0.3)
     plt.title(name)
+
+    if len(position) > 0:
+        ax2 = ax1.twinx()
+        ax2.plot(position['Close'])
 
     if saveFig:
         filename = 'output/temp/' + filename

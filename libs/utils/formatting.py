@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 import os 
 import shutil
 import glob
+import time
 
 def name_parser(name: str) -> str:
     """ parses file name to generate fund name """
@@ -108,4 +109,24 @@ def get_daterange():
             return [start, end]
 
     return None
+
+
+def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4, bad_parse='\\') -> list:
+    globbed = extension.split('/')
+    if len(globbed) < desired_len:
+        end = globbed[desired_len-2].split(bad_parse)
+        globbed.pop(desired_len-2)
+        globbed.append(end[0])
+        globbed.append(end[1])
+    return globbed
+
+
+def command_header():
+    print(" ")
+    print("----------------------------------")
+    print("-   Securities Analysis Tools    -")
+    print("-                                -")
+    print("----------------------------------")
+    print(" ")
+    time.sleep(1)
 

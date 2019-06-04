@@ -128,7 +128,7 @@ def relative_strength( fundA_name: str,
         sp = get_SP500(tickers)
         if sp is not None and is_fund_match(tickers[fundA_name], tickers[fundB_name]):
             positionB = sp 
-            title = 'Strength: {} - ^GSPC'.format(fundA_name)
+            title = 'Strength: {} vs. ^GSPC'.format(fundA_name)
             
     rat = normalized_ratio(tickers[fundA_name], positionB)
     st = period_strength(fundA_name, tickers, periods=[20, 50, 100], sector=sector)

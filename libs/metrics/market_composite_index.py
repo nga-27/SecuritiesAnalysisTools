@@ -10,7 +10,10 @@ def metrics_initializer():
     tickers = 'VGT VHT VCR VDC VFH VDE VIS VOX VNQ VPU VAW'
     sectors = tickers.split(' ')
     tickers = index_appender(tickers)
+    print(" ")
+    print('Fetching Market Composite Index funds...')
     data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+    print(" ")
     return data, sectors
 
 

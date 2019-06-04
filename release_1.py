@@ -33,15 +33,16 @@ from libs.utils import name_parser, fund_list_extractor, index_extractor, index_
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.metrics import nasit_composite_index
 
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, command_header
 from libs.outputs import slide_creator, output_to_json
 from libs.metrics import metrics_initializer, market_composite_index
 
+
+command_header()
 PROCESS_STEPS = 8
 
-
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
-tickers = 'VTI VWINX' # VHT VGT VOX VWO MMM VNQ VXUS VDC VWINX'
+tickers = 'VTI' # VHT VGT VOX VWO MMM VNQ VXUS VDC VWINX'
 tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
 
@@ -49,11 +50,16 @@ remove_temp_dir()
 configure_temp_dir()
 
 daterange = get_daterange()
+period = '1y'
+interval = '1d'
 
 if daterange is None:
-    data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+    print(f'Fetching investments for {period} at {interval} intervals...')
+    data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
 else: 
-    data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker', start=daterange[0], end=daterange[1])
+    print(f'Fetching investments from dates {daterange[0]} to {daterange[1]}...')
+    data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
+print(" ")
     
 funds = fund_list_extractor(data)
 

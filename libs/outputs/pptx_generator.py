@@ -6,7 +6,7 @@ from datetime import datetime
 import os 
 import glob 
 
-from libs.utils import fund_list_extractor
+from libs.utils import fund_list_extractor, windows_compatible_file_parse
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -112,11 +112,14 @@ def fund_title_header(slide, fund: str):
 
 
 def format_plots(prs, slide_indices: list, globs: list):
-    parts = globs[0].split('/')
+    parts = windows_compatible_file_parse(globs[0])
+
     header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/'
 
     for globber in globs:
-        part = globber.split('/')[3]
+
+        globbed = windows_compatible_file_parse(globber)
+        part = globbed[3]
 
         if 'cluster' in part:
             left = Inches(0)

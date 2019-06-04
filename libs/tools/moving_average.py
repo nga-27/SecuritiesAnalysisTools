@@ -82,10 +82,11 @@ def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plot_output=
         tlong.append(np.mean(fund['Close'][i-config[2]:i+1]))
 
     name2 = name + ' - Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
+    legend = ['Price', f'{config[0]}-SMA', f'{config[1]}-SMA', f'{config[2]}-SMA']
     if plot_output:
-        generic_plotting([fund['Close'], tshort, tmed, tlong], title=name2)
+        generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2)
     else:
         filename = name +'/moving_averages_{}.png'.format(name)
-        generic_plotting([fund['Close'], tshort, tmed, tlong], title=name2, saveFig=True, filename=filename)
+        generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2, saveFig=True, filename=filename)
 
     return tshort, tmed, tlong
