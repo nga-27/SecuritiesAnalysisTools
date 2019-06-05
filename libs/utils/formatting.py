@@ -121,12 +121,38 @@ def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4
     return globbed
 
 
-def command_header():
+
+def start_header(default='VTI') -> str:
     print(" ")
     print("----------------------------------")
     print("-   Securities Analysis Tools    -")
     print("-                                -")
+    print("-           by: nga-27           -")
+    print("-                                -")
+    print("-           ver 0.1.0            -")
+    print("-      released: 2019-06-04      -")
     print("----------------------------------")
     print(" ")
     time.sleep(1)
+
+    # Default (hitting enter)
+    tickers = default
+
+    x = input("Enter stock/fund ticker symbols (e.g. 'VTI VWINX'): ")
+    if x != '':
+        tickers = x
+        if "'" in x:
+            spl = x.split("'")
+            tickers = spl[1]        
+    
+    ticker_print = ''
+    t = tickers.split(' ')
+    if len(t) < 2:
+        ticker_print += t[0] + ' and ^GSPC'
+    else:
+        for i in range(len(t)):
+            ticker_print += t[i] + ', '
+        ticker_print += 'and ^GSPC'
+    print(" ")
+    return tickers, ticker_print
 
