@@ -44,7 +44,7 @@ def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: flo
         slope_diff.append(obv_slope[i] - slope_ma[i])
 
     x = dates_extractor_list(fund)
-    name2 = name + ' - OBV'
+    name2 = name + ' - On Balance Volume'
     if plot_output:
         #generic_plotting([obv, obv_sig], x_=x, title=name2)
         dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2)
