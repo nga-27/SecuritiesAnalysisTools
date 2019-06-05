@@ -136,3 +136,36 @@ def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=Fal
         plt.show()
     plt.close()
     plt.clf()
+
+
+
+def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', legend=[], saveFig=False, filename=''):
+    register_matplotlib_converters()
+    x = x_
+    if len(x_) < 1:
+        x = dates_extractor_list(list_of_plots[0])
+    figure, ax = plt.subplots()
+
+    for i in range(len(list_of_plots)):
+        if i not in alt_ax_index:
+            ax.plot(x, list_of_plots[i])
+    
+    ax2 = ax.twinx()
+    for i in range(len(list_of_plots)):
+        if i in alt_ax_index:
+            ax2.plot(x, list_of_plots[i], color='tab:purple')
+
+    plt.title(title)
+    ax2.set_ylabel(legend[0])
+    if len(legend) > 0:
+        plt.legend(legend)
+
+    if saveFig:
+        filename = 'output/temp/' + filename
+        if os.path.exists(filename):
+            os.remove(filename)
+        plt.savefig(filename)
+    else:
+        plt.show()
+    plt.close()
+    plt.clf()

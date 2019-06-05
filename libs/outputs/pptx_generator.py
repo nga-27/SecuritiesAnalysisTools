@@ -135,7 +135,7 @@ def format_plots(prs, slide_indices: list, globs: list):
             width = Inches(4.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'moving_averages' in part:
+        if 'simple_moving_averages' in part:
             left = Inches(0.0)
             top = Inches(4.1)
             height = Inches(3.0)
@@ -149,9 +149,25 @@ def format_plots(prs, slide_indices: list, globs: list):
             width = Inches(4.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
+        ### Slide #2
+
         if 'relative_strength' in part:
             left = Inches(0)
             top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'exp_moving_averages' in part:
+            left = Inches(4.5)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'swing_trades' in part:
+            left = Inches(0.0)
+            top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(4.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)

@@ -25,7 +25,7 @@ import pprint
 import yfinance as yf 
 
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
-from libs.tools import relative_strength, triple_moving_average
+from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
@@ -33,16 +33,16 @@ from libs.utils import name_parser, fund_list_extractor, index_extractor, index_
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.metrics import nasit_composite_index
 
-from libs.utils import ProgressBar, command_header
+from libs.utils import ProgressBar, start_header
 from libs.outputs import slide_creator, output_to_json
 from libs.metrics import metrics_initializer, market_composite_index
 
 
-command_header()
-PROCESS_STEPS = 8
+tickers, ticker_print = start_header()
+PROCESS_STEPS = 9
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
-tickers = 'VTI' # VHT VGT VOX VWO MMM VNQ VXUS VDC VWINX'
+
 tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
 
@@ -54,10 +54,10 @@ period = '1y'
 interval = '1d'
 
 if daterange is None:
-    print(f'Fetching investments for {period} at {interval} intervals...')
+    print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
     data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
 else: 
-    print(f'Fetching investments from dates {daterange[0]} to {daterange[1]}...')
+    print(f'Fetching data for {ticker_print} from dates {daterange[0]} to {daterange[1]}...')
     data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
 print(" ")
     
@@ -95,6 +95,9 @@ for fund_name in funds:
     p.uptick()
 
     triple_moving_average(fund, plot_output=False, name=name)
+    p.uptick()
+
+    moving_average_swing_trade(fund, plot_output=False, name=name)
     p.uptick()
 
     analysis[name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=False, name=name)
