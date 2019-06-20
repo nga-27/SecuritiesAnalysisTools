@@ -26,7 +26,9 @@ def output_to_json(data: dict, exclude_tabular=True):
     if os.path.exists(filename):
         os.remove(filename)
 
-    meta = metadata_copy(data)
+    meta = data
+    if exclude_tabular:
+        meta = metadata_copy(data)
 
     with open(filename, 'w') as f:
         json.dump(meta, f)

@@ -37,6 +37,7 @@ from libs.utils import ProgressBar, start_header
 from libs.outputs import slide_creator, output_to_json
 from libs.metrics import metrics_initializer, market_composite_index
 
+from test import test_competitive
 
 tickers, ticker_print = start_header()
 PROCESS_STEPS = 9
@@ -69,6 +70,9 @@ analysis = {}
 for fund_name in funds:
 
     name = fund_name
+
+    # ticker_name = yf.Ticker(name)
+    # print(ticker_name.dividends)
     
     create_sub_temp_dir(name)
     analysis[name] = {}
@@ -113,6 +117,8 @@ for fund_name in funds:
     p.uptick()
 
 
+test_competitive(data, analysis)
+
 data, sectors = metrics_initializer()
 market_composite_index(data, sectors, plot_output=False) 
 
@@ -120,5 +126,6 @@ slide_creator('2019', analysis)
 output_to_json(analysis)
 
 remove_temp_dir()
+
 print('Done.')
 
