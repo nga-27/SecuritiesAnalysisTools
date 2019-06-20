@@ -1,6 +1,7 @@
 import pandas as pd 
 import numpy as np 
 import yfinance as yf
+import pprint
 
 def test_competitive(ticker_set, analysis: dict, start_invest=100000):
     """ Compare technical traits on when to buy sell securities """
@@ -9,9 +10,48 @@ def test_competitive(ticker_set, analysis: dict, start_invest=100000):
 
     ticks = list(analysis.keys())
     test_analysis['benchmark'] = init_benchmark(ticker_set, ticks, start_invest)
-    print(test_analysis)
+    test_analysis['cluster'] = run_clusters(ticker_set, ticks, analysis, start_invest)
+    pprint.pprint(test_analysis)
 
     return test_analysis 
+
+#######################################################################################
+
+def run_clusters(ticker_set, tickers: list, analysis: dict, start_invest: int) -> dict:
+    cluster = {}
+    SELL_TH = 0.67
+    BUY_TH = 0.5
+
+    for tick in tickers:
+        cluster[tick] = {}
+        cluster[tick]['init_amt'] = start_invest
+        shares, cash = init_shares(ticker_set, tick, start_invest)
+        cluster[tick]['init_shares'] = shares
+        cluster[tick]['cash'] = cash
+
+        cluster_vals = []
+        for clus in analysis[tick]['clustered_osc']['all']:
+            cluster_vals.append(clus[2])
+        sell = SELL_TH * np.max(cluster_vals)
+        buy = BUY_TH * np.min(cluster_vals)
+        # print(f"sell: {sell}, buy: {buy}")
+
+        for clus in analysis[tick]['clustered_osc']['all']:
+            if clus[2] > sell:
+                sells = np.floor(float(shares) * 0.20)
+                shares -= sells
+                cash += np.round(float(sells) * clus[1], 2)
+            if clus[2] < buy:
+                shs = np.floor(float(cash) / clus[1])
+                cash = np.round(float(cash) - (float(shs) * clus[1]), 2)
+                shares += shs 
+
+        cluster[tick]['cash'] = cash
+        cluster[tick]['final_shares'] = shares 
+        final_price = ticker_set[tick]['Close'][len(ticker_set[tick]['Close'])-1]
+        cluster[tick]['final_amt'] = np.round(final_price * cluster[tick]['final_shares'] + cluster[tick]['cash'], 2)
+
+    return cluster
 
 
 #######################################################################################
