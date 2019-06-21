@@ -50,9 +50,9 @@ sp500_index = index_extractor(tickers)
 remove_temp_dir()
 configure_temp_dir()
 
-daterange = get_daterange()
-period = '1y'
+period = '2y'
 interval = '1d'
+daterange = get_daterange(period=period)
 
 if daterange is None:
     print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
@@ -119,7 +119,7 @@ for fund_name in funds:
 
 test_competitive(data, analysis)
 
-data, sectors = metrics_initializer()
+data, sectors = metrics_initializer(period=period)
 market_composite_index(data, sectors, plot_output=False) 
 
 slide_creator('2019', analysis)

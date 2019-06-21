@@ -91,7 +91,7 @@ def create_sub_temp_dir(name):
         os.mkdir('output/temp/' + name + '/')
 
 
-def get_daterange():
+def get_daterange(period: str='1y'):
     fulltime = datetime.now().strftime('%H:%M:%S')
     # Note, timing can be input to function if desired; central time
     endtime = datetime.strptime('19:00:00', '%H:%M:%S').strftime('%H:%M:%S')
@@ -102,13 +102,35 @@ def get_daterange():
         if fulltime <= endtime:
             # For mutual funds, take prior day range.
             date = datetime.today()
+            y, m, d = period_parser(period)
             new_end = date - timedelta(days=1)
-            new_start = new_end - relativedelta(years=1)
+            new_start = new_end - relativedelta(years=y, months=m, days=d)
             end = datetime.strftime(new_end, '%Y-%m-%d')
             start = datetime.strftime(new_start, '%Y-%m-%d')
             return [start, end]
 
     return None
+
+
+def period_parser(period: str):
+    """ returns [years, months, days] """
+    if 'y' in period:
+        yr = period.split('y')[0]
+        yr = int(yr)
+        return yr, 0, 0
+        # Year
+    elif 'm' in period:
+        m = period.split('m')[0]
+        m = int(m)
+        return 0, m, 0
+        # Month
+    elif 'd' in period:
+        d = period.split('d')[0]
+        d = int(d)
+        return 0, 0, d
+        # Day
+    else:
+        return 1, 0, 0
 
 
 def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4, bad_parse='\\') -> list:

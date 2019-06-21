@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 import yfinance as yf
 import pprint
+import copy
 
 def test_competitive(ticker_set, analysis: dict, start_invest=100000):
     """ Compare technical traits on when to buy sell securities """
@@ -11,16 +12,39 @@ def test_competitive(ticker_set, analysis: dict, start_invest=100000):
     ticks = list(analysis.keys())
     test_analysis['benchmark'] = init_benchmark(ticker_set, ticks, start_invest)
     test_analysis['cluster'] = run_clusters(ticker_set, ticks, analysis, start_invest)
+    test_analysis = restructure_analysis(test_analysis)
     pprint.pprint(test_analysis)
 
     return test_analysis 
+
+
+def restructure_analysis(test_analysis: dict) -> dict:
+    bench = copy.deepcopy(test_analysis['benchmark'])
+    cluster = copy.deepcopy(test_analysis['cluster'])
+
+    new_analysis = dict()
+    for key in bench.keys():
+        new_analysis[key] = {}
+        for k2 in bench[key].keys():
+            k3 = f'bench_{k2}'
+            new_analysis[key][k3] = bench[key][k2]
+        for k2 in cluster[key].keys():
+            k3 = f'cluster_{k2}'
+            new_analysis[key][k3] = cluster[key][k2]
+
+    return new_analysis
 
 #######################################################################################
 
 def run_clusters(ticker_set, tickers: list, analysis: dict, start_invest: int) -> dict:
     cluster = {}
-    SELL_TH = 0.67
-    BUY_TH = 0.5
+
+    # Note: as trends are determined, THs will increase/decrease (rise=>SELL higher,BUY=> lower)
+    SELL_TH = 0.6
+    BUY_TH = 0.4
+    SELL_AMT = 0.3
+    BUY_AMT = 1.0
+    ACCELERATOR = 1.2
 
     for tick in tickers:
         cluster[tick] = {}
@@ -33,16 +57,24 @@ def run_clusters(ticker_set, tickers: list, analysis: dict, start_invest: int) -
         for clus in analysis[tick]['clustered_osc']['all']:
             cluster_vals.append(clus[2])
         sell = SELL_TH * np.max(cluster_vals)
+        diff_s = np.max(cluster_vals) - sell
         buy = BUY_TH * np.min(cluster_vals)
-        # print(f"sell: {sell}, buy: {buy}")
+        diff_b = np.min(cluster_vals) - buy
+        print(f"clusters: {analysis[tick]['clustered_osc']['all'][0]}")
+        print(f"tickers: {ticker_set[tick]['Close'][27]}")
 
         for clus in analysis[tick]['clustered_osc']['all']:
             if clus[2] > sell:
-                sells = np.floor(float(shares) * 0.20)
+                samt = SELL_AMT * (float(clus[2]) - sell) / diff_s
+                sells = np.floor(float(shares) * samt)
                 shares -= sells
                 cash += np.round(float(sells) * clus[1], 2)
             if clus[2] < buy:
-                shs = np.floor(float(cash) / clus[1])
+                bamt = BUY_AMT * (float(clus[2]) - buy) / diff_b * ACCELERATOR
+                if bamt > 1.0:
+                    bamt = 1.0
+                b_cash = bamt * float(cash)
+                shs = np.floor(b_cash / clus[1])
                 cash = np.round(float(cash) - (float(shs) * clus[1]), 2)
                 shares += shs 
 

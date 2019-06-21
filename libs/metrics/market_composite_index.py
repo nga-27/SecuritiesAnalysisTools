@@ -6,13 +6,13 @@ import yfinance as yf
 from libs.tools import cluster_oscs
 from libs.utils import dual_plotting, ProgressBar, index_appender
 
-def metrics_initializer():
+def metrics_initializer(period='1y'):
     tickers = 'VGT VHT VCR VDC VFH VDE VIS VOX VNQ VPU VAW'
     sectors = tickers.split(' ')
     tickers = index_appender(tickers)
     print(" ")
     print('Fetching Market Composite Index funds...')
-    data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+    data = yf.download(tickers=tickers, period=period, interval='1d', group_by='ticker')
     print(" ")
     return data, sectors
 
