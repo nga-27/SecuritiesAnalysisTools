@@ -53,6 +53,9 @@ def run_clusters(ticker_set, tickers: list, analysis: dict, start_invest: int) -
         cluster[tick]['init_shares'] = shares
         cluster[tick]['cash'] = cash
 
+        data = yf.Ticker(tick)
+        dividends = data.dividends
+
         cluster_vals = []
         for clus in analysis[tick]['clustered_osc']['all']:
             cluster_vals.append(clus[2])
@@ -62,6 +65,14 @@ def run_clusters(ticker_set, tickers: list, analysis: dict, start_invest: int) -
         diff_b = np.min(cluster_vals) - buy
         print(f"clusters: {analysis[tick]['clustered_osc']['all'][0]}")
         print(f"tickers: {ticker_set[tick]['Close'][27]}")
+
+        start_date = ticker_set[tick]['Close'].index[0]
+        if len(dividends) > 0:
+            start_index = 0
+            while ((start_index < len(dividends)) and (start_date > dividends.index[start_index])):
+                start_index += 1
+            if start_index < len(dividends):
+                print("dividend set here")
 
         for clus in analysis[tick]['clustered_osc']['all']:
             if clus[2] > sell:
