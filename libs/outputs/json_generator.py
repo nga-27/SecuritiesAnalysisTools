@@ -9,11 +9,11 @@ def metadata_copy(data: dict) -> dict:
     meta = data.copy()
     for key in meta.keys():
         meta[key].pop('clustered_osc')
-        if 'features' in meta[key].keys():
-            for feature in meta[key]['features']:
-                for feat in range(len(meta[key]['features'][feature]['features'])):
+        # if 'features' in meta[key].keys():
+        #     for feature in meta[key]['features']:
+        #         for feat in range(len(meta[key]['features'][feature]['features'])):
                     # Array of 'feature' features
-                    meta[key]['features'][feature]['features'][feat].pop('indexes')
+                    # meta[key]['features'][feature]['features'][feat].pop('indexes')
 
     return meta
 

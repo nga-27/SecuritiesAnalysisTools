@@ -1,0 +1,13 @@
+Custom Metrics Include:
+Market Composite Index - aggregate of 'Clustered Oscillators' signals for all 11 market sectors (using Vanguard)
+
+Fund Charting:
+1. Clustered Oscillators - proprietary weighting summation of Stochastic, RSI, and Ultimate Oscillators. The higher the signal, the more of a SELL. The more negative a signal, the more of a BUY.
+2. Moving Average Convergence/Divergence (MACD) - momentum indicator of EMA(12) - EMA(26). [More] positive signals means a strong positive/growth trend in price.
+3. Simple Moving Averages (SMA) - momentum indicators that suggest support/resistance levels as well
+4. On Balance Volume - monitoring large buys/sells of a fund by institutional ["smart"] managers. Negative signals means institutional SELL (sometimes means price will drop). Positive signals mean institutional BUY.
+5. Strength vs. Benchmark - overall view of growth in time period vs. S&P500
+6. Exponential Moving Averages (EMA) - momentum indicators that suggest support/resistance levels as well
+7. Swing Trading - looking for conditions in moving averages where bullish or bearish signals derive from signal crossings. Higher the signal, more of a SELL. Lower the signal, more of a BUY.
+8. Feature Detection:
+    a. Head-and-Shoulders - reversal signal where 3 peaks/troughs alternate with 2 troughs/peaks, suggesting resistance/support levels present. 'M' shape [triple bottom] implies bullish reversal; 'W' shape [triple top] implies bearish reversal.

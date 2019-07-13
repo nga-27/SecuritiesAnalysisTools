@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import os
 
-from libs.utils import generic_plotting
+from libs.utils import generic_plotting, shape_plotting
 from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list, date_extractor
 
 # Relative strength ratio 
@@ -139,5 +139,7 @@ def relative_strength( fundA_name: str,
     else:
         filename = fundA_name +'/relative_strength_{}.png'.format(fundA_name)
         generic_plotting([rat], x_=dates, title=title, saveFig=True, filename=filename)
+
+    # shape_plotting(rat)
 
     return st
