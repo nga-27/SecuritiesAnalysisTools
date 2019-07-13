@@ -2,33 +2,54 @@ import pandas as pd
 import numpy as np 
 import pprint 
 
-import fix_yahoo_finance as yf 
+import yfinance as yf 
 
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
-from libs.tools import relative_strength, triple_moving_average
+from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
 from libs.features import feature_head_and_shoulders
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender
-from libs.utils import configure_temp_dir, remove_temp_dir
+from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor, get_daterange
+from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.metrics import nasit_composite_index
 
-from libs.utils import ProgressBar
-from libs.outputs import slide_creator
+from libs.utils import ProgressBar, start_header
+from libs.outputs import slide_creator, output_to_json
+from libs.metrics import metrics_initializer, market_composite_index
 
-# https://stockcharts.com/school/doku.php?id=chart_school:overview:john_murphy_charting_made_easy
+from test import test_competitive
 
-PROCESS_STEPS = 8
+################################
+_VERSION_ = '0.1.02'
+_DATE_REVISION_ = '2019-07-12'
+################################
 
+tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
+PROCESS_STEPS = 9
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
-tickers = 'PFE'
+
 tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
 
+remove_temp_dir()
 configure_temp_dir()
 
-data = yf.download(tickers=tickers, period='1y', interval='1d', group_by='ticker')
+if period is None:
+    period = '1y'
+if interval is None:
+    interval = '1d'
+
+daterange = get_daterange(period=period)
+
+if daterange is None:
+    print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
+    data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
+else: 
+    print(f'Fetching data for {ticker_print} from dates {daterange[0]} to {daterange[1]}...')
+    data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
+print(" ")
+    
 funds = fund_list_extractor(data)
 
 # Start of automated process
@@ -37,48 +58,44 @@ analysis = {}
 for fund_name in funds:
 
     name = fund_name
+
+    # ticker_name = yf.Ticker(name)
+    # print(ticker_name.dividends)
+    
+    create_sub_temp_dir(name)
     analysis[name] = {}
 
     p = ProgressBar(PROCESS_STEPS, name=name)
     p.start()
 
-    print(fund_name)
     fund = data[fund_name]
     p.uptick()
     fundB = fund #pd.read_csv(fileB)
     p.uptick()
 
-    analysis[name]['dates_covered'] = {'start': str(fund.index[0]), 'end': str(fund.index[len(fund['Close'])-1])}
+    start = date_extractor(fund.index[0], _format='str')
+    end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
+
+    analysis[name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
     analysis[name]['name'] = name
 
-    #full_stochastic(fund, name=name)
-
-    #chart, dat = cluster_oscs(fund, function='full_stochastic', filter_thresh=3, name=name) 
-    #analysis['full_stochastic'] = dat
-    #chart, dat = cluster_oscs(fund, function='ultimate', filter_thresh=3, name=name)
-    #analysis['ultimate'] = dat  
-    #chart, dat = cluster_oscs(fund, function='rsi', filter_thresh=3, name=name)
-    #analysis['rsi'] = dat
-    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=True)
-    analysis[name]['weighted'] = dat
+    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=False)
+    analysis[name]['clustered_osc'] = dat
     p.uptick()
 
-    on_balance_volume(fund, plot_output=True, name=name) 
+    on_balance_volume(fund, plot_output=False, name=name)
     p.uptick()
 
-    triple_moving_average(fund, plot_output=True, name=name)
+    triple_moving_average(fund, plot_output=False, name=name)
     p.uptick()
 
-    #analysis['rsi'] = RSI(fund, name=name)
-    #analysis['ultimate'] = ultimate_oscillator(fund, name=name)
-
-    analysis[name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=True, name=name)
+    moving_average_swing_trade(fund, plot_output=False, name=name)
     p.uptick()
 
-    #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[50, 25, 12]))
-    #print(get_trend_analysis(fund, date_range=['2019-02-01', '2019-04-14'], config=[200, 50, 25]))
+    analysis[name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=False, name=name)
+    p.uptick()
 
-    analysis[name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=True)
+    analysis[name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=False)
     analysis[name]['features'] = {}
 
     p.uptick()
@@ -87,14 +104,16 @@ for fund_name in funds:
     analysis[name]['features']['head_shoulders'] = hs
     p.uptick()
 
-    #print("")
-    #print("")
-    #print(f"{name} for {fund['Date'][len(fund['Date'])-1]}")
-    #print("")
-    #pprint.pprint(analysis['features'])
-    #pprint.pprint(analysis['macd'])
+
+# test_competitive(data, analysis)
+
+data, sectors = metrics_initializer(period=period)
+market_composite_index(data, sectors, plot_output=False) 
 
 slide_creator('2019', analysis)
+output_to_json(analysis)
 
 remove_temp_dir()
+
 print('Done.')
+

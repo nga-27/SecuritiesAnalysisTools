@@ -4,3 +4,4 @@ venv
 securities/*.csv
 .vscode
 output/*
+core.json

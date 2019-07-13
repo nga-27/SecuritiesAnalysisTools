@@ -6,6 +6,7 @@ import os
 import shutil
 import glob
 import time
+import json 
 
 def name_parser(name: str) -> str:
     """ parses file name to generate fund name """
@@ -144,15 +145,15 @@ def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4
 
 
 
-def start_header(default='VTI') -> str:
+def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI') -> str:
     print(" ")
     print("----------------------------------")
     print("-   Securities Analysis Tools    -")
     print("-                                -")
     print("-           by: nga-27           -")
     print("-                                -")
-    print("-           ver 0.1.0            -")
-    print("-      released: 2019-06-04      -")
+    print(f"-       version: {version}           -")
+    print(f"-      released: {update_release}      -")
     print("----------------------------------")
     print(" ")
     time.sleep(1)
@@ -161,11 +162,22 @@ def start_header(default='VTI') -> str:
     tickers = default
 
     x = input("Enter stock/fund ticker symbols (e.g. 'VTI VWINX'): ")
+
+    period = None
+    interval = None
+
     if x != '':
-        tickers = x
-        if "'" in x:
-            spl = x.split("'")
-            tickers = spl[1]        
+        core = header_core_parse(x)
+        if core is not None:
+            tickers = core[0]
+            period = core[1]
+            interval = core[2]
+
+        else:
+            tickers = x
+            if "'" in x:
+                spl = x.split("'")
+                tickers = spl[1]        
     
     ticker_print = ''
     t = tickers.split(' ')
@@ -173,8 +185,25 @@ def start_header(default='VTI') -> str:
         ticker_print += t[0] + ' and ^GSPC'
     else:
         for i in range(len(t)):
-            ticker_print += t[i] + ', '
+            if t[i] != '':
+                ticker_print += t[i] + ', '
         ticker_print += 'and ^GSPC'
     print(" ")
-    return tickers, ticker_print
+    return tickers, ticker_print, period, interval 
 
+
+def header_core_parse(input_str: str) -> list:
+    if input_str != '--core':
+        return None
+
+    if os.path.exists('core.json'):
+        tickers = ''
+        with open('core.json') as json_file:
+            core = json.load(json_file)
+            for i in range(len(core['Ticker Symbols'])-1):
+                tickers += core['Ticker Symbols'][i] + ' '
+            tickers += core['Ticker Symbols'][len(core['Ticker Symbols'])-1]
+            interval = core['Properties']['Interval']
+            period = core['Properties']['Period']
+
+    return [tickers, period, interval]
