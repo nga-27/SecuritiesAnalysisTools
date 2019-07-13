@@ -150,7 +150,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     print("----------------------------------")
     print("-   Securities Analysis Tools    -")
     print("-                                -")
-    print("-             nga-27             -")
+    print("-            nga-27              -")
     print("-                                -")
     print(f"-       version: {version}          -")
     print(f"-       updated: {update_release}      -")
@@ -161,7 +161,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     # Default (hitting enter)
     tickers = default
 
-    x = input("Enter stock/fund ticker symbols (e.g. 'VTI VWINX'): ")
+    x = input("Enter stock/fund ticker symbols (e.g. 'VTI VWINX') or '--core': ")
 
     period = None
     interval = None
@@ -205,5 +205,8 @@ def header_core_parse(input_str: str) -> list:
             tickers += core['Ticker Symbols'][len(core['Ticker Symbols'])-1]
             interval = core['Properties']['Interval']
             period = core['Properties']['Period']
+    
+    else:
+        return None
 
     return [tickers, period, interval]

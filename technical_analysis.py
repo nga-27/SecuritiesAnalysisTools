@@ -20,7 +20,7 @@ from libs.metrics import metrics_initializer, market_composite_index
 from test import test_competitive
 
 ################################
-_VERSION_ = '0.1.03'
+_VERSION_ = '0.1.05'
 _DATE_REVISION_ = '2019-07-13'
 ################################
 

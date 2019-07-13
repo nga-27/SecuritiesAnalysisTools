@@ -37,7 +37,7 @@ def title_presentation(year: str, VERSION: str):
     p4.text = f"A Technical Analysis of Financial Markets by 'nga-27'"
     p4.font.italic = True
     p4.font.size = Pt(14)
-    p4.font.color.rgb = RGBColor(0x34, 0x29, 0x4A)
+    p4.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
     p4.font.name = 'Arial'
 
     stitle = slide.placeholders[1]
@@ -47,14 +47,14 @@ def title_presentation(year: str, VERSION: str):
     p2.text = f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
     p2.font.bold = False
     p2.font.size = Pt(22)
-    p2.font.color.rgb = RGBColor(0x3c, 0xe6, 0x4a)
+    p2.font.color.rgb = RGBColor(0x30, 0x9c, 0x4f)
     p2.font.name = 'Arial'
 
     p3 = text_frame2.add_paragraph()
     p3.text = f'Software Version: {VERSION}'
     p3.font.bold = False
-    p3.font.size = Pt(20)
-    p3.font.color.rgb = RGBColor(0x3c, 0xe6, 0x4A)
+    p3.font.size = Pt(18)
+    p3.font.color.rgb = RGBColor(0x30, 0x9c, 0x4f)
     p3.font.name = 'Arial'
 
     return prs 
@@ -77,6 +77,48 @@ def subtitle_header(slide, title: str):
     return slide
 
 
+def make_intro_slide(prs):
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = fund_title_header(slide, 'Explanation of Analysis', include_time=False)
+
+    if os.path.exists('metric_explanation.txt'):
+        filer = open('metric_explanation.txt', 'r')
+        content = filer.readlines()
+        content2 = []
+        for cont in content:
+            c = cont.split('\r\n')[0]
+            content2.append(c)
+        content = content2
+        filer.close()
+
+        top = Inches(0.81)
+        left = Inches(0.42)
+        width = Inches(9)
+        height = Inches(6)
+        txtbox = slide.shapes.add_textbox(left, top, width, height)
+        text_frame = txtbox.text_frame
+        text_frame.word_wrap = True
+
+        p = text_frame.paragraphs[0]
+        p.text = content[0] 
+        p.font.size = Pt(12)
+        p.font.bold = True
+        for i in range(1,len(content)):
+            p = text_frame.add_paragraph()
+            p.text = content[i]
+            if i == 3:
+                p.font.size = Pt(12)
+                p.font.bold = True
+            else:
+                p.font.size = Pt(10)
+                p.font.bold = False
+
+    else:
+        print("WARNING - file 'metric_explanation.txt' not found.")
+
+    return prs
+
+
 def make_MCI_slides(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     slide = fund_title_header(slide, 'Market Composite Index')
@@ -95,12 +137,33 @@ def make_MCI_slides(prs):
 def make_fund_slides(prs, analysis: dict):
     funds = analysis.keys()
     for fund in funds:
-        prs = add_fund_content(prs, fund)
+        prs = add_fund_content(prs, fund, analysis)
 
     return prs
 
 
-def add_fund_content(prs, fund: str):
+def add_fund_content(prs, fund: str, analysis: dict):
+    slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
+    title = slide.shapes.title
+    text_frame = title.text_frame
+    p = text_frame.paragraphs[0]
+    p.text = f'{fund}'
+    p.font.bold = True
+    p.font.size = Pt(54)
+    p.font.name = 'Arial'
+
+    p2 = text_frame.add_paragraph()
+    p2.text = f"Dates Covered: {analysis[fund]['dates_covered']['start']}  :  {analysis[fund]['dates_covered']['end']}"
+    p2.font.bold = False
+    p2.font.size = Pt(18)
+    p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
+    p2.font.name = 'Arial'
+
+    stitle = slide.placeholders[1]
+    text_frame2 = stitle.text_frame
+    p3 = text_frame2.paragraphs[0]
+    p3.text = ' '
+
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     indexes = []
     indexes.append(len(prs.slides) - 1)
@@ -119,7 +182,7 @@ def add_fund_content(prs, fund: str):
     return prs
 
 
-def fund_title_header(slide, fund: str):
+def fund_title_header(slide, fund: str, include_time=True):
     left = Inches(0) #Inches(3.86)
     top = Inches(0)
     width = height = Inches(0.5)
@@ -132,10 +195,12 @@ def fund_title_header(slide, fund: str):
     p.font.name = 'Arial'
     p.font.bold = True
 
-    p = tf.add_paragraph()
-    p.font.size = Pt(16)
-    p.font.bold = False
-    p.text = str(datetime.now())
+    if include_time:
+        p = tf.add_paragraph()
+        p.font.size = Pt(14)
+        p.font.bold = False
+        p.font.name = 'Arial'
+        p.text = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     return slide
 
@@ -218,6 +283,7 @@ def slide_creator(year: str, analysis: dict, version: str):
     print("Starting presentation creation.")
 
     prs = title_presentation(year, VERSION=version)
+    prs = make_intro_slide(prs)
     prs = make_MCI_slides(prs)
     prs = make_fund_slides(prs, analysis)
 
