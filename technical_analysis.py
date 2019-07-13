@@ -6,7 +6,7 @@ import yfinance as yf
 
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
-from libs.features import feature_head_and_shoulders
+from libs.features import feature_head_and_shoulders, feature_plotter
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor, get_daterange
@@ -20,12 +20,12 @@ from libs.metrics import metrics_initializer, market_composite_index
 from test import test_competitive
 
 ################################
-_VERSION_ = '0.1.02'
-_DATE_REVISION_ = '2019-07-12'
+_VERSION_ = '0.1.03'
+_DATE_REVISION_ = '2019-07-13'
 ################################
 
 tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
-PROCESS_STEPS = 9
+PROCESS_STEPS = 12
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
 
@@ -96,12 +96,25 @@ for fund_name in funds:
     p.uptick()
 
     analysis[name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=False)
-    analysis[name]['features'] = {}
-
     p.uptick()
 
-    hs, ma = feature_head_and_shoulders(fund)
-    analysis[name]['features']['head_shoulders'] = hs
+    # Feature Detection Block
+    shapes = []
+    analysis[name]['features'] = {}
+
+    hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=2, name=name, shapes=shapes)
+    analysis[name]['features']['head_shoulders_2'] = hs2
+    p.uptick()
+
+    hs, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=4, name=name, shapes=shapes)
+    analysis[name]['features']['head_shoulders_4'] = hs
+    p.uptick()
+
+    hs3, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=8, name=name, shapes=shapes)
+    analysis[name]['features']['head_shoulders_8'] = hs3
+    p.uptick()
+
+    feature_plotter(fund, shapes, name=name, feature='head_and_shoulders')
     p.uptick()
 
 
@@ -110,7 +123,7 @@ for fund_name in funds:
 data, sectors = metrics_initializer(period=period)
 market_composite_index(data, sectors, plot_output=False) 
 
-slide_creator('2019', analysis)
+slide_creator('2019', analysis, _VERSION_)
 output_to_json(analysis)
 
 remove_temp_dir()

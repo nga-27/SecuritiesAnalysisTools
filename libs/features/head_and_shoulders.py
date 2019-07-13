@@ -1,7 +1,8 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.tools import exponential_ma
+from libs.utils import shape_plotting, generic_plotting
+from libs.tools import exponential_ma, windowed_ma_list
 
 from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
 from .feature_utils import local_extrema
@@ -103,7 +104,7 @@ def feature_detection(features: list) -> dict:
 
 
 
-def feature_head_and_shoulders(fund: pd.DataFrame, FILTER_SIZE=10, sanitize_dict=True):
+def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10, sanitize_dict=True, name=''):
     """ 
     Find head and shoulders feature of a reversal 
     Args:
@@ -114,7 +115,8 @@ def feature_head_and_shoulders(fund: pd.DataFrame, FILTER_SIZE=10, sanitize_dict
         ma - (list) fund filtered with ema
     """
 
-    ma = exponential_ma(fund, FILTER_SIZE)
+    # ma = exponential_ma(fund, FILTER_SIZE)
+    ma = windowed_ma_list(fund['Close'], interval=FILTER_SIZE+1)
     ex = local_extrema(ma)
     r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE)
     r = remove_duplicates(r)
@@ -125,5 +127,13 @@ def feature_head_and_shoulders(fund: pd.DataFrame, FILTER_SIZE=10, sanitize_dict
     if sanitize_dict:
         hs.pop('max')
         hs.pop('min')
+
+    if hs['features'] != []:
+        for feat in hs['features']:
+            # generic_plotting([fund['Close'], ma])
+            fe = {}
+            fe['type'] = feat['type']
+            fe['indexes'] = feat['indexes']
+            shapes.append(fe)
     
-    return hs, ma
+    return hs, ma, shapes

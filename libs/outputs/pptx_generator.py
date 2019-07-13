@@ -1,5 +1,6 @@
 from pptx import Presentation
 from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
 import pandas as pd 
 import numpy as np 
 from datetime import datetime
@@ -20,13 +21,41 @@ CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
 
-def title_presentation(year: str):
+def title_presentation(year: str, VERSION: str):
     prs = Presentation()
     slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
+
     title = slide.shapes.title
-    title.text = f'Financial Analysis'
+    text_frame = title.text_frame
+    p = text_frame.paragraphs[0]
+    p.text = f'Securities Analysis'
+    p.font.bold = True
+    p.font.size = Pt(48)
+    p.font.name = 'Arial'
+
+    p4 = text_frame.add_paragraph()
+    p4.text = f"A Technical Analysis of Financial Markets by 'nga-27'"
+    p4.font.italic = True
+    p4.font.size = Pt(14)
+    p4.font.color.rgb = RGBColor(0x34, 0x29, 0x4A)
+    p4.font.name = 'Arial'
+
     stitle = slide.placeholders[1]
-    stitle.text = f'Generated: {datetime.now()}'
+    text_frame2 = stitle.text_frame
+
+    p2 = text_frame2.paragraphs[0]
+    p2.text = f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+    p2.font.bold = False
+    p2.font.size = Pt(22)
+    p2.font.color.rgb = RGBColor(0x3c, 0xe6, 0x4a)
+    p2.font.name = 'Arial'
+
+    p3 = text_frame2.add_paragraph()
+    p3.text = f'Software Version: {VERSION}'
+    p3.font.bold = False
+    p3.font.size = Pt(20)
+    p3.font.color.rgb = RGBColor(0x3c, 0xe6, 0x4A)
+    p3.font.name = 'Arial'
 
     return prs 
 
@@ -172,16 +201,23 @@ def format_plots(prs, slide_indices: list, globs: list):
             width = Inches(4.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
+        if 'head_and_shoulders' in part:
+            left = Inches(4.5)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(4.5)
+            prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
     return prs 
 
 
 
-def slide_creator(year: str, analysis: dict):
+def slide_creator(year: str, analysis: dict, version: str):
     """ High-level function for converting inventors spreadsheet to slides """
 
     print("Starting presentation creation.")
 
-    prs = title_presentation(year)
+    prs = title_presentation(year, VERSION=version)
     prs = make_MCI_slides(prs)
     prs = make_fund_slides(prs, analysis)
 

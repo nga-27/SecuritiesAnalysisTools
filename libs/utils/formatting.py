@@ -153,7 +153,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     print("-             nga-27             -")
     print("-                                -")
     print(f"-       version: {version}          -")
-    print(f"-      released: {update_release}      -")
+    print(f"-       updated: {update_release}      -")
     print("----------------------------------")
     print(" ")
     time.sleep(1)

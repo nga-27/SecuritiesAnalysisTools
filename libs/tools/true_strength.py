@@ -140,6 +140,6 @@ def relative_strength( fundA_name: str,
         filename = fundA_name +'/relative_strength_{}.png'.format(fundA_name)
         generic_plotting([rat], x_=dates, title=title, saveFig=True, filename=filename)
 
-    shape_plotting(rat)
+    # shape_plotting(rat)
 
     return st

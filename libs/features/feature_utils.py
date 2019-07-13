@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-from libs.utils import date_extractor
+from libs.utils import date_extractor, shape_plotting
 
 def local_extrema(filtered: list) -> dict:
     extrema = {}
@@ -108,8 +108,15 @@ def remove_empty_keys(dictionary: dict) -> dict:
     return new_dict        
 
 
-def plotter(a1, a2=[]):
-    plt.plot(a1)
-    if len(a2) > 0:
-        plt.plot(a2)
-    plt.show()
+def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_and_shoulders'):
+    filename = name + f'/{feature}_{name}.png'
+    title = f'{name} Feature Detection: '
+    if feature == 'head_and_shoulders':
+        title += 'Head and Shoulders'
+
+    shape_plotting( fund['Close'], 
+                    shapeXY=shapes, 
+                    feature=feature, 
+                    saveFig=True, 
+                    title=title,
+                    filename=filename)

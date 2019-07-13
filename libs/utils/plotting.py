@@ -171,13 +171,54 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
     plt.clf()
 
 
-def shape_plotting(main_plot: list, saveFig=False, filename=''):
+def shape_plotting(main_plot: list, shapeXY: list=[], feature='default', title='', legend=[], saveFig=False, filename=''):
+    """ Note, shapeXY is a list of dictionaries of coordinates and type """
+
+    if type(main_plot) != list:
+        new_list = []
+        for i in range(len(main_plot)):
+            new_list.append(main_plot[i])
+        main_plot = new_list
 
     plt.plot(main_plot)
-
     xpts = plt.gca().get_lines()[0].get_xdata()
     ypts = plt.gca().get_lines()[0].get_ydata()
-    dotted_line = plt.Line2D((xpts[40],xpts[len(xpts)-40]), (np.min(ypts), np.max(ypts)), lw=1, ls='-', alpha=0.5)
-    plt.gca().add_line(dotted_line)
 
-    plt.show()
+    if feature == 'default':
+        dotted_line = plt.Line2D((xpts[40],xpts[len(xpts)-40]), (np.min(ypts), np.max(ypts)), lw=1, ls='-', alpha=0.5)
+        plt.gca().add_line(dotted_line)
+
+    elif (feature == 'head_and_shoulders') and (shapeXY != []):
+        for shape in shapeXY:
+            ypts = []
+            xpts = []
+            if shape['type'] == 'bullish':
+                colors = 'green'
+            else:
+                colors = 'red'
+
+            for pt in shape['indexes']:
+                ypts.append(pt[1])
+                xpts.append(pt[0])
+            box = plt.Line2D((xpts[0], xpts[4]), (np.min(ypts), np.min(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            plt.gca().add_line(box)
+            box = plt.Line2D((xpts[0], xpts[0]), (np.min(ypts), np.max(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            plt.gca().add_line(box)
+            box = plt.Line2D((xpts[0], xpts[4]), (np.max(ypts), np.max(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            plt.gca().add_line(box)
+            box = plt.Line2D((xpts[4], xpts[4]), (np.min(ypts), np.max(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            plt.gca().add_line(box)
+
+    plt.title(title)
+    if len(legend) > 0:
+        plt.legend(legend)
+
+    if saveFig:
+        filename = 'output/temp/' + filename
+        if os.path.exists(filename):
+            os.remove(filename)
+        plt.savefig(filename)
+    else:
+        plt.show()
+    plt.close()
+    plt.clf()
