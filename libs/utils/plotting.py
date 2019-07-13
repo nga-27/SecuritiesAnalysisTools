@@ -169,3 +169,15 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
         plt.show()
     plt.close()
     plt.clf()
+
+
+def shape_plotting(main_plot: list, saveFig=False, filename=''):
+
+    plt.plot(main_plot)
+
+    xpts = plt.gca().get_lines()[0].get_xdata()
+    ypts = plt.gca().get_lines()[0].get_ydata()
+    dotted_line = plt.Line2D((xpts[40],xpts[len(xpts)-40]), (np.min(ypts), np.max(ypts)), lw=1, ls='-', alpha=0.5)
+    plt.gca().add_line(dotted_line)
+
+    plt.show()
