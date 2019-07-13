@@ -1,6 +1,8 @@
 from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN
+
 import pandas as pd 
 import numpy as np 
 from datetime import datetime
@@ -21,29 +23,49 @@ CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
 
-def title_presentation(year: str, VERSION: str):
+def title_presentation(year: str, VERSION: str, wide_ratio=True):
     prs = Presentation()
-    slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
 
-    title = slide.shapes.title
-    text_frame = title.text_frame
+    height = prs.slide_height
+    width = int(16 * height / 9)
+    prs.slide_width = width
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    # else:
+    #     slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
+
+    # title = slide.shapes.title
+    LEFT_INCHES = 6
+    left = Inches(LEFT_INCHES)
+    top = Inches(2.45)
+    text = slide.shapes.add_textbox(left, top, Inches(1), Inches(1))
+    text_frame = text.text_frame
+
+    # text_frame = title.text_frame
     p = text_frame.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
     p.text = f'Securities Analysis'
     p.font.bold = True
     p.font.size = Pt(48)
     p.font.name = 'Arial'
 
     p4 = text_frame.add_paragraph()
+    p4.alignment = PP_ALIGN.CENTER
     p4.text = f"A Technical Analysis of Financial Markets by 'nga-27'"
     p4.font.italic = True
     p4.font.size = Pt(14)
     p4.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
     p4.font.name = 'Arial'
 
-    stitle = slide.placeholders[1]
-    text_frame2 = stitle.text_frame
+    left = Inches(LEFT_INCHES)
+    top = Inches(4.0)
+    text = slide.shapes.add_textbox(left, top, Inches(1), Inches(1))
+    text_frame2 = text.text_frame
+    # else:
+    #     stitle = slide.placeholders[1]
+    #     text_frame2 = stitle.text_frame
 
     p2 = text_frame2.paragraphs[0]
+    p2.alignment = PP_ALIGN.CENTER
     p2.text = f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
     p2.font.bold = False
     p2.font.size = Pt(22)
@@ -51,6 +73,7 @@ def title_presentation(year: str, VERSION: str):
     p2.font.name = 'Arial'
 
     p3 = text_frame2.add_paragraph()
+    p3.alignment = PP_ALIGN.CENTER
     p3.text = f'Software Version: {VERSION}'
     p3.font.bold = False
     p3.font.size = Pt(18)
@@ -125,10 +148,10 @@ def make_MCI_slides(prs):
     
     content = f'output/temp/MCI.png'
     if os.path.exists(content):
-        left = Inches(1.5)
+        left = Inches(3)
         top = Inches(1.27)
-        height = Inches(5.6)
-        width = Inches(7.0)
+        height = Inches(6)
+        width = Inches(7.3)
         slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs
@@ -143,26 +166,36 @@ def make_fund_slides(prs, analysis: dict):
 
 
 def add_fund_content(prs, fund: str, analysis: dict):
-    slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
-    title = slide.shapes.title
-    text_frame = title.text_frame
+    # slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
+    # title = slide.shapes.title
+    # text_frame = title.text_frame
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    top = Inches(2.5)
+    left = Inches(4)
+    width = Inches(5)
+    height = Inches(2)
+    txtbox = slide.shapes.add_textbox(left, top, width, height)
+    text_frame = txtbox.text_frame
+
     p = text_frame.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
     p.text = f'{fund}'
     p.font.bold = True
     p.font.size = Pt(54)
     p.font.name = 'Arial'
 
     p2 = text_frame.add_paragraph()
+    p2.alignment = PP_ALIGN.CENTER
     p2.text = f"Dates Covered: {analysis[fund]['dates_covered']['start']}  :  {analysis[fund]['dates_covered']['end']}"
     p2.font.bold = False
     p2.font.size = Pt(18)
     p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
     p2.font.name = 'Arial'
 
-    stitle = slide.placeholders[1]
-    text_frame2 = stitle.text_frame
-    p3 = text_frame2.paragraphs[0]
-    p3.text = ' '
+    # stitle = slide.placeholders[1]
+    # text_frame2 = stitle.text_frame
+    # p3 = text_frame2.paragraphs[0]
+    # p3.text = ' '
 
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     indexes = []
