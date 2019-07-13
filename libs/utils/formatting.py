@@ -6,6 +6,7 @@ import os
 import shutil
 import glob
 import time
+import json 
 
 def name_parser(name: str) -> str:
     """ parses file name to generate fund name """
@@ -91,7 +92,7 @@ def create_sub_temp_dir(name):
         os.mkdir('output/temp/' + name + '/')
 
 
-def get_daterange():
+def get_daterange(period: str='1y'):
     fulltime = datetime.now().strftime('%H:%M:%S')
     # Note, timing can be input to function if desired; central time
     endtime = datetime.strptime('19:00:00', '%H:%M:%S').strftime('%H:%M:%S')
@@ -102,13 +103,35 @@ def get_daterange():
         if fulltime <= endtime:
             # For mutual funds, take prior day range.
             date = datetime.today()
+            y, m, d = period_parser(period)
             new_end = date - timedelta(days=1)
-            new_start = new_end - relativedelta(years=1)
+            new_start = new_end - relativedelta(years=y, months=m, days=d)
             end = datetime.strftime(new_end, '%Y-%m-%d')
             start = datetime.strftime(new_start, '%Y-%m-%d')
             return [start, end]
 
     return None
+
+
+def period_parser(period: str):
+    """ returns [years, months, days] """
+    if 'y' in period:
+        yr = period.split('y')[0]
+        yr = int(yr)
+        return yr, 0, 0
+        # Year
+    elif 'm' in period:
+        m = period.split('m')[0]
+        m = int(m)
+        return 0, m, 0
+        # Month
+    elif 'd' in period:
+        d = period.split('d')[0]
+        d = int(d)
+        return 0, 0, d
+        # Day
+    else:
+        return 1, 0, 0
 
 
 def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4, bad_parse='\\') -> list:
@@ -122,15 +145,15 @@ def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4
 
 
 
-def start_header(default='VTI') -> str:
+def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI') -> str:
     print(" ")
     print("----------------------------------")
     print("-   Securities Analysis Tools    -")
     print("-                                -")
     print("-           by: nga-27           -")
     print("-                                -")
-    print("-           ver 0.1.0            -")
-    print("-      released: 2019-06-04      -")
+    print(f"-       version: {version}           -")
+    print(f"-      released: {update_release}      -")
     print("----------------------------------")
     print(" ")
     time.sleep(1)
@@ -139,11 +162,22 @@ def start_header(default='VTI') -> str:
     tickers = default
 
     x = input("Enter stock/fund ticker symbols (e.g. 'VTI VWINX'): ")
+
+    period = None
+    interval = None
+
     if x != '':
-        tickers = x
-        if "'" in x:
-            spl = x.split("'")
-            tickers = spl[1]        
+        core = header_core_parse(x)
+        if core is not None:
+            tickers = core[0]
+            period = core[1]
+            interval = core[2]
+
+        else:
+            tickers = x
+            if "'" in x:
+                spl = x.split("'")
+                tickers = spl[1]        
     
     ticker_print = ''
     t = tickers.split(' ')
@@ -151,8 +185,25 @@ def start_header(default='VTI') -> str:
         ticker_print += t[0] + ' and ^GSPC'
     else:
         for i in range(len(t)):
-            ticker_print += t[i] + ', '
+            if t[i] != '':
+                ticker_print += t[i] + ', '
         ticker_print += 'and ^GSPC'
     print(" ")
-    return tickers, ticker_print
+    return tickers, ticker_print, period, interval 
 
+
+def header_core_parse(input_str: str) -> list:
+    if input_str != '--core':
+        return None
+
+    if os.path.exists('core.json'):
+        tickers = ''
+        with open('core.json') as json_file:
+            core = json.load(json_file)
+            for i in range(len(core['Ticker Symbols'])-1):
+                tickers += core['Ticker Symbols'][i] + ' '
+            tickers += core['Ticker Symbols'][len(core['Ticker Symbols'])-1]
+            interval = core['Properties']['Interval']
+            period = core['Properties']['Period']
+
+    return [tickers, period, interval]

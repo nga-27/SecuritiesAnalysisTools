@@ -1,0 +1,1 @@
+from .competitive import test_competitive

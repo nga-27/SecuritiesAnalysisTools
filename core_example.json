@@ -1,0 +1,12 @@
+{
+    "Properties": 
+    {
+        "Period": "1y",
+        "Interval": "1d"
+    },
+    "Ticker Symbols" :
+    [
+        "AAPL",
+        "GLD"
+    ]
+}

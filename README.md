@@ -1,14 +1,16 @@
 # SecuritiesAnalysisTools
 Technical analysis tools for securities (funds, stocks, bonds, equities).
 
-## Versioning
+## Versioning / Releases
 * 0.1.0, 2019-06-04 - Release 1: outputing to pptx and json files; basic analysis; primarily plot based
+* 0.1.x - Working toward Release 2 (`technical_analysis.py` is always current on master)
 
 ## To Use
 1. Run `pip install -r requirements.txt`
-1. Run the top-level job file.  For example, `technical_analysis.py`
-1. Run `python technical_analysis.py` or `python release_1.py`
-1. Answer input prompt of stock ticker (default is 'VTI', hitting simply 'enter')
+1. Save file `core_example.json` as `core.json`. Edit new file as desired.
+1. Run the top-level job file.  For DEV functionality, `technical_analysis.py`. Run `release_1.py` for PROD.
+1. Answer input prompt of stock ticker (default is 'VTI', hitting simply 'enter'). 
+    * With version 0.1.02+, entering in `--core` when prompted for tickers will run `core.json` funds.
 
 ## Acknowledgements
 * [ranaroussi](https://pypi.org/project/fix-yahoo-finance/) for `PyPI fix-yahoo-finance`
@@ -16,6 +18,16 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * B. Henry, V. Chevrier for great discussion and theories on market behavior, technical analysis
 
 ## Miscellaneous
+### core.json Functionality
+Adding `core.json` file to your repo (see 'To Use' above) can allow the user to look at any number of tickers without having to 
+manually add them in to the input prompt every single time. Simply enter in `--core` when prompted to input ticker symbols and the
+software will read the `core.json` file. If the file does not exist, it will run the default behavior (as if simply clicking 'enter').
+
+Core functionality provides the user to build up a list of investments he or she owns and/or typically monitors. `core.json` is part of
+gitignore, so privacy of one's funds will be maintained.
+
+FUTURE - adding more customizable fields to core functionality for greater user costumization.
+
 ### Other Library Installations 
 Run `pip install yfinance --upgrade --no-cache-dir` (note: 'upgrade' and 'no-cache...' might be omitted)
 Run `pip install python-pptx`
