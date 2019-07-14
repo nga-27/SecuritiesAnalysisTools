@@ -1,8 +1,9 @@
 # SecuritiesAnalysisTools
 Technical analysis tools for securities (funds, stocks, bonds, equities).
 
-## Versioning / Releases
+## Notable Versioning / Releases
 * 0.1.0, 2019-06-04 - Release 1: outputing to pptx and json files; basic analysis; primarily plot based
+* 0.1.06, 2019-07-13 - Wide 16:9 ratio for pptx output
 * 0.1.x - Working toward Release 2 (`technical_analysis.py` is always current on master)
 
 ## To Use
