@@ -39,8 +39,7 @@ def title_presentation(year: str, VERSION: str, wide_ratio=True):
     top = Inches(2.45)
     text = slide.shapes.add_textbox(left, top, Inches(1), Inches(1))
     text_frame = text.text_frame
-
-    # text_frame = title.text_frame
+    
     p = text_frame.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     p.text = f'Securities Analysis'
@@ -60,9 +59,6 @@ def title_presentation(year: str, VERSION: str, wide_ratio=True):
     top = Inches(4.0)
     text = slide.shapes.add_textbox(left, top, Inches(1), Inches(1))
     text_frame2 = text.text_frame
-    # else:
-    #     stitle = slide.placeholders[1]
-    #     text_frame2 = stitle.text_frame
 
     p2 = text_frame2.paragraphs[0]
     p2.alignment = PP_ALIGN.CENTER
@@ -116,7 +112,7 @@ def make_intro_slide(prs):
 
         top = Inches(0.81)
         left = Inches(0.42)
-        width = Inches(9)
+        width = Inches(11)
         height = Inches(6)
         txtbox = slide.shapes.add_textbox(left, top, width, height)
         text_frame = txtbox.text_frame
@@ -148,10 +144,10 @@ def make_MCI_slides(prs):
     
     content = f'output/temp/MCI.png'
     if os.path.exists(content):
-        left = Inches(3)
+        left = Inches(2.8)
         top = Inches(1.27)
-        height = Inches(6)
-        width = Inches(7.3)
+        height = Inches(6.3)
+        width = Inches(7.6)
         slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs
@@ -166,9 +162,6 @@ def make_fund_slides(prs, analysis: dict):
 
 
 def add_fund_content(prs, fund: str, analysis: dict):
-    # slide = prs.slides.add_slide(prs.slide_layouts[PRES_TITLE_SLIDE])
-    # title = slide.shapes.title
-    # text_frame = title.text_frame
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     top = Inches(2.5)
     left = Inches(4)
@@ -181,7 +174,7 @@ def add_fund_content(prs, fund: str, analysis: dict):
     p.alignment = PP_ALIGN.CENTER
     p.text = f'{fund}'
     p.font.bold = True
-    p.font.size = Pt(54)
+    p.font.size = Pt(60)
     p.font.name = 'Arial'
 
     p2 = text_frame.add_paragraph()
@@ -191,11 +184,6 @@ def add_fund_content(prs, fund: str, analysis: dict):
     p2.font.size = Pt(18)
     p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
     p2.font.name = 'Arial'
-
-    # stitle = slide.placeholders[1]
-    # text_frame2 = stitle.text_frame
-    # p3 = text_frame2.paragraphs[0]
-    # p3.text = ' '
 
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     indexes = []
@@ -221,7 +209,7 @@ def fund_title_header(slide, fund: str, include_time=True):
     width = height = Inches(0.5)
     txbox = slide.shapes.add_textbox(left, top, width, height)
     tf = txbox.text_frame
-    #p = tf.add_paragraph()
+
     p = tf.paragraphs[0]
     p.text = fund 
     p.font.size = Pt(36)
@@ -252,28 +240,28 @@ def format_plots(prs, slide_indices: list, globs: list):
             left = Inches(0)
             top = Inches(1.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
         if 'macd_bar' in part:
-            left = Inches(4.5)
+            left = Inches(6.5)
             top = Inches(1.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
         if 'simple_moving_averages' in part:
             left = Inches(0.0)
             top = Inches(4.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
         if 'obv' in part:
-            left = Inches(4.5)
+            left = Inches(6.5)
             top = Inches(4.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
         ### Slide #2
@@ -282,28 +270,28 @@ def format_plots(prs, slide_indices: list, globs: list):
             left = Inches(0)
             top = Inches(1.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
         if 'exp_moving_averages' in part:
-            left = Inches(4.5)
+            left = Inches(6.5)
             top = Inches(1.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
         if 'swing_trades' in part:
             left = Inches(0.0)
             top = Inches(4.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
         if 'head_and_shoulders' in part:
-            left = Inches(4.5)
+            left = Inches(6.5)
             top = Inches(4.1)
             height = Inches(3.0)
-            width = Inches(4.5)
+            width = Inches(6.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
     return prs 
