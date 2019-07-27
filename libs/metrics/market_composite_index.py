@@ -17,8 +17,8 @@ def metrics_initializer(period='1y'):
     return data, sectors
 
 
-def market_composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
-    p = ProgressBar(13, name='Market Composite Index')
+def composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
+    p = ProgressBar(len(sectors)+2, name='Market Composite Index')
     p.start()
 
     composite = []
@@ -42,6 +42,11 @@ def market_composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
         dual_plotting(data['^GSPC']['Close'], composite2, y1_label='S&P500', y2_label='MCI', title='Market Composite Index', saveFig=True, filename='MCI.png')
     p.uptick()
     return composite2 
+
+
+def market_composite_index(period='1y'):
+    data, sectors = metrics_initializer(period=period)
+    composite_index(data, sectors, plot_output=False) 
 
 
 
