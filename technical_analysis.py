@@ -15,13 +15,13 @@ from libs.metrics import nasit_composite_index
 
 from libs.utils import ProgressBar, start_header
 from libs.outputs import slide_creator, output_to_json
-from libs.metrics import metrics_initializer, market_composite_index
+from libs.metrics import market_composite_index, bond_composite_index
 
 from test import test_competitive
 
 ################################
-_VERSION_ = '0.1.06'
-_DATE_REVISION_ = '2019-07-13'
+_VERSION_ = '0.1.07'
+_DATE_REVISION_ = '2019-07-27'
 ################################
 
 tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
@@ -120,8 +120,9 @@ for fund_name in funds:
 
 # test_competitive(data, analysis)
 
-data, sectors = metrics_initializer(period=period)
-market_composite_index(data, sectors, plot_output=False) 
+market_composite_index(period=period)
+
+bond_composite_index(period=period)
 
 slide_creator('2019', analysis, _VERSION_)
 output_to_json(analysis)

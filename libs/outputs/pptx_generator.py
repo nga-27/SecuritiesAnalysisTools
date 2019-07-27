@@ -144,11 +144,38 @@ def make_MCI_slides(prs):
     
     content = f'output/temp/MCI.png'
     if os.path.exists(content):
-        left = Inches(2.8)
+        left = Inches(1.42)
         top = Inches(1.27)
-        height = Inches(6.3)
-        width = Inches(7.6)
+        height = Inches(6.1)
+        width = Inches(10.5)
         slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+    return prs
+
+
+def make_BCI_slides(prs):
+    NUM_BOND_INDEXES = 3
+    for i in range(NUM_BOND_INDEXES):
+        if i == 0:
+            filekey = 'Treasury'
+        elif i == 1:
+            filekey = 'Corporate'
+        elif i == 2:
+            filekey = 'International'
+        else:
+            return prs 
+
+        title = f"{filekey} Bond Composite Index"
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, title)
+        
+        content = f'output/temp/{filekey}_BCI.png'
+        if os.path.exists(content):
+            left = Inches(1.42)
+            top = Inches(1.27)
+            height = Inches(6.1)
+            width = Inches(10.5)
+            slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs
 
@@ -306,6 +333,7 @@ def slide_creator(year: str, analysis: dict, version: str):
     prs = title_presentation(year, VERSION=version)
     prs = make_intro_slide(prs)
     prs = make_MCI_slides(prs)
+    prs = make_BCI_slides(prs)
     prs = make_fund_slides(prs, analysis)
 
     if not os.path.exists('output/'):

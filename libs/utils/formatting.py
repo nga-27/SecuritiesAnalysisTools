@@ -179,6 +179,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
                 spl = x.split("'")
                 tickers = spl[1]        
     
+    tickers = tickers.upper()
     ticker_print = ''
     t = tickers.split(' ')
     if len(t) < 2:
