@@ -9,6 +9,7 @@ from libs.tools import relative_strength, triple_moving_average, moving_average_
 from libs.features import feature_head_and_shoulders, feature_plotter
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
+from libs.tools import find_resistance_support_lines
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor, get_daterange
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.metrics import nasit_composite_index
@@ -20,12 +21,12 @@ from libs.metrics import market_composite_index, bond_composite_index
 from test import test_competitive
 
 ################################
-_VERSION_ = '0.1.07'
-_DATE_REVISION_ = '2019-07-27'
+_VERSION_ = '0.1.08'
+_DATE_REVISION_ = '2019-07-30'
 ################################
 
 tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
-PROCESS_STEPS = 12
+PROCESS_STEPS = 13
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
 
@@ -36,7 +37,7 @@ remove_temp_dir()
 configure_temp_dir()
 
 if period is None:
-    period = '1y'
+    period = '2y'
 if interval is None:
     interval = '1d'
 
@@ -96,6 +97,9 @@ for fund_name in funds:
     p.uptick()
 
     analysis[name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=False)
+    p.uptick()
+
+    find_resistance_support_lines(fund)
     p.uptick()
 
     # Feature Detection Block

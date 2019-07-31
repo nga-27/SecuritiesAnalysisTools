@@ -58,11 +58,20 @@ def dual_plotting(
 
 def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=False, filename=''):
     register_matplotlib_converters()
-    x = x_
+    
     if len(x_) < 1:
         x = dates_extractor_list(list_of_plots[0])
-    for fig in list_of_plots:
-        plt.plot(x, fig)
+        for fig in list_of_plots:
+            plt.plot(x, fig)
+    else:
+        if type(x_[0]) == list:
+            x = x_
+            for i in range(len(list_of_plots)):
+                plt.plot(x[i], list_of_plots[i])
+        else:
+            x = x_
+            for fig in list_of_plots:
+                plt.plot(x, fig)
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)

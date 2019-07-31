@@ -11,8 +11,8 @@ def metrics_initializer(period='1y', bond_type='Treasury'):
         tickers = 'BSV BIV BLV VTEB BND'
         index = 'BND'
     elif bond_type == 'Corporate':
-        tickers = 'VCSH VCIT VCLT VTC'
-        index = 'VTC'
+        tickers = 'VCSH VCIT VCLT'
+        index = 'Corporate'
     elif bond_type == 'International':
         tickers = 'BNDX VWOB'
         index = 'International'
@@ -38,11 +38,22 @@ def international_index_generator(data: pd.DataFrame) -> list:
         index_chart.append(val)
     return index_chart
 
+def corporate_index_generator(data: pd.DataFrame) -> list:
+    VCIT_WEIGHT = 0.2935
+    VCSH_WEIGHT = 0.3666
+    VCLT_WEIGHT = 0.3398
+    index_chart = []
+    for i in range(len(data['VCLT']['Close'])):
+        val = data['VCLT']['Close'][i] * VCLT_WEIGHT
+        val += data['VCIT']['Close'][i] * VCIT_WEIGHT
+        val += data['VCSH']['Close'][i] * VCSH_WEIGHT
+        index_chart.append(val)
+    return index_chart
 
 
 def composite_index(data: pd.DataFrame, sectors: list, plot_output=True, bond_type='Treasury', index_type='BND'):
     progress = len(sectors) + 1
-    if bond_type == 'International':
+    if (bond_type == 'International') or (bond_type == 'Corporate'):
         progress += 1
     p = ProgressBar(progress, name=f'{bond_type} Bond Composite Index')
     p.start()
@@ -66,6 +77,9 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True, bond_ty
     if bond_type == 'International':
         data_to_plot = international_index_generator(data)
         dates = dates_extractor_list(data['BNDX'])
+    elif bond_type == 'Corporate':
+        data_to_plot = corporate_index_generator(data)
+        dates = dates_extractor_list(data['VCIT'])
     else:
         data_to_plot = data[index_type]['Close']
         dates = []
