@@ -124,9 +124,9 @@ for fund_name in funds:
 
 # test_competitive(data, analysis)
 
-market_composite_index(period=period)
+# market_composite_index(period=period)
 
-bond_composite_index(period=period)
+# bond_composite_index(period=period)
 
 slide_creator('2019', analysis, _VERSION_)
 output_to_json(analysis)
