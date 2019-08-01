@@ -22,7 +22,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.08'
-_DATE_REVISION_ = '2019-07-30'
+_DATE_REVISION_ = '2019-07-31'
 ################################
 
 tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
@@ -99,7 +99,8 @@ for fund_name in funds:
     analysis[name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=False)
     p.uptick()
 
-    find_resistance_support_lines(fund)
+    # Support and Resistance Analysis
+    analysis[name]['support_resistance'] = find_resistance_support_lines(fund, name=name)
     p.uptick()
 
     # Feature Detection Block

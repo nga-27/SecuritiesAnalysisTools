@@ -14,6 +14,7 @@ from libs.utils import generic_plotting
 
 """
 CLUSTER_THRESHOLD = 0.7
+NUM_NEAREST_LINES = 4
 
 def find_points(data: pd.DataFrame, timeframe: int, line_type='support') -> list:
     total_entries = len(data['Close'])
@@ -131,8 +132,95 @@ def get_plot_content(data: pd.DataFrame, rs_lines: dict, selected_timeframe: str
     return Xs, Ys, Xr, Yr
 
 
+def res_sup_unions(Yr: list, Xr: list, Ys: list, Xs: list):
+    Yc = []
+    Xc = []
+    for i, res in enumerate(Yr):
+        for j, sup in enumerate(Ys):
+            neg = sup[0] * (1.0 - (CLUSTER_THRESHOLD / 100.0))
+            pos = sup[0] * (1.0 + (CLUSTER_THRESHOLD / 100.0))
+            if (res[0] in sup) or ((res[0] > neg) and (res[0] < pos)):
+                # Union X values...
+                start_r = Xr[i][0]
+                start_s = Xs[j][0]
+                start = min(start_r, start_s)
+                end = Xs[j][len(Xs[j])-1]
+                x = list(range(start, end))
+                Xc.append(x)
+                y = [res[0]] * (end - start)
+                Yc.append(y)
 
-def find_resistance_support_lines(data: pd.DataFrame, timeframes: list=[13, 21, 34, 55, 89, 144]):
+    return Xc, Yc
+
+
+def get_nearest_lines(ylist: list, cur_price: float, support_resistance='support') -> list:
+    keys = []
+    if support_resistance == 'major':
+        for y in range(len(ylist)-1, -1, -1):
+            percent = np.round((ylist[y] - cur_price) / cur_price * 100.0, 3)
+            keys.append({'Price': f"{ylist[y]}", 'Change': f"{percent}%"})
+        return keys
+
+    elif support_resistance == 'support':
+        endcap = 0
+        count = 0
+        modifier = -1
+        while ((count < len(ylist)) and (cur_price > ylist[count])):
+            count += 1
+    else:
+        endcap = len(ylist) - 1
+        count = len(ylist) - 1
+        modifier = 1
+        while ((count >= 0) and (cur_price < ylist[count])):
+            count -= 1
+    if count != endcap:
+        count += modifier
+        if support_resistance == 'support':
+            if (count - NUM_NEAREST_LINES) < 0:
+                for i in range(count, -1, modifier):
+                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+            else: 
+                for i in range(count, count - NUM_NEAREST_LINES, -1):
+                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+        else:
+            if (count + NUM_NEAREST_LINES) >= len(ylist) - 1:
+                for i in range(count, len(ylist), modifier):
+                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+            else: 
+                for i in range(count, count + NUM_NEAREST_LINES, modifier):
+                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+    return keys
+
+
+
+def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
+    analysis = {}
+    Yr = zipped_content[0]
+    Ys = zipped_content[1]
+    Yc = zipped_content[2]
+    res = [y[0] for y in Yr]
+    sup = [y[0] for y in Ys]
+    maj = [y[0] for y in Yc]
+    res.sort()
+    sup.sort()
+    maj.sort()
+
+    analysis['current price'] = data['Close'][len(data['Close'])-1]
+    analysis['supports'] = get_nearest_lines(sup, analysis['current price'], support_resistance='support')
+    analysis['resistances'] = get_nearest_lines(res, analysis['current price'], support_resistance='resistance')
+    analysis['major S&R'] = get_nearest_lines(maj, analysis['current price'], support_resistance='major')
+    
+    return analysis
+
+
+def find_resistance_support_lines(  data: pd.DataFrame, 
+                                    plot_output: bool=False,
+                                    name: str='',
+                                    timeframes: list=[13, 21, 34, 55, 89, 144]) -> dict:
     resist_support_lines = {}
     resist_support_lines['support'] = {}
     resist_support_lines['resistance'] = {}
@@ -155,7 +243,15 @@ def find_resistance_support_lines(data: pd.DataFrame, timeframes: list=[13, 21, 
         resist_support_lines['resistance'][str(time)] = cluster_notables(sorted_resistance, data)
 
     Xs, Ys, Xr, Yr = get_plot_content(data, resist_support_lines, selected_timeframe=str(timeframes[len(timeframes)-1]))
-    generic_plotting(Ys, x_=Xs, title='Support')
-    generic_plotting(Yr, x_=Xr, title='Resistance')
+    generic_plotting(Ys, x_=Xs, title=f'{name} Support')
+    generic_plotting(Yr, x_=Xr, title=f'{name} Resistance')
 
+    Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
+    Xc.append(list(range(len(data['Close']))))
+    Yc.append(data['Close'])
+    generic_plotting(Yc, x_=Xc, title=f'{name} Major Resistance & Support')
+
+    analysis = detailed_analysis([Yr, Ys, Yc], data)
+    print(analysis)
+    return analysis
 
