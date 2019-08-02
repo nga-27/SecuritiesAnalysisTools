@@ -14,32 +14,64 @@ from libs.utils import generic_plotting
 
 """
 CLUSTER_THRESHOLD = 0.7
+MAJOR_GROUP_THRESHOLD = 1.1
 NUM_NEAREST_LINES = 4
 
-def find_points(data: pd.DataFrame, timeframe: int, line_type='support') -> list:
+def truncate_points(X: list, Y: list) -> list:
+    new_X = []
+    new_Y = []
+    for i,x in enumerate(X):
+        if x not in new_X:
+            new_X.append(x)
+            new_Y.append(Y[i])
+    return new_X, new_Y
+
+
+def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_type='windowed') -> list:
     total_entries = len(data['Close'])
-    sections = int(np.ceil(float(total_entries) / float(timeframe)))
     sect_count = 0
     X = []
     Y = []
 
-    while (sect_count < sections):
-        left = sect_count * timeframe
-        right = left + timeframe
-        if total_entries < (left + timeframe + 1):
-            right = total_entries
+    if filter_type == 'windowed':
+        sections = int(np.ceil(float(total_entries) / float(timeframe)))
+        while (sect_count < sections):
+            left = sect_count * timeframe
+            right = left + timeframe
+            if total_entries < (left + timeframe + 1):
+                right = total_entries
 
-        if line_type == 'support':
-            val = np.min(data['Close'][left:right])
-            point = np.where(data['Close'][left:right] == val)[0][0] + left
-        else:
-            val = np.max(data['Close'][left:right])
-            point = np.where(data['Close'][left:right] == val)[0][0] + left
+            if line_type == 'support':
+                val = np.min(data['Close'][left:right])
+                point = np.where(data['Close'][left:right] == val)[0][0] + left
+            else:
+                val = np.max(data['Close'][left:right])
+                point = np.where(data['Close'][left:right] == val)[0][0] + left
 
-        X.append(point)
-        Y.append(val)
-        
-        sect_count += 1
+            X.append(point)
+            Y.append(val)
+            
+            sect_count += 1
+
+    if filter_type == 'convolution':
+        while (sect_count + timeframe < total_entries):
+            left = sect_count
+            right = left + timeframe
+            if total_entries < (left + timeframe + 1):
+                right = total_entries
+
+            if line_type == 'support':
+                val = np.min(data['Close'][left:right])
+                point = np.where(data['Close'][left:right] == val)[0][0] + left
+            else:
+                val = np.max(data['Close'][left:right])
+                point = np.where(data['Close'][left:right] == val)[0][0] + left
+
+            X.append(point)
+            Y.append(val)
+            
+            sect_count += 1
+        X, Y = truncate_points(X, Y)
 
     return X, Y
 
@@ -133,22 +165,55 @@ def get_plot_content(data: pd.DataFrame, rs_lines: dict, selected_timeframe: str
 
 
 def res_sup_unions(Yr: list, Xr: list, Ys: list, Xs: list):
+    """ Combines Resistances and Supports within the MAJOR_GROUP_THRESHOLD window """
     Yc = []
     Xc = []
-    for i, res in enumerate(Yr):
-        for j, sup in enumerate(Ys):
-            neg = sup[0] * (1.0 - (CLUSTER_THRESHOLD / 100.0))
-            pos = sup[0] * (1.0 + (CLUSTER_THRESHOLD / 100.0))
-            if (res[0] in sup) or ((res[0] > neg) and (res[0] < pos)):
-                # Union X values...
-                start_r = Xr[i][0]
-                start_s = Xs[j][0]
-                start = min(start_r, start_s)
-                end = Xs[j][len(Xs[j])-1]
+    Yc.extend(Yr)
+    Xc.extend(Xr)
+    Yc.extend(Ys)
+    Xc.extend(Xs)
+    C = list(zip(Xc, Yc))
+    C.sort(key=lambda x: x[1][0])
+    Xc, Yc = list(zip(*C))
+
+    no_changes = False
+    while not no_changes:
+        no_changes = True
+        Yu = []
+        Xu = []
+        added_ith = False
+        for i in range(1, len(Yc)):
+            neg = Yc[i][0] * (1.0 - (MAJOR_GROUP_THRESHOLD / 100.0))
+            pos = Yc[i][0] * (1.0 + (MAJOR_GROUP_THRESHOLD / 100.0))
+            if ((Yc[i-1][0] > neg) and (Yc[i-1][0] < pos)):
+                # Two lines are near each other, average and combine. If added_ith=True, pop item in list before to combine
+                if added_ith:
+                    added_ith = False
+                    Yu.pop(len(Yu)-1)
+                    Xu.pop(len(Xu)-1)
+                start = min(Xc[i-1][0], Xc[i][0])
+                end = max(Xc[i-1][len(Xc[i-1])-1], Xc[i][len(Xc[i])-1])
+                y = [np.round(np.mean([Yc[i-1][0], Yc[i][0]]), 2)] * (end-start)
                 x = list(range(start, end))
-                Xc.append(x)
-                y = [res[0]] * (end - start)
-                Yc.append(y)
+                Xu.append(x)
+                Yu.append(y)
+                no_changes = False
+            elif (i == 1):
+                # Special case where neither i=0 or i=1 are near, append both
+                Xu.append(Xc[i-1])
+                Xu.append(Xc[i])
+                Yu.append(Yc[i-1])
+                Yu.append(Yc[i])
+                added_ith = True
+            else:
+                # ith case added
+                Xu.append(Xc[i])
+                Yu.append(Yc[i])
+                added_ith = True
+        y = [y[0] for y in Yu]
+        # print(f"y: {y}")
+        Xc = Xu.copy()
+        Yc = Yu.copy()
 
     return Xc, Yc
 
@@ -210,8 +275,8 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
     maj.sort()
 
     analysis['current price'] = data['Close'][len(data['Close'])-1]
-    analysis['supports'] = get_nearest_lines(sup, analysis['current price'], support_resistance='support')
-    analysis['resistances'] = get_nearest_lines(res, analysis['current price'], support_resistance='resistance')
+    # analysis['supports'] = get_nearest_lines(sup, analysis['current price'], support_resistance='support')
+    # analysis['resistances'] = get_nearest_lines(res, analysis['current price'], support_resistance='resistance')
     analysis['major S&R'] = get_nearest_lines(maj, analysis['current price'], support_resistance='major')
     
     return analysis
@@ -220,7 +285,7 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
 def find_resistance_support_lines(  data: pd.DataFrame, 
                                     plot_output: bool=False,
                                     name: str='',
-                                    timeframes: list=[13, 21, 34, 55, 89, 144]) -> dict:
+                                    timeframes: list=[13, 21, 34, 55]) -> dict:
     resist_support_lines = {}
     resist_support_lines['support'] = {}
     resist_support_lines['resistance'] = {}
@@ -229,7 +294,7 @@ def find_resistance_support_lines(  data: pd.DataFrame,
     resistance = {}
     for time in timeframes:
         support[str(time)] = {}
-        x, y = find_points(data, line_type='support', timeframe=time)
+        x, y = find_points(data, line_type='support', timeframe=time, filter_type='windowed')
         support[str(time)]['x'] = x
         support[str(time)]['y'] = y
         sorted_support = sort_and_group(support)
@@ -243,13 +308,15 @@ def find_resistance_support_lines(  data: pd.DataFrame,
         resist_support_lines['resistance'][str(time)] = cluster_notables(sorted_resistance, data)
 
     Xs, Ys, Xr, Yr = get_plot_content(data, resist_support_lines, selected_timeframe=str(timeframes[len(timeframes)-1]))
-    generic_plotting(Ys, x_=Xs, title=f'{name} Support')
-    generic_plotting(Yr, x_=Xr, title=f'{name} Resistance')
+    # generic_plotting(Ys, x_=Xs, title=f'{name} Support')
+    # generic_plotting(Yr, x_=Xr, title=f'{name} Resistance')
 
     Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
-    Xc.append(list(range(len(data['Close']))))
-    Yc.append(data['Close'])
-    generic_plotting(Yc, x_=Xc, title=f'{name} Major Resistance & Support')
+    Xp = Xc.copy()
+    Yp = Yc.copy()
+    Xp.append(list(range(len(data['Close']))))
+    Yp.append(data['Close'])
+    generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support')
 
     analysis = detailed_analysis([Yr, Ys, Yc], data)
     print(analysis)

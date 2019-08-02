@@ -45,13 +45,16 @@ def dual_plotting(
     if len(title) > 0:
         plt.title(title)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'dual_plotting' of title: {title}")
     plt.close()
     plt.clf()
 
@@ -99,13 +102,16 @@ def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, f
     if len(position) > 0:
         plt.plot(position['Close'])
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'histogram' of title: {title}")
     plt.close()
     plt.clf()
 
@@ -139,13 +145,16 @@ def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=Fal
         ax2 = ax1.twinx()
         ax2.plot(position['Close'])
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'bar_chart' of name: {name}")
     plt.close()
     plt.clf()
 
@@ -172,13 +181,16 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
     if len(legend) > 0:
         plt.legend(legend)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'specialty plotting' of title: {title}")
     plt.close()
     plt.clf()
 
@@ -225,12 +237,15 @@ def shape_plotting(main_plot: list, shapeXY: list=[], feature='default', title='
     if len(legend) > 0:
         plt.legend(legend)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'shape plotting' of title: {title}")
     plt.close()
     plt.clf()
