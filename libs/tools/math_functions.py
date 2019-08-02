@@ -1,6 +1,5 @@
 import pandas as pd 
 import numpy as np 
-import matplotlib.pyplot as plt
 
 def linear_regression(x_list, y_list) -> list:
     """ returns [m_slope, intercept] """
