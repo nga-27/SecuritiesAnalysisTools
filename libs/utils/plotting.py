@@ -76,13 +76,16 @@ def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=Fa
     if len(legend) > 0:
         plt.legend(legend)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'generic_plotting' of title: {title}")
     plt.close()
     plt.clf()
 
