@@ -16,7 +16,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 ## Acknowledgements
 * [ranaroussi](https://pypi.org/project/fix-yahoo-finance/) for `PyPI fix-yahoo-finance`
 * J. Arthur for python-pptx library
-* B. Henry, V. Chevrier for great discussion and theories on market behavior, technical analysis
+* B. Henry, V. Chevrier, J. Arthur for great discussion and theories on market behavior, technical analysis
 
 ## Miscellaneous
 ### core.json Functionality

@@ -45,35 +45,50 @@ def dual_plotting(
     if len(title) > 0:
         plt.title(title)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'dual_plotting' of title: {title}")
     plt.close()
     plt.clf()
 
 
 def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=False, filename=''):
     register_matplotlib_converters()
-    x = x_
+    
     if len(x_) < 1:
         x = dates_extractor_list(list_of_plots[0])
-    for fig in list_of_plots:
-        plt.plot(x, fig)
+        for fig in list_of_plots:
+            plt.plot(x, fig)
+    else:
+        if type(x_[0]) == list:
+            x = x_
+            for i in range(len(list_of_plots)):
+                plt.plot(x[i], list_of_plots[i])
+        else:
+            x = x_
+            for fig in list_of_plots:
+                plt.plot(x, fig)
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'generic_plotting' of title: {title}")
     plt.close()
     plt.clf()
 
@@ -87,13 +102,16 @@ def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, f
     if len(position) > 0:
         plt.plot(position['Close'])
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'histogram' of title: {title}")
     plt.close()
     plt.clf()
 
@@ -127,13 +145,16 @@ def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=Fal
         ax2 = ax1.twinx()
         ax2.plot(position['Close'])
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'bar_chart' of name: {name}")
     plt.close()
     plt.clf()
 
@@ -160,13 +181,16 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
     if len(legend) > 0:
         plt.legend(legend)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'specialty plotting' of title: {title}")
     plt.close()
     plt.clf()
 
@@ -213,12 +237,15 @@ def shape_plotting(main_plot: list, shapeXY: list=[], feature='default', title='
     if len(legend) > 0:
         plt.legend(legend)
 
-    if saveFig:
-        filename = 'output/temp/' + filename
-        if os.path.exists(filename):
-            os.remove(filename)
-        plt.savefig(filename)
-    else:
-        plt.show()
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'shape plotting' of title: {title}")
     plt.close()
     plt.clf()

@@ -4,6 +4,7 @@ from .moving_average import triple_moving_average, moving_average_swing_trade
 
 from .trends import trendline, trendline_deriv, support, resistance 
 from .trends import get_trend, get_trend_analysis, trend_filter
+from .resistance_support import find_resistance_support_lines
 
 from .true_strength import relative_strength
 

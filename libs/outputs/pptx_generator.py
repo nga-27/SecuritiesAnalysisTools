@@ -189,43 +189,52 @@ def make_fund_slides(prs, analysis: dict):
 
 
 def add_fund_content(prs, fund: str, analysis: dict):
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    top = Inches(2.5)
-    left = Inches(4)
-    width = Inches(5)
-    height = Inches(2)
-    txtbox = slide.shapes.add_textbox(left, top, width, height)
-    text_frame = txtbox.text_frame
-
-    p = text_frame.paragraphs[0]
-    p.alignment = PP_ALIGN.CENTER
-    p.text = f'{fund}'
-    p.font.bold = True
-    p.font.size = Pt(60)
-    p.font.name = 'Arial'
-
-    p2 = text_frame.add_paragraph()
-    p2.alignment = PP_ALIGN.CENTER
-    p2.text = f"Dates Covered: {analysis[fund]['dates_covered']['start']}  :  {analysis[fund]['dates_covered']['end']}"
-    p2.font.bold = False
-    p2.font.size = Pt(18)
-    p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
-    p2.font.name = 'Arial'
-
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    indexes = []
-    indexes.append(len(prs.slides) - 1)
-
-    slide = fund_title_header(slide, fund)
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = fund_title_header(slide, fund)
-    indexes.append(len(prs.slides)-1)
-
     content_dir = f'output/temp/{fund}/'
     if os.path.exists(content_dir):
+        # Title slide for a fund
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        top = Inches(2.5)
+        left = Inches(4)
+        width = Inches(5)
+        height = Inches(2)
+        txtbox = slide.shapes.add_textbox(left, top, width, height)
+        text_frame = txtbox.text_frame
+
+        p = text_frame.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER
+        p.text = f'{fund}'
+        p.font.bold = True
+        p.font.size = Pt(60)
+        p.font.name = 'Arial'
+
+        p2 = text_frame.add_paragraph()
+        p2.alignment = PP_ALIGN.CENTER
+        p2.text = f"Dates Covered: {analysis[fund]['dates_covered']['start']}  :  {analysis[fund]['dates_covered']['end']}"
+        p2.font.bold = False
+        p2.font.size = Pt(18)
+        p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
+        p2.font.name = 'Arial'
+
+        # Slide #1 of content
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        indexes = []
+        indexes.append(len(prs.slides) - 1)
+        slide = fund_title_header(slide, fund)
+
+        # Slide #2 of content
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, fund)
+        indexes.append(len(prs.slides)-1)
+
+        # Slide #3 of content
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, fund)
+        indexes.append(len(prs.slides)-1)
+
         content = content_dir + '*.png'
         pics = glob.glob(content)
-        prs = format_plots(prs, indexes, pics)
+        fund_analysis = analysis[fund]
+        prs = format_plots(prs, indexes, pics, fund_analysis=fund_analysis)
 
     return prs
 
@@ -253,7 +262,7 @@ def fund_title_header(slide, fund: str, include_time=True):
     return slide
 
 
-def format_plots(prs, slide_indices: list, globs: list):
+def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
     parts = windows_compatible_file_parse(globs[0])
 
     header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/'
@@ -320,6 +329,49 @@ def format_plots(prs, slide_indices: list, globs: list):
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        # Slide #3
+
+        if 'resist_support' in part:
+            left = Inches(0)
+            top = Inches(1.55)
+            height = Inches(4.7)
+            width = Inches(7)
+            prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+            left = Inches(7)
+            top = Inches(0.25)
+            height = Inches(4.7)
+            width = Inches(4)
+            txbox = prs.slides[slide_indices[2]].shapes.add_textbox(left, top, width, height)
+            
+            tf = txbox.text_frame
+            p = tf.paragraphs[0]
+            p.text = f"Nearest Support & Resistance Levels"
+            p.font.size = Pt(18)
+            p.font.name = 'Arial'
+            p.font.bold = True
+
+            p = tf.add_paragraph()
+            p.text = f"Current Price ${fund_analysis['support_resistance']['current price']}"
+            p.font.size = Pt(16)
+            p.font.name = 'Arial'
+            p.font.bold = True
+
+            p = tf.add_paragraph()
+
+            for maj in fund_analysis['support_resistance']['major S&R']:
+                p = tf.add_paragraph()
+                p.text = f"${maj['Price']} \t\t-\t {maj['Change']}"
+                p.font.size = Pt(12)
+                p.font.name = 'Arial'
+                p.font.bold = False
+                fl = maj['Change'].split('%')[0]
+                if float(fl) >= 0.0:
+                    p.font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
+                else:
+                    p.font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
+            
 
     return prs 
 
