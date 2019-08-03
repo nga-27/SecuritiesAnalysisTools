@@ -15,7 +15,7 @@ from libs.utils import generic_plotting
 """
 CLUSTER_THRESHOLD = 0.7
 MAJOR_GROUP_THRESHOLD = 1.1
-NUM_NEAREST_LINES = 4
+NUM_NEAREST_LINES = 7
 
 def truncate_points(X: list, Y: list) -> list:
     new_X = []
@@ -275,15 +275,15 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
     maj.sort()
 
     analysis['current price'] = data['Close'][len(data['Close'])-1]
-    # analysis['supports'] = get_nearest_lines(sup, analysis['current price'], support_resistance='support')
-    # analysis['resistances'] = get_nearest_lines(res, analysis['current price'], support_resistance='resistance')
+    analysis['supports'] = get_nearest_lines(maj, analysis['current price'], support_resistance='support')
+    analysis['resistances'] = get_nearest_lines(maj, analysis['current price'], support_resistance='resistance')
     analysis['major S&R'] = get_nearest_lines(maj, analysis['current price'], support_resistance='major')
     
     return analysis
 
 
 def find_resistance_support_lines(  data: pd.DataFrame, 
-                                    plot_output: bool=False,
+                                    plot_output: bool=True,
                                     name: str='',
                                     timeframes: list=[13, 21, 34, 55]) -> dict:
     resist_support_lines = {}
@@ -316,9 +316,13 @@ def find_resistance_support_lines(  data: pd.DataFrame,
     Yp = Yc.copy()
     Xp.append(list(range(len(data['Close']))))
     Yp.append(data['Close'])
-    generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support')
+
+    if plot_output:
+        generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support')
+    else:
+        filename = f"{name}/resist_support_{name}.png"
+        generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
 
     analysis = detailed_analysis([Yr, Ys, Yc], data)
-    print(analysis)
     return analysis
 

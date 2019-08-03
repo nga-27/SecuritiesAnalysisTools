@@ -22,7 +22,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.08'
-_DATE_REVISION_ = '2019-07-31'
+_DATE_REVISION_ = '2019-08-03'
 ################################
 
 tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
@@ -100,7 +100,7 @@ for fund_name in funds:
     p.uptick()
 
     # Support and Resistance Analysis
-    analysis[name]['support_resistance'] = find_resistance_support_lines(fund, name=name)
+    analysis[name]['support_resistance'] = find_resistance_support_lines(fund, name=name, plot_output=False)
     p.uptick()
 
     # Feature Detection Block
@@ -125,9 +125,9 @@ for fund_name in funds:
 
 # test_competitive(data, analysis)
 
-# market_composite_index(period=period)
+market_composite_index(period=period)
 
-# bond_composite_index(period=period)
+bond_composite_index(period=period)
 
 slide_creator('2019', analysis, _VERSION_)
 output_to_json(analysis)
