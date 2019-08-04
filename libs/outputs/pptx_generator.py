@@ -139,11 +139,11 @@ def make_intro_slide(prs):
 
 
 def make_MCI_slides(prs):
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = fund_title_header(slide, 'Market Composite Index')
-    
     content = f'output/temp/MCI.png'
     if os.path.exists(content):
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, 'Market Composite Index')
+
         left = Inches(1.42)
         top = Inches(1.27)
         height = Inches(6.1)
@@ -165,12 +165,13 @@ def make_BCI_slides(prs):
         else:
             return prs 
 
-        title = f"{filekey} Bond Composite Index"
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = fund_title_header(slide, title)
-        
         content = f'output/temp/{filekey}_BCI.png'
         if os.path.exists(content):
+
+            title = f"{filekey} Bond Composite Index"
+            slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+            slide = fund_title_header(slide, title)
+        
             left = Inches(1.42)
             top = Inches(1.27)
             height = Inches(6.1)
@@ -193,7 +194,7 @@ def add_fund_content(prs, fund: str, analysis: dict):
     if os.path.exists(content_dir):
         # Title slide for a fund
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        top = Inches(2.5)
+        top = Inches(0.1)
         left = Inches(4)
         width = Inches(5)
         height = Inches(2)
@@ -214,6 +215,14 @@ def add_fund_content(prs, fund: str, analysis: dict):
         p2.font.size = Pt(18)
         p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
         p2.font.name = 'Arial'
+
+        content = content_dir + f"candlestick_{fund}.png"
+        if os.path.exists(content):
+            left = Inches(1.42)
+            top = Inches(1.4)
+            height = Inches(6)
+            width = Inches(10.5)
+            slide.shapes.add_picture(content, left, top, height=height, width=width)
 
         # Slide #1 of content
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])

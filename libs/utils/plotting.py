@@ -249,3 +249,48 @@ def shape_plotting(main_plot: list, shapeXY: list=[], feature='default', title='
         print(f"plot failed to render in 'shape plotting' of title: {title}")
     plt.close()
     plt.clf()
+
+
+def candlestick(data: pd.DataFrame, title='', legend=[], saveFig=False, filename=''):
+    register_matplotlib_converters()
+    plt.plot(list(range(len(data['Close']))), data['Close'], alpha=0.01)
+
+    for i in range(len(data['Close'])):
+        op = data['Open'][i]
+        close = data['Close'][i]
+        high = data['High'][i]
+        low = data['Low'][i]
+
+        if data['Close'][i] > data['Open'][i]:
+            colors = 'green'
+        elif data['Close'][i] == data['Open'][i]:
+            colors = 'black'
+            if i > 0:
+                op = data['Open'][i-1]
+                if op > close:
+                    colors = 'red'
+                else: 
+                    colors = 'green'
+        else:
+            colors = 'red'
+        oc = plt.Line2D((i, i), (op, close), lw=3, ls='-', alpha=1, color=colors)
+        plt.gca().add_line(oc)
+        hl = plt.Line2D((i, i), (high, low), lw=0.75, ls='-', alpha=1, color='black')
+        plt.gca().add_line(hl)
+
+    plt.title(title)
+    if len(legend) > 0:
+        plt.legend(legend)
+
+    try:
+        if saveFig:
+            filename = 'output/temp/' + filename
+            if os.path.exists(filename):
+                os.remove(filename)
+            plt.savefig(filename)
+        else:
+            plt.show()
+    except:
+        print(f"plot failed to render in 'shape plotting' of title: {title}")
+    plt.close()
+    plt.clf()
