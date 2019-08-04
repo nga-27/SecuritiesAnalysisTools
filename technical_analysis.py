@@ -12,6 +12,7 @@ from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_ba
 from libs.tools import find_resistance_support_lines
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor, get_daterange
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
+from libs.utils import candlestick
 from libs.metrics import nasit_composite_index
 
 from libs.utils import ProgressBar, start_header
@@ -21,12 +22,12 @@ from libs.metrics import market_composite_index, bond_composite_index
 from test import test_competitive
 
 ################################
-_VERSION_ = '0.1.08'
-_DATE_REVISION_ = '2019-08-03'
+_VERSION_ = '0.1.09'
+_DATE_REVISION_ = '2019-08-04'
 ################################
 
 tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
-PROCESS_STEPS = 13
+PROCESS_STEPS = 14
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
 
@@ -120,6 +121,10 @@ for fund_name in funds:
     p.uptick()
 
     feature_plotter(fund, shapes, name=name, feature='head_and_shoulders')
+    p.uptick()
+
+    filename = f"{fund_name}/candlestick_{fund_name}"
+    candlestick(fund, title=fund_name, filename=filename, saveFig=True)
     p.uptick()
 
 
