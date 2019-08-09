@@ -1,9 +1,11 @@
 import pandas as pd 
 import numpy as np 
 from datetime import datetime
+from scipy.stats import linregress
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list
+from libs.utils import generic_plotting
 
 TREND_PTS = [2, 3, 6]
 
@@ -177,4 +179,78 @@ def trend_filter(osc: dict, position: pd.DataFrame) -> dict:
     filtered = {}
 
     return filtered 
+
+
+
+################################
+"""
+Algorithmic theory:
+1) Find min and max of each iteration.
+2) If trend in region of top 3 points has high rvalue (>= 0.95?), then use trend
+
+Another option:
+1) Find linear regression of a size (interval?)
+2) Find variance/error from points from linear regression line.  Max deviations are max/min?
+
+Option (from online):
+https://stackoverflow.com/questions/43769906/how-to-calculate-the-trendline-for-stock-price
+"""
+
+def get_maxima_minima(data: pd.DataFrame, interval: list=[8, 16, 34, 55]):
+    # maxes = []
+    MULTIPLIER = 2
+    for inter in interval:
+        mins = []
+        xs = []
+        y = []
+        x = []
+
+        data1 = data.copy()
+        data3 = data.copy()
+        data1.reset_index(drop=True, inplace=True)
+        data3.reset_index(drop=True, inplace=True)
+        data1['date_index'] = list(range(len(data['Close'])))
+        data1.drop(data1.index[MULTIPLIER * inter:len(data1['Close'])], inplace=True)
+        data3['date_index'] = list(range(len(data['Close'])))
+        data3.drop(data3.index[MULTIPLIER * inter:len(data3['Close'])], inplace=True)
+        data2 = pd.DataFrame() 
+        data4 = pd.DataFrame()
+
+        while (len(data1['Close']) > 3):
+            reg = linregress(x=data1['date_index'], y=data1['Close'])
+            data2 = data1.copy()
+            data1 = data1.loc[data1['Close'] < reg[0] * data1['date_index'] + reg[1]]
+        while (len(data3['Close']) > 3):
+            reg = linregress(x=data3['date_index'], y=data3['Close'])
+            data4 = data3.copy()
+            data3 = data3.loc[data3['Close'] > reg[0] * data3['date_index'] + reg[1]]
+
+        print(f"data: {data1['Close']}")
+        if len(data1['Close']) < 2:
+            print(f"data2: {data2['Close']}")
+            reg = linregress(x=data2['date_index'], y=data2['Close'])
+        else:
+            reg = linregress(x=data1['date_index'], y=data1['Close'])
+            
+        x = list(range(2 * MULTIPLIER * inter))     
+        y = [reg[0] * xi + reg[1] for xi in x]   
+        mins.append(y)
+        xs.append(x)
+
+        if len(data3['Close']) < 2:
+            print(f"data4: {data4['Close']}")
+            reg = linregress(x=data4['date_index'], y=data4['Close'])
+        else:
+            reg = linregress(x=data3['date_index'], y=data3['Close'])
+            
+        x = list(range(2 * MULTIPLIER * inter))     
+        y = [reg[0] * xi + reg[1] for xi in x] 
+        mins.append(y)
+        xs.append(x)
+
+        xs.append(list(range(len(data['Close']))))
+        mins.append(list(data['Close']))
+        generic_plotting(mins, x_=xs)
+
+    
 

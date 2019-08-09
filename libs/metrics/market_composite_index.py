@@ -44,9 +44,11 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
     return composite2 
 
 
-def market_composite_index(period='1y'):
-    data, sectors = metrics_initializer(period=period)
-    composite_index(data, sectors, plot_output=False) 
+def market_composite_index(period='1y', properties=None):
+    if 'Market Sector' in properties.keys():
+        if properties['Market Sector'] == True:
+            data, sectors = metrics_initializer(period=period)
+            composite_index(data, sectors, plot_output=False) 
 
 
 

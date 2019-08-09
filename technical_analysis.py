@@ -9,7 +9,7 @@ from libs.tools import relative_strength, triple_moving_average, moving_average_
 from libs.features import feature_head_and_shoulders, feature_plotter
 
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.tools import find_resistance_support_lines
+from libs.tools import find_resistance_support_lines, get_maxima_minima
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor, get_daterange
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.utils import candlestick
@@ -22,11 +22,11 @@ from libs.metrics import market_composite_index, bond_composite_index
 from test import test_competitive
 
 ################################
-_VERSION_ = '0.1.09'
-_DATE_REVISION_ = '2019-08-04'
+_VERSION_ = '0.1.10'
+_DATE_REVISION_ = '2019-08-09'
 ################################
 
-tickers, ticker_print, period, interval = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
+tickers, ticker_print, period, interval, properties = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
 PROCESS_STEPS = 14
 
 # DO NOT INCLUDE ^GSPC IN 'tickers' STRING
@@ -127,12 +127,14 @@ for fund_name in funds:
     candlestick(fund, title=fund_name, filename=filename, saveFig=True)
     p.uptick()
 
+    # get_maxima_minima(fund)
+
 
 # test_competitive(data, analysis)
 
-market_composite_index(period=period)
+market_composite_index(period=period, properties=properties)
 
-bond_composite_index(period=period)
+bond_composite_index(period=period, properties=properties)
 
 slide_creator('2019', analysis, _VERSION_)
 output_to_json(analysis)
