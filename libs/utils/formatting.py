@@ -165,6 +165,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
 
     period = None
     interval = None
+    properties = None
 
     if x != '':
         core = header_core_parse(x)
@@ -172,6 +173,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
             tickers = core[0]
             period = core[1]
             interval = core[2]
+            properties = core[3]
 
         else:
             tickers = x
@@ -190,7 +192,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
                 ticker_print += t[i] + ', '
         ticker_print += 'and ^GSPC'
     print(" ")
-    return tickers, ticker_print, period, interval 
+    return tickers, ticker_print, period, interval, properties 
 
 
 def header_core_parse(input_str: str) -> list:
@@ -206,8 +208,11 @@ def header_core_parse(input_str: str) -> list:
             tickers += core['Ticker Symbols'][len(core['Ticker Symbols'])-1]
             interval = core['Properties']['Interval']
             period = core['Properties']['Period']
+            props = None
+            if 'Indexes' in core['Properties'].keys():
+                props = core['Properties']['Indexes']
     
     else:
         return None
 
-    return [tickers, period, interval]
+    return [tickers, period, interval, props]
