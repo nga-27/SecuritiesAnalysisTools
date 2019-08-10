@@ -96,17 +96,19 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True, bond_ty
 
 
 def bond_composite_index(period='1y', properties=None):
-    if 'Treasury Bond' in properties.keys():
-        if properties['Treasury Bond'] == True:
-            data, sectors, index_type = metrics_initializer(period=period, bond_type='Treasury')
-            composite_index(data, sectors, plot_output=False, bond_type='Treasury', index_type=index_type)
+    if 'Indexes' in properties.keys():
+        props = properties['Indexes']
+        if 'Treasury Bond' in props.keys():
+            if props['Treasury Bond'] == True:
+                data, sectors, index_type = metrics_initializer(period=period, bond_type='Treasury')
+                composite_index(data, sectors, plot_output=False, bond_type='Treasury', index_type=index_type)
 
-    if 'Corporate Bond' in properties.keys():
-        if properties['Corporate Bond'] == True:
-            data, sectors, index_type = metrics_initializer(period=period, bond_type='Corporate')
-            composite_index(data, sectors, plot_output=False, bond_type='Corporate', index_type=index_type)
+        if 'Corporate Bond' in props.keys():
+            if props['Corporate Bond'] == True:
+                data, sectors, index_type = metrics_initializer(period=period, bond_type='Corporate')
+                composite_index(data, sectors, plot_output=False, bond_type='Corporate', index_type=index_type)
 
-    if 'International Bond' in properties.keys():
-        if properties['International Bond'] == True:
-            data, sectors, index_type = metrics_initializer(period=period, bond_type='International')
-            composite_index(data, sectors, plot_output=False, bond_type='International', index_type=index_type)
+        if 'International Bond' in props.keys():
+            if props['International Bond'] == True:
+                data, sectors, index_type = metrics_initializer(period=period, bond_type='International')
+                composite_index(data, sectors, plot_output=False, bond_type='International', index_type=index_type)

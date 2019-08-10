@@ -206,11 +206,9 @@ def header_core_parse(input_str: str) -> list:
             for i in range(len(core['Ticker Symbols'])-1):
                 tickers += core['Ticker Symbols'][i] + ' '
             tickers += core['Ticker Symbols'][len(core['Ticker Symbols'])-1]
-            interval = core['Properties']['Interval']
-            period = core['Properties']['Period']
-            props = None
-            if 'Indexes' in core['Properties'].keys():
-                props = core['Properties']['Indexes']
+            props = core['Properties']
+            interval = props['Interval']
+            period = props['Period']
     
     else:
         return None
