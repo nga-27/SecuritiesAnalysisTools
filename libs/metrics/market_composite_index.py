@@ -45,12 +45,13 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
 
 
 def market_composite_index(period='1y', properties=None):
-    if 'Indexes' in properties.keys():
-        props = properties['Indexes']
-        if 'Market Sector' in props.keys():
-            if props['Market Sector'] == True:
-                data, sectors = metrics_initializer(period=period)
-                composite_index(data, sectors, plot_output=False) 
+    if properties is not None:
+        if 'Indexes' in properties.keys():
+            props = properties['Indexes']
+            if 'Market Sector' in props.keys():
+                if props['Market Sector'] == True:
+                    data, sectors = metrics_initializer(period=period)
+                    composite_index(data, sectors, plot_output=False) 
 
 
 

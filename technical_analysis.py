@@ -127,11 +127,11 @@ for fund_name in funds:
     candlestick(fund, title=fund_name, filename=filename, saveFig=True)
     p.uptick()
 
-    # get_maxima_minima(fund)
+    get_maxima_minima(fund)
 
 
 # test_competitive(data, analysis)
-
+print(f"properties: {properties}")
 market_composite_index(period=period, properties=properties)
 
 bond_composite_index(period=period, properties=properties)
