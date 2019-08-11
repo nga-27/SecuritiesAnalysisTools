@@ -100,8 +100,8 @@ def make_intro_slide(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     slide = fund_title_header(slide, 'Explanation of Analysis', include_time=False)
 
-    if os.path.exists('metric_explanation.txt'):
-        filer = open('metric_explanation.txt', 'r')
+    if os.path.exists('resources/metric_explanation.txt'):
+        filer = open('resources/metric_explanation.txt', 'r')
         content = filer.readlines()
         content2 = []
         for cont in content:

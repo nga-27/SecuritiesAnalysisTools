@@ -127,7 +127,7 @@ for fund_name in funds:
     candlestick(fund, title=fund_name, filename=filename, saveFig=True)
     p.uptick()
 
-    get_trendlines(fund)
+    # get_trendlines(fund)
 
 
 # test_competitive(data, analysis)
