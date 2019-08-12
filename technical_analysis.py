@@ -53,6 +53,7 @@ PROCESS_STEPS = 13
 tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
 
+# Temporary directories to save graphs as images, etc.
 remove_temp_dir()
 configure_temp_dir()
 

@@ -5,6 +5,12 @@ import matplotlib.pyplot as plt
 from libs.utils import date_extractor, shape_plotting
 
 def local_extrema(filtered: list) -> dict:
+    """
+    Assuming a filtered list input, finds local minima and maxima
+    Returns:
+        extrema - dict() -> dictionary of lists of extrema indices of 'filtered'
+            keys: 'min', 'max'
+    """
     extrema = {}
     extrema['max'] = []
     extrema['min'] = []
@@ -27,10 +33,18 @@ def local_extrema(filtered: list) -> dict:
     return extrema
 
 
-def reconstruct_extrema(original, extrema: dict, ma_size: int) -> dict:
+def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int) -> dict:
     """ 
     Function to find true extrema on 'original', especially when 'extrema' is generated
-    from a filtered / averaged signal (moving averages introduce time shifting)
+    from a filtered / averaged signal (moving averages introduce time shifting). Uses 
+    Args:
+        original:   pd.DataFrame -> specifically of 'Close' key (so easily castable to type list)
+        extrema:    dict -> keys: 'min', 'max' of filtered signal
+        ma_size:    int -> moving average filter size (used for reconditioning)
+    
+    Returns:
+        recon:      dict -> keys: 'min', 'max'; each key has a list of format:
+                    [index_of_min_or_max, value]
     """
 
     recon = {}
@@ -42,12 +56,14 @@ def reconstruct_extrema(original, extrema: dict, ma_size: int) -> dict:
         start = _max - ma_size
         if start < 0:
             start = 0
+        # Search for the maximum on the original signal between 'start' and '_max'.
         recon['max'].append([olist.index(np.max(olist[start:_max]), start, _max), np.max(olist[start:_max+1])])
 
     for _min in extrema['min']:
         start = _min - ma_size
         if start < 0:
             start = 0
+        # Search for the maximum on the original signal between 'start' and '_min'.
         recon['min'].append([olist.index(np.min(olist[start:_min]), start, _min), np.min(olist[start:_min+1])])
     
     return recon
@@ -56,7 +72,7 @@ def reconstruct_extrema(original, extrema: dict, ma_size: int) -> dict:
 
 def remove_duplicates(recon: dict, threshold=0.01) -> dict:
     """ 
-    Removes duplicates of extrema (due to equal tops, errors, those w/in a threshold of its neighbor)
+    Removes duplicates of extrema (due to equal tops/bottoms, errors, those w/in a threshold of its neighbor)
     """
     most_recent = 0
     newlist = []
@@ -109,6 +125,9 @@ def remove_empty_keys(dictionary: dict) -> dict:
 
 
 def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_and_shoulders'):
+    """
+    Plots a rectangle of where the feature was detected overlayed on the ticker signal.
+    """
     filename = name + f'/{feature}_{name}.png'
     title = f'{name} Feature Detection: '
     if feature == 'head_and_shoulders':
