@@ -8,6 +8,8 @@ import glob
 import time
 import json 
 
+import yfinance as yf 
+
 def name_parser(name: str) -> str:
     """ parses file name to generate fund name """
     name = name.split('.')[0]
@@ -214,3 +216,22 @@ def header_core_parse(input_str: str) -> list:
         return None
 
     return [tickers, period, interval, props]
+
+
+def download_data(period: str, interval: str, ticker_print: str, tickers: str) -> list:
+    if period is None:
+        period = '2y'
+    if interval is None:
+        interval = '1d'
+    
+    daterange = get_daterange(period=period)
+    
+    if daterange is None:
+        print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
+        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
+    else: 
+        print(f'Fetching data for {ticker_print} from dates {daterange[0]} to {daterange[1]}...')
+        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
+    print(" ")
+
+    return data

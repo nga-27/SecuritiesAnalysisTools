@@ -1,35 +1,54 @@
-import pandas as pd 
-import numpy as np 
-import pprint 
-
-import yfinance as yf 
-
-from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
-from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
-from libs.features import feature_head_and_shoulders, feature_plotter
-
-from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from libs.tools import find_resistance_support_lines, get_maxima_minima, get_trendlines
-from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor, get_daterange
-from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import candlestick
-from libs.metrics import nasit_composite_index
-
-from libs.utils import ProgressBar, start_header
-from libs.outputs import slide_creator, output_to_json
-from libs.metrics import market_composite_index, bond_composite_index
-
-from test import test_competitive
+"""
+#   Technical Analysis Tools
+#
+#   by: nga-27
+#
+#   A program that outputs a graphical and a numerical analysis of
+#   securities (stocks, bonds, equities, and the like). Analysis 
+#   includes use of oscillators (Stochastic, RSI, and Ultimate), 
+#   momentum charting (Moving Average Convergence Divergence, 
+#   Simple and Exponential Moving Averages), trend analysis (Bands, 
+#   Support and Resistance, Channels), and some basic feature 
+#   detection (Head and Shoulders, Pennants).
+#   
+"""
 
 ################################
 _VERSION_ = '0.1.11'
-_DATE_REVISION_ = '2019-08-10'
+_DATE_REVISION_ = '2019-08-11'
 ################################
 
-tickers, ticker_print, period, interval, properties = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
-PROCESS_STEPS = 14
+# Imports that are custom tools that are the crux of this program
+from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
+from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
+from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
+from libs.tools import find_resistance_support_lines
 
-# DO NOT INCLUDE ^GSPC IN 'tickers' STRING
+# Imports that support functions doing feature detection
+from libs.features import feature_head_and_shoulders, feature_plotter
+
+# Imports that are generic file/string/object/date utility functions
+from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
+from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir, download_data
+
+# Imports that plot (many are imported in functions)
+from libs.utils import candlestick
+
+# Imports that drive custom metrics for market analysis
+from libs.metrics import market_composite_index, bond_composite_index
+
+# Imports that create final products and show progress doing so
+from libs.utils import ProgressBar, start_header
+from libs.outputs import slide_creator, output_to_json
+
+# Imports in development / non-final "public" calls
+from test import test_competitive
+from libs.tools import get_maxima_minima, get_trendlines
+
+####################################################################
+####################################################################
+tickers, ticker_print, period, interval, properties = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
+PROCESS_STEPS = 13
 
 tickers = index_appender(tickers)
 sp500_index = index_extractor(tickers)
@@ -37,20 +56,7 @@ sp500_index = index_extractor(tickers)
 remove_temp_dir()
 configure_temp_dir()
 
-if period is None:
-    period = '2y'
-if interval is None:
-    interval = '1d'
-
-daterange = get_daterange(period=period)
-
-if daterange is None:
-    print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
-    data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
-else: 
-    print(f'Fetching data for {ticker_print} from dates {daterange[0]} to {daterange[1]}...')
-    data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
-print(" ")
+data = download_data(period=period, interval=interval, ticker_print=ticker_print, tickers=tickers)
     
 funds = fund_list_extractor(data)
 
@@ -60,9 +66,6 @@ analysis = {}
 for fund_name in funds:
 
     name = fund_name
-
-    # ticker_name = yf.Ticker(name)
-    # print(ticker_name.dividends)
     
     create_sub_temp_dir(name)
     analysis[name] = {}
@@ -71,8 +74,6 @@ for fund_name in funds:
     p.start()
 
     fund = data[fund_name]
-    p.uptick()
-    fundB = fund #pd.read_csv(fileB)
     p.uptick()
 
     start = date_extractor(fund.index[0], _format='str')
@@ -136,7 +137,7 @@ market_composite_index(period=period, properties=properties)
 
 bond_composite_index(period=period, properties=properties)
 
-slide_creator('2019', analysis, _VERSION_)
+slide_creator(_DATE_REVISION_, analysis, _VERSION_)
 output_to_json(analysis)
 
 remove_temp_dir()
