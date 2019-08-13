@@ -1,3 +1,12 @@
+"""
+bond_composite_index.py
+
+An quasi-weighted aggregate metric that takes the computed clustered oscillator metric 
+for various bond types of the bond market represented by the Vanguard ETFs listed under
+'tickers' below in 'metrics_initializer'. Note - bond oscillators are not as accurate 
+as market oscillators, but the metrics can still provide buy-sell signals.
+"""
+
 import pandas as pd 
 import numpy as np 
 
@@ -8,12 +17,16 @@ from libs.utils import dual_plotting, ProgressBar, index_appender, dates_extract
 
 def metrics_initializer(period='1y', bond_type='Treasury'):
     if bond_type == 'Treasury':
-        tickers = 'BSV BIV BLV VTEB BND'
+        # Treasury (Gov't only - alternative would be BSV/BIV/BLV)
+        tickers = 'VGSH VGIT VGLT VTEB BND'
         index = 'BND'
     elif bond_type == 'Corporate':
+        # Corporate investment-grade bonds (BBB/BAA or higher)
         tickers = 'VCSH VCIT VCLT'
         index = 'Corporate'
     elif bond_type == 'International':
+        # BNDX - International investment grade: (roughly) 55% Europe, 25% Pacific, 10% N. America, 4% Emerging
+        # VWOB - Emerging Gov't: <45% below investment grade, 60% emerging markets
         tickers = 'BNDX VWOB'
         index = 'International'
     else:
@@ -96,6 +109,7 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True, bond_ty
 
 
 def bond_composite_index(period='1y', properties=None):
+    """ Validate each index key is set to True in the --core file """
     if properties is not None:
         if 'Indexes' in properties.keys():
             props = properties['Indexes']

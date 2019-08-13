@@ -15,7 +15,7 @@
 
 ################################
 _VERSION_ = '0.1.11'
-_DATE_REVISION_ = '2019-08-11'
+_DATE_REVISION_ = '2019-08-13'
 ################################
 
 # Imports that are custom tools that are the crux of this program
@@ -65,13 +65,11 @@ funds = fund_list_extractor(data)
 analysis = {}
 
 for fund_name in funds:
-
-    name = fund_name
     
-    create_sub_temp_dir(name)
-    analysis[name] = {}
+    create_sub_temp_dir(fund_name)
+    analysis[fund_name] = {}
 
-    p = ProgressBar(PROCESS_STEPS, name=name)
+    p = ProgressBar(PROCESS_STEPS, name=fund_name)
     p.start()
 
     fund = data[fund_name]
@@ -80,49 +78,49 @@ for fund_name in funds:
     start = date_extractor(fund.index[0], _format='str')
     end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
 
-    analysis[name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
-    analysis[name]['name'] = name
+    analysis[fund_name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
+    analysis[fund_name]['name'] = fund_name
 
-    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=name, plot_output=False)
-    analysis[name]['clustered_osc'] = dat
+    chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=fund_name, plot_output=False)
+    analysis[fund_name]['clustered_osc'] = dat
     p.uptick()
 
-    on_balance_volume(fund, plot_output=False, name=name)
+    on_balance_volume(fund, plot_output=False, name=fund_name)
     p.uptick()
 
-    triple_moving_average(fund, plot_output=False, name=name)
+    triple_moving_average(fund, plot_output=False, name=fund_name)
     p.uptick()
 
-    moving_average_swing_trade(fund, plot_output=False, name=name)
+    moving_average_swing_trade(fund, plot_output=False, name=fund_name)
     p.uptick()
 
-    analysis[name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=False, name=name)
+    analysis[fund_name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=False, name=fund_name)
     p.uptick()
 
-    analysis[name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=False)
+    analysis[fund_name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=False)
     p.uptick()
 
     # Support and Resistance Analysis
-    analysis[name]['support_resistance'] = find_resistance_support_lines(fund, name=name, plot_output=False)
+    analysis[fund_name]['support_resistance'] = find_resistance_support_lines(fund, name=fund_name, plot_output=False)
     p.uptick()
 
     # Feature Detection Block
     shapes = []
-    analysis[name]['features'] = {}
+    analysis[fund_name]['features'] = {}
 
-    hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=2, name=name, shapes=shapes)
-    analysis[name]['features']['head_shoulders_2'] = hs2
+    hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=2, name=fund_name, shapes=shapes)
+    analysis[fund_name]['features']['head_shoulders_2'] = hs2
     p.uptick()
 
-    hs, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=4, name=name, shapes=shapes)
-    analysis[name]['features']['head_shoulders_4'] = hs
+    hs, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=4, name=fund_name, shapes=shapes)
+    analysis[fund_name]['features']['head_shoulders_4'] = hs
     p.uptick()
 
-    hs3, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=8, name=name, shapes=shapes)
-    analysis[name]['features']['head_shoulders_8'] = hs3
+    hs3, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=8, name=fund_name, shapes=shapes)
+    analysis[fund_name]['features']['head_shoulders_8'] = hs3
     p.uptick()
 
-    feature_plotter(fund, shapes, name=name, feature='head_and_shoulders')
+    feature_plotter(fund, shapes, name=fund_name, feature='head_and_shoulders')
     p.uptick()
 
     filename = f"{fund_name}/candlestick_{fund_name}"

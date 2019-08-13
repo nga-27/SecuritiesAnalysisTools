@@ -1,3 +1,14 @@
+"""
+market_composite_index.py
+
+An equal-weight aggregate metric that takes the computed clustered oscillator metric 
+for each of the 11 sectors of the market represented by the Vanguard ETFs listed under
+'tickers' below in 'metrics_initializer'. Arguably a more accurate metric than a 
+clustered oscillator metric on the S&P500 by itself. 
+
+FUTURE - compare this metric with a correlation metric of each sector.
+"""
+
 import pandas as pd 
 import numpy as np 
 
@@ -45,6 +56,7 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
 
 
 def market_composite_index(period='1y', properties=None):
+    """ Validate each index key is set to True in the --core file """
     if properties is not None:
         if 'Indexes' in properties.keys():
             props = properties['Indexes']
@@ -56,6 +68,7 @@ def market_composite_index(period='1y', properties=None):
 
 
 def type_composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
+    """ Similar to MCI, TCI compares broader market types (sensitive, cyclical, and defensive) """
     p = ProgressBar(13, name='Type Composite Index')
     p.start()
 
