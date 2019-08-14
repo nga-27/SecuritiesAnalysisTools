@@ -95,11 +95,13 @@ def create_sub_temp_dir(name):
 
 
 def get_daterange(period: str='1y'):
+    # Note: deprecated for more robust fix of mutual fund responses
+    """
     fulltime = datetime.now().strftime('%H:%M:%S')
     # Note, timing can be input to function if desired; central time
     endtime = datetime.strptime('19:00:00', '%H:%M:%S').strftime('%H:%M:%S')
     day_of_week = datetime.today().weekday()
-    
+
     if (day_of_week < 5):
         # 0: monday, 6: sunday
         if fulltime <= endtime:
@@ -111,7 +113,7 @@ def get_daterange(period: str='1y'):
             end = datetime.strftime(new_end, '%Y-%m-%d')
             start = datetime.strftime(new_start, '%Y-%m-%d')
             return [start, end]
-
+    """
     return None
 
 

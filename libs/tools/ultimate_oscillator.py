@@ -15,9 +15,16 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list=[7, 14, 28
 
     ult_osc = []
     stats = position 
+    
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
+    tot_len = len(stats['Close'])
+    if pd.isna(stats['Close'][tot_len-1]):
+        tot_len -= 1
 
     # Generate the ultimate oscillator values
-    for i in range(len(stats['Close'])):
+    for i in range(tot_len):
         
         # Handle edge cases first
         if i < 1:
@@ -30,6 +37,7 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list=[7, 14, 28
             high = np.max([stats['High'][i], stats['Close'][i-1]])
             bp.append(np.round(stats['Close'][i] - low, 6))
             tr.append(np.round(high - low, 6))
+            
 
         if i < config[0]:
             ushort.append(0.0)
@@ -39,7 +47,10 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list=[7, 14, 28
             for j in range(config[0]):
                 shbp += bp[len(bp)-1-j]
                 shtr += tr[len(tr)-1-j]
-            ushort.append(np.round(shbp / shtr, 6))
+            if shtr == 0.0:
+                ushort.append(0.0)
+            else:
+                ushort.append(np.round(shbp / shtr, 6))
 
         if i < config[1]:
             umed.append(0.0)
@@ -49,7 +60,10 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list=[7, 14, 28
             for j in range(config[1]):
                 shbp += bp[len(bp)-1-j]
                 shtr += tr[len(tr)-1-j]
-            umed.append(np.round(shbp / shtr, 6))
+            if shtr == 0.0:
+                umed.append(0.0)
+            else:
+                umed.append(np.round(shbp / shtr, 6))
 
         if i < config[2]:
             ulong.append(0.0)
@@ -78,7 +92,15 @@ def ult_osc_find_triggers(position: pd.DataFrame, ult_osc_signal: list, thresh_l
     trigger = []
     marker_val = 0.0
     marker_ind = 0
-    for i in range(len(stats['Close'])):
+
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
+    tot_len = len(stats['Close'])
+    if pd.isna(stats['Close'][tot_len-1]):
+        tot_len -= 1
+
+    for i in range(tot_len):
 
         # Find bullish signal
         if ult_osc[i] < LOW_TH:

@@ -274,7 +274,13 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
     sup.sort()
     maj.sort()
 
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
     analysis['current price'] = data['Close'][len(data['Close'])-1]
+    if pd.isna(analysis['current price']):
+        analysis['current price'] = data['Close'][len(data['Close'])-2]
+
     analysis['supports'] = get_nearest_lines(maj, analysis['current price'], support_resistance='support')
     analysis['resistances'] = get_nearest_lines(maj, analysis['current price'], support_resistance='resistance')
     analysis['major S&R'] = get_nearest_lines(maj, analysis['current price'], support_resistance='major')
