@@ -8,6 +8,8 @@ import glob
 import time
 import json 
 
+import yfinance as yf 
+
 def name_parser(name: str) -> str:
     """ parses file name to generate fund name """
     name = name.split('.')[0]
@@ -93,11 +95,13 @@ def create_sub_temp_dir(name):
 
 
 def get_daterange(period: str='1y'):
+    # Note: deprecated for more robust fix of mutual fund responses
+    """
     fulltime = datetime.now().strftime('%H:%M:%S')
     # Note, timing can be input to function if desired; central time
     endtime = datetime.strptime('19:00:00', '%H:%M:%S').strftime('%H:%M:%S')
     day_of_week = datetime.today().weekday()
-    
+
     if (day_of_week < 5):
         # 0: monday, 6: sunday
         if fulltime <= endtime:
@@ -109,7 +113,7 @@ def get_daterange(period: str='1y'):
             end = datetime.strftime(new_end, '%Y-%m-%d')
             start = datetime.strftime(new_start, '%Y-%m-%d')
             return [start, end]
-
+    """
     return None
 
 
@@ -206,13 +210,30 @@ def header_core_parse(input_str: str) -> list:
             for i in range(len(core['Ticker Symbols'])-1):
                 tickers += core['Ticker Symbols'][i] + ' '
             tickers += core['Ticker Symbols'][len(core['Ticker Symbols'])-1]
-            interval = core['Properties']['Interval']
-            period = core['Properties']['Period']
-            props = None
-            if 'Indexes' in core['Properties'].keys():
-                props = core['Properties']['Indexes']
+            props = core['Properties']
+            interval = props['Interval']
+            period = props['Period']
     
     else:
         return None
 
     return [tickers, period, interval, props]
+
+
+def download_data(period: str, interval: str, ticker_print: str, tickers: str) -> list:
+    if period is None:
+        period = '2y'
+    if interval is None:
+        interval = '1d'
+    
+    daterange = get_daterange(period=period)
+    
+    if daterange is None:
+        print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
+        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
+    else: 
+        print(f'Fetching data for {ticker_print} from dates {daterange[0]} to {daterange[1]}...')
+        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
+    print(" ")
+
+    return data

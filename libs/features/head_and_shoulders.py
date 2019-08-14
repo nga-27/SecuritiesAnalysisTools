@@ -8,6 +8,12 @@ from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema
 from .feature_utils import local_extrema
 
 def find_head_shoulders(extrema: dict) -> dict:
+    """
+    Head and shoulders detection algorithm 
+    
+    For bearish, find 3 maxima alternated by 2 minima. The 2nd maximum must be higher 
+    than the other 2 maxima. For bullish, the exact opposite.
+    """
     extrema['features'] = []
     lmax = len(extrema['max'])
     lmin = len(extrema['min'])
@@ -49,6 +55,10 @@ def find_head_shoulders(extrema: dict) -> dict:
 
 
 def feature_detection(features: list) -> dict:
+    """
+    Continuation of 'find_head_shoulders' above. If feature detected,
+    add various feature details as well.
+    """
     detected = {}
     #print(features)
     if features[0][1] > features[1][1]:
@@ -106,21 +116,29 @@ def feature_detection(features: list) -> dict:
 
 def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10, sanitize_dict=True, name=''):
     """ 
-    Find head and shoulders feature of a reversal 
+    PUBLIC FUNCTION - Find head and shoulders feature of a reversal 
     Args:
         fund - pd.DataFrame of fund over a period
         FILTER_SIZE - (int) period of ema filter
+        sanitize_dict - (bool) if True, remove min/max lists so only feature-detected elements remain
     Returns:
         hs - dict of head and shoulders features
-        ma - (list) fund filtered with ema
+        ma - (list) fund signal filtered with ema
     """
 
+    # Filter and find extrema. Reconstruct where those extremes exist on the actual signal.
     # ma = exponential_ma(fund, FILTER_SIZE)
     ma = windowed_ma_list(fund['Close'], interval=FILTER_SIZE+1)
     ex = local_extrema(ma)
     r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE)
+
+    # Cleanse data sample for duplicates and errors
     r = remove_duplicates(r)
+
+    # Run detection algorithm (head and shoulders in this case)
     hs = find_head_shoulders(r) 
+
+    # Cleanse data dictionary [again] and add dates for plotting features.
     hs = add_daterange(fund, hs, 5)
     hs = remove_empty_keys(hs) 
     
@@ -130,7 +148,6 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
 
     if hs['features'] != []:
         for feat in hs['features']:
-            # generic_plotting([fund['Close'], ma])
             fe = {}
             fe['type'] = feat['type']
             fe['indexes'] = feat['indexes']

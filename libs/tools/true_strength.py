@@ -9,7 +9,15 @@ from libs.utils import index_extractor, fund_list_extractor, dates_extractor_lis
 
 def basic_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
     ratio = []
-    for close in range(len(fundA['Adj Close'])):
+
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
+    tot_len = len(fundA['Adj Close']) if len(fundA['Adj Close']) <= len(fundB['Adj Close']) else len(fundB['Adj Close'])
+    if pd.isna(fundA['Adj Close'][tot_len-1]) or pd.isna(fundB['Adj Close'][tot_len-1]):
+        tot_len -= 1
+
+    for close in range(tot_len):
         ratio.append(np.round(fundA['Adj Close'][close] / fundB['Adj Close'][close], 6))
 
     return ratio 
@@ -18,7 +26,15 @@ def basic_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
 def normalized_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
     ratio = []
     divisor = np.round(fundA['Adj Close'][0] / fundB['Adj Close'][0], 6)
-    for close in range(len(fundA['Adj Close'])):
+
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
+    tot_len = len(fundA['Adj Close']) if len(fundA['Adj Close']) <= len(fundB['Adj Close']) else len(fundB['Adj Close'])
+    if pd.isna(fundA['Adj Close'][tot_len-1]) or pd.isna(fundB['Adj Close'][tot_len-1]):
+        tot_len -= 1
+    
+    for close in range(tot_len):
         ratio.append(np.round((fundA['Adj Close'][close] / fundB['Adj Close'][close] / divisor) - 1.0, 6))
 
     return ratio 
@@ -27,7 +43,15 @@ def normalized_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
 def normalized_ratio_lists(fundA: list, fundB: list) -> list:
     ratio = []
     divisor = np.round(fundA[0] / fundB[0], 6)
-    for close in range(len(fundA)):
+
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
+    tot_len = len(fundA) if len(fundA) <= len(fundB) else len(fundB)
+    if pd.isna(fundA[tot_len-1]) or pd.isna(fundB[tot_len-1]):
+        tot_len -= 1
+
+    for close in range(tot_len):
         ratio.append(np.round((fundA[close] / fundB[close] / divisor) - 1.0, 6))
 
     return ratio 
@@ -47,7 +71,7 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
     hasSP = False
     hasSector = False
 
-    sp = get_SP500(tickers)
+    sp = get_SP500_df(tickers)
     if sp is not None:
         hasSP = True
     if sector != '':
@@ -57,6 +81,13 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
 
     fund = tickers[fund_name]
 
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
+    mutual_fund_mode = 0
+    if pd.isna(fund['Adj Close'][len(fund['Adj Close'])-1]):
+        mutual_fund_mode = 1
+
     for period in periods:
         entry = {}
         entry['period'] = period
@@ -64,7 +95,7 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
         if hasSP:
             entry['sp500'] = {}
             sp_temp = list(sp['Adj Close'])
-            sp_temp = sp_temp[len(sp_temp)-period:len(sp_temp)+1]
+            sp_temp = sp_temp[len(sp_temp)-period-mutual_fund_mode:len(sp_temp)+1-mutual_fund_mode]
             f_temp = list(fund['Adj Close'])
             f_temp = f_temp[len(f_temp)-period:len(f_temp)+1]
             r = normalized_ratio_lists(f_temp, sp_temp)
@@ -78,7 +109,7 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
             entry['sector'] = {}
             entry['sector']['name'] = sector
             sp_temp = list(sec['Adj Close'])
-            sp_temp = sp_temp[len(sp_temp)-period:len(sp_temp)+1]
+            sp_temp = sp_temp[len(sp_temp)-period-mutual_fund_mode:len(sp_temp)+1-mutual_fund_mode]
             f_temp = list(fund['Adj Close'])
             f_temp = f_temp[len(f_temp)-period:len(f_temp)+1]
             r = normalized_ratio_lists(f_temp, sp_temp)
@@ -93,7 +124,7 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
     return ratio 
 
 
-def get_SP500(tickers: pd.DataFrame) -> pd.DataFrame:
+def get_SP500_df(tickers: pd.DataFrame) -> pd.DataFrame:
     SP500_INDEX = 'securities/^GSPC.csv'
     if os.path.exists(SP500_INDEX):
         sp = pd.read_csv(SP500_INDEX)
@@ -125,7 +156,7 @@ def relative_strength( fundA_name: str,
     positionB = tickers[fundB_name]
     title = 'Strength: {} - {}'.format(fundA_name, fundB_name)
     if sector == '':
-        sp = get_SP500(tickers)
+        sp = get_SP500_df(tickers)
         if sp is not None and is_fund_match(tickers[fundA_name], tickers[fundB_name]):
             positionB = sp 
             title = 'Strength: {} vs. ^GSPC'.format(fundA_name)
@@ -133,13 +164,17 @@ def relative_strength( fundA_name: str,
     rat = normalized_ratio(tickers[fundA_name], positionB)
     st = period_strength(fundA_name, tickers, periods=[20, 50, 100], sector=sector)
     
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
+    # length of plotting to accomodate.
     dates = dates_extractor_list(tickers)
+    if len(rat) < len(dates):
+        dates = dates[0:len(rat)]
+
     if plot_output:
         generic_plotting([rat], x_=dates, title=title)
     else:
         filename = fundA_name +'/relative_strength_{}.png'.format(fundA_name)
         generic_plotting([rat], x_=dates, title=title, saveFig=True, filename=filename)
-
-    # shape_plotting(rat)
 
     return st

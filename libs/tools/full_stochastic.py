@@ -30,7 +30,12 @@ def generate_full_stoch_signal(position: pd.DataFrame, config=[14, 3, 3]) -> lis
 
         s = [low, high, position['Close'][i]]
 
-        K = (position['Close'][i] - low) / (high - low) * 100.0
+        # For very low cost funds with no movement over range, will be NaN
+        if low != high:
+            K = (position['Close'][i] - low) / (high - low) * 100.0
+        else:
+            K = 50.0
+
         k_instant.append(K)
 
         # Smooth oscillator with config[1]

@@ -100,8 +100,8 @@ def make_intro_slide(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     slide = fund_title_header(slide, 'Explanation of Analysis', include_time=False)
 
-    if os.path.exists('metric_explanation.txt'):
-        filer = open('metric_explanation.txt', 'r')
+    if os.path.exists('resources/metric_explanation.txt'):
+        filer = open('resources/metric_explanation.txt', 'r')
         content = filer.readlines()
         content2 = []
         for cont in content:
@@ -386,10 +386,11 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
 
 
 
-def slide_creator(year: str, analysis: dict, version: str):
+def slide_creator(date_revision: str, analysis: dict, version: str):
     """ High-level function for converting inventors spreadsheet to slides """
 
     print("Starting presentation creation.")
+    year = date_revision.split('-')[0]
 
     prs = title_presentation(year, VERSION=version)
     prs = make_intro_slide(prs)
