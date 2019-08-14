@@ -247,7 +247,7 @@ def shape_plotting(main_plot: pd.DataFrame, shapeXY: list=[], feature='default',
     # plt.plot(main_plot)
     xpts = plt.gca().get_lines()[0].get_xdata()
     ypts = plt.gca().get_lines()[0].get_ydata()
-    print(f"xpts {xpts}")
+    """ CONVERT SHAPEXY (DICT OF ITEMS) TO DATE """
 
     if feature == 'default':
         dotted_line = plt.Line2D((xpts[40],xpts[len(xpts)-40]), (np.min(ypts), np.max(ypts)), lw=1, ls='-', alpha=0.5)
@@ -263,6 +263,7 @@ def shape_plotting(main_plot: pd.DataFrame, shapeXY: list=[], feature='default',
                 colors = 'red'
 
             for pt in shape['indexes']:
+                # convert to date here
                 ypts.append(pt[1])
                 xpts.append(pt[0])
             box = plt.Line2D((xpts[0], xpts[4]), (np.min(ypts), np.min(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
