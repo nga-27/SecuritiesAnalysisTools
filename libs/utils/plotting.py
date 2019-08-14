@@ -255,8 +255,9 @@ def shape_plotting(main_plot: pd.DataFrame, shapeXY: list=[], feature='default',
 
     elif (feature == 'head_and_shoulders') and (shapeXY != []):
         for shape in shapeXY:
-            ypts = []
-            xpts = []
+            
+            y_shp_pts = []
+            x_shp_pts = []
             if shape['type'] == 'bullish':
                 colors = 'green'
             else:
@@ -264,15 +265,15 @@ def shape_plotting(main_plot: pd.DataFrame, shapeXY: list=[], feature='default',
 
             for pt in shape['indexes']:
                 # convert to date here
-                ypts.append(pt[1])
-                xpts.append(pt[0])
-            box = plt.Line2D((xpts[0], xpts[4]), (np.min(ypts), np.min(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+                y_shp_pts.append(pt[1])
+                x_shp_pts.append(xpts[pt[0]])
+            box = plt.Line2D((x_shp_pts[0], x_shp_pts[4]), (np.min(y_shp_pts), np.min(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
-            box = plt.Line2D((xpts[0], xpts[0]), (np.min(ypts), np.max(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            box = plt.Line2D((x_shp_pts[0], x_shp_pts[0]), (np.min(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
-            box = plt.Line2D((xpts[0], xpts[4]), (np.max(ypts), np.max(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            box = plt.Line2D((x_shp_pts[0], x_shp_pts[4]), (np.max(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
-            box = plt.Line2D((xpts[4], xpts[4]), (np.min(ypts), np.max(ypts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            box = plt.Line2D((x_shp_pts[4], x_shp_pts[4]), (np.min(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
 
     plt.title(title)

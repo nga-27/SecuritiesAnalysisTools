@@ -288,6 +288,16 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
     return analysis
 
 
+def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list) -> list:
+    new_l_of_xls = []
+    for xlist in list_of_xlists:
+        new_xlist = []
+        for x in xlist:
+            new_xlist.append(df.index[x])
+        new_l_of_xls.append(new_xlist)
+    return new_l_of_xls
+
+
 def find_resistance_support_lines(  data: pd.DataFrame, 
                                     plot_output: bool=True,
                                     name: str='',
@@ -319,15 +329,16 @@ def find_resistance_support_lines(  data: pd.DataFrame,
 
     Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
     Xp = Xc.copy()
+    Xp2 = dates_convert_from_index(data, Xp)
     Yp = Yc.copy()
-    Xp.append(list(range(len(data['Close']))))
+    Xp2.append(data.index)
     Yp.append(data['Close'])
 
     if plot_output:
-        generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support')
+        generic_plotting(Yp, x_=Xp2, title=f'{name} Major Resistance & Support')
     else:
         filename = f"{name}/resist_support_{name}.png"
-        generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
+        generic_plotting(Yp, x_=Xp2, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
 
     analysis = detailed_analysis([Yr, Ys, Yc], data)
     return analysis

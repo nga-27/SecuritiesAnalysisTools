@@ -15,7 +15,7 @@
 
 ################################
 _VERSION_ = '0.1.12'
-_DATE_REVISION_ = '2019-08-13'
+_DATE_REVISION_ = '2019-08-14'
 ################################
 
 # Imports that are custom tools that are the crux of this program
