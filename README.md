@@ -46,9 +46,9 @@ gitignore, so privacy of one's funds will be maintained.
     * `Corporate Bond` - summation of 'Clustered Oscillator' metrics for 3 corporate bond timeframes based off Vanguard's corp bond ETFs:
         * VCSH (Short-term), VCIT (Intermediate-term), and VCLT (Long-term)
     * `Treasury Bond` - summation of 'Clustered Oscillator' metrics for 4 investment-grade, treasury/gov't-based bonds and timeframes based off select Vanguard ETFs:
-        * BSV (Short-term), BIV (Intermediate-Term), BLV (Long-Term), and VTEB (tax-exempt municipal)
+        * VGSH (Short-term), VGIT (Intermediate-Term), VGLT (Long-Term), and VTEB (tax-exempt municipal)
     * `International Composite` - weighted summation of 'Clustered Oscilator' metrics for 2 select Vanguard international ETFs:
-        * VXUS (International Index), VWO (Emerging Markets Index)
+        * BNDX (International Index), VWO (Emerging Markets Index)
 
 FUTURE - adding more customizable fields to core functionality for greater user costumization.
 

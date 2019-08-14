@@ -1,11 +1,33 @@
 import pandas as pd 
 import numpy as np 
 import matplotlib.pyplot as plt 
+import matplotlib.dates as mdates
 from datetime import datetime
 import os
 from pandas.plotting import register_matplotlib_converters
 
 from .formatting import dates_extractor_list
+
+
+def plot_xaxis_disperse(axis_obj, every_nth: int=2, dynamic=True):
+    num_ticks = len(axis_obj.xaxis.get_ticklabels())
+    tick_even = True
+    if dynamic:
+        if num_ticks % 2 == 0:
+            # length is even, end with tick mark
+            tick_even = True
+        else:
+            tick_even = False
+
+    for n, label in enumerate(axis_obj.xaxis.get_ticklabels()):
+        if tick_even:
+            if n % every_nth == 0:
+                label.set_visible(False)
+        else:
+            if n % every_nth != 0:
+                label.set_visible(False)
+    return 
+
 
 def dual_plotting(
     y1: list, 
@@ -42,6 +64,9 @@ def dual_plotting(
     fig.tight_layout()
     plt.legend([y2_label])
 
+    plt.tight_layout()
+    plot_xaxis_disperse(ax1)
+
     if len(title) > 0:
         plt.title(title)
 
@@ -61,6 +86,8 @@ def dual_plotting(
 
 def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=False, filename=''):
     register_matplotlib_converters()
+
+    fig, ax = plt.subplots()
     
     if len(x_) < 1:
         x = dates_extractor_list(list_of_plots[0])
@@ -78,6 +105,8 @@ def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=Fa
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
+
+    plot_xaxis_disperse(ax)
 
     try:
         if saveFig:
@@ -145,6 +174,8 @@ def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=Fal
         ax2 = ax1.twinx()
         ax2.plot(position['Close'])
 
+    plot_xaxis_disperse(ax1)
+
     try:
         if saveFig:
             filename = 'output/temp/' + filename
@@ -165,7 +196,7 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
     x = x_
     if len(x_) < 1:
         x = dates_extractor_list(list_of_plots[0])
-    figure, ax = plt.subplots()
+    fig, ax = plt.subplots()
 
     for i in range(len(list_of_plots)):
         if i not in alt_ax_index:
@@ -181,6 +212,8 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
     if len(legend) > 0:
         plt.legend(legend)
 
+    plot_xaxis_disperse(ax)
+
     try:
         if saveFig:
             filename = 'output/temp/' + filename
@@ -195,18 +228,26 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
     plt.clf()
 
 
-def shape_plotting(main_plot: list, shapeXY: list=[], feature='default', title='', legend=[], saveFig=False, filename=''):
+def shape_plotting(main_plot: pd.DataFrame, shapeXY: list=[], feature='default', title='', legend=[], saveFig=False, filename=''):
     """ Note, shapeXY is a list of dictionaries of coordinates and type """
+    register_matplotlib_converters()
 
-    if type(main_plot) != list:
-        new_list = []
-        for i in range(len(main_plot)):
-            new_list.append(main_plot[i])
-        main_plot = new_list
+    fig, ax = plt.subplots()
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    
+    x = [datetime.strptime(d, '%Y-%m-%d').date() for d in main_plot.index.astype(str)]
+    plt.plot(x, main_plot)
 
-    plt.plot(main_plot)
+    # if type(main_plot) != list:
+    #     new_list = []
+    #     for i in range(len(main_plot)):
+    #         new_list.append(main_plot[i])
+    #     main_plot = new_list
+
+    # plt.plot(main_plot)
     xpts = plt.gca().get_lines()[0].get_xdata()
     ypts = plt.gca().get_lines()[0].get_ydata()
+    print(f"xpts {xpts}")
 
     if feature == 'default':
         dotted_line = plt.Line2D((xpts[40],xpts[len(xpts)-40]), (np.min(ypts), np.max(ypts)), lw=1, ls='-', alpha=0.5)
@@ -237,6 +278,8 @@ def shape_plotting(main_plot: list, shapeXY: list=[], feature='default', title='
     if len(legend) > 0:
         plt.legend(legend)
 
+    plot_xaxis_disperse(ax)
+
     try:
         if saveFig:
             filename = 'output/temp/' + filename
@@ -253,8 +296,13 @@ def shape_plotting(main_plot: list, shapeXY: list=[], feature='default', title='
 
 def candlestick(data: pd.DataFrame, title='', legend=[], saveFig=False, filename=''):
     register_matplotlib_converters()
-    plt.plot(list(range(len(data['Close']))), data['Close'], alpha=0.01)
 
+    fig, ax = plt.subplots()
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+    
+    x = [datetime.strptime(d, '%Y-%m-%d').date() for d in data.index.astype(str)]
+    plt.plot(x, data['Close'], alpha=0.01)
+    
     for i in range(len(data['Close'])):
         op = data['Open'][i]
         close = data['Close'][i]
@@ -273,14 +321,16 @@ def candlestick(data: pd.DataFrame, title='', legend=[], saveFig=False, filename
                     colors = 'green'
         else:
             colors = 'red'
-        oc = plt.Line2D((i, i), (op, close), lw=3, ls='-', alpha=1, color=colors)
+        oc = plt.Line2D((x[i], x[i]), (op, close), lw=3, ls='-', alpha=1, color=colors)
         plt.gca().add_line(oc)
-        hl = plt.Line2D((i, i), (high, low), lw=0.75, ls='-', alpha=1, color='black')
+        hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75, ls='-', alpha=1, color='black')
         plt.gca().add_line(hl)
 
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
+
+    plot_xaxis_disperse(ax)
 
     try:
         if saveFig:
