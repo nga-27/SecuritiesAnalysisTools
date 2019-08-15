@@ -29,6 +29,9 @@ def truncate_points(X: list, Y: list) -> list:
 
 def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_type='windowed') -> list:
     total_entries = len(data['Close'])
+    if pd.isna(data['Close'][total_entries-1]):
+        total_entries -= 1
+
     sect_count = 0
     X = []
     Y = []
@@ -38,6 +41,7 @@ def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_
         while (sect_count < sections):
             left = sect_count * timeframe
             right = left + timeframe
+            # print(f"tot: {total_entries}, left: {left}, right: {right}")
             if total_entries < (left + timeframe + 1):
                 right = total_entries
 
