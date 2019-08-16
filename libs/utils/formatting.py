@@ -237,3 +237,40 @@ def download_data(period: str, interval: str, ticker_print: str, tickers: str) -
     print(" ")
 
     return data
+
+
+def data_nan_fix(fund_df: pd.DataFrame) -> pd.DataFrame:
+    close = np.where(pd.isna(fund_df['Close']) == True)
+    adjclose = np.where(pd.isna(fund_df['Adj Close']) == True)
+    vol = np.where(pd.isna(fund_df['Volume']) == True)
+    op = np.where(pd.isna(fund_df['Open']) == True)
+    high = np.where(pd.isna(fund_df['High']) == True)
+    low = np.where(pd.isna(fund_df['Low']) == True)
+    # TODO: average values, look for point cases where Nan, fill with average
+    print(f"s = {fund_df['Close'].isna()[0]}")
+    if len(close) > 0:
+        for cl in enumerate(close):
+            if (fund_df['Close'].isna()[cl-1] == False) and (cl != 0) and (cl + 1 != len(fund_df['Close'])) and (fund_df['Close'].isna()[cl+1] == False):
+                fund_df['Close'][cl] = np.mean([fund_df['Close'][cl-1], fund_df['Close'][cl+1]])
+    if len(adjclose) > 0:
+        for cl in enumerate(close):
+            if (not pd.isna(fund_df['Adj Close'][cl-1])) and (cl != 0) and (cl + 1 != len(fund_df['Adj Close'])) and (not pd.isna(fund_df['Adj Close'][cl+1])):
+                fund_df['Adj Close'][cl] = np.mean([fund_df['Adj Close'][cl-1], fund_df['Adj Close'][cl+1]])
+    if len(vol) > 0:
+        for cl in enumerate(close):
+            if (not pd.isna(fund_df['Volume'][cl-1])) and (cl != 0) and (cl + 1 != len(fund_df['Volume'])) and (not pd.isna(fund_df['Volume'][cl+1])):
+                fund_df['Volume'][cl] = np.mean([fund_df['Volume'][cl-1], fund_df['Volume'][cl+1]])
+    if len(op) > 0:
+        for cl in enumerate(close):
+            if (not pd.isna(fund_df['Open'][cl-1])) and (cl != 0) and (cl + 1 != len(fund_df['Open'])) and (not pd.isna(fund_df['Open'][cl+1])):
+                fund_df['Open'][cl] = np.mean([fund_df['Open'][cl-1], fund_df['Open'][cl+1]])
+    if len(high) > 0:
+        for cl in enumerate(close):
+            if (not pd.isna(fund_df['High'][cl-1])) and (cl != 0) and (cl + 1 != len(fund_df['High'])) and (not pd.isna(fund_df['High'][cl+1])):
+                fund_df['High'][cl] = np.mean([fund_df['High'][cl-1], fund_df['High'][cl+1]])
+    if len(low) > 0:
+        for cl in enumerate(close):
+            if (not pd.isna(fund_df['Low'][cl-1])) and (cl != 0) and (cl + 1 != len(fund_df['Low'])) and (not pd.isna(fund_df['Low'][cl+1])):
+                fund_df['Low'][cl] = np.mean([fund_df['Low'][cl-1], fund_df['Low'][cl+1]])
+
+    return fund_df

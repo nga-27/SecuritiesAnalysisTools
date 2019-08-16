@@ -128,6 +128,7 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
 
     # Filter and find extrema. Reconstruct where those extremes exist on the actual signal.
     # ma = exponential_ma(fund, FILTER_SIZE)
+    print(f"fund: {np.where(pd.isna(fund['Close']) == True)}, {fund['Close'][460]}, {fund['Close'][461]}, {fund['Close'][462]}, {fund.index[461]}")
     ma = windowed_ma_list(fund['Close'], interval=FILTER_SIZE+1)
     ex = local_extrema(ma)
     r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE)

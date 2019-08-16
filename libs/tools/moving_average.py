@@ -1,5 +1,6 @@
 import pandas as pd 
 import numpy as np 
+import math 
 
 def exponential_ma(fund: pd.DataFrame, interval: int) -> list:
     ema = []
@@ -35,10 +36,16 @@ def windowed_ma_list(item: list, interval: int) -> list:
     wma = []
     for i in range(left):
         wma.append(item[i])
+        # if math.isnan(item[i]):
+        #     print(f"NaN on item {i}")
     for i in range(left, len(item)-left):
         wma.append(np.mean(item[i-(left):i+1+(left)]))
+        # if math.isnan(item[i]):
+        #     print(f"NaN on item {i}")
     for i in range(len(item)-left, len(item)):
         wma.append(item[i])
+        # if math.isnan(item[i]):
+        #     print(f"NaN on item {i}")
 
     return wma 
 
