@@ -294,12 +294,19 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
 
 def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list) -> list:
     new_l_of_xls = []
-    for xlist in list_of_xlists:
-        new_xlist = []
-        for x in xlist:
-            new_xlist.append(df.index[x])
-        new_l_of_xls.append(new_xlist)
+    if len(list_of_xlists) > 0:
+        for xlist in list_of_xlists:
+            new_xlist = []
+            for x in xlist:
+                new_xlist.append(df.index[x])
+            new_l_of_xls.append(new_xlist)
     return new_l_of_xls
+
+def remove_dates_from_close(df: pd.DataFrame) -> list:
+    fixed_list = []
+    for i in range(len(df)):
+        fixed_list.append(df['Close'][i])
+    return fixed_list
 
 
 def find_resistance_support_lines(  data: pd.DataFrame, 
@@ -332,11 +339,16 @@ def find_resistance_support_lines(  data: pd.DataFrame,
     # generic_plotting(Yr, x_=Xr, title=f'{name} Resistance')
 
     Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
-    Xp = Xc.copy()
-    Xp2 = dates_convert_from_index(data, Xp)
-    Yp = Yc.copy()
-    Xp2.append(data.index)
-    Yp.append(data['Close'])
+    # Odd list behavior when no res/sup lines drawn on appends, so if-else to fix
+    if len(Yc) > 0:
+        Xp = Xc.copy()
+        Xp2 = dates_convert_from_index(data, Xp)
+        Yp = Yc.copy()
+        Xp2.append(data.index)
+        Yp.append(remove_dates_from_close(data))
+    else:
+        Xp2 = data.index 
+        Yp = [remove_dates_from_close(data)]
 
     if plot_output:
         generic_plotting(Yp, x_=Xp2, title=f'{name} Major Resistance & Support')

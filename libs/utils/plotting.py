@@ -100,8 +100,9 @@ def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=Fa
                 plt.plot(x[i], list_of_plots[i])
         else:
             x = x_
-            for fig in list_of_plots:
-                plt.plot(x, fig)
+            for i, figy in enumerate(list_of_plots):
+                plt.plot(x, figy)
+
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
