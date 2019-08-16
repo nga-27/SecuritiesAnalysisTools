@@ -36,14 +36,18 @@ def index_appender(tickers: str) -> str:
     return tickers
 
 
-def fund_list_extractor(ticker_df: pd.DataFrame) -> list:
+def fund_list_extractor(ticker_df: pd.DataFrame, config: dict) -> list:
     """ Extracts fund names from ticker_df for accessing later """
     funds = []
+    # First check if a single fund (single dimension)
+    if 'Open' in ticker_df.keys():
+        funds = [config['tickers']]
+        return funds
+
     for key in ticker_df.keys():
         """ Multi-level df, so we need to extract only name key (remove duplicates) """
         if (len(key) > 1) and (key[0] not in funds):
             funds.append(key[0])
-
     return funds
 
 
@@ -76,25 +80,7 @@ def date_extractor(date, _format=None):
     return dateX
 
 
-def configure_temp_dir():
-    """ for outputting, as well as temp files """
-    if not os.path.exists('output/temp/'):
-        if not os.path.exists('output/'):
-            os.mkdir('output/')
-        os.mkdir('output/temp/')
-
-
-def remove_temp_dir():
-    if os.path.exists('output/temp/'):
-        shutil.rmtree('output/temp/')
-
-
-def create_sub_temp_dir(name):
-    if not os.path.exists('output/temp/' + name + '/'):
-        os.mkdir('output/temp/' + name + '/')
-
-
-def get_daterange(period: str='1y'):
+def get_daterange(period: str='1y') -> list:
     # Note: deprecated for more robust fix of mutual fund responses
     """
     fulltime = datetime.now().strftime('%H:%M:%S')
@@ -114,7 +100,7 @@ def get_daterange(period: str='1y'):
             start = datetime.strftime(new_start, '%Y-%m-%d')
             return [start, end]
     """
-    return None
+    return [None, None]
 
 
 def period_parser(period: str):
@@ -137,142 +123,3 @@ def period_parser(period: str):
     else:
         return 1, 0, 0
 
-
-def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4, bad_parse='\\') -> list:
-    globbed = extension.split('/')
-    if len(globbed) < desired_len:
-        end = globbed[desired_len-2].split(bad_parse)
-        globbed.pop(desired_len-2)
-        globbed.append(end[0])
-        globbed.append(end[1])
-    return globbed
-
-
-
-def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI') -> str:
-    print(" ")
-    print("----------------------------------")
-    print("-   Securities Analysis Tools    -")
-    print("-                                -")
-    print("-            nga-27              -")
-    print("-                                -")
-    print(f"-       version: {version}          -")
-    print(f"-       updated: {update_release}      -")
-    print("----------------------------------")
-    print(" ")
-    time.sleep(1)
-
-    # Default (hitting enter)
-    tickers = default
-
-    x = input("Enter stock/fund ticker symbols (e.g. 'VTI VWINX') or '--core': ")
-
-    period = None
-    interval = None
-    properties = None
-
-    if x != '':
-        core = header_core_parse(x)
-        if core is not None:
-            tickers = core[0]
-            period = core[1]
-            interval = core[2]
-            properties = core[3]
-
-        else:
-            tickers = x
-            if "'" in x:
-                spl = x.split("'")
-                tickers = spl[1]        
-    
-    tickers = tickers.upper()
-    ticker_print = ''
-    t = tickers.split(' ')
-    if len(t) < 2:
-        ticker_print += t[0] + ' and ^GSPC'
-    else:
-        for i in range(len(t)):
-            if t[i] != '':
-                ticker_print += t[i] + ', '
-        ticker_print += 'and ^GSPC'
-    print(" ")
-    return tickers, ticker_print, period, interval, properties 
-
-
-def header_core_parse(input_str: str) -> list:
-    if input_str != '--core':
-        return None
-
-    if os.path.exists('core.json'):
-        tickers = ''
-        with open('core.json') as json_file:
-            core = json.load(json_file)
-            for i in range(len(core['Ticker Symbols'])-1):
-                tickers += core['Ticker Symbols'][i] + ' '
-            tickers += core['Ticker Symbols'][len(core['Ticker Symbols'])-1]
-            props = core['Properties']
-            interval = props['Interval']
-            period = props['Period']
-    
-    else:
-        return None
-
-    return [tickers, period, interval, props]
-
-
-def download_data(period: str, interval: str, ticker_print: str, tickers: str) -> list:
-    if period is None:
-        period = '2y'
-    if interval is None:
-        interval = '1d'
-    
-    daterange = get_daterange(period=period)
-    
-    if daterange is None:
-        print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
-        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
-    else: 
-        print(f'Fetching data for {ticker_print} from dates {daterange[0]} to {daterange[1]}...')
-        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
-    print(" ")
-
-    return data
-
-
-def data_nan_fix(fund_df1: pd.DataFrame) -> pd.DataFrame:
-    """ Data sent via provider sometimes has NaN in spots, which breaks many algorithms. This patches some of those glitches. """
-
-    fund_df = fund_df1.copy()
-    close = list(np.where(pd.isna(fund_df['Close']) == True))[0]
-    adjclose = list(np.where(pd.isna(fund_df['Adj Close']) == True))[0]
-    vol = list(np.where(pd.isna(fund_df['Volume']) == True))[0]
-    op = list(np.where(pd.isna(fund_df['Open']) == True))[0]
-    high = list(np.where(pd.isna(fund_df['High']) == True))[0]
-    low = list(np.where(pd.isna(fund_df['Low']) == True))[0]
-
-    if len(close) > 0:
-        for e, cl in enumerate(close):
-            if (fund_df['Close'].isna()[cl-1] == False) and (cl != 0) and (cl + 1 != len(fund_df['Close'])) and (fund_df['Close'].isna()[cl+1] == False):
-                fund_df['Close'][cl] = np.mean([fund_df['Close'][cl-1], fund_df['Close'][cl+1]])
-    if len(adjclose) > 0:
-        for e, cl in enumerate(adjclose):
-            if (fund_df['Adj Close'].isna()[cl-1] == False) and (cl != 0) and (cl + 1 != len(fund_df['Adj Close'])) and (fund_df['Adj Close'].isna()[cl+1] == False):
-                fund_df['Adj Close'][cl] = np.mean([fund_df['Adj Close'][cl-1], fund_df['Adj Close'][cl+1]])
-    if len(vol) > 0:
-        for e, cl in enumerate(vol):
-            if (fund_df['Volume'].isna()[cl-1] == False) and (cl != 0) and (cl + 1 != len(fund_df['Volume'])) and (fund_df['Volume'].isna()[cl+1] == False):
-                fund_df['Volume'][cl] = np.mean([fund_df['Volume'][cl-1], fund_df['Volume'][cl+1]])
-    if len(op) > 0:
-        for e, cl in enumerate(op):
-            if (fund_df['Open'].isna()[cl-1] == False) and (cl != 0) and (cl + 1 != len(fund_df['Open'])) and (not fund_df['Open'].isna()[cl+1] == False):
-                fund_df['Open'][cl] = np.mean([fund_df['Open'][cl-1], fund_df['Open'][cl+1]])
-    if len(high) > 0:
-        for e, cl in enumerate(high):
-            if (fund_df['High'].isna()[cl-1] == False) and (cl != 0) and (cl + 1 != len(fund_df['High'])) and (fund_df['High'].isna()[cl+1] == False):
-                fund_df['High'][cl] = np.mean([fund_df['High'][cl-1], fund_df['High'][cl+1]])
-    if len(low) > 0:
-        for e, cl in enumerate(low):
-            if (fund_df['Low'].isna()[cl-1] == False) and (cl != 0) and (cl + 1 != len(fund_df['Low'])) and (fund_df['Low'].isna()[cl+1] == False):
-                fund_df['Low'][cl] = np.mean([fund_df['Low'][cl-1], fund_df['Low'][cl+1]])
-
-    return fund_df
