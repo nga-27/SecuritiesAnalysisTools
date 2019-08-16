@@ -29,6 +29,9 @@ def truncate_points(X: list, Y: list) -> list:
 
 def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_type='windowed') -> list:
     total_entries = len(data['Close'])
+    if pd.isna(data['Close'][total_entries-1]):
+        total_entries -= 1
+
     sect_count = 0
     X = []
     Y = []
@@ -38,6 +41,7 @@ def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_
         while (sect_count < sections):
             left = sect_count * timeframe
             right = left + timeframe
+            # print(f"tot: {total_entries}, left: {left}, right: {right}")
             if total_entries < (left + timeframe + 1):
                 right = total_entries
 
@@ -288,6 +292,23 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
     return analysis
 
 
+def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list) -> list:
+    new_l_of_xls = []
+    if len(list_of_xlists) > 0:
+        for xlist in list_of_xlists:
+            new_xlist = []
+            for x in xlist:
+                new_xlist.append(df.index[x])
+            new_l_of_xls.append(new_xlist)
+    return new_l_of_xls
+
+def remove_dates_from_close(df: pd.DataFrame) -> list:
+    fixed_list = []
+    for i in range(len(df)):
+        fixed_list.append(df['Close'][i])
+    return fixed_list
+
+
 def find_resistance_support_lines(  data: pd.DataFrame, 
                                     plot_output: bool=True,
                                     name: str='',
@@ -318,16 +339,22 @@ def find_resistance_support_lines(  data: pd.DataFrame,
     # generic_plotting(Yr, x_=Xr, title=f'{name} Resistance')
 
     Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
-    Xp = Xc.copy()
-    Yp = Yc.copy()
-    Xp.append(list(range(len(data['Close']))))
-    Yp.append(data['Close'])
+    # Odd list behavior when no res/sup lines drawn on appends, so if-else to fix
+    if len(Yc) > 0:
+        Xp = Xc.copy()
+        Xp2 = dates_convert_from_index(data, Xp)
+        Yp = Yc.copy()
+        Xp2.append(data.index)
+        Yp.append(remove_dates_from_close(data))
+    else:
+        Xp2 = data.index 
+        Yp = [remove_dates_from_close(data)]
 
     if plot_output:
-        generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support')
+        generic_plotting(Yp, x_=Xp2, title=f'{name} Major Resistance & Support')
     else:
         filename = f"{name}/resist_support_{name}.png"
-        generic_plotting(Yp, x_=Xp, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
+        generic_plotting(Yp, x_=Xp2, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
 
     analysis = detailed_analysis([Yr, Ys, Yc], data)
     return analysis

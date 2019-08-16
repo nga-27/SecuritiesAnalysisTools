@@ -14,8 +14,8 @@
 """
 
 ################################
-_VERSION_ = '0.1.11'
-_DATE_REVISION_ = '2019-08-13'
+_VERSION_ = '0.1.12'
+_DATE_REVISION_ = '2019-08-16'
 ################################
 
 # Imports that are custom tools that are the crux of this program
@@ -29,7 +29,7 @@ from libs.features import feature_head_and_shoulders, feature_plotter
 
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
-from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir, download_data
+from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir, download_data, data_nan_fix
 
 # Imports that plot (many are imported in functions)
 from libs.utils import candlestick
@@ -66,6 +66,7 @@ analysis = {}
 
 for fund_name in funds:
     
+    print(f"~~{fund_name}~~")
     create_sub_temp_dir(fund_name)
     analysis[fund_name] = {}
 
@@ -73,6 +74,7 @@ for fund_name in funds:
     p.start()
 
     fund = data[fund_name]
+    fund = data_nan_fix(fund)
     p.uptick()
 
     start = date_extractor(fund.index[0], _format='str')
