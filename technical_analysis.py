@@ -107,7 +107,8 @@ if config['state'] != 'halt':
         p.uptick()
 
         if config['state'] != 'run_no_index':
-            analysis[fund_name]['relative_strength'] = relative_strength(fund_name, fund_name, tickers=data, sector='', plot_output=False)
+            analysis[fund_name]['relative_strength'] = relative_strength(   fund_name, fund_name, config=config, 
+                                                                            tickers=data, sector='', plot_output=False)
         p.uptick()
 
         # Support and Resistance Analysis
