@@ -35,25 +35,19 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['period'] = None
     config['interval'] = None
     config['properties'] = None
-    if options is not None:
-        config['state'], x = header_options_parse(x)
+    config['core'] = False
 
+    if options is not None:
+        config, x = header_options_parse(x, config)
         if config['state'] == 'halt':
             return config
 
-    if x == '':
+    if (x == '') and (config['core'] == False):
         # Default (hitting enter)
         config['tickers'] = default
 
     else:
-        core = header_core_parse(x)
-        if core is not None:
-            config['tickers'] = core[0]
-            config['period'] = core[1]
-            config['interval'] = core[2]
-            config['properties'] = core[3]
-
-        else:
+        if config['core'] == False:
             config['tickers'] = x
             config['tickers'] = config['tickers'].strip()
             if "'" in x:
@@ -119,7 +113,7 @@ def header_core_parse(input_str: str) -> list:
     return [tickers, period, interval, props]
 
 
-def header_options_parse(input_str: str) -> list:
+def header_options_parse(input_str: str, config: dict) -> list:
     if '--options' in input_str:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
@@ -132,23 +126,40 @@ def header_options_parse(input_str: str) -> list:
         else:
             print(f"ERROR - NO {options_file} found.")
             print(" ")
-        return 'halt', input_str
+        config['state'] = 'halt'
+        return config, input_str
+
+    if '--core' in input_str:
+        core = header_core_parse(input_str)
+        if core is not None:
+            config['tickers'] = core[0]
+            config['period'] = core[1]
+            config['interval'] = core[2]
+            config['properties'] = core[3]
+            config['state'] = 'run'
+            config['core'] = True
+            output_str = input_str.replace('--core', '')
+        return config, output_str
 
     if '--noindex' in input_str:
         output_str = input_str.replace('--noindex', '')
-        return 'run_no_index', output_str
+        config['state'] = 'run_no_index'
+        return config, output_str
 
     if '--r1' in input_str:
         output_str = input_str.replace('--r1', '')
-        return 'r1', output_str
+        config['state'] = 'r1'
+        return config, output_str
 
     if '--r2' in input_str:
         output_str = input_str.replace('--r2', '')
-        return 'r2', output_str
+        config['state'] = 'r2'
+        return config, output_str
 
     # HAS TO BE LAST! Error catch-all for any '--' inputs
     if '--' in input_str:
         print(f"Error 400: Bad / unknown request of input string of '{input_str}''. Aborting...")
-        return 'halt', input_str
+        config['state'] = 'halt'
+        return config, input_str
         
-    return 'run', input_str
+    return config, input_str

@@ -19,7 +19,7 @@ _DATE_REVISION_ = '2019-08-18'
 ################################
 
 # Imports that create final products and show progress doing so
-from libs.utils import ProgressBar, start_header
+from libs.utils import start_header
 
 # Imports that run operations and functions for the program
 from releases import technical_analysis, release_1
@@ -32,7 +32,7 @@ class App:
 
     def run(self):
         self.config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
-        
+
         if 'run' in self.config['state']:
             self.config['release'] = False
             technical_analysis(self.config)
@@ -43,7 +43,7 @@ class App:
 
         if 'r2' in self.config['state']:
             self.config['release'] = True
-            technical_analysis(self.config)
+            # technical_analysis(self.config)
             print("ERROR: release 2 has not been created yet!")
 
         print('Done.')

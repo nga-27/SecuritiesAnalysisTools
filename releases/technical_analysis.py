@@ -45,8 +45,8 @@ from libs.tools import get_maxima_minima, get_trendlines
 
 PROCESS_STEPS = 13
 ################################
-_VERSION_ = '0.1.23'
-_DATE_REVISION_ = '2010-08-18'
+_VERSION_ = '0.1.13'
+_DATE_REVISION_ = '2019-08-18'
 ################################
 
 def technical_analysis(config: dict):
@@ -66,7 +66,11 @@ def technical_analysis(config: dict):
         configure_temp_dir()
 
         data = download_data(config=config)
-            
+
+        e_check = {'tickers': config['tickers']}
+        if has_critical_error(data, 'download_data', misc=e_check):
+            return None
+        
         funds = fund_list_extractor(data, config=config)
 
         # Start of automated process
@@ -157,3 +161,15 @@ def technical_analysis(config: dict):
 
         remove_temp_dir()
 
+
+def has_critical_error(item, e_type: str, misc: dict=None) -> bool:
+    # TODO: check all tickers (some good, some bad)
+    if e_type == 'download_data':
+        # A successful pull of actual data will have multiIndex keys. Bad data will have columns but no data.
+        if 'Close' not in item.keys():
+            return False
+        if len(item['Close']) == 0:
+            print(f"404 ERROR: Data requested not found. Input traceback: {misc} provided")
+            return True
+
+    return False

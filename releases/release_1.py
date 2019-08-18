@@ -67,7 +67,7 @@ def release_1():
     period = '1y'
     interval = '1d'
 
-    if daterange is None:
+    if daterange[0] is None:
         print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
         data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
     else: 
