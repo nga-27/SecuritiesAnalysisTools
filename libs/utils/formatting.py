@@ -36,13 +36,14 @@ def index_appender(tickers: str) -> str:
     return tickers
 
 
-def fund_list_extractor(ticker_df: pd.DataFrame, config: dict) -> list:
+def fund_list_extractor(ticker_df: pd.DataFrame, config: dict=None) -> list:
     """ Extracts fund names from ticker_df for accessing later """
     funds = []
-    # First check if a single fund (single dimension)
-    if 'Open' in ticker_df.keys():
-        funds = [config['tickers']]
-        return funds
+    if config is not None:
+        # First check if a single fund (single dimension), only on 0.1.13+
+        if 'Open' in ticker_df.keys():
+            funds = [config['tickers']]
+            return funds
 
     for key in ticker_df.keys():
         """ Multi-level df, so we need to extract only name key (remove duplicates) """

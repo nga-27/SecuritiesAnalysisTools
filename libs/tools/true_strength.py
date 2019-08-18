@@ -150,7 +150,7 @@ def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
 def relative_strength( fundA_name: str, 
     fundB_name: str, 
     tickers: pd.DataFrame,
-    config: dict,
+    config: dict=None,
     sector: str='', 
     plot_output=True ) -> list:
 

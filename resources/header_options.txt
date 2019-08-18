@@ -1,0 +1,10 @@
+OPTIONS:
+
+--core       :     normal operation run with parameters found in core.json
+--r1         :     run release_1.py
+--noindex    :     does not include S&P500 index, omits comparison operations
+
+FUNCTIONS:   :     (e.g. '--clustered_osc --macd vti AAPL amzn' ) [FUTURE RELEASE]
+
+--clustered_osc    displays plot of oscillator of fund [FUTURE RELEASE]
+--macd             displays plot of moving average convergence/divergence [FUTURE RELEASE]

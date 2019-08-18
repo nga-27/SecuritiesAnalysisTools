@@ -12,52 +12,53 @@
 #   detection (Head and Shoulders, Pennants).
 #   
 """
-import sys, os
-sys.path.insert(0, os.path.abspath('..'))
+
 # https://stackoverflow.com/questions/6323860/sibling-package-imports
 
+# Use only after release!
 ################################
-_VERSION_ = '0.1.13'
-_DATE_REVISION_ = '2019-08-16'
+# _VERSION_ = '0.1.13'
+# _DATE_REVISION_ = '2019-08-18'
 ################################
 
 # Imports that are custom tools that are the crux of this program
-from ..app.libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
-from ..libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
-from ..libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
-from ..libs.tools import find_resistance_support_lines
+from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
+from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
+from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
+from libs.tools import find_resistance_support_lines
 
 # Imports that support functions doing feature detection
-from ..libs.features import feature_head_and_shoulders, feature_plotter
+from libs.features import feature_head_and_shoulders, feature_plotter
 
 # Imports that are generic file/string/object/date utility functions
-from ..libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
-from ..libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir, download_data, data_nan_fix
+from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
+from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir, download_data, data_nan_fix
 
 # Imports that plot (many are imported in functions)
-from ..libs.utils import candlestick
+from libs.utils import candlestick
 
 # Imports that drive custom metrics for market analysis
-from ..libs.metrics import market_composite_index, bond_composite_index
+from libs.metrics import market_composite_index, bond_composite_index
 
 # Imports that create final products and show progress doing so
-from ..libs.utils import ProgressBar, start_header
-from ..libs.outputs import slide_creator, output_to_json
+from libs.utils import ProgressBar, start_header
+from libs.outputs import slide_creator, output_to_json
 
 # Imports in development / non-final "public" calls
-from ..test import test_competitive
-from ..libs.tools import get_maxima_minima, get_trendlines
+from test import test_competitive
+from libs.tools import get_maxima_minima, get_trendlines
 
 ####################################################################
 ####################################################################
-config = start_header(update_release=_DATE_REVISION_, version=_VERSION_)
 PROCESS_STEPS = 13
 
-if config['state'] != 'halt':
+
+def technical_analysis(config: dict):
+
 
     if config['state'] != 'run_no_index':
         config['tickers'] = index_appender(config['tickers'])
-        sp500_index = index_extractor(config['tickers'])
+        # sp500_index = index_extractor(config['tickers'])
 
     # Temporary directories to save graphs as images, etc.
     remove_temp_dir()
@@ -150,10 +151,8 @@ if config['state'] != 'halt':
 
     bond_composite_index(config=config)
 
-    slide_creator(_DATE_REVISION_, analysis, _VERSION_)
+    slide_creator(analysis, config=config)
     output_to_json(analysis)
 
     remove_temp_dir()
-
-print('Done.')
 

@@ -8,7 +8,7 @@ import glob
 import time
 import json 
 
-def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI') -> dict:
+def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI', options: str=None) -> dict:
     print(" ")
     print("----------------------------------")
     print("-   Securities Analysis Tools    -")
@@ -23,15 +23,23 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     time.sleep(1)
     config = dict()
 
-    x = input("Enter ticker symbols (e.g. 'aapl') and tags (see --options): ")
+    if options is not None:
+        x = input("Enter ticker symbols (e.g. 'aapl') and tags (see --options): ")
+    else:
+        x = input("Enter ticker symbols (e.g. 'aapl'): ")
 
+    config['version'] = version
+    config['date_release'] = update_release
+
+    config['state'] = 'run'
     config['period'] = None
     config['interval'] = None
     config['properties'] = None
-    config['state'], x = header_options_parse(x)
+    if options is not None:
+        config['state'], x = header_options_parse(x)
 
-    if config['state'] == 'halt':
-        return config
+        if config['state'] == 'halt':
+            return config
 
     if x == '':
         # Default (hitting enter)
@@ -96,23 +104,25 @@ def header_core_parse(input_str: str) -> list:
 
 def header_options_parse(input_str: str) -> list:
     if '--options' in input_str:
-        print(" ")
-        print("OPTIONS:")
-        print(" ")
-        print("--core       :     normal operation run with parameters found in core.json")
-        print("--r1         :     run release_1.py [FUTURE RELEASE]")
-        print("--noindex    :     does not include S&P500 index, omits comparison operations")
-        print(" ")
-        print("FUNCTIONS:   :     (e.g. '--clustered_osc --macd vti AAPL amzn' ) [FUTURE RELEASE]")
-        print(" ")
-        print("--clustered_osc    displays plot of oscillator of fund [FUTURE RELEASE]")
-        print("--macd             displays plot of moving average convergence/divergence [FUTURE RELEASE]")
-        print(" ")
+        options_file = 'resources/header_options.txt'
+        if os.path.exists(options_file):
+            fs = open(options_file, 'r')
+            options_read = fs.read()
+            fs.close()
+            print(" ")
+            print(options_read)
+            print(" ")
+        else:
+            print(f"ERROR - NO {options_file} found.")
+            print(" ")
         return ['halt', input_str]
 
     if '--noindex' in input_str:
         output_str = input_str.replace('--noindex', '')
         return 'run_no_index', output_str
 
-    
+    if '--r1' in input_str:
+        output_str = input_str.replace('--r1', '')
+        return 'r1', output_str
+        
     return 'run', input_str
