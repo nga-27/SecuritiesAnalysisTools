@@ -55,7 +55,20 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
     return composite2 
 
 
-def market_composite_index(period='1y', properties=None):
+def market_composite_index(config: dict=None, period=None):
+    if config is not None:
+        period = config['period']
+        properties = config['properties']
+    elif period is None:
+        print(f"ERROR: config and period both provided {period} for market_composite_index")
+        return 
+    else:
+        # Support for release 1 versions
+        period = period
+        properties = dict()
+        properties['Indexes'] = {}
+        properties['Indexes']['Market Sector'] = True
+
     """ Validate each index key is set to True in the --core file """
     if properties is not None:
         if 'Indexes' in properties.keys():

@@ -386,11 +386,19 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
 
 
 
-def slide_creator(date_revision: str, analysis: dict, version: str):
+def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
     """ High-level function for converting inventors spreadsheet to slides """
 
     print("Starting presentation creation.")
-    year = date_revision.split('-')[0]
+    if config is not None:
+        year = config['date_release'].split('-')[0]
+        version = config['version']
+    elif year is None:
+        print(f"ERROR: 'year', 'config', [and 'version'] {year} provided in 'slide_creator'.")
+        return 
+    else:
+        year = year
+        version = version
 
     prs = title_presentation(year, VERSION=version)
     prs = make_intro_slide(prs)

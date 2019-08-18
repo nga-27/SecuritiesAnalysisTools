@@ -108,7 +108,10 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True, bond_ty
     return composite2 
 
 
-def bond_composite_index(period='1y', properties=None):
+def bond_composite_index(config: dict):
+    period = config['period']
+    properties = config['properties']
+    
     """ Validate each index key is set to True in the --core file """
     if properties is not None:
         if 'Indexes' in properties.keys():

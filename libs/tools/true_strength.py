@@ -58,7 +58,7 @@ def normalized_ratio_lists(fundA: list, fundB: list) -> list:
 
 
 
-def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector: str='') -> list:
+def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, config: dict, sector: str='') -> list:
     """
     Try to provide ratio evaluations of 'fund' vs. market and sector
     Args:
@@ -71,7 +71,7 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
     hasSP = False
     hasSector = False
 
-    sp = get_SP500_df(tickers)
+    sp = get_SP500_df(tickers, config=config)
     if sp is not None:
         hasSP = True
     if sector != '':
@@ -124,12 +124,12 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, sector
     return ratio 
 
 
-def get_SP500_df(tickers: pd.DataFrame) -> pd.DataFrame:
+def get_SP500_df(tickers: pd.DataFrame, config: dict) -> pd.DataFrame:
     SP500_INDEX = 'securities/^GSPC.csv'
     if os.path.exists(SP500_INDEX):
         sp = pd.read_csv(SP500_INDEX)
         return sp 
-    sp = index_extractor(fund_list_extractor(tickers))
+    sp = index_extractor(fund_list_extractor(tickers, config))
     if sp is not None:
         return tickers[sp]
     return None 
@@ -150,19 +150,20 @@ def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
 def relative_strength( fundA_name: str, 
     fundB_name: str, 
     tickers: pd.DataFrame,
+    config: dict=None,
     sector: str='', 
     plot_output=True ) -> list:
 
     positionB = tickers[fundB_name]
     title = 'Strength: {} - {}'.format(fundA_name, fundB_name)
     if sector == '':
-        sp = get_SP500_df(tickers)
+        sp = get_SP500_df(tickers, config)
         if sp is not None and is_fund_match(tickers[fundA_name], tickers[fundB_name]):
             positionB = sp 
             title = 'Strength: {} vs. ^GSPC'.format(fundA_name)
             
     rat = normalized_ratio(tickers[fundA_name], positionB)
-    st = period_strength(fundA_name, tickers, periods=[20, 50, 100], sector=sector)
+    st = period_strength(fundA_name, tickers, config=config, periods=[20, 50, 100], sector=sector)
     
     # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
     # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update

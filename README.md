@@ -5,19 +5,20 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.1.0, 2019-06-04 - Release 1: outputing to pptx and json files; basic analysis; primarily plot based
 * 0.1.06, 2019-07-13 - Wide 16:9 ratio for pptx output
 * 0.1.11, 2019-08-13 - Upgraded requirements, some better documentation, and mutual fund timeframe issue resolved
-* 0.1.x - Working toward Release 2 (`technical_analysis.py` is always current on master)
+* 0.1.13, 2019-08-18 - Architecture overhaul (now `app.py`), terminal input options, error handling, robust backward compatibility to release 1
+* 0.1.x - Working toward Release 2 (`app.py` with no `--rX` tags [X = available release] is most current on master)
 
 ## To Use
 1. Pull repository, start local, virtual, and/or global python environment.
 1. Run `pip install -r requirements.txt`.  (Validate modules installed from _Other Library Installations_ section.)
 1. Save file `core_example.json` as `core.json`. Edit new file as desired. This is recommended but not required.
-1. Run the top-level job file.  For most updated functionality, run `python technical_analysis.py`.
+1. Run the top-level job file.  For most updated functionality, run `python app.py`.
 1. After intro screen in terminal, an input prompt with 3 options (all followed by "enter" / "return"):
     * Default: 'VTI' and 'S&P500' by simply hitting "enter" / "return"
     * Input tickers: any string of tickers (space-delimited) can be entered. Example: `mmm AAPL 'AMZN'`
     * "Core": starting version 0.1.02+, entering `--core` when prompted for tickers will run `core.json` funds
         * Functionality offers an update on a user's porfolio w/o requiring entering it in all of the time
-1. All default behavior (non-core) is `1 year period, 1 day interval`. (View `yfinance` api for other settings).
+1. All default behavior (non-core) is `2 year period, 1 day interval`. (View `yfinance` api for other settings).
 
 
 ## Acknowledgements
@@ -51,6 +52,12 @@ gitignore, so privacy of one's funds will be maintained.
         * BNDX (International Index), VWO (Emerging Markets Index)
 
 FUTURE - adding more customizable fields to core functionality for greater user costumization.
+
+### "Options" at Input
+Starting with **0.1.13**, the input prompt handles varying inputs beyond simply `--core`. All of the available (and some future) options are available at the
+starting prompt by entering `--options`. This input will print out in the terminal available options from `resources/header_options.txt`. (Please, do not update this
+file as it is read only into the program.) The program will also complete after printing out the available option keys. Please run the program again with the desired
+-- tags.
 
 ## Python Libraries / Issues
 ### Other Library Installations 
