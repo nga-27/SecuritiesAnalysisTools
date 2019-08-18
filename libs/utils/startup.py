@@ -24,9 +24,9 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config = dict()
 
     if options is not None:
-        x = input("Enter ticker symbols (e.g. 'aapl') and tags (see --options): ")
+        x = input("Enter ticker symbols (e.g. 'aapl MSFT') and tags (see --options): ")
     else:
-        x = input("Enter ticker symbols (e.g. 'aapl'): ")
+        x = input("Enter ticker symbols (e.g. 'aapl MSFT'): ")
 
     config['version'] = version
     config['date_release'] = update_release
@@ -55,13 +55,17 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
 
         else:
             config['tickers'] = x
+            config['tickers'] = config['tickers'].strip()
             if "'" in x:
                 spl = x.split("'")
                 config['tickers'] = spl[1]        
     
     config['tickers'] = config['tickers'].upper()
     ticker_print = ''
-    t = config['tickers'].split(' ')
+
+    # whitespace fixing on input strings
+    t, config = remove_whitespace(config, default=default)
+
     if len(t) < 2:
         if config['state'] != 'run_no_index':
             ticker_print += t[0] + ' and ^GSPC'
@@ -75,10 +79,23 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
                 if t[i] != '':
                     ticker_print += t[i] + ', '
         if config['state'] != 'run_no_index':
-            ticker_print += 'and ^GSPC'
+            ticker_print += 'and S&P500'
     config['ticker print'] = ticker_print
     print(" ")
     return config 
+
+
+def remove_whitespace(config: dict, default: str) -> list:
+    # Remove '' entries in list
+    t2 = config['tickers'].split(' ')
+    t = []
+    for t1 in t2:
+        if t1 != '':
+            t.append(t1)
+    if len(t) == 0:
+        config['tickers'] = default
+        t = config['tickers'].split(' ')
+    return t, config
 
 
 def header_core_parse(input_str: str) -> list:
