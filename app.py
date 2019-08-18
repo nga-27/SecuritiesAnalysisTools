@@ -33,9 +33,18 @@ class App:
     def run(self):
         self.config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
         if 'run' in self.config['state']:
+            self.config['release'] = False
             technical_analysis(self.config)
+
         if 'r1' in self.config['state']:
+            self.config['release'] = True
             release_1()
+
+        if 'r2' in self.config['state']:
+            self.config['release'] = True
+            technical_analysis(self.config)
+            print("ERROR: release 2 has not been created yet!")
+            
         print('Done.')
 
 

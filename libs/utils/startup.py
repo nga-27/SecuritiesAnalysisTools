@@ -115,7 +115,7 @@ def header_options_parse(input_str: str) -> list:
         else:
             print(f"ERROR - NO {options_file} found.")
             print(" ")
-        return ['halt', input_str]
+        return 'halt', input_str
 
     if '--noindex' in input_str:
         output_str = input_str.replace('--noindex', '')
@@ -124,5 +124,14 @@ def header_options_parse(input_str: str) -> list:
     if '--r1' in input_str:
         output_str = input_str.replace('--r1', '')
         return 'r1', output_str
+
+    if '--r2' in input_str:
+        output_str = input_str.replace('--r2', '')
+        return 'r2', output_str
+
+    # HAS TO BE LAST! Error catch-all for any '--' inputs
+    if '--' in input_str:
+        print(f"Error 400: Bad / unknown request of input string of '{input_str}''. Aborting...")
+        return 'halt', input_str
         
     return 'run', input_str

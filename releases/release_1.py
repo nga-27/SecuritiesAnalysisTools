@@ -92,7 +92,6 @@ def release_1():
 
         fund = data[fund_name]
         p.uptick()
-        fundB = fund #pd.read_csv(fileB)
         p.uptick()
 
         start = date_extractor(fund.index[0], _format='str')
