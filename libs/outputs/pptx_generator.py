@@ -367,20 +367,37 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             p.font.name = 'Arial'
             p.font.bold = True
 
-            p = tf.add_paragraph()
+            left_loc = Inches(8)
+            top_loc = Inches(1)
+            table_width = Inches(4)
 
-            for maj in fund_analysis['support_resistance']['major S&R']:
-                p = tf.add_paragraph()
-                p.text = f"${maj['Price']} \t\t-\t {maj['Change']}"
-                p.font.size = Pt(12)
-                p.font.name = 'Arial'
-                p.font.bold = False
+            num_srs = len(fund_analysis['support_resistance']['major S&R']) + 1
+            table_height = Inches(num_srs * 0.33)
+            if num_srs * 0.33 > 6.0:
+                table_height = Inches(6.0)
+
+            table_placeholder = prs.slides[slide_indices[2]].shapes.add_table(
+                                                    num_srs, 
+                                                    2,
+                                                    left_loc,
+                                                    top_loc,
+                                                    table_width,
+                                                    table_height)
+            table = table_placeholder.table
+
+            table.cell(0,0).text = 'Price'
+            table.cell(0,1).text = '% Change'
+
+            for i, maj in enumerate(fund_analysis['support_resistance']['major S&R']):
+                table.cell(i+1, 0).text = f"${maj['Price']}"
+                table.cell(i+1, 1).text = f"{maj['Change']}"
                 fl = maj['Change'].split('%')[0]
                 if float(fl) >= 0.0:
-                    p.font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
+                    table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
+                    table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
                 else:
-                    p.font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
-            
+                    table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
+                    table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
 
     return prs 
 
