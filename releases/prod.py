@@ -147,11 +147,6 @@ def technical_analysis(config: dict):
             candlestick(fund, title=fund_name, filename=filename, saveFig=True)
             p.uptick()
 
-            # get_trendlines(fund)
-
-
-        # test_competitive(data, analysis)
-
         market_composite_index(config=config)
 
         bond_composite_index(config=config)
