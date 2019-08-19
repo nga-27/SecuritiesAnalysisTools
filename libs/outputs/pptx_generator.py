@@ -218,11 +218,38 @@ def add_fund_content(prs, fund: str, analysis: dict):
 
         content = content_dir + f"candlestick_{fund}.png"
         if os.path.exists(content):
-            left = Inches(1.42)
+            left = Inches(2.6) #Inches(1.42)
             top = Inches(1.4)
             height = Inches(6)
             width = Inches(10.5)
             slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+        # Insert a table of fund figures
+        left_loc = Inches(0.1)
+        top_loc = Inches(1.1)
+        table_width = Inches(2.4)
+        table_height = Inches(1.4)
+
+        table_placeholder = slide.shapes.add_table( 3, 
+                                                    2,
+                                                    left_loc,
+                                                    top_loc,
+                                                    table_width,
+                                                    table_height)
+        table = table_placeholder.table
+
+        table.cell(0,0).text = 'Attribute'
+        table.cell(0,1).text = ''
+        table.cell(1,0).text = 'Beta'
+        table.cell(1,1).text = str(np.round(analysis[fund]['beta'], 5))
+        table.cell(2,0).text = 'R-Squared'
+        table.cell(2,1).text = str(np.round(analysis[fund]['r_squared'], 5))
+
+        table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
+        table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
+        for i in range(1,3):
+            table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(14)
+            table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(14)
 
         # Slide #1 of content
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])

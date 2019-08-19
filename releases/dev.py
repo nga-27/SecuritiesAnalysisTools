@@ -17,6 +17,7 @@
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
 from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
+from libs.tools import beta_comparison
 from libs.tools import find_resistance_support_lines
 
 # Imports that support functions doing feature detection
@@ -43,10 +44,10 @@ from libs.tools import get_maxima_minima, get_trendlines
 ####################################################################
 ####################################################################
 
-PROCESS_STEPS = 13
+PROCESS_STEPS = 12
 ################################
 _VERSION_ = '0.1.15'
-_DATE_REVISION_ = '2019-08-18'
+_DATE_REVISION_ = '2019-08-19'
 ################################
 
 def technical_analysis(config: dict):
@@ -61,6 +62,7 @@ def technical_analysis(config: dict):
     if config['state'] != 'halt':
         if config['state'] != 'run_no_index':
             config['tickers'] = index_appender(config['tickers'])
+            PROCESS_STEPS = 14
 
         # Temporary directories to save graphs as images, etc.
         remove_temp_dir()
@@ -119,6 +121,10 @@ def technical_analysis(config: dict):
             if config['state'] != 'run_no_index':
                 analysis[fund_name]['relative_strength'] = relative_strength(   fund_name, fund_name, config=config, 
                                                                                 tickers=data, sector='', plot_output=False)
+                p.uptick()
+                beta, rsqd = beta_comparison(fund, data['^GSPC'])
+                analysis[fund_name]['beta'] = beta 
+                analysis[fund_name]['r_squared'] = rsqd
             p.uptick()
 
             # Support and Resistance Analysis

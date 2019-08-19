@@ -1,5 +1,6 @@
 import pandas as pd 
 import numpy as np 
+from scipy.stats import linregress
 
 def linear_regression(x_list, y_list) -> list:
     """ returns [m_slope, intercept] """
@@ -131,4 +132,24 @@ def bull_bear_th(osc, start, thresh, bull_bear='bull'):
     return None 
 
 
+def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> float:
+    tot_len = len(fund['Close'])
+    if pd.isna(fund['Close'][len(fund['Close'])-1]):
+        tot_len -= 1
+
+    fund_return = []
+    fund_return.append(0.0)
+    bench_return = []
+    bench_return.append(0.0)
+    for i in range(1,tot_len):
+        ret = (fund['Close'][i]-fund['Close'][i-1]) / fund['Close'][i-1] * 100.0
+        fund_return.append(ret)
+        ret = (benchmark['Close'][i]-benchmark['Close'][i-1]) / benchmark['Close'][i-1] * 100.0
+        bench_return.append(ret)
+
+    # slope, intercept, r-correlation, p-value, stderr
+    beta_figures = linregress(bench_return, fund_return)
+    rsqd = beta_figures[2]**2
+    
+    return beta_figures[0], rsqd
 
