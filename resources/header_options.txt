@@ -1,8 +1,13 @@
 OPTIONS:
 
 --core       :     normal operation run with parameters found in core.json
---r1         :     run release_1.py
 --noindex    :     does not include S&P500 index, omits comparison operations
+
+VERSIONS:    :     (flags for versioning)
+
+--dev        :     most recent updates, pushed frequently, possibly unstable
+--prod       :     default behavior; more updated than release, less than dev, but more stable
+--r1         :     run release_1.py (deprecated version)
 
 FUNCTIONS:   :     (e.g. '--clustered_osc --macd vti AAPL amzn' ) [FUTURE RELEASE]
 

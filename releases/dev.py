@@ -45,7 +45,7 @@ from libs.tools import get_maxima_minima, get_trendlines
 
 PROCESS_STEPS = 13
 ################################
-_VERSION_ = '0.1.13'
+_VERSION_ = '0.1.14'
 _DATE_REVISION_ = '2019-08-18'
 ################################
 
@@ -54,7 +54,8 @@ def technical_analysis(config: dict):
     if config['release'] == True:
         # Use only after release!
         print(" ")
-        print("~~~~ RELEASE 2 ~~~~ [deprecated but supported]")
+        # print("~~~~ RELEASE 2 ~~~~ [deprecated but supported]")
+        print("~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]")
         config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
 
     if config['state'] != 'halt':

@@ -42,7 +42,7 @@ _VERSION_ = '0.1.00'
 _DATE_REVISION_ = '2019-06-04'
 ################################
 
-def release_1():
+def technical_analysis():
 
     print(" ")
     print("~~~~ RELEASE 1 ~~~~ [deprecated but supported]")

@@ -114,6 +114,9 @@ def header_core_parse(input_str: str) -> list:
 
 
 def header_options_parse(input_str: str, config: dict) -> list:
+    # Input flag handling
+    # TODO: determine order for chaining states, conditions (multiple flags in input)
+    
     if '--options' in input_str:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
@@ -144,6 +147,17 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--noindex' in input_str:
         output_str = input_str.replace('--noindex', '')
         config['state'] = 'run_no_index'
+        return config, output_str
+
+    if '--dev' in input_str:
+        output_str = input_str.replace('--dev', '')
+        config['state'] = 'dev'
+        return config, output_str
+
+    if '--prod' in input_str:
+        # default behavior
+        output_str = input_str.replace('--prod', '')
+        config['state'] = 'run'
         return config, output_str
 
     if '--r1' in input_str:
