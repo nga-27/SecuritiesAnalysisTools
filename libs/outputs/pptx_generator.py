@@ -138,7 +138,7 @@ def make_intro_slide(prs):
     return prs
 
 
-def make_MCI_slides(prs):
+def make_MCI_slides(prs, analysis: dict):
     content = f'output/temp/MCI.png'
     if os.path.exists(content):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
@@ -148,6 +148,40 @@ def make_MCI_slides(prs):
         top = Inches(1.27)
         height = Inches(6.1)
         width = Inches(10.5)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+    content = f"output/temp/MCI_correlations.png"
+    if os.path.exists(content):
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, 'Market Composite Index')
+
+        left = Inches(1.42)
+        top = Inches(1.27)
+        height = Inches(6.1)
+        width = Inches(10.5)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+        # Add table here!
+
+    content = f"output/temp/MCI_net_correlation.png"
+    if os.path.exists(content):
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, 'Market Composite Index')
+
+        left = Inches(0.1)
+        top = Inches(1.27)
+        height = Inches(5.69)
+        width = Inches(6.42)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+    content = f"output/temp/MCI_osc_correlation.png"
+    if os.path.exists(content):
+        slide = prs.slides[len(prs.slides)-1]
+
+        left = Inches(6.67)
+        top = Inches(1.27)
+        height = Inches(5.69)
+        width = Inches(6.42)
         slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs
@@ -447,7 +481,7 @@ def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
 
     prs = title_presentation(year, VERSION=version)
     prs = make_intro_slide(prs)
-    prs = make_MCI_slides(prs)
+    prs = make_MCI_slides(prs, analysis)
     prs = make_BCI_slides(prs)
     prs = make_fund_slides(prs, analysis)
 

@@ -73,6 +73,11 @@ def dual_plotting(
     try:
         if saveFig:
             filename = 'output/temp/' + filename
+            if not os.path.exists('output/temp/'):
+                # For functions, this directory may not exist.
+                plt.close(fig)
+                plt.clf()
+                return 
             if os.path.exists(filename):
                 os.remove(filename)
             plt.savefig(filename)
@@ -80,7 +85,7 @@ def dual_plotting(
             plt.show()
     except:
         print(f"plot failed to render in 'dual_plotting' of title: {title}")
-    plt.close()
+    plt.close('all')
     plt.clf()
 
 
@@ -119,7 +124,7 @@ def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=Fa
             plt.show()
     except:
         print(f"plot failed to render in 'generic_plotting' of title: {title}")
-    plt.close()
+    plt.close('all')
     plt.clf()
 
 
