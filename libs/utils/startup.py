@@ -114,9 +114,9 @@ def header_core_parse(input_str: str) -> list:
 
 
 def header_options_parse(input_str: str, config: dict) -> list:
-    # Input flag handling
-    # TODO: determine order for chaining states, conditions (multiple flags in input)
-    
+    """ Input flag handling """
+
+    config['state'] = ''
     if '--options' in input_str:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
@@ -132,6 +132,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'halt'
         return config, input_str
 
+    # Configuration flags that append to states but do not return / force them
     if '--core' in input_str:
         core = header_core_parse(input_str)
         if core is not None:
@@ -139,16 +140,17 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['period'] = core[1]
             config['interval'] = core[2]
             config['properties'] = core[3]
-            config['state'] = 'run'
             config['core'] = True
             output_str = input_str.replace('--core', '')
-        return config, output_str
+            input_str = output_str
 
     if '--noindex' in input_str:
         output_str = input_str.replace('--noindex', '')
-        config['state'] = 'run_no_index'
-        return config, output_str
+        config['state'] += '_no_index'
+        input_str = output_str
 
+
+    # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in input_str:
         output_str = input_str.replace('--dev', '')
         config['state'] = 'dev'
@@ -157,7 +159,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--prod' in input_str:
         # default behavior
         output_str = input_str.replace('--prod', '')
-        config['state'] = 'run'
+        config['state'] = 'run' + config['state']
         return config, output_str
 
     if '--r1' in input_str:
@@ -176,4 +178,5 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'halt'
         return config, input_str
         
+    config['state'] = 'run' + config['state']
     return config, input_str
