@@ -47,6 +47,8 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
         config['tickers'] = default
 
     else:
+        if x != '':
+            config['tickers'] += f" {x}"
         if config['core'] == False:
             config['tickers'] = x
             config['tickers'] = config['tickers'].strip()

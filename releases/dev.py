@@ -25,7 +25,8 @@ from libs.features import feature_head_and_shoulders, feature_plotter
 
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
-from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir, download_data, data_nan_fix
+from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
+from libs.utils import download_data, data_nan_fix, has_critical_error
 
 # Imports that plot (many are imported in functions)
 from libs.utils import candlestick
@@ -71,6 +72,7 @@ def technical_analysis(config: dict):
         configure_temp_dir()
 
         data = download_data(config=config)
+        # print(f"AAPPPPPLLLEEE: {data['APPLE']['Close']}")
 
         e_check = {'tickers': config['tickers']}
         if has_critical_error(data, 'download_data', misc=e_check):
@@ -171,14 +173,3 @@ def technical_analysis(config: dict):
         remove_temp_dir()
 
 
-def has_critical_error(item, e_type: str, misc: dict=None) -> bool:
-    # TODO: check all tickers (some good, some bad)
-    if e_type == 'download_data':
-        # A successful pull of actual data will have multiIndex keys. Bad data will have columns but no data.
-        if 'Close' not in item.keys():
-            return False
-        if len(item['Close']) == 0:
-            print(f"404 ERROR: Data requested not found. Input traceback: {misc} provided")
-            return True
-
-    return False
