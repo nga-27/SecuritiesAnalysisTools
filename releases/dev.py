@@ -44,25 +44,27 @@ from libs.tools import get_maxima_minima, get_trendlines
 ####################################################################
 ####################################################################
 
-PROCESS_STEPS = 12
 ################################
 _VERSION_ = '0.1.15'
-_DATE_REVISION_ = '2019-08-19'
+_DATE_REVISION_ = '2019-08-21'
 ################################
+PROCESS_STEPS_DEV = 12
 
 def technical_analysis(config: dict):
 
+    config['process_steps'] = PROCESS_STEPS_DEV
     if config['release'] == True:
         # Use only after release!
         print(" ")
         # print("~~~~ RELEASE 2 ~~~~ [deprecated but supported]")
         print("~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]")
         config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
+        config['process_steps'] = PROCESS_STEPS_DEV
 
     if config['state'] != 'halt':
         if config['state'] != 'run_no_index':
             config['tickers'] = index_appender(config['tickers'])
-            PROCESS_STEPS = 14
+            config['process_steps'] = config['process_steps'] + 2
 
         # Temporary directories to save graphs as images, etc.
         remove_temp_dir()
@@ -85,7 +87,7 @@ def technical_analysis(config: dict):
             create_sub_temp_dir(fund_name)
             analysis[fund_name] = {}
 
-            p = ProgressBar(PROCESS_STEPS, name=fund_name)
+            p = ProgressBar(config['process_steps'], name=fund_name)
             p.start()
 
             if len(funds) > 1:
@@ -125,7 +127,7 @@ def technical_analysis(config: dict):
                 beta, rsqd = beta_comparison(fund, data['^GSPC'])
                 analysis[fund_name]['beta'] = beta 
                 analysis[fund_name]['r_squared'] = rsqd
-            p.uptick()
+                p.uptick()
 
             # Support and Resistance Analysis
             analysis[fund_name]['support_resistance'] = find_resistance_support_lines(fund, name=fund_name, plot_output=False)
