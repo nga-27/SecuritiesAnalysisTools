@@ -14,7 +14,7 @@ import numpy as np
 
 import yfinance as yf 
 
-from libs.tools import cluster_oscs
+from libs.tools import cluster_oscs, beta_comparison
 from libs.utils import dual_plotting, ProgressBar, index_appender
 
 def metrics_initializer(period='1y'):
@@ -28,14 +28,11 @@ def metrics_initializer(period='1y'):
     return data, sectors
 
 
-def composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
-    p = ProgressBar(len(sectors)+2, name='Market Composite Index')
-    p.start()
-
+def composite_index(data: pd.DataFrame, sectors: list, progress_bar=None, plot_output=True):
     composite = []
     for tick in sectors:
         graph, _ = cluster_oscs(data[tick], plot_output=False, function='market', wma=False)
-        p.uptick()
+        progress_bar.uptick()
         composite.append(graph)
 
     composite2 = []
@@ -45,23 +42,31 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True):
             s += float(composite[j][i])
 
         composite2.append(s)
-    p.uptick()
+    progress_bar.uptick()
 
     if plot_output:
         dual_plotting(data['^GSPC']['Close'], composite2, y1_label='S&P500', y2_label='MCI', title='Market Composite Index')
     else:
         dual_plotting(data['^GSPC']['Close'], composite2, y1_label='S&P500', y2_label='MCI', title='Market Composite Index', saveFig=True, filename='MCI.png')
-    p.uptick()
+    progress_bar.uptick()
     return composite2 
 
 
-def market_composite_index(config: dict=None, period=None):
+def composite_correlation(data: pd.DataFrame, sectors: list, progress_bar=None, plot_output=True) -> dict:
+    """ betas and r-squared for 2 time periods for each sector (full, 1/2 time) """
+    """ plot of r-squared vs. S&P500 for last 50 or 100 days for each sector """
+    correlations = {}
+    progress_bar.uptick()
+    return correlations
+
+
+def market_composite_index(config: dict=None, period=None, plot_output=False) -> dict:
     if config is not None:
         period = config['period']
         properties = config['properties']
     elif period is None:
         print(f"ERROR: config and period both provided {period} for market_composite_index")
-        return 
+        return {}
     else:
         # Support for release 1 versions
         period = period
@@ -76,7 +81,14 @@ def market_composite_index(config: dict=None, period=None):
             if 'Market Sector' in props.keys():
                 if props['Market Sector'] == True:
                     data, sectors = metrics_initializer(period=period)
-                    composite_index(data, sectors, plot_output=False) 
+
+                    p = ProgressBar(len(sectors)+3, name='Market Composite Index')
+                    p.start()
+
+                    composite_index(data, sectors, plot_output=plot_output, progress_bar=p) 
+                    correlations = composite_correlation(data, sectors, plot_output=plot_output, progress_bar=p)
+                    return correlations
+    return {}
 
 
 

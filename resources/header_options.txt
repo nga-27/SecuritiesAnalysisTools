@@ -2,6 +2,7 @@ OPTIONS:
 
 --core       :     normal operation run with parameters found in core.json
 --noindex    :     does not include S&P500 index, omits comparison operations
+--function   :     triggers only designated functions (below)
 
 VERSIONS:    :     (flags for versioning)
 
@@ -11,5 +12,5 @@ VERSIONS:    :     (flags for versioning)
 
 FUNCTIONS:   :     (e.g. '--clustered_osc --macd vti AAPL amzn' ) [FUTURE RELEASE]
 
---clustered_osc    displays plot of oscillator of fund [FUTURE RELEASE]
---macd             displays plot of moving average convergence/divergence [FUTURE RELEASE]
+--mci        :     run Market Composite Index (MCI); requires "--function" flag
+--bci        :     run Bond Composite Index (BCI); requires "--function" flag

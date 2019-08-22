@@ -32,14 +32,16 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['date_release'] = update_release
 
     config['state'] = 'run'
-    config['period'] = None
-    config['interval'] = None
-    config['properties'] = None
+    config['period'] = '1y'
+    config['interval'] = '1d'
+    config['properties'] = {}
     config['core'] = False
 
     if options is not None:
         config, x = header_options_parse(x, config)
         if config['state'] == 'halt':
+            return config
+        if config['state'] == 'function':
             return config
 
     if (x == '') and (config['core'] == False):
@@ -81,6 +83,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     return config 
 
 
+
 def remove_whitespace(config: dict, default: str) -> list:
     # Remove '' entries in list
     t2 = config['tickers'].split(' ')
@@ -115,10 +118,13 @@ def header_core_parse(input_str: str) -> list:
     return [tickers, period, interval, props]
 
 
+####################################################################
+
 def header_options_parse(input_str: str, config: dict) -> list:
     """ Input flag handling """
 
     config['state'] = ''
+    config['run_functions'] = ''
     if '--options' in input_str:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
@@ -152,10 +158,26 @@ def header_options_parse(input_str: str, config: dict) -> list:
         input_str = output_str
 
 
+    # Configuration flags that append functions (requires '--function' flag)
+    if '--mci' in input_str:
+        output_str = input_str.replace('--mci', '')
+        config['run_functions'] += ' mci'
+        input_str = output_str
+
+    if '--bci' in input_str:
+        output_str = input_str.replace('--bci', '')
+        config['run_functions'] += ' bci'
+        input_str = output_str
+
     # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in input_str:
         output_str = input_str.replace('--dev', '')
         config['state'] = 'dev'
+        return config, output_str
+
+    if '--function' in input_str:
+        output_str = input_str.replace('--function', '')
+        config['state'] = 'function'
         return config, output_str
 
     if '--prod' in input_str:
