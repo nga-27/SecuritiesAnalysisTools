@@ -32,14 +32,16 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['date_release'] = update_release
 
     config['state'] = 'run'
-    config['period'] = None
-    config['interval'] = None
-    config['properties'] = None
+    config['period'] = '1y'
+    config['interval'] = '1d'
+    config['properties'] = {}
     config['core'] = False
 
     if options is not None:
         config, x = header_options_parse(x, config)
         if config['state'] == 'halt':
+            return config
+        if config['state'] == 'function':
             return config
 
     if (x == '') and (config['core'] == False):
@@ -47,6 +49,8 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
         config['tickers'] = default
 
     else:
+        if x != '':
+            config['tickers'] += f" {x}"
         if config['core'] == False:
             config['tickers'] = x
             config['tickers'] = config['tickers'].strip()
@@ -77,6 +81,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['ticker print'] = ticker_print
     print(" ")
     return config 
+
 
 
 def remove_whitespace(config: dict, default: str) -> list:
@@ -113,10 +118,13 @@ def header_core_parse(input_str: str) -> list:
     return [tickers, period, interval, props]
 
 
+####################################################################
+
 def header_options_parse(input_str: str, config: dict) -> list:
-    # Input flag handling
-    # TODO: determine order for chaining states, conditions (multiple flags in input)
-    
+    """ Input flag handling """
+
+    config['state'] = ''
+    config['run_functions'] = ''
     if '--options' in input_str:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
@@ -132,6 +140,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'halt'
         return config, input_str
 
+    # Configuration flags that append to states but do not return / force them
     if '--core' in input_str:
         core = header_core_parse(input_str)
         if core is not None:
@@ -139,25 +148,42 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['period'] = core[1]
             config['interval'] = core[2]
             config['properties'] = core[3]
-            config['state'] = 'run'
             config['core'] = True
             output_str = input_str.replace('--core', '')
-        return config, output_str
+            input_str = output_str
 
     if '--noindex' in input_str:
         output_str = input_str.replace('--noindex', '')
-        config['state'] = 'run_no_index'
-        return config, output_str
+        config['state'] += '_no_index'
+        input_str = output_str
 
+
+    # Configuration flags that append functions (requires '--function' flag)
+    if '--mci' in input_str:
+        output_str = input_str.replace('--mci', '')
+        config['run_functions'] += ' mci'
+        input_str = output_str
+
+    if '--bci' in input_str:
+        output_str = input_str.replace('--bci', '')
+        config['run_functions'] += ' bci'
+        input_str = output_str
+
+    # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in input_str:
         output_str = input_str.replace('--dev', '')
         config['state'] = 'dev'
         return config, output_str
 
+    if '--function' in input_str:
+        output_str = input_str.replace('--function', '')
+        config['state'] = 'function'
+        return config, output_str
+
     if '--prod' in input_str:
         # default behavior
         output_str = input_str.replace('--prod', '')
-        config['state'] = 'run'
+        config['state'] = 'run' + config['state']
         return config, output_str
 
     if '--r1' in input_str:
@@ -176,4 +202,5 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'halt'
         return config, input_str
         
+    config['state'] = 'run' + config['state']
     return config, input_str

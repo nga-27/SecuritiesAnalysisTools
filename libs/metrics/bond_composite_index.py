@@ -108,7 +108,7 @@ def composite_index(data: pd.DataFrame, sectors: list, plot_output=True, bond_ty
     return composite2 
 
 
-def bond_composite_index(config: dict):
+def bond_composite_index(config: dict, plot_output=False):
     period = config['period']
     properties = config['properties']
     
@@ -119,14 +119,14 @@ def bond_composite_index(config: dict):
             if 'Treasury Bond' in props.keys():
                 if props['Treasury Bond'] == True:
                     data, sectors, index_type = metrics_initializer(period=period, bond_type='Treasury')
-                    composite_index(data, sectors, plot_output=False, bond_type='Treasury', index_type=index_type)
+                    composite_index(data, sectors, plot_output=plot_output, bond_type='Treasury', index_type=index_type)
 
             if 'Corporate Bond' in props.keys():
                 if props['Corporate Bond'] == True:
                     data, sectors, index_type = metrics_initializer(period=period, bond_type='Corporate')
-                    composite_index(data, sectors, plot_output=False, bond_type='Corporate', index_type=index_type)
+                    composite_index(data, sectors, plot_output=plot_output, bond_type='Corporate', index_type=index_type)
 
             if 'International Bond' in props.keys():
                 if props['International Bond'] == True:
                     data, sectors, index_type = metrics_initializer(period=period, bond_type='International')
-                    composite_index(data, sectors, plot_output=False, bond_type='International', index_type=index_type)
+                    composite_index(data, sectors, plot_output=plot_output, bond_type='International', index_type=index_type)

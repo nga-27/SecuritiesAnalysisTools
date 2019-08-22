@@ -2,6 +2,8 @@ from .startup import start_header
 from .file_io import configure_temp_dir, remove_temp_dir, create_sub_temp_dir, windows_compatible_file_parse
 from .data import download_data, data_nan_fix
 
+from .error_handler import has_critical_error
+
 from .formatting import name_parser, index_extractor, fund_list_extractor, index_appender
 from .formatting import dates_extractor_list, date_extractor, get_daterange
 

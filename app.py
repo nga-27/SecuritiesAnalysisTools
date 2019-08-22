@@ -15,16 +15,16 @@
 
 ################################
 _VERSION_ = '0.1.14'
-_DATE_REVISION_ = '2019-08-18'
+_DATE_REVISION_ = '2019-08-21'
 ################################
 
 # Imports that create final products and show progress doing so
 from libs.utils import start_header
 
 # Imports that run operations and functions for the program
-from releases import release_1
-from releases import prod 
-from releases import dev
+from releases.release_1 import technical_analysis as r1
+from releases.prod import technical_analysis as prod 
+from releases.dev import technical_analysis as dev
 
 class App:
 
@@ -39,19 +39,18 @@ class App:
             self.config['release'] = False
             print("~~~~ PRODUCTION ENVIRONMENT ~~~~")
             print(" ")
-            prod.technical_analysis(self.config)
+            prod(self.config)
 
         if 'dev' in self.config['state']:
             self.config['release'] = True
-            dev.technical_analysis(self.config)
+            dev(self.config)
 
         if 'r1' in self.config['state']:
             self.config['release'] = True
-            release_1.technical_analysis()
+            r1()
 
         if 'r2' in self.config['state']:
             self.config['release'] = True
-            # technical_analysis(self.config)
             print("ERROR: release 2 has not been created yet!")
 
         print('Done.')
