@@ -6,12 +6,14 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.1.06, 2019-07-13 - Wide 16:9 ratio for pptx output
 * 0.1.11, 2019-08-13 - Upgraded requirements, some better documentation, and mutual fund timeframe issue resolved
 * 0.1.13, 2019-08-18 - Architecture overhaul (now `app.py`), terminal input options, error handling, robust backward compatibility to release 1
+* 0.1.16, 2019-08-23 - Data download / formatting overhaul (a `dict()` of `pd.DataFrames`); fixes `NaN` fields
 * 0.1.x - Working toward Release 2 (`app.py` with no `--rX` tags [X = available release] is most current on master)
 
 ## To Use
 1. Pull repository, start local, virtual, and/or global python environment.
 1. Run `pip install -r requirements.txt`.  (Validate modules installed from _Other Library Installations_ section.)
 1. Save file `core_example.json` as `core.json`. Edit new file as desired. This is recommended but not required.
+    * Optional (0.1.16+) a save the `test_example.json` as `test.json` as an optional supplement to `core.json
 1. Run `python app.py`
 1. After intro screen in terminal, an input prompt with 4+ options (all followed by "enter" / "return"):
     * Default: 'VTI' and 'S&P500' by simply hitting "enter" / "return"
@@ -36,6 +38,10 @@ software will read the `core.json` file. If the file does not exist, it will run
 
 Core functionality provides the user to build up a list of investments he or she owns and/or typically monitors. `core.json` is part of
 gitignore, so privacy of one's funds will be maintained.
+
+New with 0.1.16, an optional `test.json` file can be added with the same functionality and concept as `--core`. For usage, simply enter
+`--test`.  This can be helpful when branching this repo and testing things separate from one's main `core.json` list. This is entirely 
+optional.
 
 ### "Core" Properties
 * **Period** - timeframe of historical stock data. Default is 1 year. (Provides 'Open', 'Close', 'High', 'Low', 'Volume', and 'Adj Close' for each fund.)

@@ -26,7 +26,7 @@ from libs.features import feature_head_and_shoulders, feature_plotter
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data, data_nan_fix, has_critical_error
+from libs.utils import download_data, has_critical_error
 
 # Imports that control function-only inputs
 from libs.functions import only_functions_handler
@@ -49,7 +49,7 @@ from libs.tools import get_maxima_minima, get_trendlines
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.15'
+_VERSION_ = '0.1.16'
 _DATE_REVISION_ = '2019-08-23'
 ################################
 PROCESS_STEPS_DEV = 11
@@ -60,7 +60,6 @@ def technical_analysis(config: dict):
     if config['release'] == True:
         # Use only after release!
         print(" ")
-        # print("~~~~ RELEASE 2 ~~~~ [deprecated but supported]")
         print("~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]")
         config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
         config['process_steps'] = PROCESS_STEPS_DEV
@@ -68,7 +67,7 @@ def technical_analysis(config: dict):
     if config['state'] == 'halt':
         return 
 
-    if config['state'] == 'function':
+    if 'function' in config['state']:
         # If only simple functions are desired, they go into this handler
         only_functions_handler(config)
         return
@@ -81,33 +80,24 @@ def technical_analysis(config: dict):
     remove_temp_dir()
     configure_temp_dir()
 
-    data = download_data(config=config)
-    # print(f"data: {data}")
+    data, funds = download_data(config=config)
 
     e_check = {'tickers': config['tickers']}
     if has_critical_error(data, 'download_data', misc=e_check):
         return None
-    
-    funds = fund_list_extractor(data, config=config)
-    
-    data = data_nan_fix(data, funds)
 
     # Start of automated process
     analysis = {}
 
     for fund_name in funds:
         
+        fund = data[fund_name]
         print(f"~~{fund_name}~~")
         create_sub_temp_dir(fund_name)
         analysis[fund_name] = {}
 
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()
-
-        if len(funds) > 1:
-            fund = data[fund_name]
-        else:
-            fund = data
 
         start = date_extractor(fund.index[0], _format='str')
         end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')

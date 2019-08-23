@@ -17,15 +17,16 @@ import yfinance as yf
 from libs.tools import cluster_oscs, beta_comparison_list
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import ProgressBar, index_appender
-from libs.utils import data_nan_fix
+from libs.utils import download_data_indexes
 
 def metrics_initializer(period='1y'):
     tickers = 'VGT VHT VCR VDC VFH VDE VIS VOX VNQ VPU VAW'
     sectors = tickers.split(' ')
     tickers = index_appender(tickers)
+    all_tickers = tickers.split(' ')
     print(" ")
     print('Fetching Market Composite Index funds...')
-    data = yf.download(tickers=tickers, period=period, interval='1d', group_by='ticker')
+    data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, period=period, interval='1d')
     print(" ")
     return data, sectors
 
@@ -43,7 +44,7 @@ def simple_beta_rsq(fund: pd.DataFrame, benchmark: pd.DataFrame, recent_period: 
     return simple_br 
 
 
-def composite_index(data: pd.DataFrame, sectors: list, progress_bar=None, plot_output=True):
+def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=True):
     composite = []
     for tick in sectors:
         graph, _ = cluster_oscs(data[tick], plot_output=False, function='market', wma=False)
@@ -67,7 +68,7 @@ def composite_index(data: pd.DataFrame, sectors: list, progress_bar=None, plot_o
     return composite2 
 
 
-def composite_correlation(data: pd.DataFrame, sectors: list, composite_osc=None, progress_bar=None, plot_output=True) -> dict:
+def composite_correlation(data: dict, sectors: list, composite_osc=None, progress_bar=None, plot_output=True) -> dict:
     """ betas and r-squared for 2 time periods for each sector (full, 1/2 time) """
     """ plot of r-squared vs. S&P500 for last 50 or 100 days for each sector """
     DIVISOR = 5
@@ -79,7 +80,7 @@ def composite_correlation(data: pd.DataFrame, sectors: list, composite_osc=None,
         if start_pt > 100:
             start_pt = 100
         corrs = {}
-        dates = data.index[start_pt:tot_len]
+        dates = data['^GSPC'].index[start_pt:tot_len]
         net_correlation = [0.0] * (tot_len-start_pt)
         for sector in sectors:
             correlations[sector] = simple_beta_rsq(data[sector], data['^GSPC'], recent_period=[int(np.round(tot_len/2, 0)), tot_len])
@@ -161,7 +162,6 @@ def market_composite_index(config: dict=None, period=None, plot_output=False) ->
             if 'Market Sector' in props.keys():
                 if props['Market Sector'] == True:
                     data, sectors = metrics_initializer(period=period)
-                    data = data_nan_fix(data, sectors)
 
                     p = ProgressBar(len(sectors)*2+5, name='Market Composite Index')
                     p.start()

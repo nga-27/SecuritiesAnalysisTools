@@ -36,4 +36,4 @@ def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
     title = f"Financial Analysis {year}.pptx"
     prs.save(f"{out_dir}{title}")
     
-    print(f"Presentation '{title}'created.")
+    print(f"Presentation '{title}' created.")

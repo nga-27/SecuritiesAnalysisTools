@@ -36,7 +36,7 @@ def index_appender(tickers: str) -> str:
     return tickers
 
 
-def fund_list_extractor(ticker_df: pd.DataFrame, config: dict=None) -> list:
+def fund_list_extractor(ticker_df: dict, config: dict=None) -> list:
     """ Extracts fund names from ticker_df for accessing later """
     funds = []
     if config is not None:
