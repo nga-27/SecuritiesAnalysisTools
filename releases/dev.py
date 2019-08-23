@@ -82,7 +82,7 @@ def technical_analysis(config: dict):
     configure_temp_dir()
 
     data = download_data(config=config)
-    # print(f"AAPPPPPLLLEEE: {data['APPLE']['Close']}")
+    # print(f"data: {data}")
 
     e_check = {'tickers': config['tickers']}
     if has_critical_error(data, 'download_data', misc=e_check):

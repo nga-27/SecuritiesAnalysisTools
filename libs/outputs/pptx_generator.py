@@ -155,10 +155,10 @@ def make_MCI_slides(prs, analysis: dict):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = fund_title_header(slide, 'Market Composite Index')
 
-        left = Inches(1.42)
-        top = Inches(1.27)
-        height = Inches(6.1)
-        width = Inches(10.5)
+        left = Inches(5.63)
+        top = Inches(1.1)
+        height = Inches(6.0)
+        width = Inches(7.6)
         slide.shapes.add_picture(content, left, top, height=height, width=width)
 
         # Add table here!
@@ -171,8 +171,8 @@ def make_MCI_slides(prs, analysis: dict):
 
             left_loc = Inches(0.1)
             top_loc = Inches(1.1)
-            table_width = Inches(2.4)
-            table_height = Inches(1.4)
+            table_width = Inches(5.75)
+            table_height = Inches(6)
 
             table_placeholder = slide.shapes.add_table( num_rows, 
                                                         num_cols,
@@ -191,21 +191,30 @@ def make_MCI_slides(prs, analysis: dict):
 
             table.cell(1,0).text = 'Fund'
             table.cell(0,1).text = f"{time_periods[0]} Periods"
-            table.cell(0,3).text = f"{time_periods[0]} Periods"
+            table.cell(0,3).text = f"{time_periods[1]} Periods"
             table.cell(1,1).text = 'Beta'
             table.cell(1,3).text = 'Beta'
             table.cell(1,2).text = 'R-Squared'
             table.cell(1,4).text = 'R-Squared'
-            
-            # table.cell(1,1).text = str(np.round(analysis[fund]['beta'], 5))
-            # table.cell(2,0).text = 'R-Squared'
-            # table.cell(2,1).text = str(np.round(analysis[fund]['r_squared'], 5))
 
-            # table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
-            # table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
-            # for i in range(1,3):
-            #     table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(14)
-            #     table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(14)
+            for i in range(5):
+                table.cell(1, i).text_frame.paragraphs[0].font.size = Pt(15)
+                table.cell(1, i).text_frame.paragraphs[0].font.bold = True
+
+            for i, fund in enumerate(analysis['MCI'].keys()):
+                table.cell(i+2,0).text = fund 
+                table.cell(i+2,1).text = str(analysis['MCI'][fund][0]['beta'])
+                table.cell(i+2,2).text = str(analysis['MCI'][fund][0]['r_squared'])
+                table.cell(i+2,3).text = str(analysis['MCI'][fund][1]['beta'])
+                table.cell(i+2,4).text = str(analysis['MCI'][fund][1]['r_squared'])
+
+                table.cell(i+2,0).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,1).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,2).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,3).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,4).text_frame.paragraphs[0].font.size = Pt(14)
+            
+            
 
 
     content = f"output/temp/MCI_net_correlation.png"

@@ -32,13 +32,13 @@ def metrics_initializer(period='1y'):
 def simple_beta_rsq(fund: pd.DataFrame, benchmark: pd.DataFrame, recent_period: list=[]) -> list:
     simple_br = []
     for period in recent_period:
-        val = {}
+        val = dict()
         val['period'] = period 
         tot_len = len(fund['Close'])
         b, r = beta_comparison_list(fund['Close'][tot_len-period:tot_len], benchmark['Close'][tot_len-period:tot_len])
         val['beta'] = np.round(b, 5) 
         val['r_squared'] = np.round(r, 5)
-        simple_br.append(val)
+        simple_br.append(val.copy())
     return simple_br 
 
 
