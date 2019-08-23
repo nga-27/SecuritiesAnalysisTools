@@ -50,9 +50,9 @@ from libs.tools import get_maxima_minima, get_trendlines
 
 ################################
 _VERSION_ = '0.1.15'
-_DATE_REVISION_ = '2019-08-22'
+_DATE_REVISION_ = '2019-08-23'
 ################################
-PROCESS_STEPS_DEV = 12
+PROCESS_STEPS_DEV = 11
 
 def technical_analysis(config: dict):
 
@@ -89,6 +89,8 @@ def technical_analysis(config: dict):
         return None
     
     funds = fund_list_extractor(data, config=config)
+    
+    data = data_nan_fix(data, funds)
 
     # Start of automated process
     analysis = {}
@@ -106,9 +108,6 @@ def technical_analysis(config: dict):
             fund = data[fund_name]
         else:
             fund = data
-
-        fund = data_nan_fix(fund)
-        p.uptick()
 
         start = date_extractor(fund.index[0], _format='str')
         end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')

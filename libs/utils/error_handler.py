@@ -11,7 +11,7 @@ def has_critical_error(item, e_type: str, misc: dict=None) -> bool:
             for fund in item.keys():
                 # Check each ticker to validate data
                 if len(fund) > 1:
-                    if pd.isna(item[fund[0]]['Close'][0]):
+                    if pd.isna(item[fund[0]]['Close'][1]):
                         print(f"404 ERROR: Data requested of ticker '{fund[0]}' not found. Input traceback: {misc} provided")
                         return True
             return False

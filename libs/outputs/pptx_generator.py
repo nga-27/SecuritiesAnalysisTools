@@ -155,7 +155,7 @@ def make_MCI_slides(prs, analysis: dict):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = fund_title_header(slide, 'Market Composite Index')
 
-        left = Inches(5.63)
+        left = Inches(5.75)
         top = Inches(1.1)
         height = Inches(6.0)
         width = Inches(7.6)
