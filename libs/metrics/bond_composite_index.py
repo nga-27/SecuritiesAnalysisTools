@@ -10,11 +10,9 @@ as market oscillators, but the metrics can still provide buy-sell signals.
 import pandas as pd 
 import numpy as np 
 
-import yfinance as yf 
-
 from libs.tools import cluster_oscs
 from libs.utils import dual_plotting, ProgressBar, index_appender, dates_extractor_list
-from libs.utils import data_nan_fix
+from libs.utils import download_data_indexes
 
 def metrics_initializer(period='1y', bond_type='Treasury'):
     if bond_type == 'Treasury':
@@ -37,7 +35,7 @@ def metrics_initializer(period='1y', bond_type='Treasury'):
     # tickers = index_appender(tickers)
     print(" ")
     print(f'Fetching {bond_type} Bond Composite Index funds...')
-    data = yf.download(tickers=tickers, period=period, interval='1d', group_by='ticker')
+    data, _ = download_data_indexes(indexes=sectors, tickers=tickers, period=period, interval='1d')
     print(" ")
     return data, sectors, index
 
@@ -65,7 +63,7 @@ def corporate_index_generator(data: pd.DataFrame) -> list:
     return index_chart
 
 
-def composite_index(data: pd.DataFrame, sectors: list, plot_output=True, bond_type='Treasury', index_type='BND'):
+def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Treasury', index_type='BND'):
     progress = len(sectors) + 1
     if (bond_type == 'International') or (bond_type == 'Corporate'):
         progress += 1
@@ -119,18 +117,15 @@ def bond_composite_index(config: dict, plot_output=False):
             props = properties['Indexes']
             if 'Treasury Bond' in props.keys():
                 if props['Treasury Bond'] == True:
-                    data1, sectors, index_type = metrics_initializer(period=period, bond_type='Treasury')
-                    data = data_nan_fix(data1, sectors)
+                    data, sectors, index_type = metrics_initializer(period=period, bond_type='Treasury')
                     composite_index(data, sectors, plot_output=plot_output, bond_type='Treasury', index_type=index_type)
 
             if 'Corporate Bond' in props.keys():
                 if props['Corporate Bond'] == True:
-                    data1, sectors, index_type = metrics_initializer(period=period, bond_type='Corporate')
-                    data = data_nan_fix(data1, sectors)
+                    data, sectors, index_type = metrics_initializer(period=period, bond_type='Corporate')
                     composite_index(data, sectors, plot_output=plot_output, bond_type='Corporate', index_type=index_type)
 
             if 'International Bond' in props.keys():
                 if props['International Bond'] == True:
-                    data1, sectors, index_type = metrics_initializer(period=period, bond_type='International')
-                    data = data_nan_fix(data1, sectors)
+                    data, sectors, index_type = metrics_initializer(period=period, bond_type='International')
                     composite_index(data, sectors, plot_output=plot_output, bond_type='International', index_type=index_type)

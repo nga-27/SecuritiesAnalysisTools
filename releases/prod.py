@@ -26,7 +26,7 @@ from libs.features import feature_head_and_shoulders, feature_plotter
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data, data_nan_fix, has_critical_error
+from libs.utils import download_data, has_critical_error
 
 # Imports that control function-only inputs
 from libs.functions import only_functions_handler

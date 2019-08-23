@@ -26,7 +26,7 @@ from libs.features import feature_head_and_shoulders, feature_plotter
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data, data_nan_fix, has_critical_error
+from libs.utils import download_data, has_critical_error
 
 # Imports that control function-only inputs
 from libs.functions import only_functions_handler
@@ -49,7 +49,7 @@ from libs.tools import get_maxima_minima, get_trendlines
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.15'
+_VERSION_ = '0.1.16'
 _DATE_REVISION_ = '2019-08-23'
 ################################
 PROCESS_STEPS_DEV = 11
@@ -81,16 +81,17 @@ def technical_analysis(config: dict):
     remove_temp_dir()
     configure_temp_dir()
 
-    data = download_data(config=config)
-    # print(f"data: {data}")
+    data, funds = download_data(config=config)
+    # data2 = data_format(data, config)
+    # print(f"data: {data2}")
 
     e_check = {'tickers': config['tickers']}
     if has_critical_error(data, 'download_data', misc=e_check):
         return None
     
-    funds = fund_list_extractor(data, config=config)
+    # funds = fund_list_extractor(data, config=config)
     
-    data = data_nan_fix(data, funds)
+    # data = data_nan_fix(data, funds)
 
     # Start of automated process
     analysis = {}

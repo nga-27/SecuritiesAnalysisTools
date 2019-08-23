@@ -58,7 +58,7 @@ def normalized_ratio_lists(fundA: list, fundB: list) -> list:
 
 
 
-def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, config: dict, sector: str='') -> list:
+def period_strength(fund_name: str, tickers: dict, periods: list, config: dict, sector: str='') -> list:
     """
     Try to provide ratio evaluations of 'fund' vs. market and sector
     Args:
@@ -124,14 +124,10 @@ def period_strength(fund_name: str, tickers: pd.DataFrame, periods: list, config
     return ratio 
 
 
-def get_SP500_df(tickers: pd.DataFrame, config: dict) -> pd.DataFrame:
-    SP500_INDEX = 'securities/^GSPC.csv'
-    if os.path.exists(SP500_INDEX):
-        sp = pd.read_csv(SP500_INDEX)
-        return sp 
-    sp = index_extractor(fund_list_extractor(tickers, config))
-    if sp is not None:
-        return tickers[sp]
+def get_SP500_df(tickers: dict, config: dict) -> pd.DataFrame:
+    SP500_INDEX = '^GSPC' 
+    if SP500_INDEX in tickers.keys():
+        return tickers[SP500_INDEX]
     return None 
 
 
@@ -149,7 +145,7 @@ def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
 
 def relative_strength( fundA_name: str, 
     fundB_name: str, 
-    tickers: pd.DataFrame,
+    tickers: dict,
     config: dict=None,
     sector: str='', 
     plot_output=True ) -> list:
@@ -168,7 +164,7 @@ def relative_strength( fundA_name: str,
     # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
     # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
     # length of plotting to accomodate.
-    dates = dates_extractor_list(tickers)
+    dates = dates_extractor_list(tickers[list(tickers.keys())[0]])
     if len(rat) < len(dates):
         dates = dates[0:len(rat)]
 
