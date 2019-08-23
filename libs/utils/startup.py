@@ -208,7 +208,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     if '--function' in input_str:
         output_str = input_str.replace('--function', '')
-        config['state'] = 'function'
+        config['state'] = 'function run'
         return config, output_str
 
     if '--prod' in input_str:

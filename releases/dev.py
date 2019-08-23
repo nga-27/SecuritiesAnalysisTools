@@ -60,7 +60,6 @@ def technical_analysis(config: dict):
     if config['release'] == True:
         # Use only after release!
         print(" ")
-        # print("~~~~ RELEASE 2 ~~~~ [deprecated but supported]")
         print("~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]")
         config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
         config['process_steps'] = PROCESS_STEPS_DEV
@@ -68,7 +67,7 @@ def technical_analysis(config: dict):
     if config['state'] == 'halt':
         return 
 
-    if config['state'] == 'function':
+    if 'function' in config['state']:
         # If only simple functions are desired, they go into this handler
         only_functions_handler(config)
         return

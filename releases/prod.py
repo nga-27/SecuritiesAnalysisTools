@@ -50,7 +50,7 @@ from libs.tools import get_maxima_minima, get_trendlines
 
 PROCESS_STEPS = 11
 ################################
-_VERSION_ = '0.1.15'
+_VERSION_ = '0.1.16'
 _DATE_REVISION_ = '2019-08-23'
 ################################
 
@@ -67,7 +67,7 @@ def technical_analysis(config: dict):
     if config['state'] == 'halt':
         return 
 
-    if config['state'] == 'function':
+    if 'function' in config['state']:
         # If only simple functions are desired, they go into this handler
         only_functions_handler(config)
         return
@@ -76,37 +76,28 @@ def technical_analysis(config: dict):
         config['tickers'] = index_appender(config['tickers'])
         config['process_steps'] = config['process_steps'] + 2
 
-    # Temporary directories to save graphs as images, etc.
+     # Temporary directories to save graphs as images, etc.
     remove_temp_dir()
     configure_temp_dir()
 
-    data = download_data(config=config)
-    # print(f"data: {data}")
+    data, funds = download_data(config=config)
 
     e_check = {'tickers': config['tickers']}
     if has_critical_error(data, 'download_data', misc=e_check):
         return None
-    
-    funds = fund_list_extractor(data, config=config)
-    
-    data = data_nan_fix(data, funds)
 
     # Start of automated process
     analysis = {}
 
     for fund_name in funds:
         
+        fund = data[fund_name]
         print(f"~~{fund_name}~~")
         create_sub_temp_dir(fund_name)
         analysis[fund_name] = {}
 
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()
-
-        if len(funds) > 1:
-            fund = data[fund_name]
-        else:
-            fund = data
 
         start = date_extractor(fund.index[0], _format='str')
         end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
