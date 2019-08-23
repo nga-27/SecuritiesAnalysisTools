@@ -36,6 +36,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['interval'] = '1d'
     config['properties'] = {}
     config['core'] = False
+    config['tickers'] = ''
 
     if options is not None:
         config, x = header_options_parse(x, config)
@@ -44,6 +45,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
         if config['state'] == 'function':
             return config
 
+    x = remove_whitespace_str(x)
     if (x == '') and (config['core'] == False):
         # Default (hitting enter)
         config['tickers'] = default
@@ -95,6 +97,18 @@ def remove_whitespace(config: dict, default: str) -> list:
         config['tickers'] = default
         t = config['tickers'].split(' ')
     return t, config
+
+
+def remove_whitespace_str(input_str: str) -> str:
+    s = input_str.split(' ')
+    s1 = []
+    for s2 in s:
+        if s2 != '':
+            s1.append(s2)
+    if len(s1) == 0:
+        return ''
+    s = ' '.join(s1)
+    return s
 
 
 def header_core_parse(input_str: str) -> list:
