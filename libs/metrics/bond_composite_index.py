@@ -14,6 +14,7 @@ import yfinance as yf
 
 from libs.tools import cluster_oscs
 from libs.utils import dual_plotting, ProgressBar, index_appender, dates_extractor_list
+from libs.utils import data_nan_fix
 
 def metrics_initializer(period='1y', bond_type='Treasury'):
     if bond_type == 'Treasury':
@@ -118,15 +119,18 @@ def bond_composite_index(config: dict, plot_output=False):
             props = properties['Indexes']
             if 'Treasury Bond' in props.keys():
                 if props['Treasury Bond'] == True:
-                    data, sectors, index_type = metrics_initializer(period=period, bond_type='Treasury')
+                    data1, sectors, index_type = metrics_initializer(period=period, bond_type='Treasury')
+                    data = data_nan_fix(data1, sectors)
                     composite_index(data, sectors, plot_output=plot_output, bond_type='Treasury', index_type=index_type)
 
             if 'Corporate Bond' in props.keys():
                 if props['Corporate Bond'] == True:
-                    data, sectors, index_type = metrics_initializer(period=period, bond_type='Corporate')
+                    data1, sectors, index_type = metrics_initializer(period=period, bond_type='Corporate')
+                    data = data_nan_fix(data1, sectors)
                     composite_index(data, sectors, plot_output=plot_output, bond_type='Corporate', index_type=index_type)
 
             if 'International Bond' in props.keys():
                 if props['International Bond'] == True:
-                    data, sectors, index_type = metrics_initializer(period=period, bond_type='International')
+                    data1, sectors, index_type = metrics_initializer(period=period, bond_type='International')
+                    data = data_nan_fix(data1, sectors)
                     composite_index(data, sectors, plot_output=plot_output, bond_type='International', index_type=index_type)

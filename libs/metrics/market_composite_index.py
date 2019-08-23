@@ -17,6 +17,7 @@ import yfinance as yf
 from libs.tools import cluster_oscs, beta_comparison_list
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import ProgressBar, index_appender
+from libs.utils import data_nan_fix
 
 def metrics_initializer(period='1y'):
     tickers = 'VGT VHT VCR VDC VFH VDE VIS VOX VNQ VPU VAW'
@@ -160,6 +161,7 @@ def market_composite_index(config: dict=None, period=None, plot_output=False) ->
             if 'Market Sector' in props.keys():
                 if props['Market Sector'] == True:
                     data, sectors = metrics_initializer(period=period)
+                    data = data_nan_fix(data, sectors)
 
                     p = ProgressBar(len(sectors)*2+5, name='Market Composite Index')
                     p.start()
