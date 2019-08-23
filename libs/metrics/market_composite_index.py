@@ -23,9 +23,10 @@ def metrics_initializer(period='1y'):
     tickers = 'VGT VHT VCR VDC VFH VDE VIS VOX VNQ VPU VAW'
     sectors = tickers.split(' ')
     tickers = index_appender(tickers)
+    all_tickers = tickers.split(' ')
     print(" ")
     print('Fetching Market Composite Index funds...')
-    data = download_data_indexes(indexes=sectors, tickers=tickers, period=period, interval='1d')
+    data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, period=period, interval='1d')
     print(" ")
     return data, sectors
 
@@ -79,7 +80,7 @@ def composite_correlation(data: dict, sectors: list, composite_osc=None, progres
         if start_pt > 100:
             start_pt = 100
         corrs = {}
-        dates = data.index[start_pt:tot_len]
+        dates = data['^GSPC'].index[start_pt:tot_len]
         net_correlation = [0.0] * (tot_len-start_pt)
         for sector in sectors:
             correlations[sector] = simple_beta_rsq(data[sector], data['^GSPC'], recent_period=[int(np.round(tot_len/2, 0)), tot_len])

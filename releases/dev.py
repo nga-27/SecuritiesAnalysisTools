@@ -82,33 +82,23 @@ def technical_analysis(config: dict):
     configure_temp_dir()
 
     data, funds = download_data(config=config)
-    # data2 = data_format(data, config)
-    # print(f"data: {data2}")
 
     e_check = {'tickers': config['tickers']}
     if has_critical_error(data, 'download_data', misc=e_check):
         return None
-    
-    # funds = fund_list_extractor(data, config=config)
-    
-    # data = data_nan_fix(data, funds)
 
     # Start of automated process
     analysis = {}
 
     for fund_name in funds:
         
+        fund = data[fund_name]
         print(f"~~{fund_name}~~")
         create_sub_temp_dir(fund_name)
         analysis[fund_name] = {}
 
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()
-
-        if len(funds) > 1:
-            fund = data[fund_name]
-        else:
-            fund = data
 
         start = date_extractor(fund.index[0], _format='str')
         end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
