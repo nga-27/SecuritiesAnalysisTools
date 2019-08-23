@@ -173,7 +173,7 @@ def technical_analysis(config: dict):
 
     # test_competitive(data, analysis)
 
-    market_composite_index(config=config)
+    analysis['MCI'] = market_composite_index(config=config)
 
     bond_composite_index(config=config)
 

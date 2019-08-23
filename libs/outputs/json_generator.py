@@ -14,13 +14,14 @@ def metadata_copy(data: dict) -> dict:
     """ Speciality copy function to remove tabulars, etc. Pops selected tabular keys/data """
     meta = data.copy()
     for key in meta.keys():
-        meta[key].pop('clustered_osc')
-        """ Additional grooming / popping follows """
-        # if 'features' in meta[key].keys():
-        #     for feature in meta[key]['features']:
-        #         for feat in range(len(meta[key]['features'][feature]['features'])):
-                    # Array of 'feature' features
-                    # meta[key]['features'][feature]['features'][feat].pop('indexes')
+        if 'clustered_osc' in meta[key]:
+            meta[key].pop('clustered_osc')
+            """ Additional grooming / popping follows """
+            # if 'features' in meta[key].keys():
+            #     for feature in meta[key]['features']:
+            #         for feat in range(len(meta[key]['features'][feature]['features'])):
+                        # Array of 'feature' features
+                        # meta[key]['features'][feature]['features'][feat].pop('indexes')
 
     return meta
 

@@ -29,6 +29,19 @@ def metrics_initializer(period='1y'):
     return data, sectors
 
 
+def simple_beta_rsq(fund: pd.DataFrame, benchmark: pd.DataFrame, recent_period: list=[]) -> list:
+    simple_br = []
+    for period in recent_period:
+        val = {}
+        val['period'] = period 
+        tot_len = len(fund['Close'])
+        b, r = beta_comparison_list(fund['Close'][tot_len-period:tot_len], benchmark['Close'][tot_len-period:tot_len])
+        val['beta'] = np.round(b, 5) 
+        val['r_squared'] = np.round(r, 5)
+        simple_br.append(val)
+    return simple_br 
+
+
 def composite_index(data: pd.DataFrame, sectors: list, progress_bar=None, plot_output=True):
     composite = []
     for tick in sectors:
@@ -68,6 +81,7 @@ def composite_correlation(data: pd.DataFrame, sectors: list, composite_osc=None,
         dates = data.index[start_pt:tot_len]
         net_correlation = [0.0] * (tot_len-start_pt)
         for sector in sectors:
+            correlations[sector] = simple_beta_rsq(data[sector], data['^GSPC'], recent_period=[int(np.round(tot_len/2, 0)), tot_len])
             corrs[sector] = []
             for i in range(start_pt, tot_len):
                 _, rsqd = beta_comparison_list(data[sector]['Close'][i-start_pt:i], data['^GSPC']['Close'][i-start_pt:i])
