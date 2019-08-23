@@ -1,0 +1,19 @@
+{
+    "Properties": 
+    {
+        "Period": "2y",
+        "Interval": "1d",
+        "Indexes": {
+            "Market Sector": false,
+            "Corporate Bond": true,
+            "Treasury Bond": true,
+            "International Bond": true
+        }
+    },
+    "Ticker Symbols" :
+    [
+        "VWINX",
+        "VTSAX",
+        "VHT"
+    ]
+}

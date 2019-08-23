@@ -1,6 +1,7 @@
 OPTIONS:
 
 --core       :     normal operation run with parameters found in core.json
+--test       :     similar to '--core' but with test.json (for testing only)
 --noindex    :     does not include S&P500 index, omits comparison operations
 --function   :     triggers only designated functions (below)
 

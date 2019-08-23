@@ -111,13 +111,19 @@ def remove_whitespace_str(input_str: str) -> str:
     return s
 
 
-def header_core_parse(input_str: str) -> list:
-    if '--core' not in input_str:
+def header_json_parse(input_str: str, key: str) -> list:
+    if key not in input_str:
         return None
 
-    if os.path.exists('core.json'):
+    json_path = ''
+    if key == '--core':
+        json_path = 'core.json'
+    if key == '--test':
+        json_path = 'test.json'
+
+    if os.path.exists(json_path):
         tickers = ''
-        with open('core.json') as json_file:
+        with open(json_path) as json_file:
             core = json.load(json_file)
             for i in range(len(core['Ticker Symbols'])-1):
                 tickers += core['Ticker Symbols'][i] + ' '
@@ -156,7 +162,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     # Configuration flags that append to states but do not return / force them
     if '--core' in input_str:
-        core = header_core_parse(input_str)
+        core = header_json_parse(input_str, '--core')
         if core is not None:
             config['tickers'] = core[0]
             config['period'] = core[1]
@@ -164,6 +170,17 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['properties'] = core[3]
             config['core'] = True
             output_str = input_str.replace('--core', '')
+            input_str = output_str
+
+    if '--test' in input_str:
+        core = header_json_parse(input_str, '--test')
+        if core is not None:
+            config['tickers'] = core[0]
+            config['period'] = core[1]
+            config['interval'] = core[2]
+            config['properties'] = core[3]
+            config['core'] = True
+            output_str = input_str.replace('--test', '')
             input_str = output_str
 
     if '--noindex' in input_str:

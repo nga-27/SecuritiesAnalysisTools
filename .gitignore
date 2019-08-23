@@ -5,4 +5,4 @@ securities/*.csv
 .vscode
 output/*
 core.json
-corex.json
+test.json
