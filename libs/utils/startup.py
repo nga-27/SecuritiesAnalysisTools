@@ -32,7 +32,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['date_release'] = update_release
 
     config['state'] = 'run'
-    config['period'] = '1y'
+    config['period'] = '2y'
     config['interval'] = '1d'
     config['properties'] = {}
     config['core'] = False

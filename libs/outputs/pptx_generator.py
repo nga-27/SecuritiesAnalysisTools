@@ -138,7 +138,7 @@ def make_intro_slide(prs):
     return prs
 
 
-def make_MCI_slides(prs):
+def make_MCI_slides(prs, analysis: dict):
     content = f'output/temp/MCI.png'
     if os.path.exists(content):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
@@ -148,6 +148,94 @@ def make_MCI_slides(prs):
         top = Inches(1.27)
         height = Inches(6.1)
         width = Inches(10.5)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+    content = f"output/temp/MCI_correlations.png"
+    if os.path.exists(content):
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, 'Market Composite Index')
+
+        left = Inches(5.63)
+        top = Inches(1.1)
+        height = Inches(6.0)
+        width = Inches(7.6)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+        # Add table here!
+        if 'MCI' in analysis.keys():
+            num_rows = len(list(analysis['MCI'].keys())) + 2
+            fund_key = list(analysis['MCI'].keys())[0]
+            time_periods = [analysis['MCI'][fund_key][0]['period'], analysis['MCI'][fund_key][1]['period']]
+            # list of look back periods, having both B & R, plus name
+            num_cols = 5 # len(analysis['MCI'][temp_key]) * 2 + 1
+
+            left_loc = Inches(0.1)
+            top_loc = Inches(1.1)
+            table_width = Inches(5.75)
+            table_height = Inches(6)
+
+            table_placeholder = slide.shapes.add_table( num_rows, 
+                                                        num_cols,
+                                                        left_loc,
+                                                        top_loc,
+                                                        table_width,
+                                                        table_height)
+            table = table_placeholder.table
+
+            cell_1 = table.cell(0,1)
+            cell_2 = table.cell(0,2)
+            cell_1.merge(cell_2)
+            cell_3 = table.cell(0,3)
+            cell_4 = table.cell(0,4)
+            cell_3.merge(cell_4)
+
+            table.cell(1,0).text = 'Fund'
+            table.cell(0,1).text = f"{time_periods[0]} Periods"
+            table.cell(0,3).text = f"{time_periods[1]} Periods"
+            table.cell(1,1).text = 'Beta'
+            table.cell(1,3).text = 'Beta'
+            table.cell(1,2).text = 'R-Squared'
+            table.cell(1,4).text = 'R-Squared'
+
+            for i in range(5):
+                table.cell(1, i).text_frame.paragraphs[0].font.size = Pt(15)
+                table.cell(1, i).text_frame.paragraphs[0].font.bold = True
+
+            for i, fund in enumerate(analysis['MCI'].keys()):
+                table.cell(i+2,0).text = fund 
+                table.cell(i+2,1).text = str(analysis['MCI'][fund][0]['beta'])
+                table.cell(i+2,2).text = str(analysis['MCI'][fund][0]['r_squared'])
+                table.cell(i+2,3).text = str(analysis['MCI'][fund][1]['beta'])
+                table.cell(i+2,4).text = str(analysis['MCI'][fund][1]['r_squared'])
+
+                table.cell(i+2,0).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,1).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,2).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,3).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+2,4).text_frame.paragraphs[0].font.size = Pt(14)
+            
+            
+
+
+    content = f"output/temp/MCI_net_correlation.png"
+    if os.path.exists(content):
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = fund_title_header(slide, 'Market Composite Index')
+
+        left = Inches(0.1)
+        top = Inches(1.27)
+        height = Inches(5.69)
+        width = Inches(6.42)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+    content = f"output/temp/MCI_osc_correlation.png"
+    if os.path.exists(content):
+        slide = prs.slides[len(prs.slides)-1]
+
+        left = Inches(6.67)
+        top = Inches(1.27)
+        height = Inches(5.69)
+        width = Inches(6.42)
         slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs
@@ -447,7 +535,7 @@ def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
 
     prs = title_presentation(year, VERSION=version)
     prs = make_intro_slide(prs)
-    prs = make_MCI_slides(prs)
+    prs = make_MCI_slides(prs, analysis)
     prs = make_BCI_slides(prs)
     prs = make_fund_slides(prs, analysis)
 
