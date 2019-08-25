@@ -216,59 +216,7 @@ def get_macd_state(macd: list) -> str:
             return 'weakly_bearish'
 
 
-def get_macd_nasit_score(signal: list, macd: dict) -> dict:
-    """ NASIT score """
-    factor = get_group_duration_factor(signal, len(signal)-1, f_type='score')
-    if macd['state'] == 'crossover_bullish':
-        return {'true': 1.0/factor, 'normalized': 1.0/factor}
-    if macd['state'] == 'crossover_bearish':
-        return {'true': -1.0/factor, 'normalized': -1.0/factor}
 
-    nasit = get_nasit_signal(signal) 
-    #print(nasit)
-    na_max = np.max(np.abs(nasit))
-    na_norm = nasit[len(nasit)-1] / na_max
-    return {'true': nasit[len(nasit)-1] / 100.0, 'normalized': na_norm}
-
-
-def get_nasit_signal(signal: list, interval=6) -> list:
-    nasit = []
-    tick_count = [0, 0.0]
-    for i in range(interval-1):
-        nasit.append(0.0)
-    for i in range(interval-1, len(signal)):
-        if (signal[i] > 0.0) and (signal[i-1] < 0.0):
-            nasit.append(100.0)
-            tick_count = [interval-1, 100.0, get_group_duration_factor(signal, i, f_type='signal')]
-        elif (signal[i] < 0.0) and (signal[i-1] > 0.0):
-            nasit.append(-100.0)
-            tick_count = [interval-1, -100.0, get_group_duration_factor(signal, i, f_type='signal')]
-        else:
-            val = get_macd_value(signal, value_type='group', index=i)
-            val = val / 100.0 * 50.0
-            m_ema = []
-            for j in range(tick_count[0]):
-                m_ema.append(tick_count[1] / tick_count[2])
-            for j in range(tick_count[0], interval-1):
-                m_ema.append(nasit[len(nasit)-1-(interval-1-j)])
-            m_ema.append(val)
-            m_ema = exponential_ma_list(m_ema, interval=interval)
-            nasit.append(m_ema[len(m_ema)-1])
-            tick_count[0] -= 1
-            if tick_count[0] < 0:
-                tick_count[0] = 0
-
-    #generic_plotting([nasit], title='NASIT for MACD')
-    nasit_ema = exponential_ma_list(nasit, interval=3)
-    #print(nasit_ema)
-    #generic_plotting([nasit_ema], title='NASIT for MACD')
-    return nasit_ema
-
-
-def export_macd_nasit_signal(fund: pd.DataFrame, plotting=False) -> list: 
-    macd_sig, _ = generate_macd_signal(fund, plotting=False)
-    nasit = get_nasit_signal(macd_sig)
-    return nasit 
 
 
 def mov_avg_convergence_divergence(fund: pd.DataFrame, plot_output=False, name='') -> dict:
@@ -286,17 +234,10 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, plot_output=False, name='
 
     macd['change'] = get_macd_value(macd_sig, value_type='change')
 
-    macd['nasit'] = get_macd_nasit_score(macd_sig, macd)
-
-    # if plot_output:
-    #     #nasit = get_nasit_signal(macd_sig)
-    #     #dual_plotting(fund['Close'], nasit, 'Price', 'Nasit score', 'trading')
-
     name2 = name + ' - MACD: '
     if plot_output:
         dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
-        #dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
     else:
         filename = name +'/macd_{}.png'.format(name)
         dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2, saveFig=True, filename=filename)

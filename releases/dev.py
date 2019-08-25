@@ -49,8 +49,8 @@ from libs.tools import get_maxima_minima, get_trendlines
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.16'
-_DATE_REVISION_ = '2019-08-23'
+_VERSION_ = '0.1.17'
+_DATE_REVISION_ = '2019-08-25'
 ################################
 PROCESS_STEPS_DEV = 11
 

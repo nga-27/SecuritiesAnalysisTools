@@ -5,7 +5,7 @@ from .moving_average import triple_moving_average, moving_average_swing_trade
 
 from .trends import trendline, trendline_deriv, support, resistance 
 from .trends import get_trend, get_trend_analysis, trend_filter
-from .trends import get_maxima_minima, get_trendlines
+from .trends import get_maxima_minima, get_trendlines, get_trendlines_2
 from .resistance_support import find_resistance_support_lines
 
 from .true_strength import relative_strength
@@ -18,6 +18,5 @@ from .trends import get_trend, get_trend_analysis
 from .clusters import cluster_oscs, export_cluster_nasit_signal
 
 from .macd import mov_avg_convergence_divergence 
-from .macd import export_macd_nasit_signal
 
 from .on_balance_volume import on_balance_volume 

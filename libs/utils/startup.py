@@ -68,7 +68,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
 
     if len(t) < 2:
         if config['state'] != 'run_no_index':
-            ticker_print += t[0] + ' and ^GSPC'
+            ticker_print += t[0] + ' and S&P500'
         else:
             ticker_print += t[0]
     else:
@@ -198,6 +198,13 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--bci' in input_str:
         output_str = input_str.replace('--bci', '')
         config['run_functions'] += ' bci'
+        input_str = output_str
+
+    if '--trend' in input_str:
+        output_str = input_str.replace('--trend', '')
+        ticker_str = output_str.replace('--function', '')
+        config['tickers'] = ticker_str
+        config['run_functions'] += ' trend'
         input_str = output_str
 
     # Configuration flags that control state outcomes and return immediately after setting

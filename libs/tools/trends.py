@@ -430,3 +430,8 @@ def get_trendlines(data: pd.DataFrame, interval: list=[16]):
             
     generic_plotting(tY, x_=tX)
 
+
+
+def get_trendlines_2(data: pd.DataFrame, interval: list=[16]):
+    print(f"Trendlines_2")
+
