@@ -4,8 +4,10 @@ from datetime import datetime
 from scipy.stats import linregress
 
 from .math_functions import linear_regression
-from .moving_average import simple_ma_list
+from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
 from libs.utils import generic_plotting
+
+from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
 
 TREND_PTS = [2, 3, 6]
 
@@ -432,6 +434,82 @@ def get_trendlines(data: pd.DataFrame, interval: list=[16]):
 
 
 
-def get_trendlines_2(data: pd.DataFrame, interval: list=[16]):
-    print(f"Trendlines_2")
+def get_trendlines_2(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
+    mins_y = []
+    mins_x = []
+    maxes_y = []
+    maxes_x = []
+    all_x = []
+
+    for i, period in enumerate(interval):
+        ma_size = period
+
+        # ma = windowed_ma_list(fund['Close'], interval=ma_size)
+        weight_strength = 2.0 + (0.1 * float(i))
+        ma = windowed_ema_list(fund['Close'], interval=ma_size, weight_strength=weight_strength)
+        ex = local_extrema(ma)
+        r = reconstruct_extrema(fund['Close'], extrema=ex, ma_size=ma_size, ma_type='windowed')
+
+        # Cleanse data sample for duplicates and errors
+        r = remove_duplicates(r, method='point')
+
+        # print(f"extrema: {r}")
+
+        for y in r['min']:
+            if y[0] not in mins_x:
+                mins_x.append(y[0])
+                mins_y.append(y[1])
+            if y[0] not in all_x:
+                all_x.append(y[0])
+        for y in r['max']:
+            if y[0] not in maxes_x:
+                maxes_x.append(y[0])
+                maxes_y.append(y[1])
+            if y[0] not in all_x:
+                all_x.append(y[0])
+
+    # Y = []
+    # X = []
+
+    # x_counter = 0
+    # x_len = len(all_x)
+    # while (x_counter < x_len):
+    #     if x_counter + 2 < x_len:
+    #         x_temp = [all_x[x_counter], all_x[x_counter+1], all_x[x_counter+2]]
+    #         y_temp = [fund['Close'][x_temp[0]], fund['Close'][x_temp[1]], fund['Close'][x_temp[2]]]
+    #         lin = linregress(x=x_temp, y=y_temp)
+
+    zipped_min = list(zip(mins_x, mins_y))
+    zipped_min.sort(key=lambda x: x[0])
+    mins_x = [x[0] for x in zipped_min]
+    mins_y = [y[1] for y in zipped_min]
+
+    zipped_max = list(zip(maxes_x, maxes_y))
+    zipped_max.sort(key=lambda x: x[0])
+    maxes_x = [x[0] for x in zipped_max]
+    maxes_y = [y[1] for y in zipped_max]
+
+
+        # mins_y = [y[1] for y in r['min']]
+    mins_xd = [fund.index[x] for x in mins_x]
+        # maxes_y = [y[1] for y in r['max']]
+    maxes_xd = [fund.index[x] for x in maxes_x]
+
+    generic_plotting([fund['Close'], mins_y, maxes_y], x_=[list(fund.index), mins_xd, maxes_xd], legend=['f', 'min', 'max'])
+
+    # generic_plotting(mas, x_=fund.index, legend=[str(interval[0]), str(interval[0]), str(interval[0])])
+
+    # new_interval = 47
+    # r_sqrd = []
+    # x_x = []
+    # for i in range(new_interval, len(fund['Close'])):
+    #     lin = linregress(x=list(range(i-new_interval, i+1)), y=fund['Close'][i-new_interval:i+1])
+    #     val = (lin[2] ** 2) * 200.0
+    #     r_sqrd.append(val) 
+    #     x_x.append(fund.index[i])
+
+    # generic_plotting([fund['Close'], r_sqrd], x_=[list(fund.index), x_x], legend=['fund', 'r-squared'])
+
+
+    
 

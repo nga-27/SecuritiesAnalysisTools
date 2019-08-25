@@ -130,7 +130,7 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
     # ma = exponential_ma(fund, FILTER_SIZE)
     ma = windowed_ma_list(fund['Close'], interval=FILTER_SIZE+1)
     ex = local_extrema(ma)
-    r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE)
+    r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE, ma_type='windowed')
 
     # Cleanse data sample for duplicates and errors
     r = remove_duplicates(r)

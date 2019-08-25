@@ -1,6 +1,7 @@
 from .math_functions import linear_regression, lower_low, higher_high, bull_bear_th, local_minima
 from .math_functions import beta_comparison, beta_comparison_list
-from .moving_average import exponential_ma, windowed_ma_list, exponential_ma_list, simple_ma_list
+from .moving_average import exponential_ma, exponential_ma_list, simple_ma_list
+from .moving_average import windowed_ma_list, windowed_ema_list
 from .moving_average import triple_moving_average, moving_average_swing_trade
 
 from .trends import trendline, trendline_deriv, support, resistance 

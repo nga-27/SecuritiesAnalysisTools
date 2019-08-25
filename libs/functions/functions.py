@@ -46,5 +46,7 @@ def trends_function(config: dict):
     # config['period'] = '2y'
     # config['interval'] = '1d'
     data, fund_list = download_data(config=config)
-    print(f"Trends of {config['tickers']}!")
-    get_trendlines_2(data)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Trends of {fund}!")
+            get_trendlines_2(data[fund])

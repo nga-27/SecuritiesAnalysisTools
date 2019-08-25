@@ -39,7 +39,7 @@ def windowed_ma_list(item: list, interval: int) -> list:
         # if math.isnan(item[i]):
         #     print(f"NaN on item {i}")
     for i in range(left, len(item)-left):
-        wma.append(np.mean(item[i-(left):i+1+(left)]))
+        wma.append(np.mean(item[i-(left):i+(left)]))
         # if math.isnan(item[i]):
         #     print(f"NaN on item {i}")
     for i in range(len(item)-left, len(item)):
@@ -48,6 +48,27 @@ def windowed_ma_list(item: list, interval: int) -> list:
         #     print(f"NaN on item {i}")
 
     return wma 
+
+
+def windowed_ema_list(item: list, interval: int, weight_strength=2.0) -> list:
+    left = int(np.floor(float(interval) / 2))
+    weight = weight_strength / (float(interval) + 1.0)
+    if weight > 1.0:
+        weight = 1.0
+    wma = []
+    for i in range(left):
+        wma.append(item[i])
+    for i in range(left, len(item)-left):
+        sum_len = len(item[i-(left):i+(left)]) - 1
+        sum_vals = np.sum(item[i-(left):i+(left)])
+        sum_vals -= item[i]
+        sum_vals = sum_vals / float(sum_len)
+        sum_vals = item[i] * weight + sum_vals * (1.0 - weight)
+        wma.append(sum_vals)
+    for i in range(len(item)-left, len(item)):
+        wma.append(item[i])
+
+    return wma
 
 
 def simple_ma_list(item: list, interval: int) -> list:
