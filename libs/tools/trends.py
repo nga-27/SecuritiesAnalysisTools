@@ -468,17 +468,6 @@ def get_trendlines_2(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
             if y[0] not in all_x:
                 all_x.append(y[0])
 
-    # Y = []
-    # X = []
-
-    # x_counter = 0
-    # x_len = len(all_x)
-    # while (x_counter < x_len):
-    #     if x_counter + 2 < x_len:
-    #         x_temp = [all_x[x_counter], all_x[x_counter+1], all_x[x_counter+2]]
-    #         y_temp = [fund['Close'][x_temp[0]], fund['Close'][x_temp[1]], fund['Close'][x_temp[2]]]
-    #         lin = linregress(x=x_temp, y=y_temp)
-
     zipped_min = list(zip(mins_x, mins_y))
     zipped_min.sort(key=lambda x: x[0])
     mins_x = [x[0] for x in zipped_min]
@@ -489,26 +478,158 @@ def get_trendlines_2(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
     maxes_x = [x[0] for x in zipped_max]
     maxes_y = [y[1] for y in zipped_max]
 
-
-        # mins_y = [y[1] for y in r['min']]
     mins_xd = [fund.index[x] for x in mins_x]
-        # maxes_y = [y[1] for y in r['max']]
     maxes_xd = [fund.index[x] for x in maxes_x]
 
     generic_plotting([fund['Close'], mins_y, maxes_y], x_=[list(fund.index), mins_xd, maxes_xd], legend=['f', 'min', 'max'])
 
-    # generic_plotting(mas, x_=fund.index, legend=[str(interval[0]), str(interval[0]), str(interval[0])])
+    long_term = 180
+    intermediate_term = 90
+    short_term = 20 
+    get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term)
 
-    # new_interval = 47
-    # r_sqrd = []
-    # x_x = []
-    # for i in range(new_interval, len(fund['Close'])):
-    #     lin = linregress(x=list(range(i-new_interval, i+1)), y=fund['Close'][i-new_interval:i+1])
-    #     val = (lin[2] ** 2) * 200.0
-    #     r_sqrd.append(val) 
-    #     x_x.append(fund.index[i])
+    
 
-    # generic_plotting([fund['Close'], r_sqrd], x_=[list(fund.index), x_x], legend=['fund', 'r-squared'])
+
+def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> list:
+    mins_y = kargs[1]
+    mins_x = kargs[0]
+    maxes_y = kargs[3]
+    maxes_x = kargs[2]
+
+    
+
+
+
+
+def get_the_lines(fund: pd.DataFrame, kargs: list):
+    mins_y = kargs[1]
+    mins_x = kargs[0]
+    maxes_y = kargs[3]
+    maxes_x = kargs[2]
+    # all_x = kargs[4]
+
+    EXTENSION = 25
+
+    X = []
+    Y = []
+
+    # Start with minimums
+    print("Starting mins")
+    ix = 1
+    x0 = [mins_x[ix-1], mins_x[ix]]
+    y0 = [mins_y[ix-1], mins_y[ix]]
+    start_pt = x0[0]
+    ix += 1
+    while (ix < len(mins_x)):
+        
+        lin = linregress(x=x0, y=y0)
+        above_line = True
+        next_x = mins_x[ix]
+        while above_line:
+            next_x += 1
+            if next_x == len(fund['Close']):
+                break
+            if ix == len(mins_x):
+                break
+            if next_x == mins_x[ix]:
+                x1 = [mins_x[ix-1], mins_x[ix]]
+                y1 = [mins_y[ix-1], mins_y[ix]]
+                lin1 = linregress(x=x1, y=y1)
+                if (lin1[0] > lin[0] * 0.99) and (lin1[0] < lin[0] * 1.01):
+                    x0.append(mins_x[ix])
+                    y0.append(mins_y[ix])
+                    ix += 1
+
+            new_line_x = list(range(start_pt, next_x))
+            new_line_y = [lin[1] + lin[0]*x for x in new_line_x]
+            above_line = line_check(fund, line_x=new_line_x, line_y=new_line_y, metric='above')
+
+        new_line_x = list(range(start_pt, next_x+EXTENSION))
+        new_line_y = [lin[1] + lin[0]*x for x in new_line_x]
+
+        X.append(new_line_x)
+        Y.append(new_line_y)
+
+        if ix+1 < len(mins_x):
+            ix+=1
+            x0 = [mins_x[ix-1], mins_x[ix]]
+            y0 = [mins_y[ix-1], mins_y[ix]]
+            start_pt = mins_x[ix-1]
+        else:
+            break
+
+    # Maxes 
+    print("Starting maxes")
+    ix = 1
+    x0 = [maxes_x[ix-1], maxes_x[ix]]
+    y0 = [maxes_y[ix-1], maxes_y[ix]]
+    start_pt = x0[0]
+    ix += 1
+    while (ix < len(maxes_x)):
+        
+        lin = linregress(x=x0, y=y0)
+        above_line = True
+        next_x = maxes_x[ix]
+        while above_line:
+            next_x += 1
+            if next_x == len(fund['Close']):
+                break
+            if ix == len(maxes_x):
+                break
+            if next_x == maxes_x[ix]:
+                x1 = [maxes_x[ix-1], maxes_x[ix]]
+                y1 = [maxes_y[ix-1], maxes_y[ix]]
+                lin1 = linregress(x=x1, y=y1)
+                if (lin1[0] > lin[0] * 0.99) and (lin1[0] < lin[0] * 1.01):
+                    x0.append(maxes_x[ix])
+                    y0.append(maxes_y[ix])
+                    ix += 1
+
+            new_line_x = list(range(start_pt, next_x))
+            new_line_y = [lin[1] + lin[0]*x for x in new_line_x]
+            above_line = line_check(fund, line_x=new_line_x, line_y=new_line_y, metric='below')
+
+        new_line_x = list(range(start_pt, next_x+EXTENSION))
+        new_line_y = [lin[1] + lin[0]*x for x in new_line_x]
+
+        X.append(new_line_x)
+        Y.append(new_line_y)
+
+        if ix+1 < len(maxes_x):
+            ix+=1
+            x0 = [maxes_x[ix-1], maxes_x[ix]]
+            y0 = [maxes_y[ix-1], maxes_y[ix]]
+            start_pt = maxes_x[ix-1]
+        else:
+            break
+
+    X.append(list(range(0,len(fund['Close']))))
+    Y.append(fund['Close'])
+    generic_plotting(Y, x_=X)
+
+
+        
+
+
+def line_check(fund: pd.DataFrame, line_x: list, line_y: list, metric='above') -> bool:
+    if metric == 'above':
+        for i, x in enumerate(line_x):
+            if fund['Close'][x] < line_y[i]:
+                return False
+
+    else:
+        for i, x in enumerate(line_x):
+            if fund['Close'][x] > line_y[i]:
+                return False
+
+    return True
+
+
+    
+         
+
+        
 
 
     
