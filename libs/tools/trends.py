@@ -481,23 +481,109 @@ def get_trendlines_2(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
     mins_xd = [fund.index[x] for x in mins_x]
     maxes_xd = [fund.index[x] for x in maxes_x]
 
-    generic_plotting([fund['Close'], mins_y, maxes_y], x_=[list(fund.index), mins_xd, maxes_xd], legend=['f', 'min', 'max'])
+    # generic_plotting([fund['Close'], mins_y, maxes_y], x_=[list(fund.index), mins_xd, maxes_xd], legend=['f', 'min', 'max'])
 
     long_term = 180
     intermediate_term = 90
-    short_term = 20 
+    short_term = 45
+    near_term = 20 
     get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term)
+    get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term)
+    get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term)
+    get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term)
 
     
 
 
 def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> list:
+    EXTENSION = interval
+    BREAK_LOOP = 50
+    cycles = int(np.floor(len(fund['Close'])/interval))
     mins_y = kargs[1]
     mins_x = kargs[0]
     maxes_y = kargs[3]
     maxes_x = kargs[2]
+    X = []
+    Y = []
 
-    
+    for cycle in range(cycles):
+        start = cycle * interval
+        end = start + interval
+        data = fund['Close'][start:end].copy()
+        x = list(range(start, end))
+        reg = linregress(x=x, y=data)
+        if reg[0] >= 0:
+            use_min = True
+        else:
+            use_min = False 
+        
+        count = 0
+        st_count = count
+        if use_min:
+            while (count < len(mins_x)) and (mins_x[count] < start):
+                count += 1
+                st_count = count
+            while (count < len(mins_x)) and (mins_x[count] < end):
+                count += 1
+                end_count = count
+            datay = mins_y[st_count:end_count].copy()
+            datax = mins_x[st_count:end_count].copy()
+            dataz = {}
+            dataz['x'] = datax
+            dataz['y'] = datay
+            dataw = pd.DataFrame.from_dict(dataz)
+            dataw.set_index('x')
+            datav = dataw.copy()
+            stop_loop = 0
+            while ((len(dataw['x']) > 1) and (reg[0] > 0.0)) and (stop_loop < BREAK_LOOP):
+                reg = linregress(x=dataw['x'], y=dataw['y'])
+                datav = dataw.copy()
+                dataw = dataw.loc[dataw['y'] < reg[0] * dataw['x'] + reg[1]]
+                stop_loop += 1
+
+            if len(dataw) < 2:
+                dataw = datav.copy()
+                if len(dataw) >= 2:
+                    reg = linregress(x=dataw['x'], y=dataw['y'])
+
+        else:
+            while (count < len(maxes_x)) and (maxes_x[count] < start):
+                count += 1
+                st_count = count
+            while (count < len(maxes_x)) and (maxes_x[count] < end):
+                count += 1
+                end_count = count
+            datay = maxes_y[st_count:end_count].copy()
+            datax = maxes_x[st_count:end_count].copy()
+            dataz = {}
+            dataz['x'] = datax
+            dataz['y'] = datay
+            dataw = pd.DataFrame.from_dict(dataz)
+            dataw.set_index('x')
+            datav = dataw.copy()
+            stop_loop = 0
+            while ((len(dataw['x']) > 1) and (reg[0] < 0.0)) and (stop_loop < BREAK_LOOP):
+                reg = linregress(x=dataw['x'], y=dataw['y'])
+                datav = dataw.copy()
+                dataw = dataw.loc[dataw['y'] > reg[0] * dataw['x'] + reg[1]]
+                stop_loop += 1
+
+            if len(dataw) < 2:
+                dataw = datav.copy()
+                if len(dataw) >= 2:
+                    reg = linregress(x=dataw['x'], y=dataw['y'])
+
+        max_range = [start, end + EXTENSION]
+        if max_range[1] > len(fund['Close']):
+            max_range[1] = len(fund['Close'])
+        datax = list(range(max_range[0], max_range[1]))
+        datay = [reg[0] * x + reg[1] for x in datax]
+        X.append(datax)
+        Y.append(datay)
+
+    X.append(list(range(0,len(fund['Close']))))
+    Y.append(fund['Close'])
+    generic_plotting(Y, x_=X)
 
 
 
