@@ -146,7 +146,7 @@ def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, f
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'histogram' of title: {title}")
+        print(f"plot failed to render in 'histogram'")
     plt.close()
     plt.clf()
 
