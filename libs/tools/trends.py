@@ -107,7 +107,7 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 
     return trend_analysis
 
 
-def get_trendlines_2(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
+def get_trendlines(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
     mins_y = []
     mins_x = []
     maxes_y = []

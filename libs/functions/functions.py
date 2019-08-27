@@ -3,7 +3,7 @@ import numpy as np
 
 from libs.utils import download_data
 from libs.metrics import market_composite_index, bond_composite_index
-from libs.tools import get_trendlines_2, find_resistance_support_lines
+from libs.tools import get_trendlines, find_resistance_support_lines
 
 def only_functions_handler(config: dict):
     print(f"Running functions: '{config['run_functions']}' for {config['tickers']}")
@@ -50,7 +50,7 @@ def trends_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Trends of {fund}...")
-            get_trendlines_2(data[fund])
+            get_trendlines(data[fund])
 
 
 def support_resistance_function(config: dict):

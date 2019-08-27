@@ -43,7 +43,7 @@ from libs.outputs import slide_creator, output_to_json
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
-from libs.tools import get_trendlines_2
+from libs.tools import get_trendlines
 
 ####################################################################
 ####################################################################
