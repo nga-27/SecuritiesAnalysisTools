@@ -222,12 +222,15 @@ def res_sup_unions(Yr: list, Xr: list, Ys: list, Xs: list):
     return Xc, Yc
 
 
-def get_nearest_lines(ylist: list, cur_price: float, support_resistance='support') -> list:
+def get_nearest_lines(ylist: list, cur_price: float, support_resistance='support', color=[]) -> list:
     keys = []
     if support_resistance == 'major':
         for y in range(len(ylist)-1, -1, -1):
             percent = np.round((ylist[y] - cur_price) / cur_price * 100.0, 3)
-            keys.append({'Price': f"{ylist[y]}", 'Change': f"{percent}%"})
+            y_color = 'black'
+            if len(color) > 0:
+                y_color = color[y]
+            keys.append({'Price': f"{ylist[y]}", 'Change': f"{percent}%", 'Color': y_color})
         return keys
 
     elif support_resistance == 'support':
@@ -266,17 +269,31 @@ def get_nearest_lines(ylist: list, cur_price: float, support_resistance='support
 
 
 
-def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
+def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> dict:
     analysis = {}
+    colors = []
+
+    for key in key_args.keys():
+        analysis[key] = key_args[key]
+    if 'Colors' in key_args.keys():
+        colors = key_args['Colors']
+
     Yr = zipped_content[0]
     Ys = zipped_content[1]
     Yc = zipped_content[2]
     res = [y[0] for y in Yr]
     sup = [y[0] for y in Ys]
     maj = [y[0] for y in Yc]
+    zipper = list(zip(maj, colors))
+    zipper.sort(key=lambda x: x[0])
+    maj = [x[0] for x in zipper]
+    colors = [y[1] for y in zipper]
+
     res.sort()
     sup.sort()
     maj.sort()
+
+    
 
     # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
     # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
@@ -287,8 +304,8 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame) -> dict:
 
     analysis['supports'] = get_nearest_lines(maj, analysis['current price'], support_resistance='support')
     analysis['resistances'] = get_nearest_lines(maj, analysis['current price'], support_resistance='resistance')
-    analysis['major S&R'] = get_nearest_lines(maj, analysis['current price'], support_resistance='major')
-    
+    analysis['major S&R'] = get_nearest_lines(maj, analysis['current price'], support_resistance='major', color=colors)
+
     return analysis
 
 
@@ -349,13 +366,34 @@ def find_resistance_support_lines(  data: pd.DataFrame,
     else:
         Xp2 = data.index 
         Yp = [remove_dates_from_close(data)]
+    c = colorize_plots(len(Yp), primary_plot_index=len(Yp)-1)
 
     if plot_output:
-        generic_plotting(Yp, x_=Xp2, title=f'{name} Major Resistance & Support')
+        generic_plotting(Yp, x_=Xp2, colors=c, title=f'{name} Major Resistance & Support')
     else:
         filename = f"{name}/resist_support_{name}.png"
-        generic_plotting(Yp, x_=Xp2, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
+        generic_plotting(Yp, x_=Xp2, colors=c, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
 
-    analysis = detailed_analysis([Yr, Ys, Yc], data)
+    analysis = detailed_analysis([Yr, Ys, Yc], data, key_args={'Colors': c})
     return analysis
 
+
+def colorize_plots(len_of_plots: int, primary_plot_index=None) -> list:
+    NUM_COLORS = 6
+    colors = []
+    for i in range(len_of_plots):
+        if i % NUM_COLORS == 1:
+            colors.append('purple')
+        elif i % NUM_COLORS == 2:
+            colors.append('blue')
+        elif i % NUM_COLORS == 3:
+            colors.append('green')
+        elif i % NUM_COLORS == 4:
+            colors.append('yellow')
+        elif i % NUM_COLORS == 5:
+            colors.append('orange')
+        elif i % NUM_COLORS == 0:
+            colors.append('red')
+    if primary_plot_index is not None:
+        colors[primary_plot_index] = 'black'
+    return colors

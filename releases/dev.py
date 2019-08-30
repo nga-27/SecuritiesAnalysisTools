@@ -50,7 +50,7 @@ from libs.tools import get_trendlines
 
 ################################
 _VERSION_ = '0.1.17'
-_DATE_REVISION_ = '2019-08-25'
+_DATE_REVISION_ = '2019-08-30'
 ################################
 PROCESS_STEPS_DEV = 11
 

@@ -8,7 +8,7 @@ import os
 import glob 
 
 from libs.utils import fund_list_extractor, windows_compatible_file_parse
-from .slide_utils import slide_title_header
+from .slide_utils import slide_title_header, color_to_RGB
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -243,11 +243,14 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
                 fl = maj['Change'].split('%')[0]
-                if float(fl) >= 0.0:
-                    table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
-                    table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
-                else:
-                    table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
-                    table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
+                # if float(fl) >= 0.0:
+                #     table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
+                #     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
+                # else:
+                #     table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
+                #     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
+                color = color_to_RGB(maj['Color'])
+                table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
 
     return prs 

@@ -16,4 +16,4 @@ FUNCTIONS:   :     (e.g. '--bci --mci vti AAPL amzn' ) REQUIRES --function flag
 --mci        :     run Market Composite Index (MCI)
 --bci        :     run Bond Composite Index (BCI)
 --trend      :     run trendline analysis for a fund
---sr         :     run support/resistance line analysis; "--support_resistance" also supported
+--sr         :     run support/resistance line analysis; "--support_resistance" and "--rs" also supported

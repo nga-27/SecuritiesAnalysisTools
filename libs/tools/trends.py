@@ -163,22 +163,28 @@ def get_trendlines(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
 
     X = []
     Y = []
+    C = []
     for i, x in enumerate(X0):
         X.append(x)
         Y.append(Y0[i])
+        C.append('blue')
     for i, x in enumerate(X1):
         X.append(x)
         Y.append(Y1[i])
+        C.append('green')
     for i, x in enumerate(X2):
         X.append(x)
         Y.append(Y2[i])
+        C.append('orange')
     for i, x in enumerate(X3):
         X.append(x)
         Y.append(Y3[i])
+        C.append('red')
 
     X.append(list(range(0,len(fund['Close']))))
     Y.append(fund['Close'])
-    generic_plotting(Y, x_=X)
+    C.append('black')
+    generic_plotting(Y, x_=X, colors=C)
 
     
 

@@ -214,8 +214,9 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(config, 'run_functions', 'support_resistance')
         input_str = output_str
     
-    if '--sr' in input_str:
+    if '--sr' or '--rs' in input_str:
         output_str = input_str.replace('--sr', '')
+        output_str = output_str.replace('--rs', '')
         ticker_str = output_str.replace('--function', '')
         config['tickers'] = ticker_str
         if len(config['run_functions']) > 0:

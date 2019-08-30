@@ -89,24 +89,38 @@ def dual_plotting(
     plt.clf()
 
 
-def generic_plotting(list_of_plots: list, x_=[], title='', legend=[], saveFig=False, filename=''):
+def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[], saveFig=False, filename=''):
     register_matplotlib_converters()
+
+    if len(colors) > 0:
+        if len(colors) != len(list_of_plots):
+            print(f"Warning: lengths of plots ({len(list_of_plots)}) and colors ({len(colors)}) do not match in generic_plotting.")
+            return None
 
     fig, ax = plt.subplots()
     
     if len(x_) < 1:
         x = dates_extractor_list(list_of_plots[0])
-        for fig in list_of_plots:
-            plt.plot(x, fig)
+        for i, fig in enumerate(list_of_plots):
+            if len(colors) > 0:
+                plt.plot(x, fig, colors[i])
+            else:
+                plt.plot(x, fig)
     else:
         if type(x_[0]) == list:
             x = x_
             for i in range(len(list_of_plots)):
-                plt.plot(x[i], list_of_plots[i])
+                if len(colors) > 0:
+                    plt.plot(x[i], list_of_plots[i], colors[i])
+                else:
+                    plt.plot(x[i], list_of_plots[i])
         else:
             x = x_
             for i, figy in enumerate(list_of_plots):
-                plt.plot(x, figy)
+                if len(colors) > 0:
+                    plt.plot(x, figy, colors[i])
+                else:
+                    plt.plot(x, figy)
 
     plt.title(title)
     if len(legend) > 0:
