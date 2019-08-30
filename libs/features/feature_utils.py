@@ -33,7 +33,7 @@ def local_extrema(filtered: list) -> dict:
     return extrema
 
 
-def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int) -> dict:
+def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int, ma_type='simple') -> dict:
     """ 
     Function to find true extrema on 'original', especially when 'extrema' is generated
     from a filtered / averaged signal (moving averages introduce time shifting). Uses 
@@ -41,6 +41,7 @@ def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int) -> 
         original:   pd.DataFrame -> specifically of 'Close' key (so easily castable to type list)
         extrema:    dict -> keys: 'min', 'max' of filtered signal
         ma_size:    int -> moving average filter size (used for reconditioning)
+        ma_type:    type of filter (matching for reconstruction is key)
     
     Returns:
         recon:      dict -> keys: 'min', 'max'; each key has a list of format:
@@ -52,42 +53,82 @@ def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int) -> 
     recon['min'] = []
     olist = list(original)
 
-    for _max in extrema['max']:
-        start = _max - ma_size
-        if start < 0:
-            start = 0
-        # Search for the maximum on the original signal between 'start' and '_max'.
-        recon['max'].append([olist.index(np.max(olist[start:_max]), start, _max), np.max(olist[start:_max+1])])
+    if ma_type == 'simple':
+        for _max in extrema['max']:
+            start = _max - ma_size
+            if start < 0:
+                start = 0
+            # Search for the maximum on the original signal between 'start' and '_max'.
+            recon['max'].append([olist.index(np.max(olist[start:_max]), start, _max), np.max(olist[start:_max+1])])
 
-    for _min in extrema['min']:
-        start = _min - ma_size
-        if start < 0:
-            start = 0
-        # Search for the maximum on the original signal between 'start' and '_min'.
-        recon['min'].append([olist.index(np.min(olist[start:_min]), start, _min), np.min(olist[start:_min+1])])
+        for _min in extrema['min']:
+            start = _min - ma_size
+            if start < 0:
+                start = 0
+            # Search for the maximum on the original signal between 'start' and '_min'.
+            recon['min'].append([olist.index(np.min(olist[start:_min]), start, _min), np.min(olist[start:_min+1])])
+
+    if ma_type == 'windowed':
+        ma_size_adj = int(np.floor(float(ma_size)/2.0))
+        for _max in extrema['max']:
+            start = _max - ma_size_adj
+            end = _max + ma_size_adj
+            if start < 0:
+                start = 0
+            if end > len(olist):
+                end = len(olist)
+            # Search for the maximum on the original signal between 'start' and 'end'.
+            recon['max'].append([olist.index(np.max(olist[start:end]), start, end), np.max(olist[start:end])])
+
+        for _min in extrema['min']:
+            start = _min - ma_size_adj
+            end = _min + ma_size_adj
+            if start < 0:
+                start = 0
+            if end > len(olist):
+                end = len(olist)
+            # Search for the maximum on the original signal between 'start' and 'end'.
+            recon['min'].append([olist.index(np.min(olist[start:end]), start, end), np.min(olist[start:end])])
     
     return recon
 
 
 
-def remove_duplicates(recon: dict, threshold=0.01) -> dict:
-    """ 
-    Removes duplicates of extrema (due to equal tops/bottoms, errors, those w/in a threshold of its neighbor)
-    """
-    most_recent = 0
-    newlist = []
-    for i in range(len(recon['max'])):
-        if (recon['max'][i][0] != most_recent) and ((recon['max'][i][1] > recon['max'][i-1][1] * (1+threshold)) or (recon['max'][i][1] < recon['max'][i-1][1] * (1-threshold))):
-            most_recent = recon['max'][i][0]
-            newlist.append(recon['max'][i])
-    recon['max'] = newlist
-    newlist = []
-    most_recent = 0
-    for i in range(len(recon['min'])):
-        if (recon['min'][i][0] != most_recent) and ((recon['min'][i][1] > recon['min'][i-1][1] * (1+threshold)) or (recon['min'][i][1] < recon['min'][i-1][1] * (1-threshold))):
-            most_recent = recon['min'][i][0]
-            newlist.append(recon['min'][i])
-    recon['min'] = newlist
+def remove_duplicates(recon: dict, method='threshold', threshold=0.01) -> dict:
+
+    """ Removes duplicates of extrema (due to equal tops/bottoms, errors, those w/in a threshold of its neighbor) """
+    if method == 'threshold':
+        most_recent = 0
+        newlist = []
+        for i in range(len(recon['max'])):
+            if (recon['max'][i][0] != most_recent) and ((recon['max'][i][1] > recon['max'][i-1][1] * (1+threshold)) or (recon['max'][i][1] < recon['max'][i-1][1] * (1-threshold))):
+                most_recent = recon['max'][i][0]
+                newlist.append(recon['max'][i])
+        recon['max'] = newlist
+        newlist = []
+        most_recent = 0
+        for i in range(len(recon['min'])):
+            if (recon['min'][i][0] != most_recent) and ((recon['min'][i][1] > recon['min'][i-1][1] * (1+threshold)) or (recon['min'][i][1] < recon['min'][i-1][1] * (1-threshold))):
+                most_recent = recon['min'][i][0]
+                newlist.append(recon['min'][i])
+        recon['min'] = newlist
+    
+    """ In some extrema dicts, we want granularity but not duplicated points. If an x-axis value matches one in the list, do not add it.  Simple! """
+    if method == 'point':
+        most_recent = 0
+        newlist = []
+        for i in range(len(recon['max'])):
+            if (recon['max'][i][0] != most_recent):
+                most_recent = recon['max'][i][0]
+                newlist.append(recon['max'][i])
+        recon['max'] = newlist
+        newlist = []
+        most_recent = 0
+        for i in range(len(recon['min'])):
+            if (recon['min'][i][0] != most_recent):
+                most_recent = recon['min'][i][0]
+                newlist.append(recon['min'][i])
+        recon['min'] = newlist
 
     return recon 
 

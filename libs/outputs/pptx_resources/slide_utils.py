@@ -96,3 +96,20 @@ def intro_slide(prs):
         print("WARNING - file 'metric_explanation.txt' not found.")
 
     return prs
+
+
+def color_to_RGB(color: str):
+    if color == 'black':
+        return RGBColor(0x00, 0x00, 0x00)
+    elif color == 'blue':
+        return RGBColor(0x00, 0x00, 0xFF)
+    elif color == 'green':
+        return RGBColor(0x00, 0xCC, 0x00)
+    elif color == 'purple':
+        return RGBColor(0x7F, 0x00, 0xFF)
+    elif color == 'yellow':
+        return RGBColor(0xee, 0xd4, 0x00)
+    elif color == 'orange':
+        return RGBColor(0xff, 0x99, 0x33)
+    elif color == 'red':
+        return RGBColor(0xff, 0x00, 0x00)

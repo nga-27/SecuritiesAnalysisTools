@@ -68,7 +68,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
 
     if len(t) < 2:
         if config['state'] != 'run_no_index':
-            ticker_print += t[0] + ' and ^GSPC'
+            ticker_print += t[0] + ' and S&P500'
         else:
             ticker_print += t[0]
     else:
@@ -192,12 +192,37 @@ def header_options_parse(input_str: str, config: dict) -> list:
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in input_str:
         output_str = input_str.replace('--mci', '')
-        config['run_functions'] += ' mci'
+        config = add_str_to_dict_key(config, 'run_functions', 'mci')
         input_str = output_str
 
     if '--bci' in input_str:
         output_str = input_str.replace('--bci', '')
-        config['run_functions'] += ' bci'
+        config = add_str_to_dict_key(config, 'run_functions', 'bci')
+        input_str = output_str
+
+    if '--trend' in input_str:
+        output_str = input_str.replace('--trend', '')
+        ticker_str = output_str.replace('--function', '')
+        config['tickers'] = ticker_str
+        config = add_str_to_dict_key(config, 'run_functions', 'trend')
+        input_str = output_str
+
+    if '--support_resistance' in input_str:
+        output_str = input_str.replace('--support_resistance', '')
+        ticker_str = output_str.replace('--function', '')
+        config['tickers'] = ticker_str
+        config = add_str_to_dict_key(config, 'run_functions', 'support_resistance')
+        input_str = output_str
+    
+    if '--sr' or '--rs' in input_str:
+        output_str = input_str.replace('--sr', '')
+        output_str = output_str.replace('--rs', '')
+        ticker_str = output_str.replace('--function', '')
+        config['tickers'] = ticker_str
+        if len(config['run_functions']) > 0:
+            config['run_functions'] += ', support_resistance'
+        else:
+            config['run_functions'] += 'support_resistance'
         input_str = output_str
 
     # Configuration flags that control state outcomes and return immediately after setting
@@ -235,3 +260,12 @@ def header_options_parse(input_str: str, config: dict) -> list:
         
     config['state'] = 'run' + config['state']
     return config, input_str
+
+
+def add_str_to_dict_key(content: dict, key: str, item: str):
+    if len(content[key]) > 0:
+        content[key] += f", {item}"
+    else:
+        content[key] += item 
+    return content
+    

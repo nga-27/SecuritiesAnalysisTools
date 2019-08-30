@@ -11,7 +11,9 @@ VERSIONS:    :     (flags for versioning)
 --prod       :     default behavior; more updated than release, less than dev, but more stable
 --r1         :     run release_1.py (deprecated version)
 
-FUNCTIONS:   :     (e.g. '--clustered_osc --macd vti AAPL amzn' ) [FUTURE RELEASE]
+FUNCTIONS:   :     (e.g. '--bci --mci vti AAPL amzn' ) REQUIRES --function flag
 
---mci        :     run Market Composite Index (MCI); requires "--function" flag
---bci        :     run Bond Composite Index (BCI); requires "--function" flag
+--mci        :     run Market Composite Index (MCI)
+--bci        :     run Bond Composite Index (BCI)
+--trend      :     run trendline analysis for a fund
+--sr         :     run support/resistance line analysis; "--support_resistance" and "--rs" also supported
