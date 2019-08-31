@@ -127,6 +127,10 @@ def filter_nan(frame_list: pd.DataFrame, fund_name=None) -> list:
                 status = add_status_message(status, 'Unknown/unfixable nan')
 
     if corrected and (fund_name is not None):
-        print(f"Note: 'NaN' found on {fund_name} data. Type: '{get_status_message(status)}': Corrected OK.")
+        message = get_status_message(status)
+        if 'Unknown/unfixable nan' in message:
+            print(f"WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
+        else:
+            print(f"Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.")
         
     return new_list
