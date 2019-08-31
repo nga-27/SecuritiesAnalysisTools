@@ -158,7 +158,7 @@ def technical_analysis(config: dict):
         p.uptick()
 
         # Get Trendlines
-        get_trendlines(fund, name=fund_name, plot_output=False)
+        analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False)
         p.uptick()
 
 

@@ -170,22 +170,29 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
     X = []
     Y = []
     C = []
+    L = []
     for i, x in enumerate(X0):
         X.append(x)
         Y.append(Y0[i])
         C.append('blue')
+        L.append('long')
     for i, x in enumerate(X1):
         X.append(x)
         Y.append(Y1[i])
         C.append('green')
+        L.append('intermediate')
     for i, x in enumerate(X2):
         X.append(x)
         Y.append(Y2[i])
         C.append('orange')
+        L.append('short')
     for i, x in enumerate(X3):
         X.append(x)
         Y.append(Y3[i])
         C.append('red')
+        L.append('near')
+
+    analysis_list = generate_analysis(fund, x_list=X, y_list=Y, len_list=L)
 
     X = dates_convert_from_index(fund, X)
 
@@ -200,6 +207,8 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
         generic_plotting(Y, x_=X, colors=C, 
                             title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
                             saveFig=True, filename=filename)
+
+    return analysis_list
 
 
 
@@ -360,4 +369,37 @@ def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list) -> int:
             last_pt = intercept + slope * x_pt
     return x_pt      
 
+
+def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: list) -> list:
+    analysis = []
+
+    for i, x in enumerate(x_list):
+        sub = {}
+        sub['length'] = len(x)
+        reg = linregress(x=x_list[0:3], y=y_list[0:3])
+        sub['slope'] = reg[0]
+        sub['intercept'] = reg[1]
+
+        sub['start'] = {}
+        sub['start']['index'] = x_list[0]
+        sub['start']['date'] = fund.index[x_list[0]]
+
+        sub['term'] = len_list[i]
+        if sub['slope'] < 0:
+            sub['type'] = 'bear'
+        else:
+            sub['type'] = 'bull'
+
+        sub['x'] = {}
+        sub['x']['date'] = dates_convert_from_index(fund, [x_list])
+        sub['x']['index'] = x_list
+
+        if x_list[len(x_list)-1] == len(fund['Close'])-1:
+            sub['current'] = True
+        else:
+            sub['current'] = False
+
+        analysis.append(sub)
+
+    return analysis
 
