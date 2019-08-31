@@ -2,10 +2,11 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 from scipy.stats import linregress
+import warnings, pprint, math
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
-from libs.utils import generic_plotting
+from libs.utils import generic_plotting, dates_convert_from_index
 
 from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
 
@@ -107,7 +108,12 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 
     return trend_analysis
 
 
-def get_trendlines(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
+def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
+                    name: str='', interval: list=[4, 8, 16, 32] ):
+
+    # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
+    
     mins_y = []
     mins_x = []
     maxes_y = []
@@ -164,29 +170,46 @@ def get_trendlines(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
     X = []
     Y = []
     C = []
+    L = []
     for i, x in enumerate(X0):
         X.append(x)
         Y.append(Y0[i])
         C.append('blue')
+        L.append('long')
     for i, x in enumerate(X1):
         X.append(x)
         Y.append(Y1[i])
         C.append('green')
+        L.append('intermediate')
     for i, x in enumerate(X2):
         X.append(x)
         Y.append(Y2[i])
         C.append('orange')
+        L.append('short')
     for i, x in enumerate(X3):
         X.append(x)
         Y.append(Y3[i])
         C.append('red')
+        L.append('near')
 
-    X.append(list(range(0,len(fund['Close']))))
+    analysis_list = generate_analysis(fund, x_list=X, y_list=Y, len_list=L, color_list=C)
+
+    X = dates_convert_from_index(fund, X)
+
+    X.append(fund.index)
     Y.append(fund['Close'])
     C.append('black')
-    generic_plotting(Y, x_=X, colors=C)
-
     
+    if plot_output:
+        generic_plotting(Y, x_=X, colors=C, title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+    else:
+        filename = f"{name}/trendline_{name}.png"
+        generic_plotting(Y, x_=X, colors=C, 
+                            title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                            saveFig=True, filename=filename)
+
+    return analysis_list
+
 
 
 def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> list:
@@ -272,19 +295,21 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             
         end = line_extender(fund, list(range(start, end)), reg)
         if end != 0:
-            max_range = [start, end + EXTENSION]
+            max_range = [start, end]
             if max_range[1] > len(fund['Close']):
                 max_range[1] = len(fund['Close'])
             if interval > 100:
                 max_range[1] = len(fund['Close'])
             if end + EXTENSION > int(0.9 * float(len(fund['Close']))):
                 max_range[1] = len(fund['Close'])
-            max_range[1] = line_reducer(fund, max_range[1], reg)
+
+            max_range[1] = line_reducer(fund, max_range[1], reg, threshold=0.06)
 
             datax = list(range(max_range[0], max_range[1]))
-            datay = [reg[0] * x + reg[1] for x in datax]
-            X.append(datax)
-            Y.append(datay)
+            datay = [reg[0] * float(x) + reg[1] for x in datax]
+            if not math.isnan(datay[0]):
+                X.append(datax)
+                Y.append(datay)
 
     return X, Y
 
@@ -304,11 +329,8 @@ def line_extender(fund: pd.DataFrame, x_range: list, reg_vals: list) -> int:
                     # Original trendline was not good enough - omit
                     return 0
         # Now that original trendline is good, find ending
-        while (end_pt < max_len):
-            y_val = intercept + slope * end_pt
-            if fund['Close'][i] < y_val:
-                return end_pt
-            end_pt += 1
+        """ since we have 'line_reducer', send the maximum and let reducer fix it """
+        return max_len
 
     else:
         end_pt = x_range[len(x_range)-1]
@@ -319,31 +341,227 @@ def line_extender(fund: pd.DataFrame, x_range: list, reg_vals: list) -> int:
                     # Original trendline was not good enough - omit
                     return 0
         # Now that original trendline is good, find ending
-        while (end_pt < max_len):
-            y_val = intercept + slope * end_pt
-            if fund['Close'][i] > y_val:
-                return end_pt
-            end_pt += 1
+        """ since we have 'line_reducer', send the maximum and let reducer fix it """
+        return max_len
 
     return end_pt
         
 
-def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list) -> int:
+def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) -> int:
     """ returns shortened lines that protrude far away from overall fund price (to not distort plots) """
     slope = reg_vals[0]
     intercept = reg_vals[1]
+    top_thresh = 1.0 + threshold
+    bot_thresh = 1.0 - threshold
 
     x_pt = last_x_pt
-    if x_pt >= len(fund['Close']):
-        x_pt = len(fund['Close']) -1
+    if x_pt > len(fund['Close']):
+        x_pt = len(fund['Close'])
     last_pt = intercept + slope * x_pt
-    # print(f"x_pt {x_pt}, last_pt {last_pt}, len {len(fund['Close'])}")
-    if (last_pt <= (1.05 * fund['Close'][x_pt])) and (last_pt >= (0.95 * fund['Close'][x_pt])):
+    if (last_pt <= (top_thresh * fund['Close'][x_pt-1])) and (last_pt >= (bot_thresh * fund['Close'][x_pt-1])):
         return x_pt
     else:
-        while (last_pt > (1.05 * fund['Close'][x_pt])) or (last_pt < (0.95 * fund['Close'][x_pt])):  
+        while (last_pt > (top_thresh * fund['Close'][x_pt-1])) or (last_pt < (bot_thresh * fund['Close'][x_pt-1])):  
             x_pt -= 1
             last_pt = intercept + slope * x_pt
     return x_pt      
 
 
+def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: list, color_list: list) -> list:
+    analysis = []
+
+    for i, x in enumerate(x_list):
+        sub = {}
+        sub['length'] = len(x)
+        sub['color'] = color_list[i]
+
+        reg = linregress(x[0:3], y=y_list[i][0:3])
+        sub['slope'] = reg[0]
+        sub['intercept'] = reg[1]
+
+        sub['start'] = {}
+        sub['start']['index'] = x[0]
+        sub['start']['date'] = fund.index[x[0]].strftime("%Y-%m-%d")
+
+        sub['end'] = {}
+        sub['end']['index'] = x[len(x)-1]
+        sub['end']['date'] = fund.index[x[len(x)-1]].strftime("%Y-%m-%d")
+
+        sub['term'] = len_list[i]
+        if sub['slope'] < 0:
+            sub['type'] = 'bear'
+        else:
+            sub['type'] = 'bull'
+
+        sub['x'] = {}
+        sub['x']['by_date'] = dates_convert_from_index(fund, [x], to_str=True)
+        sub['x']['by_index'] = x
+
+        if sub['end']['index'] == len(fund['Close'])-1:
+            sub['current'] = True
+        else:
+            sub['current'] = False
+
+        sub = attribute_analysis(fund, x, y_list[i], sub)
+
+        # print(f"current trend: {sub['type']}, {sub['length']}, {sub['start']}, {sub['end']}")
+
+        analysis.append(sub)
+
+    return analysis
+
+
+def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: dict) -> dict:
+    
+    touches = []
+    if fund['Close'][x_list[0]] >= y_list[0]:
+        state = 'above'
+    else:
+        state = 'below'
+    for i,x in enumerate(x_list):
+        if state == 'above':
+            if fund['Close'][x] < y_list[i]:
+                state = 'below'
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'cross', 'state': 'below'})
+            if fund['Close'][x] == y_list[i]: 
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'touch', 'state': 'above'})
+        else: 
+            if fund['Close'][x] >= y_list[i]:
+                state = 'above'
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'cross', 'state': 'above'})
+            if fund['Close'][x] == y_list[i]: 
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'touch', 'state': 'below'})
+
+    content['test_line'] = touches
+
+    valid = []
+    broken = []
+    if content['type'] == 'bull':
+        # trendline will have positive slope. 'above' is valid, 'below' is broken.
+        v_start_index = x_list[0]
+        v_stop_index = x_list[0]
+        b_start_index = x_list[0]
+        b_stop_index = x_list[0]
+        state = 'above'
+        for touch in touches:
+            if touch['type'] == 'cross' and touch['state'] == 'below':
+                # End of a valid period
+                v_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                v = {'start': {}, 'end': {}}
+                v['start']['index'] = v_start_index
+                v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+                v['end']['index'] = v_stop_index
+                v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+                valid.append(v)
+                b_start_index = touch['index']
+                state = 'below'
+
+            
+            if touch['type'] == 'cross' and touch['state'] == 'above':
+                # End of a broken period
+                b_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                b = {'start': {}, 'end': {}}
+                b['start']['index'] = b_start_index
+                b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+                b['end']['index'] = b_stop_index
+                b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+                broken.append(b)
+                v_start_index = touch['index']
+                state = 'above'
+        
+        # End state of trend line
+        if state == 'above':
+            v_stop_index = x_list[len(x_list)-1]
+            v = {'start': {}, 'end': {}}
+            v['start']['index'] = v_start_index
+            v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+            v['end']['index'] = v_stop_index
+            v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+            valid.append(v)
+        else:
+            b_stop_index = x_list[len(x_list)-1]
+            b = {'start': {}, 'end': {}}
+            b['start']['index'] = b_start_index
+            b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+            b['end']['index'] = b_stop_index
+            b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+            broken.append(b)
+
+    else:
+        # trendline will have negative slope. 'below' is valid, 'above' is broken.
+        v_start_index = x_list[0]
+        v_stop_index = x_list[0]
+        b_start_index = x_list[0]
+        b_stop_index = x_list[0]
+        state = 'below'
+        for touch in touches:
+            if touch['type'] == 'cross' and touch['state'] == 'above':
+                # End of a valid period
+                v_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                v = {'start': {}, 'end': {}}
+                v['start']['index'] = v_start_index
+                v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+                v['end']['index'] = v_stop_index
+                v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+                valid.append(v)
+                b_start_index = touch['index']
+                state = 'above'
+
+            
+            if touch['type'] == 'cross' and touch['state'] == 'below':
+                # End of a broken period
+                b_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                b = {'start': {}, 'end': {}}
+                b['start']['index'] = b_start_index
+                b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+                b['end']['index'] = b_stop_index
+                b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+                broken.append(b)
+                v_start_index = touch['index']
+                state = 'below'
+
+        # End state of trend line
+        if state == 'below':
+            v_stop_index = x_list[len(x_list)-1]
+            v = {'start': {}, 'end': {}}
+            v['start']['index'] = v_start_index
+            v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+            v['end']['index'] = v_stop_index
+            v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+            valid.append(v)
+        else:
+            b_stop_index = x_list[len(x_list)-1]
+            b = {'start': {}, 'end': {}}
+            b['start']['index'] = b_start_index
+            b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+            b['end']['index'] = b_stop_index
+            b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+            broken.append(b)
+
+    content['valid_period'] = valid
+    content['broken_period'] = broken
+
+    return content
+
+
+""" Forecasters for trendlines - more 'future' development """
+
+def trend_simple_forecast(trend: dict, future_periods: list=[5, 10, 20], return_type='price') -> dict:
+    """
+    args:
+        trend:              dict -> each trend is a dict created by generate analysis / attribute analysis
+        future_periods:     list -> trading periods FROM last date of trend; if not a 'current' trend, ensure that
+                                    each future period is far enough in the future to be relevant to the present
+        return_type:        str ->  various return types possible: 'price' (primarily)
+    """
+    forecast = {'return_type': return_type, 'periods': future_periods, 'returns': []}
+    if return_type == 'price':
+        # Likely will be only return_type
+        slope = trend['slope']
+        intercept = trend['intercept']
+        end_index = trend['end']['index']
+        prices = [np.round(slope * (x + end_index) + intercept, 2) for x in future_periods]
+
+        forecast['returns'] = prices
+
+    return forecast

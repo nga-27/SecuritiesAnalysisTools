@@ -14,8 +14,8 @@
 """
 
 ################################
-_VERSION_ = '0.1.16'
-_DATE_REVISION_ = '2019-08-23'
+_VERSION_ = '0.1.17'
+_DATE_REVISION_ = '2019-08-31'
 ################################
 
 # Imports that create final products and show progress doing so

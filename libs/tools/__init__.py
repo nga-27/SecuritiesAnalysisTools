@@ -5,7 +5,7 @@ from .moving_average import windowed_ma_list, windowed_ema_list
 from .moving_average import triple_moving_average, moving_average_swing_trade
 
 from .trends import get_trend, get_trend_analysis
-from .trends import get_trendlines
+from .trends import get_trendlines, trend_simple_forecast
 from .resistance_support import find_resistance_support_lines
 
 from .true_strength import relative_strength
@@ -19,3 +19,5 @@ from .clusters import cluster_oscs, export_cluster_nasit_signal
 from .macd import mov_avg_convergence_divergence 
 
 from .on_balance_volume import on_balance_volume 
+
+from .statistics import get_high_level_stats
