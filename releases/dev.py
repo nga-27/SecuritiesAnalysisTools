@@ -16,9 +16,11 @@
 # Imports that are custom tools that are the crux of this program
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
-from libs.tools import get_trend_analysis, mov_avg_convergence_divergence, on_balance_volume
+from libs.tools import mov_avg_convergence_divergence, on_balance_volume
 from libs.tools import beta_comparison
 from libs.tools import find_resistance_support_lines
+from libs.tools import get_trendlines, get_trend_analysis
+from libs.tools import get_high_level_stats
 
 # Imports that support functions doing feature detection
 from libs.features import feature_head_and_shoulders, feature_plotter
@@ -43,7 +45,6 @@ from libs.outputs import slide_creator, output_to_json
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
-from libs.tools import get_trendlines
 
 ####################################################################
 ####################################################################
@@ -94,7 +95,9 @@ def technical_analysis(config: dict):
         fund = data[fund_name]
         print(f"~~{fund_name}~~")
         create_sub_temp_dir(fund_name)
+
         analysis[fund_name] = {}
+        analysis[fund_name]['statistics'] = get_high_level_stats(fund)
 
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()

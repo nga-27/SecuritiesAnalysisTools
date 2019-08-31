@@ -16,7 +16,7 @@ CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
 
-def slide_title_header(slide, fund: str, include_time=True):
+def slide_title_header(slide, fund: str, include_time=True, price_details=''):
     left = Inches(0) #Inches(3.86)
     top = Inches(0)
     width = height = Inches(0.5)
@@ -35,6 +35,26 @@ def slide_title_header(slide, fund: str, include_time=True):
         p.font.bold = False
         p.font.name = 'Arial'
         p.text = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    
+    if price_details != '':
+        left = Inches(2) 
+        top = Inches(0.1)
+        width = height = Inches(0.5)
+        txbox = slide.shapes.add_textbox(left, top, width, height)
+        tf = txbox.text_frame
+
+        p = tf.paragraphs[0]
+        p.text = fund 
+        p.font.size = Pt(24)
+        p.font.name = 'Arial'
+        p.font.bold = True
+        p.text = price_details
+        deets = price_details.split(' ')
+        if '+' in deets[1]:
+            p.font.color.rgb = color_to_RGB('green')
+        else:
+            p.font.color.rgb = color_to_RGB('red')
+
 
     return slide
 
@@ -113,3 +133,6 @@ def color_to_RGB(color: str):
         return RGBColor(0xff, 0x99, 0x33)
     elif color == 'red':
         return RGBColor(0xff, 0x00, 0x00)
+    else:
+        print(f"WARNING: Color '{color}' not found in 'color_to_RGB'")
+        return RGBColor(0x00, 0x00, 0x00)

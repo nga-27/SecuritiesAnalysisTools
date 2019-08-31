@@ -192,7 +192,7 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
         C.append('red')
         L.append('near')
 
-    analysis_list = generate_analysis(fund, x_list=X, y_list=Y, len_list=L)
+    analysis_list = generate_analysis(fund, x_list=X, y_list=Y, len_list=L, color_list=C)
 
     X = dates_convert_from_index(fund, X)
 
@@ -367,12 +367,13 @@ def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) 
     return x_pt      
 
 
-def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: list) -> list:
+def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: list, color_list: list) -> list:
     analysis = []
 
     for i, x in enumerate(x_list):
         sub = {}
         sub['length'] = len(x)
+        sub['color'] = color_list[i]
 
         reg = linregress(x[0:3], y=y_list[i][0:3])
         sub['slope'] = reg[0]
@@ -542,3 +543,25 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
 
     return content
 
+
+""" Forecasters for trendlines - more 'future' development """
+
+def trend_simple_forecast(trend: dict, future_periods: list=[5, 10, 20], return_type='price') -> dict:
+    """
+    args:
+        trend:              dict -> each trend is a dict created by generate analysis / attribute analysis
+        future_periods:     list -> trading periods FROM last date of trend; if not a 'current' trend, ensure that
+                                    each future period is far enough in the future to be relevant to the present
+        return_type:        str ->  various return types possible: 'price' (primarily)
+    """
+    forecast = {'return_type': return_type, 'periods': future_periods, 'returns': []}
+    if return_type == 'price':
+        # Likely will be only return_type
+        slope = trend['slope']
+        intercept = trend['intercept']
+        end_index = trend['end']['index']
+        prices = [np.round(slope * (x + end_index) + intercept, 2) for x in future_periods]
+
+        forecast['returns'] = prices
+
+    return forecast

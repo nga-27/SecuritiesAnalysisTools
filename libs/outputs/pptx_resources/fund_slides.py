@@ -6,8 +6,11 @@ import pandas as pd
 import numpy as np 
 import os 
 import glob 
+import datetime
 
 from libs.utils import fund_list_extractor, windows_compatible_file_parse
+from libs.tools import trend_simple_forecast
+
 from .slide_utils import slide_title_header, color_to_RGB
 
 # Slide Layouts
@@ -98,25 +101,33 @@ def add_fund_content(prs, fund: str, analysis: dict):
             width = Inches(10.5)
             slide.shapes.add_picture(content, left, top, height=height, width=width)
 
+        price_pt = analysis[fund]['statistics']['current_price']
+        price_chg_p = analysis[fund]['statistics']['current_percent_change']
+        price_chg = analysis[fund]['statistics']['current_change']
+        if price_chg > 0.0:
+            price_str = f"${price_pt} +{np.round(price_chg,2)} (+{np.round(price_chg_p,3)}%)"
+        else:
+            price_str = f"${price_pt} {np.round(price_chg,2)} ({np.round(price_chg_p,3)}%)"
+
         # Slide #1 of content
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         indexes = []
         indexes.append(len(prs.slides) - 1)
-        slide = slide_title_header(slide, fund)
+        slide = slide_title_header(slide, fund, price_details=price_str)
 
         # Slide #2 of content
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund)
+        slide = slide_title_header(slide, fund, price_details=price_str)
         indexes.append(len(prs.slides)-1)
 
         # Slide #3 of content
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund)
+        slide = slide_title_header(slide, fund, price_details=price_str)
         indexes.append(len(prs.slides)-1)
 
         # Slide #4 of content
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund)
+        slide = slide_title_header(slide, fund, price_details=price_str)
         indexes.append(len(prs.slides)-1)
 
         content = content_dir + '*.png'
@@ -217,12 +228,6 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             p.font.name = 'Arial'
             p.font.bold = True
 
-            p = tf.add_paragraph()
-            p.text = f"Current Price ${fund_analysis['support_resistance']['current price']}"
-            p.font.size = Pt(16)
-            p.font.name = 'Arial'
-            p.font.bold = True
-
             left_loc = Inches(8)
             top_loc = Inches(1)
             table_width = Inches(4)
@@ -247,7 +252,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             for i, maj in enumerate(fund_analysis['support_resistance']['major S&R']):
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
-                fl = maj['Change'].split('%')[0]
+                # fl = maj['Change'].split('%')[0]
                 # if float(fl) >= 0.0:
                 #     table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
                 #     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
@@ -266,7 +271,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             width = Inches(7)
             prs.slides[slide_indices[3]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-            left = Inches(7)
+            left = Inches(6.5)
             top = Inches(0.25)
             height = Inches(4.7)
             width = Inches(4)
@@ -274,20 +279,60 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             
             tf = txbox.text_frame
             p = tf.paragraphs[0]
-            p.text = f"Long, Intermediate, Short, and Near Term Trends"
+            p.text = f"Long, Intermediate, Short, and Near Term Trendlines"
             p.font.size = Pt(18)
             p.font.name = 'Arial'
             p.font.bold = True
 
-            p = tf.add_paragraph()
-            # TODO: need to inplement trendline analysis here
-            p.text = f"Current Price ${fund_analysis['support_resistance']['current price']}"
-            p.font.size = Pt(16)
-            p.font.name = 'Arial'
-            p.font.bold = True
-
+            trends = []
+            futures = list(range(0,91,15))
+            forecasts = []
             for trend in fund_analysis['trendlines']:
                 if trend['current']:
-                    print(f"current trend: {trend['type']}, {trend['start']}, {trend['end']}")
+                    trends.append(trend)
+                    forecast = trend_simple_forecast(trend, future_periods=futures)
+                    forecasts.append(forecast)
+
+            num_rows = len(trends) + 2
+            num_cols = len(futures)
+            table_height = num_rows * 0.33
+            table_width = num_cols * 0.8
+            if num_rows * 0.33 > 6.0:
+                table_height = 6.0
+            if num_cols * 0.8 > 6.6:
+                table_width = 6.6
+
+            left_start = 6.5
+            adj_left = (6.6 - table_width) / 2
+            table_height = Inches(table_height)
+            table_width = Inches(table_width)
+            left_loc = Inches(left_start + adj_left)
+            top_loc = Inches(0.75)
+
+            table_placeholder = prs.slides[slide_indices[3]].shapes.add_table(
+                                                    num_rows, 
+                                                    num_cols,
+                                                    left_loc,
+                                                    top_loc,
+                                                    table_width,
+                                                    table_height)
+            table = table_placeholder.table
+
+            cell_1 = table.cell(0,0)
+            cell_2 = table.cell(0,num_cols-1)
+            cell_1.merge(cell_2)
+            cell_1.text = f"Future Periods of Active Trendlines"
+
+            for i, fut in enumerate(futures):
+                table.cell(1,i).text = str(fut)
+                table.cell(1,i).text_frame.paragraphs[0].font.bold = True
+
+            for i, trend in enumerate(trends):
+                for j, value in enumerate(forecasts[i]['returns']):
+                    table.cell(i+2,j).text = f"${value}"
+                    table.cell(i+2,j).text_frame.paragraphs[0].font.size = Pt(12)
+                    color = color_to_RGB(trend['color'])
+                    table.cell(i+2,j).text_frame.paragraphs[0].font.color.rgb = color
+
 
     return prs 
