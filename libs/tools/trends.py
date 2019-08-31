@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 from scipy.stats import linregress
-import warnings, pprint
+import warnings, pprint, math
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
@@ -295,19 +295,21 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             
         end = line_extender(fund, list(range(start, end)), reg)
         if end != 0:
-            max_range = [start, end + EXTENSION]
+            max_range = [start, end]
             if max_range[1] > len(fund['Close']):
                 max_range[1] = len(fund['Close'])
             if interval > 100:
                 max_range[1] = len(fund['Close'])
             if end + EXTENSION > int(0.9 * float(len(fund['Close']))):
                 max_range[1] = len(fund['Close'])
-            max_range[1] = line_reducer(fund, max_range[1], reg)
+
+            max_range[1] = line_reducer(fund, max_range[1], reg, threshold=0.06)
 
             datax = list(range(max_range[0], max_range[1]))
-            datay = [reg[0] * x + reg[1] for x in datax]
-            X.append(datax)
-            Y.append(datay)
+            datay = [reg[0] * float(x) + reg[1] for x in datax]
+            if not math.isnan(datay[0]):
+                X.append(datax)
+                Y.append(datay)
 
     return X, Y
 
@@ -327,11 +329,8 @@ def line_extender(fund: pd.DataFrame, x_range: list, reg_vals: list) -> int:
                     # Original trendline was not good enough - omit
                     return 0
         # Now that original trendline is good, find ending
-        while (end_pt < max_len):
-            y_val = intercept + slope * end_pt
-            if fund['Close'][i] < y_val:
-                return end_pt
-            end_pt += 1
+        """ since we have 'line_reducer', send the maximum and let reducer fix it """
+        return max_len
 
     else:
         end_pt = x_range[len(x_range)-1]
@@ -342,29 +341,27 @@ def line_extender(fund: pd.DataFrame, x_range: list, reg_vals: list) -> int:
                     # Original trendline was not good enough - omit
                     return 0
         # Now that original trendline is good, find ending
-        while (end_pt < max_len):
-            y_val = intercept + slope * end_pt
-            if fund['Close'][i] > y_val:
-                return end_pt
-            end_pt += 1
+        """ since we have 'line_reducer', send the maximum and let reducer fix it """
+        return max_len
 
     return end_pt
         
 
-def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list) -> int:
+def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) -> int:
     """ returns shortened lines that protrude far away from overall fund price (to not distort plots) """
     slope = reg_vals[0]
     intercept = reg_vals[1]
+    top_thresh = 1.0 + threshold
+    bot_thresh = 1.0 - threshold
 
     x_pt = last_x_pt
-    if x_pt >= len(fund['Close']):
-        x_pt = len(fund['Close']) -1
+    if x_pt > len(fund['Close']):
+        x_pt = len(fund['Close'])
     last_pt = intercept + slope * x_pt
-    # print(f"x_pt {x_pt}, last_pt {last_pt}, len {len(fund['Close'])}")
-    if (last_pt <= (1.05 * fund['Close'][x_pt])) and (last_pt >= (0.95 * fund['Close'][x_pt])):
+    if (last_pt <= (top_thresh * fund['Close'][x_pt-1])) and (last_pt >= (bot_thresh * fund['Close'][x_pt-1])):
         return x_pt
     else:
-        while (last_pt > (1.05 * fund['Close'][x_pt])) or (last_pt < (0.95 * fund['Close'][x_pt])):  
+        while (last_pt > (top_thresh * fund['Close'][x_pt-1])) or (last_pt < (bot_thresh * fund['Close'][x_pt-1])):  
             x_pt -= 1
             last_pt = intercept + slope * x_pt
     return x_pt      
@@ -385,6 +382,10 @@ def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: 
         sub['start']['index'] = x[0]
         sub['start']['date'] = fund.index[x[0]].strftime("%Y-%m-%d")
 
+        sub['end'] = {}
+        sub['end']['index'] = x[len(x)-1]
+        sub['end']['date'] = fund.index[x[len(x)-1]].strftime("%Y-%m-%d")
+
         sub['term'] = len_list[i]
         if sub['slope'] < 0:
             sub['type'] = 'bear'
@@ -395,12 +396,14 @@ def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: 
         sub['x']['by_date'] = dates_convert_from_index(fund, [x], to_str=True)
         sub['x']['by_index'] = x
 
-        if x[len(x)-1] == len(fund['Close'])-1:
+        if sub['end']['index'] == len(fund['Close'])-1:
             sub['current'] = True
         else:
             sub['current'] = False
 
         sub = attribute_analysis(fund, x, y_list[i], sub)
+
+        # print(f"current trend: {sub['type']}, {sub['length']}, {sub['start']}, {sub['end']}")
 
         analysis.append(sub)
 

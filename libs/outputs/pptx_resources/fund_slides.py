@@ -286,4 +286,8 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             p.font.name = 'Arial'
             p.font.bold = True
 
+            for trend in fund_analysis['trendlines']:
+                if trend['current']:
+                    print(f"current trend: {trend['type']}, {trend['start']}, {trend['end']}")
+
     return prs 
