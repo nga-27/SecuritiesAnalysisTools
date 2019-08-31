@@ -139,7 +139,6 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
     if plot_output:
         dual_plotting(position['Close'], clusters, 'Position Price', 'Clustered Oscillator', 'Trading Days', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
-        #dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
     else:
         filename = name + '/clustering_{}_{}.png'.format(name, function)
         dual_plotting(position['Close'], clusters, 'Price', 'Clustered Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)

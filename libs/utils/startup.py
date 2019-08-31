@@ -225,6 +225,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['tickers'] = ticker_list_to_str(ticker_keys)
         config = add_str_to_dict_key(config, 'run_functions', 'support_resistance')
 
+    if key_match('--clustered', i_keys) or key_match('--clustered_osc', i_keys):
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config = add_str_to_dict_key(config, 'run_functions', 'clustered_oscs')
+
 
     # Configuration flags that control state outcomes and return immediately after setting
     if key_match('--dev', i_keys):

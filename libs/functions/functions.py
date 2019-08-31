@@ -1,9 +1,9 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import download_data
+from libs.utils import download_data, has_critical_error
 from libs.metrics import market_composite_index, bond_composite_index
-from libs.tools import get_trendlines, find_resistance_support_lines
+from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs
 
 def only_functions_handler(config: dict):
     print(f"Running functions: '{config['run_functions']}' for {config['tickers']}")
@@ -19,6 +19,9 @@ def only_functions_handler(config: dict):
     
     if 'support_resistance' in config['run_functions']:
         support_resistance_function(config)
+
+    if 'clustered_oscs' in config['run_functions']:
+        cluster_oscs_function(config)
 
 
 ###############################################################################
@@ -47,6 +50,9 @@ def bci_function(config: dict):
 
 def trends_function(config: dict):
     data, fund_list = download_data(config=config)
+    e_check = {'tickers': config['tickers']}
+    if has_critical_error(data, 'download_data', misc=e_check):
+        return None
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Trends of {fund}...")
@@ -55,7 +61,21 @@ def trends_function(config: dict):
 
 def support_resistance_function(config: dict):
     data, fund_list = download_data(config=config)
+    e_check = {'tickers': config['tickers']}
+    if has_critical_error(data, 'download_data', misc=e_check):
+        return None
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Support & Resistance of {fund}...")
-            find_resistance_support_lines(data[fund], plot_output=True, name=f"Support Resistance of {fund}")
+            find_resistance_support_lines(data[fund], plot_output=True, name=fund)
+
+
+def cluster_oscs_function(config: dict):
+    data, fund_list = download_data(config=config)
+    e_check = {'tickers': config['tickers']}
+    if has_critical_error(data, 'download_data', misc=e_check):
+        return None
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Clustered Oscillators of {fund}...")
+            cluster_oscs(data[fund], name=fund, plot_output=True, function='all')
