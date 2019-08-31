@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 from scipy.stats import linregress
-import warnings
+import warnings, pprint
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
@@ -376,13 +376,14 @@ def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: 
     for i, x in enumerate(x_list):
         sub = {}
         sub['length'] = len(x)
-        reg = linregress(x=x_list[0:3], y=y_list[0:3])
+
+        reg = linregress(x[0:3], y=y_list[i][0:3])
         sub['slope'] = reg[0]
         sub['intercept'] = reg[1]
 
         sub['start'] = {}
-        sub['start']['index'] = x_list[0]
-        sub['start']['date'] = fund.index[x_list[0]]
+        sub['start']['index'] = x[0]
+        sub['start']['date'] = fund.index[x[0]].strftime("%Y-%m-%d")
 
         sub['term'] = len_list[i]
         if sub['slope'] < 0:
@@ -391,15 +392,150 @@ def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: 
             sub['type'] = 'bull'
 
         sub['x'] = {}
-        sub['x']['date'] = dates_convert_from_index(fund, [x_list])
-        sub['x']['index'] = x_list
+        sub['x']['by_date'] = dates_convert_from_index(fund, [x], to_str=True)
+        sub['x']['by_index'] = x
 
-        if x_list[len(x_list)-1] == len(fund['Close'])-1:
+        if x[len(x)-1] == len(fund['Close'])-1:
             sub['current'] = True
         else:
             sub['current'] = False
 
+        sub = attribute_analysis(fund, x, y_list[i], sub)
+
         analysis.append(sub)
 
     return analysis
+
+
+def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: dict) -> dict:
+    
+    touches = []
+    if fund['Close'][x_list[0]] >= y_list[0]:
+        state = 'above'
+    else:
+        state = 'below'
+    for i,x in enumerate(x_list):
+        if state == 'above':
+            if fund['Close'][x] < y_list[i]:
+                state = 'below'
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'cross', 'state': 'below'})
+            if fund['Close'][x] == y_list[i]: 
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'touch', 'state': 'above'})
+        else: 
+            if fund['Close'][x] >= y_list[i]:
+                state = 'above'
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'cross', 'state': 'above'})
+            if fund['Close'][x] == y_list[i]: 
+                touches.append({'index': x, 'price': fund['Close'][x], 'type': 'touch', 'state': 'below'})
+
+    content['test_line'] = touches
+
+    valid = []
+    broken = []
+    if content['type'] == 'bull':
+        # trendline will have positive slope. 'above' is valid, 'below' is broken.
+        v_start_index = x_list[0]
+        v_stop_index = x_list[0]
+        b_start_index = x_list[0]
+        b_stop_index = x_list[0]
+        state = 'above'
+        for touch in touches:
+            if touch['type'] == 'cross' and touch['state'] == 'below':
+                # End of a valid period
+                v_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                v = {'start': {}, 'end': {}}
+                v['start']['index'] = v_start_index
+                v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+                v['end']['index'] = v_stop_index
+                v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+                valid.append(v)
+                b_start_index = touch['index']
+                state = 'below'
+
+            
+            if touch['type'] == 'cross' and touch['state'] == 'above':
+                # End of a broken period
+                b_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                b = {'start': {}, 'end': {}}
+                b['start']['index'] = b_start_index
+                b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+                b['end']['index'] = b_stop_index
+                b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+                broken.append(b)
+                v_start_index = touch['index']
+                state = 'above'
+        
+        # End state of trend line
+        if state == 'above':
+            v_stop_index = x_list[len(x_list)-1]
+            v = {'start': {}, 'end': {}}
+            v['start']['index'] = v_start_index
+            v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+            v['end']['index'] = v_stop_index
+            v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+            valid.append(v)
+        else:
+            b_stop_index = x_list[len(x_list)-1]
+            b = {'start': {}, 'end': {}}
+            b['start']['index'] = b_start_index
+            b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+            b['end']['index'] = b_stop_index
+            b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+            broken.append(b)
+
+    else:
+        # trendline will have negative slope. 'below' is valid, 'above' is broken.
+        v_start_index = x_list[0]
+        v_stop_index = x_list[0]
+        b_start_index = x_list[0]
+        b_stop_index = x_list[0]
+        state = 'below'
+        for touch in touches:
+            if touch['type'] == 'cross' and touch['state'] == 'above':
+                # End of a valid period
+                v_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                v = {'start': {}, 'end': {}}
+                v['start']['index'] = v_start_index
+                v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+                v['end']['index'] = v_stop_index
+                v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+                valid.append(v)
+                b_start_index = touch['index']
+                state = 'above'
+
+            
+            if touch['type'] == 'cross' and touch['state'] == 'below':
+                # End of a broken period
+                b_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
+                b = {'start': {}, 'end': {}}
+                b['start']['index'] = b_start_index
+                b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+                b['end']['index'] = b_stop_index
+                b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+                broken.append(b)
+                v_start_index = touch['index']
+                state = 'below'
+
+        # End state of trend line
+        if state == 'below':
+            v_stop_index = x_list[len(x_list)-1]
+            v = {'start': {}, 'end': {}}
+            v['start']['index'] = v_start_index
+            v['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
+            v['end']['index'] = v_stop_index
+            v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
+            valid.append(v)
+        else:
+            b_stop_index = x_list[len(x_list)-1]
+            b = {'start': {}, 'end': {}}
+            b['start']['index'] = b_start_index
+            b['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")
+            b['end']['index'] = b_stop_index
+            b['end']['date'] = fund.index[b_stop_index].strftime("%Y-%m-%d")
+            broken.append(b)
+
+    content['valid_period'] = valid
+    content['broken_period'] = broken
+
+    return content
 

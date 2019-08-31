@@ -125,13 +125,17 @@ def period_parser(period: str):
         return 1, 0, 0
 
 
-def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list) -> list:
+def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list, to_str=False) -> list:
     new_l_of_xls = []
     if len(list_of_xlists) > 0:
         for xlist in list_of_xlists:
             new_xlist = []
             for x in xlist:
-                new_xlist.append(df.index[x])
+                if to_str:
+                    date = df.index[x].strftime("%Y-%m-%d")
+                else:
+                    date = df.index[x]
+                new_xlist.append(date)
             new_l_of_xls.append(new_xlist)
     return new_l_of_xls
 
