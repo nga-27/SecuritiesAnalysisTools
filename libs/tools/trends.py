@@ -5,7 +5,7 @@ from scipy.stats import linregress
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
-from libs.utils import generic_plotting
+from libs.utils import generic_plotting, dates_convert_from_index
 
 from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
 
@@ -181,12 +181,13 @@ def get_trendlines(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
         Y.append(Y3[i])
         C.append('red')
 
-    X.append(list(range(0,len(fund['Close']))))
+    X = dates_convert_from_index(fund, X)
+
+    X.append(fund.index)
     Y.append(fund['Close'])
     C.append('black')
     generic_plotting(Y, x_=X, colors=C)
 
-    
 
 
 def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> list:

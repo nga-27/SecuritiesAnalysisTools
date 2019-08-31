@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import generic_plotting
+from libs.utils import generic_plotting, dates_convert_from_index
 
 """
     1. Combine points backward (i.e. for time=34 combine 34's and 21's)
@@ -308,16 +308,6 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> 
 
     return analysis
 
-
-def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list) -> list:
-    new_l_of_xls = []
-    if len(list_of_xlists) > 0:
-        for xlist in list_of_xlists:
-            new_xlist = []
-            for x in xlist:
-                new_xlist.append(df.index[x])
-            new_l_of_xls.append(new_xlist)
-    return new_l_of_xls
 
 def remove_dates_from_close(df: pd.DataFrame) -> list:
     fixed_list = []
