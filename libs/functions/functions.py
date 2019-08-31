@@ -56,7 +56,7 @@ def trends_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Trends of {fund}...")
-            get_trendlines(data[fund])
+            get_trendlines(data[fund], plot_output=True, name=fund)
 
 
 def support_resistance_function(config: dict):

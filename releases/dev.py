@@ -52,7 +52,7 @@ from libs.tools import get_trendlines
 _VERSION_ = '0.1.17'
 _DATE_REVISION_ = '2019-08-30'
 ################################
-PROCESS_STEPS_DEV = 11
+PROCESS_STEPS_DEV = 12
 
 def technical_analysis(config: dict):
 
@@ -157,7 +157,9 @@ def technical_analysis(config: dict):
         candlestick(fund, title=fund_name, filename=filename, saveFig=True)
         p.uptick()
 
-        # get_trendlines(fund)
+        # Get Trendlines
+        get_trendlines(fund, name=fund_name, plot_output=False)
+        p.uptick()
 
 
     # test_competitive(data, analysis)

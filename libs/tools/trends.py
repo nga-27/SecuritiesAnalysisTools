@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np 
 from datetime import datetime
 from scipy.stats import linregress
+import warnings
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
@@ -107,7 +108,12 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 
     return trend_analysis
 
 
-def get_trendlines(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
+def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
+                    name: str='', interval: list=[4, 8, 16, 32] ):
+
+    # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
+    
     mins_y = []
     mins_x = []
     maxes_y = []
@@ -186,7 +192,14 @@ def get_trendlines(fund: pd.DataFrame, interval: list=[4, 8, 16, 32]):
     X.append(fund.index)
     Y.append(fund['Close'])
     C.append('black')
-    generic_plotting(Y, x_=X, colors=C)
+    
+    if plot_output:
+        generic_plotting(Y, x_=X, colors=C, title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+    else:
+        filename = f"{name}/trendline_{name}.png"
+        generic_plotting(Y, x_=X, colors=C, 
+                            title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                            saveFig=True, filename=filename)
 
 
 

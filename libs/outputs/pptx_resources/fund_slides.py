@@ -114,6 +114,11 @@ def add_fund_content(prs, fund: str, analysis: dict):
         slide = slide_title_header(slide, fund)
         indexes.append(len(prs.slides)-1)
 
+        # Slide #4 of content
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = slide_title_header(slide, fund)
+        indexes.append(len(prs.slides)-1)
+
         content = content_dir + '*.png'
         pics = glob.glob(content)
         fund_analysis = analysis[fund]
@@ -252,5 +257,33 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
                 color = color_to_RGB(maj['Color'])
                 table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
                 table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
+
+        # Slide 4
+        if 'trendline' in part:
+            left = Inches(0)
+            top = Inches(1.55)
+            height = Inches(4.7)
+            width = Inches(7)
+            prs.slides[slide_indices[3]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+            left = Inches(7)
+            top = Inches(0.25)
+            height = Inches(4.7)
+            width = Inches(4)
+            txbox = prs.slides[slide_indices[3]].shapes.add_textbox(left, top, width, height)
+            
+            tf = txbox.text_frame
+            p = tf.paragraphs[0]
+            p.text = f"Long, Intermediate, Short, and Near Term Trends"
+            p.font.size = Pt(18)
+            p.font.name = 'Arial'
+            p.font.bold = True
+
+            p = tf.add_paragraph()
+            # TODO: need to inplement trendline analysis here
+            p.text = f"Current Price ${fund_analysis['support_resistance']['current price']}"
+            p.font.size = Pt(16)
+            p.font.name = 'Arial'
+            p.font.bold = True
 
     return prs 
