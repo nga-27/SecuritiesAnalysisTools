@@ -72,7 +72,7 @@ def technical_analysis(config: dict):
         only_functions_handler(config)
         return
 
-    if config['state'] != 'run_no_index':
+    if 'no_index' not in config['state']:
         config['tickers'] = index_appender(config['tickers'])
         config['process_steps'] = config['process_steps'] + 2
 
@@ -121,7 +121,7 @@ def technical_analysis(config: dict):
         analysis[fund_name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=False, name=fund_name)
         p.uptick()
 
-        if config['state'] != 'run_no_index':
+        if 'no_index' not in config['state']:
             analysis[fund_name]['relative_strength'] = relative_strength(   fund_name, fund_name, config=config, 
                                                                             tickers=data, sector='', plot_output=False)
             p.uptick()
