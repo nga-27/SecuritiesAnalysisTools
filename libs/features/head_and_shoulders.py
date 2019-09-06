@@ -5,7 +5,7 @@ from libs.utils import shape_plotting, generic_plotting
 from libs.tools import exponential_ma, windowed_ma_list
 
 from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
-from .feature_utils import local_extrema
+from .feature_utils import local_extrema, feature_plotter
 
 def find_head_shoulders(extrema: dict) -> dict:
     """
@@ -17,6 +17,7 @@ def find_head_shoulders(extrema: dict) -> dict:
     extrema['features'] = []
     lmax = len(extrema['max'])
     lmin = len(extrema['min'])
+    print(extrema)
     i = 0
     j = 0
 
@@ -154,3 +155,37 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
             shapes.append(fe)
     
     return hs, ma, shapes
+
+
+
+def feature_detection_head_and_shoulders(fund: pd.DataFrame, name: str, progress_bar=None, plot_output=True) -> list:
+    """ Complete detection of n sizes and features. Currently 4 progress_bar upticks """
+    head_shoulders = []
+    shapes = []
+
+    d_temp = {'filter_size': 2, "content": {}}
+    hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=2, name=name, shapes=shapes)
+    d_temp['content'] = hs2
+    head_shoulders.append(d_temp)
+    if progress_bar is not None:
+        progress_bar.uptick()
+
+    d_temp = {'filter_size': 5, "content": {}}
+    hs, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=5, name=name, shapes=shapes)
+    d_temp['content'] = hs
+    head_shoulders.append(d_temp)
+    if progress_bar is not None:
+        progress_bar.uptick()
+
+    d_temp = {'filter_size': 9, "content": {}}
+    hs3, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=9, name=name, shapes=shapes)
+    d_temp['content'] = hs3
+    head_shoulders.append(d_temp)
+    if progress_bar is not None:
+        progress_bar.uptick()
+
+    feature_plotter(fund, shapes, name=name, feature='head_and_shoulders')
+    if progress_bar is not None:
+        progress_bar.uptick()
+
+    return head_shoulders
