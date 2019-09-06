@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 from libs.utils import date_extractor, shape_plotting
 
-def local_extrema(filtered: list) -> dict:
+def local_extrema(filtered: list, raw=False) -> dict:
     """
     Assuming a filtered list input, finds local minima and maxima
     Returns:
@@ -15,20 +15,24 @@ def local_extrema(filtered: list) -> dict:
     extrema['max'] = []
     extrema['min'] = []
     direct = 0
-    for i in range(1, len(filtered)):
-        if direct == 0:
-            if filtered[i] > filtered[i-1]:
-                direct = 1
+    if not raw:
+        for i in range(1, len(filtered)):
+            if direct == 0:
+                if filtered[i] > filtered[i-1]:
+                    direct = 1
+                else:
+                    direct = -1
+            elif direct == 1:
+                if filtered[i] < filtered[i-1]:
+                    direct = -1
+                    extrema['max'].append(i-1)
             else:
-                direct = -1
-        elif direct == 1:
-            if filtered[i] < filtered[i-1]:
-                direct = -1
-                extrema['max'].append(i-1)
-        else:
-            if filtered[i] > filtered[i-1]:
-                direct = 1
-                extrema['min'].append(i-1)
+                if filtered[i] > filtered[i-1]:
+                    direct = 1
+                    extrema['min'].append(i-1)
+
+    else:
+        print(f"raw")
 
     return extrema
 
@@ -73,6 +77,8 @@ def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int, ma_
         for _max in extrema['max']:
             start = _max - ma_size_adj
             end = _max + ma_size_adj
+            if start == end:
+                end += 1
             if start < 0:
                 start = 0
             if end > len(olist):
@@ -83,6 +89,8 @@ def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int, ma_
         for _min in extrema['min']:
             start = _min - ma_size_adj
             end = _min + ma_size_adj
+            if start == end:
+                end += 1
             if start < 0:
                 start = 0
             if end > len(olist):
@@ -165,7 +173,7 @@ def remove_empty_keys(dictionary: dict) -> dict:
     return new_dict        
 
 
-def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_and_shoulders'):
+def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_and_shoulders', plot_output=True):
     """
     Plots a rectangle of where the feature was detected overlayed on the ticker signal.
     """
@@ -174,9 +182,11 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_an
     if feature == 'head_and_shoulders':
         title += 'Head and Shoulders'
 
+    saveFig = not plot_output
+
     shape_plotting( fund['Close'], 
                     shapeXY=shapes, 
                     feature=feature, 
-                    saveFig=True, 
+                    saveFig=saveFig, 
                     title=title,
                     filename=filename)
