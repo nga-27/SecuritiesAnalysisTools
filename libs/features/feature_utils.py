@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-from libs.utils import date_extractor, shape_plotting
+from libs.utils import date_extractor, shape_plotting, generic_plotting
 
 def local_extrema(filtered: list, raw=False) -> dict:
     """
@@ -32,7 +32,15 @@ def local_extrema(filtered: list, raw=False) -> dict:
                     extrema['min'].append(i-1)
 
     else:
-        print(f"raw")
+        extrema = raw_signal_extrema(filtered)
+        # print(f"extrema: {extrema}")
+        # y = []
+        # y2 = []
+        # for max_ in extrema['max']:
+        #     y.append(filtered[max_])
+        # for min_ in extrema['min']:
+        #     y2.append(filtered[min_])
+        # generic_plotting([y,y2], x_=[extrema['max'], extrema['min']], legend=['max', 'min'])
 
     return extrema
 
@@ -190,3 +198,73 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_an
                     saveFig=saveFig, 
                     title=title,
                     filename=filename)
+
+
+def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
+    extrema = {}
+    extrema['max'] = []
+    extrema['min'] = []
+    sig_len = len(signal)
+
+    for threshold in [0.01, 0.015, 0.02, 0.025, 0.03, 0.035]:
+        i = 0
+        temp = [{"index": i, "value": signal[i], "type": 0}]
+        if signal[1] > signal[0]:
+            temp[0]['type'] = -1
+            direct = 1
+        else:
+            temp[0]['type'] = 1
+            direct = -1
+        
+        i = 2
+        need_to_pop = False
+        was_max = False
+        while (i < sig_len):
+            if len(temp) > 0:
+                if temp[0]['type'] == -1:
+                    # We have a potential local max
+                    if signal[i] > temp[0]['value'] * (1.0 + threshold):
+                        # Valid minima, remove from list
+                        extrema['min'].append(temp[0]['index'])
+                        need_to_pop = True
+                        was_max = False
+                    if signal[i] < temp[0]['value'] * (1.0 - threshold):
+                        # Was not valid by threshold, so remove and wait
+                        need_to_pop = True
+                if temp[0]['type'] == 1:
+                    # We have a potential local max
+                    if signal[i] < temp[0]['value'] * (1.0 - threshold):
+                        # Valid minima, remove from list
+                        extrema['max'].append(temp[0]['index'])
+                        need_to_pop = True
+                        was_max = True
+                    if signal[i] > temp[0]['value'] * (1.0 + threshold):
+                        # Was not valid by threshold, so remove and wait
+                        need_to_pop = True
+
+                if direct == 1:
+                    if signal[i] < signal[i-1]:
+                        direct = -1
+                else:
+                    if signal[i] > signal[i-1]:
+                        direct = 1
+
+            else:
+                if direct == 1:
+                    if signal[i] < signal[i-1]:
+                        if not was_max:
+                            temp.append({"index": i-1, "value": signal[i-1], "type": direct})
+                        direct = -1
+                else:
+                    if signal[i] > signal[i-1]:
+                        if was_max:
+                            temp.append({"index": i-1, "value": signal[i-1], "type": direct})
+                        direct = 1
+
+            if need_to_pop:
+                need_to_pop = False
+                temp.pop(0)
+
+            i += 1
+
+    return extrema

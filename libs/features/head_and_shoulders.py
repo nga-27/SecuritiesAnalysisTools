@@ -179,47 +179,15 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, name: str, progress
     head_shoulders = []
     shapes = []
 
-    d_temp = {'filter_size': 0, "content": {}}
-    hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=0, name=name, shapes=shapes)
-    d_temp['content'] = hs2
-    head_shoulders.append(d_temp)
-    if progress_bar is not None:
-        progress_bar.uptick()
+    FILTER = [0, 2, 3, 5, 7, 11, 19]
 
-    d_temp = {'filter_size': 2, "content": {}}
-    hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=2, name=name, shapes=shapes)
-    d_temp['content'] = hs2
-    head_shoulders.append(d_temp)
-    if progress_bar is not None:
-        progress_bar.uptick()
-
-    d_temp = {'filter_size': 3, "content": {}}
-    hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=3, name=name, shapes=shapes)
-    d_temp['content'] = hs2
-    head_shoulders.append(d_temp)
-    if progress_bar is not None:
-        progress_bar.uptick()
-
-    d_temp = {'filter_size': 7, "content": {}}
-    hs, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=7, name=name, shapes=shapes)
-    d_temp['content'] = hs
-    head_shoulders.append(d_temp)
-    if progress_bar is not None:
-        progress_bar.uptick()
-
-    d_temp = {'filter_size': 11, "content": {}}
-    hs3, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=11, name=name, shapes=shapes)
-    d_temp['content'] = hs3
-    head_shoulders.append(d_temp)
-    if progress_bar is not None:
-        progress_bar.uptick()
-
-    d_temp = {'filter_size': 19, "content": {}}
-    hs3, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=19, name=name, shapes=shapes)
-    d_temp['content'] = hs3
-    head_shoulders.append(d_temp)
-    if progress_bar is not None:
-        progress_bar.uptick()
+    for filt in FILTER:
+        d_temp = {'filter_size': filt, "content": {}}
+        hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=filt, name=name, shapes=shapes)
+        d_temp['content'] = hs2
+        head_shoulders.append(d_temp)
+        if progress_bar is not None:
+            progress_bar.uptick()
 
     feature_plotter(fund, shapes, name=name, feature='head_and_shoulders', plot_output=plot_output)
     if progress_bar is not None:
