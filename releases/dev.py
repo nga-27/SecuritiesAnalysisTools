@@ -51,9 +51,9 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.18'
-_DATE_REVISION_ = '2019-09-05'
+_DATE_REVISION_ = '2019-09-06'
 ################################
-PROCESS_STEPS_DEV = 15
+PROCESS_STEPS_DEV = 9
 
 def technical_analysis(config: dict):
 
@@ -139,7 +139,8 @@ def technical_analysis(config: dict):
 
         # Feature Detection Block
         analysis[fund_name]['features'] = {}
-        analysis[fund_name]['features']['head_shoulders'] = feature_detection_head_and_shoulders(fund, name=fund_name, plot_output=False, progress_bar=p)
+        analysis[fund_name]['features']['head_shoulders'] = feature_detection_head_and_shoulders(fund, name=fund_name, plot_output=False)
+        p.uptick()
 
         # hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=2, name=fund_name, shapes=shapes)
         # analysis[fund_name]['features']['head_shoulders_2'] = hs2

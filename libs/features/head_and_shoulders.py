@@ -76,9 +76,9 @@ def feature_detection(features: list) -> dict:
                 vol_R = features[4][2]
                 neckline = {'slope': 0.0, 'intercept': 0.0}
                 slope = (n2 - n1) / float(features[3][0] - features[1][0])
-                neckline['slope'] = slope
+                neckline['slope'] = float(slope)
                 intercept = n1 - slope * float(features[1][0])
-                neckline['intercept'] = intercept
+                neckline['intercept'] = float(intercept)
                 line = neckline['intercept'] + neckline['slope'] * float(features[5][0])
                 if features[5][1] < line:
                     # Head and shoulders -> bearish
@@ -93,9 +93,9 @@ def feature_detection(features: list) -> dict:
                     detected['stats']['width'] = features[4][0] - features[0][0]
                     f = features.copy()
                     f = [f[i][1] for i in range(len(f))]
-                    detected['stats']['avg'] = np.round(np.mean(f), 3)
-                    detected['stats']['stdev'] = np.round(np.std(f), 3)
-                    detected['stats']['percent'] = np.round(100.0 * np.std(f) / np.mean(f), 3)
+                    detected['stats']['avg'] = float(np.round(np.mean(f), 3))
+                    detected['stats']['stdev'] = float(np.round(np.std(f), 3))
+                    detected['stats']['percent'] = float(np.round(100.0 * np.std(f) / np.mean(f), 3))
                     print(f"volumes: L {vol_L}, T {vol_T}, R {vol_R}")
                     print(f"neckline: {neckline}, line {line}, point {features[5][1]}")
 
@@ -174,23 +174,19 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
 
 
 
-def feature_detection_head_and_shoulders(fund: pd.DataFrame, name: str, progress_bar=None, plot_output=True) -> list:
-    """ PUBLIC FUNCTION: Complete detection of n sizes and features. Currently 7 progress_bar upticks """
+def feature_detection_head_and_shoulders(fund: pd.DataFrame, name: str, plot_output=True) -> list:
+    """ PUBLIC FUNCTION: Complete detection of n sizes and features. """
     head_shoulders = []
     shapes = []
 
     FILTER = [0, 2, 3, 5, 7, 11, 19]
 
     for filt in FILTER:
-        d_temp = {'filter_size': filt, "content": {}}
+        d_temp = {'filter_size': int(filt), "content": {}}
         hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=filt, name=name, shapes=shapes)
         d_temp['content'] = hs2
         head_shoulders.append(d_temp)
-        if progress_bar is not None:
-            progress_bar.uptick()
 
     feature_plotter(fund, shapes, name=name, feature='head_and_shoulders', plot_output=plot_output)
-    if progress_bar is not None:
-        progress_bar.uptick()
 
     return head_shoulders
