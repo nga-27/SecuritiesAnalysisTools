@@ -268,3 +268,14 @@ def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
             i += 1
 
     return extrema
+
+
+def cleanse_to_json(content: dict) -> dict:
+    for i in range(len(content['content']['features'])):
+        for j in range(len(content['content']['features'][i]['indexes'])):
+            vol = content['content']['features'][i]['indexes'][j][2]
+            vol = float(vol)/1000
+            content['content']['features'][i]['indexes'][j][2] = vol
+
+
+    return content
