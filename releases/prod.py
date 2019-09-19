@@ -23,7 +23,7 @@ from libs.tools import get_trendlines, get_trend_analysis
 from libs.tools import get_high_level_stats
 
 # Imports that support functions doing feature detection
-from libs.features import feature_head_and_shoulders, feature_plotter
+from libs.features import feature_detection_head_and_shoulders, feature_plotter
 
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
@@ -49,10 +49,10 @@ from test import test_competitive
 ####################################################################
 ####################################################################
 
-PROCESS_STEPS = 12
+PROCESS_STEPS = 9
 ################################
-_VERSION_ = '0.1.17'
-_DATE_REVISION_ = '2019-08-31'
+_VERSION_ = '0.1.18'
+_DATE_REVISION_ = '2019-09-18'
 ################################
 
 def technical_analysis(config: dict):
@@ -138,22 +138,8 @@ def technical_analysis(config: dict):
         p.uptick()
 
         # Feature Detection Block
-        shapes = []
         analysis[fund_name]['features'] = {}
-
-        hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=2, name=fund_name, shapes=shapes)
-        analysis[fund_name]['features']['head_shoulders_2'] = hs2
-        p.uptick()
-
-        hs, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=4, name=fund_name, shapes=shapes)
-        analysis[fund_name]['features']['head_shoulders_4'] = hs
-        p.uptick()
-
-        hs3, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=8, name=fund_name, shapes=shapes)
-        analysis[fund_name]['features']['head_shoulders_8'] = hs3
-        p.uptick()
-
-        feature_plotter(fund, shapes, name=fund_name, feature='head_and_shoulders')
+        analysis[fund_name]['features']['head_shoulders'] = feature_detection_head_and_shoulders(fund, name=fund_name, plot_output=False)
         p.uptick()
 
         filename = f"{fund_name}/candlestick_{fund_name}"
@@ -164,8 +150,6 @@ def technical_analysis(config: dict):
         analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False)
         p.uptick()
 
-
-    # test_competitive(data, analysis)
 
     analysis['MCI'] = market_composite_index(config=config)
 
