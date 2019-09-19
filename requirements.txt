@@ -7,7 +7,6 @@ pandas>=0.24.0
 pandocfilters==1.4.2
 path.py==11.0.1
 pathlib2==2.3.2
-pathlib>=1.0.1
 pprint>=0.1
 pylint
 pycodestyle

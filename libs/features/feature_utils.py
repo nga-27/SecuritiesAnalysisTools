@@ -2,9 +2,9 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-from libs.utils import date_extractor, shape_plotting
+from libs.utils import date_extractor, shape_plotting, generic_plotting
 
-def local_extrema(filtered: list) -> dict:
+def local_extrema(filtered: list, raw=False) -> dict:
     """
     Assuming a filtered list input, finds local minima and maxima
     Returns:
@@ -15,20 +15,32 @@ def local_extrema(filtered: list) -> dict:
     extrema['max'] = []
     extrema['min'] = []
     direct = 0
-    for i in range(1, len(filtered)):
-        if direct == 0:
-            if filtered[i] > filtered[i-1]:
-                direct = 1
+    if not raw:
+        for i in range(1, len(filtered)):
+            if direct == 0:
+                if filtered[i] > filtered[i-1]:
+                    direct = 1
+                else:
+                    direct = -1
+            elif direct == 1:
+                if filtered[i] < filtered[i-1]:
+                    direct = -1
+                    extrema['max'].append(i-1)
             else:
-                direct = -1
-        elif direct == 1:
-            if filtered[i] < filtered[i-1]:
-                direct = -1
-                extrema['max'].append(i-1)
-        else:
-            if filtered[i] > filtered[i-1]:
-                direct = 1
-                extrema['min'].append(i-1)
+                if filtered[i] > filtered[i-1]:
+                    direct = 1
+                    extrema['min'].append(i-1)
+
+    else:
+        extrema = raw_signal_extrema(filtered)
+        # print(f"extrema: {extrema}")
+        # y = []
+        # y2 = []
+        # for max_ in extrema['max']:
+        #     y.append(filtered[max_])
+        # for min_ in extrema['min']:
+        #     y2.append(filtered[min_])
+        # generic_plotting([y,y2], x_=[extrema['max'], extrema['min']], legend=['max', 'min'])
 
     return extrema
 
@@ -73,6 +85,8 @@ def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int, ma_
         for _max in extrema['max']:
             start = _max - ma_size_adj
             end = _max + ma_size_adj
+            if start == end:
+                end += 1
             if start < 0:
                 start = 0
             if end > len(olist):
@@ -83,6 +97,8 @@ def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int, ma_
         for _min in extrema['min']:
             start = _min - ma_size_adj
             end = _min + ma_size_adj
+            if start == end:
+                end += 1
             if start < 0:
                 start = 0
             if end > len(olist):
@@ -165,7 +181,7 @@ def remove_empty_keys(dictionary: dict) -> dict:
     return new_dict        
 
 
-def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_and_shoulders'):
+def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_and_shoulders', plot_output=True):
     """
     Plots a rectangle of where the feature was detected overlayed on the ticker signal.
     """
@@ -174,9 +190,92 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_an
     if feature == 'head_and_shoulders':
         title += 'Head and Shoulders'
 
+    saveFig = not plot_output
+
     shape_plotting( fund['Close'], 
                     shapeXY=shapes, 
                     feature=feature, 
-                    saveFig=True, 
+                    saveFig=saveFig, 
                     title=title,
                     filename=filename)
+
+
+def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
+    extrema = {}
+    extrema['max'] = []
+    extrema['min'] = []
+    sig_len = len(signal)
+
+    for threshold in [0.01, 0.015, 0.02, 0.025, 0.03, 0.035]:
+        i = 0
+        temp = [{"index": i, "value": signal[i], "type": 0}]
+        if signal[1] > signal[0]:
+            temp[0]['type'] = -1
+            direct = 1
+        else:
+            temp[0]['type'] = 1
+            direct = -1
+        
+        i = 2
+        need_to_pop = False
+        was_max = False
+        while (i < sig_len):
+            if len(temp) > 0:
+                if temp[0]['type'] == -1:
+                    # We have a potential local max
+                    if signal[i] > temp[0]['value'] * (1.0 + threshold):
+                        # Valid minima, remove from list
+                        extrema['min'].append(temp[0]['index'])
+                        need_to_pop = True
+                        was_max = False
+                    if signal[i] < temp[0]['value'] * (1.0 - threshold):
+                        # Was not valid by threshold, so remove and wait
+                        need_to_pop = True
+                if temp[0]['type'] == 1:
+                    # We have a potential local max
+                    if signal[i] < temp[0]['value'] * (1.0 - threshold):
+                        # Valid minima, remove from list
+                        extrema['max'].append(temp[0]['index'])
+                        need_to_pop = True
+                        was_max = True
+                    if signal[i] > temp[0]['value'] * (1.0 + threshold):
+                        # Was not valid by threshold, so remove and wait
+                        need_to_pop = True
+
+                if direct == 1:
+                    if signal[i] < signal[i-1]:
+                        direct = -1
+                else:
+                    if signal[i] > signal[i-1]:
+                        direct = 1
+
+            else:
+                if direct == 1:
+                    if signal[i] < signal[i-1]:
+                        if not was_max:
+                            temp.append({"index": i-1, "value": signal[i-1], "type": direct})
+                        direct = -1
+                else:
+                    if signal[i] > signal[i-1]:
+                        if was_max:
+                            temp.append({"index": i-1, "value": signal[i-1], "type": direct})
+                        direct = 1
+
+            if need_to_pop:
+                need_to_pop = False
+                temp.pop(0)
+
+            i += 1
+
+    return extrema
+
+
+def cleanse_to_json(content: dict) -> dict:
+    for i in range(len(content['content']['features'])):
+        for j in range(len(content['content']['features'][i]['indexes'])):
+            vol = content['content']['features'][i]['indexes'][j][2]
+            vol = float(vol)/1000
+            content['content']['features'][i]['indexes'][j][2] = vol
+
+
+    return content

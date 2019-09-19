@@ -34,6 +34,8 @@ def exponential_ma_list(item: list, interval: int) -> list:
 def windowed_ma_list(item: list, interval: int) -> list:
     left = int(np.floor(float(interval) / 2))
     wma = []
+    if left == 0:
+        return item
     for i in range(left):
         wma.append(item[i])
         # if math.isnan(item[i]):
