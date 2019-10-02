@@ -30,6 +30,7 @@ def only_functions_handler(config: dict):
     if 'correlation' in config['run_functions']:
         correlation_index_function(config)
 
+
 ###############################################################################
 
 def mci_function(config: dict):

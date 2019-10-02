@@ -235,6 +235,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
     
     if key_match('--corr', i_keys) or key_match('--correlation', i_keys):
         config = add_str_to_dict_key(config, 'run_functions', 'correlation')
+        if key_match('--short', i_keys):
+            config['duration'] = 'short'
+        else:
+            config['duration'] = 'long'
 
 
     # Configuration flags that control state outcomes and return immediately after setting

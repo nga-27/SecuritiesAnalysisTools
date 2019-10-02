@@ -47,15 +47,29 @@ def dual_plotting(
     fig, ax1 = plt.subplots()
     color = 'tab:orange'
     ax1.set_xlabel(x_label)
-    ax1.set_ylabel(y1_label, color=color)
-    ax1.plot(x, y1, color=color)
-    ax1.tick_params(axis='y', labelcolor=color)
-    ax1.grid(linestyle=':')
-    plt.legend([y1_label])
+    
+    list_setting = False
+    if type(y1[0]) == list:
+        list_setting = True
+        ax1.set_ylabel(y1_label[0])
+        for y in y1:
+            ax1.plot(x, y)
+            ax1.tick_params(axis='y')
+            ax1.grid(linestyle=':')
+        plt.legend(y1_label)
+    else:
+        ax1.set_ylabel(y1_label, color=color)
+        ax1.plot(x, y1, color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.grid(linestyle=':')
+        plt.legend([y1_label])
 
     ax2 = ax1.twinx()
 
-    color = 'tab:blue'
+    if list_setting:
+        color = 'k'
+    else:
+        color = 'tab:blue'
     ax2.set_ylabel(y2_label, color=color)
     ax2.plot(x, y2, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
