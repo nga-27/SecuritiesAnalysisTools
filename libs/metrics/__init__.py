@@ -1,2 +1,3 @@
 from .market_composite_index import market_composite_index, type_composite_index
 from .bond_composite_index import bond_composite_index
+from .correlation_index import correlation_composite_index

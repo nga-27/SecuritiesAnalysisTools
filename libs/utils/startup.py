@@ -232,6 +232,9 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if key_match('--head_shoulders', i_keys) or key_match('--hs', i_keys):
         config['tickers'] = ticker_list_to_str(ticker_keys)
         config = add_str_to_dict_key(config, 'run_functions', 'head_shoulders')
+    
+    if key_match('--corr', i_keys) or key_match('--correlation', i_keys):
+        config = add_str_to_dict_key(config, 'run_functions', 'correlation')
 
 
     # Configuration flags that control state outcomes and return immediately after setting

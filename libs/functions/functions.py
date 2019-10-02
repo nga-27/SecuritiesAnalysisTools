@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 
 from libs.utils import download_data, has_critical_error
-from libs.metrics import market_composite_index, bond_composite_index
+from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs
 from libs.features import feature_detection_head_and_shoulders
 
@@ -26,6 +26,9 @@ def only_functions_handler(config: dict):
 
     if 'head_shoulders' in config['run_functions']:
         head_and_shoulders_function(config)
+
+    if 'correlation' in config['run_functions']:
+        correlation_index_function(config)
 
 ###############################################################################
 
@@ -93,4 +96,8 @@ def head_and_shoulders_function(config: dict):
         if fund != '^GSPC':
             print(f"Head and Shoulders feature detection of {fund}...")
             feature_detection_head_and_shoulders(data[fund], name=fund, plot_output=True)
+
+
+def correlation_index_function(config: dict):
+    correlation_composite_index(config=config)
     
