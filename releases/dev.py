@@ -37,7 +37,7 @@ from libs.functions import only_functions_handler
 from libs.utils import candlestick
 
 # Imports that drive custom metrics for market analysis
-from libs.metrics import market_composite_index, bond_composite_index
+from libs.metrics import market_composite_index, bond_composite_index, future_returns
 
 # Imports that create final products and show progress doing so
 from libs.utils import ProgressBar, start_header
@@ -51,9 +51,9 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.19'
-_DATE_REVISION_ = '2019-10-02'
+_DATE_REVISION_ = '2019-10-15'
 ################################
-PROCESS_STEPS_DEV = 9
+PROCESS_STEPS_DEV = 11
 
 def technical_analysis(config: dict):
 
@@ -112,6 +112,9 @@ def technical_analysis(config: dict):
         analysis[fund_name]['clustered_osc'] = dat
         p.uptick()
 
+        analysis[fund_name]['rsi'] = RSI(fund, name=fund_name, plot_output=True, out_suppress=True)
+        p.uptick()
+
         on_balance_volume(fund, plot_output=False, name=fund_name)
         p.uptick()
 
@@ -148,6 +151,10 @@ def technical_analysis(config: dict):
 
         # Get Trendlines
         analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False)
+        p.uptick()
+
+        # Various Fund-specific Metrics
+        analysis[fund_name]['futures'] = future_returns(fund, to_json=True)
         p.uptick()
 
 
