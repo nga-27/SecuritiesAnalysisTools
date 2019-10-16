@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np 
 
 from datetime import datetime
+import json
+import os
 
 """ Utilities for creating data metrics for plotting later """
 
@@ -30,3 +32,7 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
 
 def metadata_to_dataset(config: dict):
     print(f"metadata_to_dataset: {config['exports']}")
+    metadata_file = "metadata.json"
+    if not os.path.exists("output/" + metadata_file):
+        print(f"WARNING: {metadata_file} does not exist. Exiting...")
+        return None
