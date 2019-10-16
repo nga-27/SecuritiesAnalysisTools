@@ -240,6 +240,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
         else:
             config['duration'] = 'long'
 
+    if key_match('--export-dataset', i_keys):
+        config = add_str_to_dict_key(config, 'run_functions', 'export')
+        # No functions run, so no tickers should be present. Only metadata keys
+        config['exports'] = ticker_list_to_str(ticker_keys)
+
 
     # Configuration flags that control state outcomes and return immediately after setting
     if key_match('--dev', i_keys):

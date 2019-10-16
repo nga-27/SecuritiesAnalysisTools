@@ -3,6 +3,7 @@ import numpy as np
 
 from libs.utils import download_data, has_critical_error
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
+from libs.metrics import metadata_to_dataset
 from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs
 from libs.features import feature_detection_head_and_shoulders
 
@@ -29,6 +30,9 @@ def only_functions_handler(config: dict):
 
     if 'correlation' in config['run_functions']:
         correlation_index_function(config)
+
+    if 'export' in config['run_functions']:
+        export_function(config)
 
 
 ###############################################################################
@@ -101,4 +105,8 @@ def head_and_shoulders_function(config: dict):
 
 def correlation_index_function(config: dict):
     correlation_composite_index(config=config)
-    
+
+
+def export_function(config: dict):
+    print(f"export_function")
+    metadata_to_dataset(config)

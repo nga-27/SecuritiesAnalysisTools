@@ -26,3 +26,7 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
         df.set_index('index', inplace=True)
         return df 
     return fr_data
+
+
+def metadata_to_dataset(config: dict):
+    print(f"metadata_to_dataset: {config['exports']}")

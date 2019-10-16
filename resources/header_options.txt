@@ -5,16 +5,19 @@ OPTIONS:
 --noindex       :      does not include S&P500 index, omits comparison operations
 --function      :      triggers only designated functions (below)
 
-VERSIONS:       :      (flags for versioning)
+VERSIONS:           :       (flags for versioning)
 
---dev           :      most recent updates, pushed frequently, possibly unstable
---prod          :      default behavior; more updated than release, less than dev, but more stable
---r1            :      run release_1.py (deprecated version)
+--dev               :       most recent updates, pushed frequently, possibly unstable
+--prod              :       default behavior; more updated than release, less than dev, but more stable
+--r1                :       run release_1.py (deprecated version)
 
-FUNCTIONS:      :      (e.g. '--function --bci --mci vti AAPL amzn' ) REQUIRES --function flag
+FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUIRES --function flag
 
---mci           :      run Market Composite Index (MCI)
---bci           :      run Bond Composite Index (BCI)
---trend         :      run trendline analysis for a fund
---sr            :      run support/resistance line analysis; "--support_resistance" and "--rs" also supported
---clustered     :      run clustered oscillators for 'all'; "--clustered_osc" also supported
+--mci               :       run Market Composite Index (MCI)
+--bci               :       run Bond Composite Index (BCI)
+--trend             :       run trendline analysis for a fund
+--sr                :       run support/resistance line analysis; "--support_resistance" and "--rs" also supported
+--clustered         :       run clustered oscillators for 'all'; "--clustered_osc" also supported
+--head_shoulders    :       run head and shoulders function
+--corr              :       run correlation index; use "--short" for 2y period (vs. entire history)
+--export-dataset    :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"
