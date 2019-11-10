@@ -10,29 +10,25 @@ from libs.features import feature_detection_head_and_shoulders
 def only_functions_handler(config: dict):
     print(f"Running functions: '{config['run_functions']}' for {config['tickers']}")
 
+    if 'export' in config['run_functions']:
+        # Non-dashed inputs will cause issues beyond export if not returning.
+        export_function(config)
+        return
     if 'mci' in config['run_functions']:
         mci_function(config)
-
     if 'bci' in config['run_functions']:
         bci_function(config)
-
     if 'trend' in config['run_functions']:
         trends_function(config)
-    
     if 'support_resistance' in config['run_functions']:
         support_resistance_function(config)
-
     if 'clustered_oscs' in config['run_functions']:
         cluster_oscs_function(config)
-
     if 'head_shoulders' in config['run_functions']:
         head_and_shoulders_function(config)
-
     if 'correlation' in config['run_functions']:
         correlation_index_function(config)
-
-    if 'export' in config['run_functions']:
-        export_function(config)
+    
 
 
 ###############################################################################
