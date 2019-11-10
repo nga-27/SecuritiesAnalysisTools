@@ -125,8 +125,8 @@ def technical_analysis(config: dict):
         p.uptick()
 
         if 'no_index' not in config['state']:
-            analysis[fund_name]['relative_strength'] = relative_strength(   fund_name, fund_name, config=config, 
-                                                                            tickers=data, sector='', plot_output=False)
+            analysis[fund_name]['relative_strength'] = relative_strength(   fund_name, full_data_dict=data, config=config, 
+                                                                            plot_output=False)
             p.uptick()
             beta, rsqd = beta_comparison(fund, data['^GSPC'])
             analysis[fund_name]['beta'] = beta 
@@ -151,7 +151,8 @@ def technical_analysis(config: dict):
         p.uptick()
 
 
-    analysis['MCI'] = market_composite_index(config=config)
+    analysis['_METRICS_'] = {}
+    analysis['_METRICS_']['MCI'] = market_composite_index(config=config)
 
     bond_composite_index(config=config)
 
