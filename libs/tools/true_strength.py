@@ -143,28 +143,30 @@ def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
     return False 
 
 
-def relative_strength( fundA_name: str, 
-    fundB_name: str, 
-    tickers: dict,
+def relative_strength( fundA_name: str,  
+    full_data_dict: dict,
+    fundB_name: str='',
     config: dict=None,
     sector: str='', 
     plot_output=True ) -> list:
 
-    positionB = tickers[fundB_name]
+    if fundB_name == '':
+        fundB_name = fundA_name
+    positionB = full_data_dict[fundB_name]
     title = 'Strength: {} - {}'.format(fundA_name, fundB_name)
     if sector == '':
-        sp = get_SP500_df(tickers, config)
-        if sp is not None and is_fund_match(tickers[fundA_name], tickers[fundB_name]):
+        sp = get_SP500_df(full_data_dict, config)
+        if sp is not None and is_fund_match(full_data_dict[fundA_name], full_data_dict[fundB_name]):
             positionB = sp 
             title = 'Strength: {} vs. ^GSPC'.format(fundA_name)
             
-    rat = normalized_ratio(tickers[fundA_name], positionB)
-    st = period_strength(fundA_name, tickers, config=config, periods=[20, 50, 100], sector=sector)
+    rat = normalized_ratio(full_data_dict[fundA_name], positionB)
+    st = period_strength(fundA_name, full_data_dict, config=config, periods=[20, 50, 100], sector=sector)
     
     # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
     # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
     # length of plotting to accomodate.
-    dates = dates_extractor_list(tickers[list(tickers.keys())[0]])
+    dates = dates_extractor_list(full_data_dict[list(full_data_dict.keys())[0]])
     if len(rat) < len(dates):
         dates = dates[0:len(rat)]
 

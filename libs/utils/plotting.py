@@ -158,6 +158,7 @@ def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[],
 
 def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, filename=''):
     """ Currently unused - Primarily used for MACD """
+    register_matplotlib_converters()
     if bins is None:
         bins = len(data)
     plt.hist(data, bins=bins)
@@ -181,6 +182,7 @@ def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, f
 
 def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=False, filename=''):
     """ Exclusively used for MACD """
+    register_matplotlib_converters()
     if len(x_) < 1:
         x = list(range(len(data)))
     else:

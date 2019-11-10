@@ -4,16 +4,19 @@ import numpy as np
 from libs.utils import download_data, has_critical_error
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import metadata_to_dataset
-from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs
+from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs, RSI
+from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
+from libs.tools import triple_moving_average
 from libs.features import feature_detection_head_and_shoulders
 
 def only_functions_handler(config: dict):
-    print(f"Running functions: '{config['run_functions']}' for {config['tickers']}")
+    print(f"Running functions: {config['run_functions']} for {config['tickers']}")
 
     if 'export' in config['run_functions']:
         # Non-dashed inputs will cause issues beyond export if not returning.
         export_function(config)
         return
+
     if 'mci' in config['run_functions']:
         mci_function(config)
     if 'bci' in config['run_functions']:
@@ -28,6 +31,16 @@ def only_functions_handler(config: dict):
         head_and_shoulders_function(config)
     if 'correlation' in config['run_functions']:
         correlation_index_function(config)
+    if 'rsi' in config['run_functions']:
+        rsi_function(config)
+    if 'macd' in config['run_functions']:
+        macd_function(config)
+    if 'relative_strength' in config['run_functions']:
+        relative_strength_function(config)
+    if 'obv' in config['run_functions']:
+        obv_function(config)
+    if 'ma' in config['run_functions']:
+        ma_function(config)
     
 
 
@@ -50,10 +63,7 @@ def bci_function(config: dict):
 
 
 def trends_function(config: dict):
-    data, fund_list = download_data(config=config)
-    e_check = {'tickers': config['tickers']}
-    if has_critical_error(data, 'download_data', misc=e_check):
-        return None
+    data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Trends of {fund}...")
@@ -61,10 +71,7 @@ def trends_function(config: dict):
 
 
 def support_resistance_function(config: dict):
-    data, fund_list = download_data(config=config)
-    e_check = {'tickers': config['tickers']}
-    if has_critical_error(data, 'download_data', misc=e_check):
-        return None
+    data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Support & Resistance of {fund}...")
@@ -72,10 +79,7 @@ def support_resistance_function(config: dict):
 
 
 def cluster_oscs_function(config: dict):
-    data, fund_list = download_data(config=config)
-    e_check = {'tickers': config['tickers']}
-    if has_critical_error(data, 'download_data', misc=e_check):
-        return None
+    data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Clustered Oscillators of {fund}...")
@@ -83,10 +87,7 @@ def cluster_oscs_function(config: dict):
 
 
 def head_and_shoulders_function(config: dict):
-    data, fund_list = download_data(config=config)
-    e_check = {'tickers': config['tickers']}
-    if has_critical_error(data, 'download_data', misc=e_check):
-        return None
+    data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"Head and Shoulders feature detection of {fund}...")
@@ -105,3 +106,55 @@ def correlation_index_function(config: dict):
 
 def export_function(config: dict):
     metadata_to_dataset(config)
+
+
+def rsi_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"RSI of {fund}...")
+            RSI(data[fund], name=fund, plot_output=True, out_suppress=False)
+
+
+def macd_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"MACD of {fund}...")
+            mov_avg_convergence_divergence(data[fund], name=fund, plot_output=True)
+
+
+def relative_strength_function(config: dict):
+    config['tickers'] += ' ^GSPC'
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Relative Strength of {fund} compared to S&P500...")
+            relative_strength(fund, full_data_dict=data, config=config, plot_output=True)
+
+
+def obv_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"On Balance Volume of {fund}...")
+            on_balance_volume(data[fund], name=fund, plot_output=True)
+
+
+def ma_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Triple Moving Average of {fund}...")
+            triple_moving_average(data[fund], name=fund, plot_output=True)
+
+
+
+####################################################
+
+def function_data_download(config: dict) -> list:
+    data, fund_list = download_data(config=config)
+    e_check = {'tickers': config['tickers']}
+    if has_critical_error(data, 'download_data', misc=e_check):
+        return [], []
+    return data, fund_list
