@@ -162,11 +162,11 @@ def technical_analysis(config: dict):
     # test_competitive(data, analysis)
 
     analysis['_METRICS_'] = {}
-    analysis['_METRICS_']['MCI'] = market_composite_index(config=config)
+    analysis['_METRICS_']['mci'] = market_composite_index(config=config)
 
     bond_composite_index(config=config)
     
-    analysis['_METRICS_']['Correlation'] = correlation_composite_index(config=config, plot_output=False)
+    analysis['_METRICS_']['correlation'] = correlation_composite_index(config=config, plot_output=False)
 
     slide_creator(analysis, config=config)
     output_to_json(analysis)

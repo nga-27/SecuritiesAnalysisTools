@@ -191,6 +191,13 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--noindex' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'no_index')
 
+    # Exporting of data from metadata.json to dataframe-like file
+    if '--export-dataset' in i_keys:
+        config = add_str_to_dict_key(config, 'state', 'function run')
+        config = add_str_to_dict_key(config, 'run_functions', 'export', type_='list')
+        # No functions run, so no tickers should be present. Only metadata keys
+        config['exports'] = ticker_list_to_str(ticker_keys)
+
 
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in i_keys:
@@ -225,11 +232,6 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['duration'] = 'short'
         else:
             config['duration'] = 'long'
-
-    if '--export-dataset' in i_keys:
-        config = add_str_to_dict_key(config, 'run_functions', 'export', type_='list')
-        # No functions run, so no tickers should be present. Only metadata keys
-        config['exports'] = ticker_list_to_str(ticker_keys)
 
     if '--rsi' in i_keys:
         config = add_str_to_dict_key(config, 'run_functions', 'rsi', type_='list')

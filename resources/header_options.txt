@@ -1,9 +1,10 @@
 OPTIONS:
 
---core          :      normal operation run with parameters found in core.json
---test          :      similar to '--core' but with test.json (for testing only)
---noindex       :      does not include S&P500 index, omits comparison operations
---function      :      triggers only designated functions (below)
+--core              :       normal operation run with parameters found in core.json
+--test              :       similar to '--core' but with test.json (for testing only)
+--noindex           :       does not include S&P500 index, omits comparison operations
+--function          :       triggers only designated functions (below)
+--export-dataset    :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
 
 VERSIONS:           :       (flags for versioning)
 
@@ -20,7 +21,6 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --clustered         :       run clustered oscillators for 'all'; "--clustered_osc" also supported
 --head_shoulders    :       run head and shoulders function
 --corr              :       run correlation index; use "--short" for 2y period (vs. entire history)
---export-dataset    :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
 --rsi               :       run Relative Strength Index (RSI) function for funds
 --macd              :       run Moving Average Convergence Divergence (MACD) function for funds
 --relative_strength :       run True Strength (vs. S&P500) function for funds 

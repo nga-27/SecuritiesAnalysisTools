@@ -4,8 +4,10 @@ import numpy as np
 from datetime import datetime
 import json
 import os
+import pprint
 
 SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
+ACCEPTED_ATTS = ['statistics', 'macd', 'rsi', 'relative_strength', 'beta', 'r_squared', 'mci', 'correlation']
 
 """ Utilities for creating data metrics for plotting later """
 
@@ -42,6 +44,8 @@ def metadata_to_dataset(config: dict):
     with open(metadata_file) as json_file:
         m_data = json.load(json_file)
         job = metadata_key_filter(config['exports'], m_data)
+
+        pprint.pprint(job)
     
 
 def metadata_key_filter(keys: str, metadata: dict) -> dict:
@@ -60,7 +64,29 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
     job_dict['attributes'] = []
     job_dict['tickers'] = []
 
-    # for key in key_list:
+    for key in key_list:
+        if key in metadata.keys():
+            job_dict['tickers'].append(key)
+    if len(job_dict['tickers']) == 0:
+        # "All available tickers" case
+        for key in metadata.keys():
+            if key != '_METRICS_':
+                job_dict['tickers'].append(key)
 
+    temp_key = job_dict['tickers'][0]
+    for key in key_list:
+        if (key.lower() in metadata[temp_key].keys()) and (key.lower() in ACCEPTED_ATTS):
+            job_dict['attributes'].append(key)
+        if key.lower() in metadata.get('_METRICS_', {}).keys():
+            job_dict['attributes'].append(key)
+
+    if len(job_dict['attributes']) == 0:
+        # "All available/accepted attributes" case
+        for key in metadata[temp_key].keys():
+            if key in ACCEPTED_ATTS:
+                job_dict['attributes'].append(key)
+        for key in metadata.get('_METRICS_', {}).keys():
+            if key in ACCEPTED_ATTS:
+                job_dict['attributes'].append(key)
 
     return job_dict
