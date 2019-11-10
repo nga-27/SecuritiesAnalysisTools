@@ -3,7 +3,7 @@ import os
 
 from libs.outputs.pptx_resources import title_presentation
 from libs.outputs.pptx_resources import intro_slide 
-from libs.outputs.pptx_resources import make_BCI_slides, make_MCI_slides
+from libs.outputs.pptx_resources import make_BCI_slides, make_MCI_slides, make_CCI_slides
 from libs.outputs.pptx_resources import make_fund_slides
 
 
@@ -25,7 +25,8 @@ def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
 
     prs = title_presentation(prs, year, VERSION=version)
     prs = intro_slide(prs)
-    prs = make_MCI_slides(prs, analysis)
+    prs = make_MCI_slides(prs, analysis.get('_METRICS_', {}))
+    prs = make_CCI_slides(prs)
     prs = make_BCI_slides(prs)
     prs = make_fund_slides(prs, analysis)
 

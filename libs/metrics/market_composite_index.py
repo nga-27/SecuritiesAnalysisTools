@@ -96,6 +96,9 @@ def composite_correlation(data: dict, sectors: list, composite_osc=None, progres
         generic_plotting(plots, x_=dates, title='MCI Correlations', legend=legend, saveFig=(not plot_output), filename='MCI_correlations.png')
         progress_bar.uptick()
 
+        max_ = np.max(net_correlation)
+        net_correlation = [x / max_ for x in net_correlation]
+
         legend = ['Net Correlation', 'S&P500']
         dual_plotting(  net_correlation, 
                         data['^GSPC']['Close'][start_pt:tot_len], 

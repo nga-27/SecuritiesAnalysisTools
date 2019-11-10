@@ -108,5 +108,4 @@ def correlation_index_function(config: dict):
 
 
 def export_function(config: dict):
-    print(f"export_function")
     metadata_to_dataset(config)

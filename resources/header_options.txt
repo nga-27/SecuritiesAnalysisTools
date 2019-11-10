@@ -20,4 +20,4 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --clustered         :       run clustered oscillators for 'all'; "--clustered_osc" also supported
 --head_shoulders    :       run head and shoulders function
 --corr              :       run correlation index; use "--short" for 2y period (vs. entire history)
---export-dataset    :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"
+--export-dataset    :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
