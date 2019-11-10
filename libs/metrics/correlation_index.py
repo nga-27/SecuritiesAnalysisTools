@@ -84,10 +84,13 @@ def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
         for date in dates:
             str_dates.append(date.strftime("%Y-%m-%d"))
         
+        corr_data['tabular'] = {}
         for i, nc_period in enumerate(net_correlation):
             corr_data[legend[i]] = {}
             corr_data[legend[i]]['data'] = nc_period.copy()
             corr_data[legend[i]]['date'] = str_dates.copy()
+            corr_data['tabular'] = {legend[i]: nc_period.copy()}
+        corr_data['tabular'] = {'date': str_dates.copy()}
         progress_bar.end()
 
     return corr_data

@@ -164,14 +164,17 @@ def market_composite_index(config: dict=None, period=None, plot_output=False) ->
             props = properties['Indexes']
             if 'Market Sector' in props.keys():
                 if props['Market Sector'] == True:
+                    mci = dict()
                     data, sectors = metrics_initializer(period=period)
 
                     p = ProgressBar(len(sectors)*2+5, name='Market Composite Index')
                     p.start()
 
                     composite = composite_index(data, sectors, plot_output=plot_output, progress_bar=p) 
+                    mci['tabular'] = {'mci': composite}
                     correlations = composite_correlation(data, sectors, composite_osc=composite, plot_output=plot_output, progress_bar=p)
-                    return correlations
+                    mci['tabular']['correlations'] = correlations
+                    return mci
     return {}
 
 

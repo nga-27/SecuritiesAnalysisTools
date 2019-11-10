@@ -233,6 +233,7 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, plot_output=False, name='
     macd['group_trend'] = get_macd_trend(macd_sig, trend_type='group')
 
     macd['change'] = get_macd_value(macd_sig, value_type='change')
+    macd['tabular'] = macd_sig
 
     name2 = name + ' - MACD: '
     if plot_output:

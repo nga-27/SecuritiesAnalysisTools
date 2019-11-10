@@ -7,7 +7,14 @@ import os
 import pprint
 
 SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
-ACCEPTED_ATTS = ['statistics', 'macd', 'rsi', 'relative_strength', 'beta', 'r_squared', 'mci', 'correlation']
+ACCEPTED_ATTS = ['statistics', 
+    'macd', 
+    'rsi', 
+    'relative_strength', 
+    'mci', 
+    'correlation',
+    'futures'
+]
 
 """ Utilities for creating data metrics for plotting later """
 
@@ -31,8 +38,11 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
         df = pd.DataFrame.from_dict(fr_data)
         df.set_index('index', inplace=True)
         return df 
-    return fr_data
+    future = {'tabular': fr_data}
+    return future
 
+
+###################################################################
 
 def metadata_to_dataset(config: dict):
     print(f"metadata_to_dataset: {config['exports']}")
@@ -44,8 +54,11 @@ def metadata_to_dataset(config: dict):
     with open(metadata_file) as json_file:
         m_data = json.load(json_file)
         job = metadata_key_filter(config['exports'], m_data)
-
         pprint.pprint(job)
+
+        full_data = collate_data(job, m_data)
+
+
     
 
 def metadata_key_filter(keys: str, metadata: dict) -> dict:
@@ -90,3 +103,27 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
                 job_dict['attributes'].append(key)
 
     return job_dict
+
+
+def collate_data(job: dict, metadata: dict):
+    all_data = dict()
+    for ticker in job['tickers']:
+        all_data[ticker] = dict()
+        # print(metadata[ticker].keys())
+        for att in job['attributes']:
+            print(f"Attribute: {att}")
+            attr = metadata[ticker].get(att)
+            if type(attr) == dict:
+                print(f"att keys: {attr.keys()}")
+            elif type(attr) == list:
+                print(f"length of list: {len(attr)}")
+            else:
+                attr = metadata['_METRICS_'].get(att)
+                if type(attr) == dict:
+                    print(f"att keys: {attr.keys()}")
+                elif type(attr) == list:
+                    print(f"length of list: {len(attr)}")
+
+
+
+    return all_data

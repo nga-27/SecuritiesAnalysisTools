@@ -148,8 +148,9 @@ def relative_strength( fundA_name: str,
     fundB_name: str='',
     config: dict=None,
     sector: str='', 
-    plot_output=True ) -> list:
+    plot_output=True ) -> dict:
 
+    r_strength = dict()
     if fundB_name == '':
         fundB_name = fundA_name
     positionB = full_data_dict[fundB_name]
@@ -162,6 +163,9 @@ def relative_strength( fundA_name: str,
             
     rat = normalized_ratio(full_data_dict[fundA_name], positionB)
     st = period_strength(fundA_name, full_data_dict, config=config, periods=[20, 50, 100], sector=sector)
+
+    r_strength['tabular'] = rat
+    r_strength['period'] = st
     
     # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
     # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
@@ -176,4 +180,4 @@ def relative_strength( fundA_name: str,
         filename = fundA_name +'/relative_strength_{}.png'.format(fundA_name)
         generic_plotting([rat], x_=dates, title=title, saveFig=True, filename=filename)
 
-    return st
+    return r_strength
