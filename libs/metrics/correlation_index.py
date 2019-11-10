@@ -7,8 +7,12 @@ from libs.utils import dual_plotting
 from libs.tools import beta_comparison_list
 
 def correlation_composite_index(config: dict, plot_output=True):
-    data, sectors = metrics_initializer(config['duration'])
-    get_correlation(data, sectors, plot_output=plot_output)
+    corr = dict()
+    if config.get('properties', {}).get('Indexes', {}).get('Correlation', {}).get('run', False):
+        config['duration'] = config.get('properties', {}).get('Indexes', {}).get('Correlation', {}).get('type', 'long')
+        data, sectors = metrics_initializer(config['duration'])
+        corr = get_correlation(data, sectors, plot_output=plot_output)
+    return corr
 
 
 def metrics_initializer(duration: str='long') -> list:
@@ -27,8 +31,11 @@ def metrics_initializer(duration: str='long') -> list:
     print(" ")
     return data, sectors
 
-def get_correlation(data: dict, sectors: list, plot_output=True):
+
+def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
     PERIOD_LENGTH = [100, 50, 25]
+    corr_data = dict()
+
     if '^GSPC' in data.keys():
         tot_len = len(data['^GSPC']['Close'])
         start_pt = max(PERIOD_LENGTH)
@@ -57,6 +64,13 @@ def get_correlation(data: dict, sectors: list, plot_output=True):
             net_correlation.append(nc.copy())
             legend.append('Corr-' + str(period))
 
+        norm_corr = []
+        for nc_period in net_correlation:
+            max_ = np.max(nc_period)
+            norm = [x / max_ for x in nc_period]
+            norm_corr.append(norm)
+        net_correlation = norm_corr.copy()
+
         dual_plotting(  net_correlation, 
                         data['^GSPC']['Close'][start_pt:tot_len], 
                         x=dates,
@@ -65,5 +79,15 @@ def get_correlation(data: dict, sectors: list, plot_output=True):
                         title='CCI Net Correlation', 
                         saveFig=(not plot_output), 
                         filename='CCI_net_correlation.png')
+
+        str_dates = []
+        for date in dates:
+            str_dates.append(date.strftime("%Y-%m-%d"))
         
+        for i, nc_period in enumerate(net_correlation):
+            corr_data[legend[i]] = {}
+            corr_data[legend[i]]['data'] = nc_period.copy()
+            corr_data[legend[i]]['date'] = str_dates.copy()
         progress_bar.end()
+
+    return corr_data

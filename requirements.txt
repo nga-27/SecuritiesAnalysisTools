@@ -1,10 +1,10 @@
-decorator==4.2.1
+decorator>=4.2.1
 matplotlib>=2.2.2
 numpy>=1.17.0
-numpydoc==0.8.0
+numpydoc>=0.8.0
 pandas>=0.24.0
-pandocfilters==1.4.2
-pathlib2==2.3.2
+pandocfilters>=1.4.2
+pathlib2>=2.3.2
 pprint>=0.1
 pylint
 pycodestyle

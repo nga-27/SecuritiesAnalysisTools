@@ -7,7 +7,11 @@
             "Market Sector": false,
             "Corporate Bond": true,
             "Treasury Bond": true,
-            "International Bond": true
+            "International Bond": true,
+            "Correlation" : {
+                "run": false,
+                "type": "long"
+            }
         }
     },
     "Ticker Symbols" :

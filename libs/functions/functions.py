@@ -38,21 +38,15 @@ def only_functions_handler(config: dict):
 ###############################################################################
 
 def mci_function(config: dict):
-    if 'properties' not in config.keys():
-        config['properties'] = dict()
-    if 'Indexes' not in config['properties'].keys():
-        config['properties']['Indexes'] = dict()
-    if 'Market Sector' not in config['properties']['Indexes'].keys():
-        config['properties']['Indexes']['Market Sector'] = True
+    config['properties'] = config.get('properties', {})
+    config['properties']['Indexes'] = config['properties'].get('Indexes', {})
+    config['properties']['Indexes']['Market Sector'] = config['properties']['Indexes'].get('Market Sector', True)
     market_composite_index(config=config, plot_output=True)
 
 
 def bci_function(config: dict):
-    if 'properties' not in config.keys():
-        config['properties'] = dict()
-    if 'Indexes' not in config['properties'].keys():
-        config['properties']['Indexes'] = dict()
-    
+    config['properties'] = config.get('properties', {})
+    config['properties']['Indexes'] = config['properties'].get('Indexes', {})
     config['properties']['Indexes']['Treasury Bond'] = True
     config['properties']['Indexes']['Corporate Bond'] = True
     config['properties']['Indexes']['International Bond'] = True
@@ -104,6 +98,12 @@ def head_and_shoulders_function(config: dict):
 
 
 def correlation_index_function(config: dict):
+    config['properties'] = config.get('properties', {})
+    config['properties']['Indexes'] = config['properties'].get('Indexes', {})
+
+    timeframe = config.get('duration', 'long')
+    temp = {"run": True, "type": timeframe}
+    config['properties']['Indexes']['Correlation'] = config['properties']['Indexes'].get('Correlation', temp)
     correlation_composite_index(config=config)
 
 

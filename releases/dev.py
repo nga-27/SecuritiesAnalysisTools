@@ -37,7 +37,8 @@ from libs.functions import only_functions_handler
 from libs.utils import candlestick
 
 # Imports that drive custom metrics for market analysis
-from libs.metrics import market_composite_index, bond_composite_index, future_returns
+from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
+from libs.metrics import future_returns
 
 # Imports that create final products and show progress doing so
 from libs.utils import ProgressBar, start_header
@@ -51,7 +52,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.19'
-_DATE_REVISION_ = '2019-10-16'
+_DATE_REVISION_ = '2019-11-10'
 ################################
 PROCESS_STEPS_DEV = 11
 
@@ -163,6 +164,8 @@ def technical_analysis(config: dict):
     analysis['MCI'] = market_composite_index(config=config)
 
     bond_composite_index(config=config)
+    
+    analysis['Correlation'] = correlation_composite_index(config=config, plot_output=False)
 
     slide_creator(analysis, config=config)
     output_to_json(analysis)
