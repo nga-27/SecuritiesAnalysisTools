@@ -6,8 +6,11 @@ import yfinance as yf
 from .formatting import get_daterange, fund_list_extractor
 
 
-def download_data_indexes(indexes: list, tickers: str, period: str='2y', interval='1d') -> list:
-    data1 = yf.download(tickers=tickers, period=period, interval='1d', group_by='ticker')
+def download_data_indexes(indexes: list, tickers: str, period: str='2y', interval='1d', start=None, end=None) -> list:
+    if (start is not None) and (end is not None):
+        data1 = yf.download(tickers=tickers, start=start, end=end, interval='1d', group_by='ticker')
+    else:
+        data1 = yf.download(tickers=tickers, period=period, interval='1d', group_by='ticker')
     data = data_format(data1, config=None, list_of_funds=indexes)
     return data, indexes
 

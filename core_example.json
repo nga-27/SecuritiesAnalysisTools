@@ -7,8 +7,16 @@
             "Market Sector": true,
             "Corporate Bond": true,
             "Treasury Bond": true,
-            "International Bond": true
+            "International Bond": true,
+            "Correlation" : {
+                "run": true,
+                "type": "short"
+            }
         }
+    },
+    "Exports": {
+        "run": true,
+        "fields": ""
     },
     "Ticker Symbols" :
     [

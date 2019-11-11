@@ -43,10 +43,11 @@ def make_MCI_slides(prs, analysis: dict):
         slide.shapes.add_picture(content, left, top, height=height, width=width)
 
         # Add table here!
-        if 'MCI' in analysis.keys():
-            num_rows = len(list(analysis['MCI'].keys())) + 2
-            fund_key = list(analysis['MCI'].keys())[0]
-            time_periods = [analysis['MCI'][fund_key][0]['period'], analysis['MCI'][fund_key][1]['period']]
+        if 'mci' in analysis.keys():
+            num_rows = len(list(analysis['mci']['correlations'].keys())) + 2
+            fund_key = list(analysis['mci']['correlations'].keys())[0]
+            time_periods = [analysis['mci']['correlations'][fund_key][0]['period'], 
+                analysis['mci']['correlations'][fund_key][1]['period']]
             # list of look back periods, having both B & R, plus name
             num_cols = 5 # len(analysis['MCI'][temp_key]) * 2 + 1
 
@@ -82,12 +83,12 @@ def make_MCI_slides(prs, analysis: dict):
                 table.cell(1, i).text_frame.paragraphs[0].font.size = Pt(15)
                 table.cell(1, i).text_frame.paragraphs[0].font.bold = True
 
-            for i, fund in enumerate(analysis['MCI'].keys()):
+            for i, fund in enumerate(analysis['mci']['correlations'].keys()):
                 table.cell(i+2,0).text = fund 
-                table.cell(i+2,1).text = str(analysis['MCI'][fund][0]['beta'])
-                table.cell(i+2,2).text = str(analysis['MCI'][fund][0]['r_squared'])
-                table.cell(i+2,3).text = str(analysis['MCI'][fund][1]['beta'])
-                table.cell(i+2,4).text = str(analysis['MCI'][fund][1]['r_squared'])
+                table.cell(i+2,1).text = str(analysis['mci']['correlations'][fund][0]['beta'])
+                table.cell(i+2,2).text = str(analysis['mci']['correlations'][fund][0]['r_squared'])
+                table.cell(i+2,3).text = str(analysis['mci']['correlations'][fund][1]['beta'])
+                table.cell(i+2,4).text = str(analysis['mci']['correlations'][fund][1]['r_squared'])
 
                 table.cell(i+2,0).text_frame.paragraphs[0].font.size = Pt(14)
                 table.cell(i+2,1).text_frame.paragraphs[0].font.size = Pt(14)
@@ -146,5 +147,22 @@ def make_BCI_slides(prs):
             height = Inches(6.1)
             width = Inches(10.5)
             slide.shapes.add_picture(content, left, top, height=height, width=width)
+
+    return prs 
+
+
+def make_CCI_slides(prs):
+    content = f'output/temp/CCI_net_correlation.png'
+    if os.path.exists(content):
+
+        title = f"Correlation Composite Index"
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = slide_title_header(slide, title)
+    
+        left = Inches(1.42)
+        top = Inches(1.27)
+        height = Inches(6.1)
+        width = Inches(10.5)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs 

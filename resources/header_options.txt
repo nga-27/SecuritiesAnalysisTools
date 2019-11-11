@@ -1,20 +1,34 @@
 OPTIONS:
 
---core          :      normal operation run with parameters found in core.json
---test          :      similar to '--core' but with test.json (for testing only)
---noindex       :      does not include S&P500 index, omits comparison operations
---function      :      triggers only designated functions (below)
+--core              :       normal operation run with parameters found in core.json
+--test              :       similar to '--core' but with test.json (for testing only)
+--noindex           :       does not include S&P500 index, omits comparison operations
+--function          :       triggers only designated functions (below)
+--export-dataset    :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
 
-VERSIONS:       :      (flags for versioning)
+VERSIONS:           :       (flags for versioning)
 
---dev           :      most recent updates, pushed frequently, possibly unstable
---prod          :      default behavior; more updated than release, less than dev, but more stable
---r1            :      run release_1.py (deprecated version)
+--dev               :       most recent updates, pushed frequently, possibly unstable
+--prod              :       default behavior; more updated than release, less than dev, but more stable
+--r1                :       run release_1.py (deprecated version)
 
-FUNCTIONS:      :      (e.g. '--function --bci --mci vti AAPL amzn' ) REQUIRES --function flag
+FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUIRES --function flag
 
---mci           :      run Market Composite Index (MCI)
---bci           :      run Bond Composite Index (BCI)
---trend         :      run trendline analysis for a fund
---sr            :      run support/resistance line analysis; "--support_resistance" and "--rs" also supported
---clustered     :      run clustered oscillators for 'all'; "--clustered_osc" also supported
+--mci               :       run Market Composite Index (MCI)
+--bci               :       run Bond Composite Index (BCI)
+--trend             :       run trendline analysis for a fund
+--sr                :       run support/resistance line analysis; "--support_resistance" and "--rs" also supported
+--clustered         :       run clustered oscillators for 'all'; "--clustered_osc" also supported
+--head_shoulders    :       run head and shoulders function
+--corr              :       run correlation index; use "--short" for 2y period (vs. entire history)
+--rsi               :       run Relative Strength Index (RSI) function for funds
+--macd              :       run Moving Average Convergence Divergence (MACD) function for funds
+--relative_strength :       run True Strength (vs. S&P500) function for funds 
+--obv               :       run On Balance Volume (OBV) function for funds; "--on_balance_volume" also supported 
+--moving_average    :       run Moving Average (MA) function for funds; "--ma" also supported
+
+AVAILABLE EXPORTS:  :       (current fields for specific tabular metrics exports)
+
+how to run          :       "--export-dataset vpu VNQ VtI rsi macD ReLaTiVe_strength"
+tabular fields      :       'statistics', 'macd', 'rsi', 'relative_strength', 'mci', 'correlation', 'futures'
+default             :       "--export-dataset " -> ALL available tickers and ALL available tabular metrics

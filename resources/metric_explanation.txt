@@ -1,5 +1,7 @@
 Custom Metrics Include:
-Market Composite Index - aggregate of 'Clustered Oscillators' signals for all 11 market sectors (using Vanguard)
+Market Composite Index - aggregate of 'Clustered Oscillators' signals for all 11 market sectors (using Vanguard).
+Bond Composite Index - aggregate of 'Clustered Oscillators' signals for International, Treasury-based, and Corporate bonds (using Vanguard).
+Correlation Composite Index - aggregate r-squared values of each market sector vs. S&P500. Stronger the correlation, the more the trend should continue.
 
 Fund Charting:
 1. Clustered Oscillators - proprietary weighting summation of Stochastic, RSI, and Ultimate Oscillators. The higher the signal, the more of a SELL. The more negative a signal, the more of a BUY.

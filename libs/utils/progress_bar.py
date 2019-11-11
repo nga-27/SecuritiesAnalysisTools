@@ -14,16 +14,16 @@ class ProgressBar(object):
     def start(self):
         self.printProgressBar(self.iteration, self.total, prefix=self.name)
 
-
     def update(self, iteration: int):
         self.printProgressBar(iteration, self.total, prefix=self.name)
 
+    def end(self):
+        self.printProgressBar(self.total, self.total, prefix=self.name)
 
     def uptick(self):
         self.iteration += 1
         self.printProgressBar(self.iteration, self.total, prefix=self.name)
-
-    
+ 
     def interrupt(self, message: str=''):
         clearBar = ''
         for i in range(self.length_of_bar):

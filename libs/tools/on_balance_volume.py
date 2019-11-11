@@ -46,7 +46,7 @@ def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: flo
     x = dates_extractor_list(fund)
     name2 = name + ' - On Balance Volume'
     if plot_output:
-        #generic_plotting([obv, obv_sig], x_=x, title=name2)
+        dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price', y2_label='On Balance Volume', x_label='Trading Days', title=name2)
         dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2)
     else:
         filename = name +'/obv_{}.png'.format(name)

@@ -47,15 +47,29 @@ def dual_plotting(
     fig, ax1 = plt.subplots()
     color = 'tab:orange'
     ax1.set_xlabel(x_label)
-    ax1.set_ylabel(y1_label, color=color)
-    ax1.plot(x, y1, color=color)
-    ax1.tick_params(axis='y', labelcolor=color)
-    ax1.grid(linestyle=':')
-    plt.legend([y1_label])
+    
+    list_setting = False
+    if type(y1[0]) == list:
+        list_setting = True
+        ax1.set_ylabel(y1_label[0])
+        for y in y1:
+            ax1.plot(x, y)
+            ax1.tick_params(axis='y')
+            ax1.grid(linestyle=':')
+        plt.legend(y1_label)
+    else:
+        ax1.set_ylabel(y1_label, color=color)
+        ax1.plot(x, y1, color=color)
+        ax1.tick_params(axis='y', labelcolor=color)
+        ax1.grid(linestyle=':')
+        plt.legend([y1_label])
 
     ax2 = ax1.twinx()
 
-    color = 'tab:blue'
+    if list_setting:
+        color = 'k'
+    else:
+        color = 'tab:blue'
     ax2.set_ylabel(y2_label, color=color)
     ax2.plot(x, y2, color=color)
     ax2.tick_params(axis='y', labelcolor=color)
@@ -144,6 +158,7 @@ def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[],
 
 def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, filename=''):
     """ Currently unused - Primarily used for MACD """
+    register_matplotlib_converters()
     if bins is None:
         bins = len(data)
     plt.hist(data, bins=bins)
@@ -167,6 +182,7 @@ def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, f
 
 def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=False, filename=''):
     """ Exclusively used for MACD """
+    register_matplotlib_converters()
     if len(x_) < 1:
         x = list(range(len(data)))
     else:
