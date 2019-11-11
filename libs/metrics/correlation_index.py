@@ -1,6 +1,6 @@
 import pandas as pd 
 import numpy as np 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from libs.utils import download_data_indexes, index_appender, ProgressBar
 from libs.utils import dual_plotting
@@ -25,9 +25,10 @@ def metrics_initializer(duration: str='long') -> list:
     print(" ")
     print('Fetching Correlation Composite Index funds...')
     if duration == 'short':
-        data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, period='2y', interval='1d')
-    else:
-        data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, start=START, end=date, interval='1d')
+        # data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, period='5y', interval='1d')
+        START = datetime.today() - timedelta(days=900)
+        START = START.strftime('%Y-%m-%d')
+    data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, start=START, end=date, interval='1d')
     print(" ")
     return data, sectors
 
@@ -89,8 +90,8 @@ def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
             corr_data[legend[i]] = {}
             corr_data[legend[i]]['data'] = nc_period.copy()
             corr_data[legend[i]]['date'] = str_dates.copy()
-            corr_data['tabular'] = {legend[i]: nc_period.copy()}
-        corr_data['tabular'] = {'date': str_dates.copy()}
+            corr_data['tabular'][legend[i]] =  nc_period.copy()
+        corr_data['tabular']['date'] =  str_dates.copy()
         progress_bar.end()
 
     return corr_data

@@ -45,7 +45,6 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
 ###################################################################
 
 def metadata_to_dataset(config: dict):
-    print(f"metadata_to_dataset: {config['exports']}")
     metadata_file = "output/metadata.json"
     if not os.path.exists(metadata_file):
         print(f"WARNING: {metadata_file} does not exist. Exiting...")
@@ -53,13 +52,16 @@ def metadata_to_dataset(config: dict):
 
     with open(metadata_file) as json_file:
         m_data = json.load(json_file)
+        json_file.close()
+
         job = metadata_key_filter(config['exports'], m_data)
-        pprint.pprint(job)
-
         full_data = collate_data(job, m_data)
+        groomed_data = groom_data(full_data)
+        t_key = list(full_data.keys())[0]
 
+        # export_data(full_data)
+        
 
-    
 
 def metadata_key_filter(keys: str, metadata: dict) -> dict:
     job_dict = dict()
@@ -70,9 +72,6 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
     for i, k in enumerate(key_list):
         if k in SP_500_NAMES:
             key_list[i] = "^GSPC" 
-
-    print(f"metadata keys: {metadata.keys()}")
-    print(f"other keys: {key_list}")
 
     job_dict['attributes'] = []
     job_dict['tickers'] = []
@@ -109,21 +108,55 @@ def collate_data(job: dict, metadata: dict):
     all_data = dict()
     for ticker in job['tickers']:
         all_data[ticker] = dict()
-        # print(metadata[ticker].keys())
         for att in job['attributes']:
-            print(f"Attribute: {att}")
-            attr = metadata[ticker].get(att)
+            attr = metadata[ticker].get(att, {}).get('tabular')
+            if attr is None:
+                attr = metadata['_METRICS_'].get(att, {}).get('tabular')
+                if attr is None:
+                    print(f"{att} has no 'tabular' key.")
+                    continue
+            
+            # Flatten tree, if necessary
             if type(attr) == dict:
-                print(f"att keys: {attr.keys()}")
-            elif type(attr) == list:
-                print(f"length of list: {len(attr)}")
+                keys = attr.keys()
+                for key in keys:
+                    if type(attr[key]) == dict:
+                        sub_keys = attr[key].keys()
+                        for sub in sub_keys:
+                            if type(attr[key][sub]) == dict:
+                                print(f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub].keys()}")
+                            else:
+                                new_name = [att, str(key), str(sub)]
+                                new_name = '-'.join(new_name)
+                                all_data[ticker][new_name] = attr[key][sub]
+                    else:
+                        new_name = [att, str(key)]
+                        new_name = '-'.join(new_name)
+                        all_data[ticker][new_name] = attr[key]
             else:
-                attr = metadata['_METRICS_'].get(att)
-                if type(attr) == dict:
-                    print(f"att keys: {attr.keys()}")
-                elif type(attr) == list:
-                    print(f"length of list: {len(attr)}")
-
-
+                all_data[ticker][att] = attr
 
     return all_data
+
+
+def groom_data(data: dict) -> dict:
+    min_length = 100000
+    for fund in data.keys():
+        for key in data[fund].keys():
+            print(f"{key}: {len(data[fund][key])}")
+            if len(data[fund][key]) < min_length:
+                min_length = len(data[fund][key])
+
+    print(f"MIN LEN: {min_length}")
+    return data
+
+
+def export_data(all_data: dict):
+    for fund in all_data.keys():
+        print(fund)
+        index = all_data[fund].get('futures-index', [])
+        df = pd.DataFrame.from_dict(all_data[fund])
+        if len(index) != 0:
+            df.set_index('futures-index')
+
+        

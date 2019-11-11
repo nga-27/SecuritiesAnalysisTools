@@ -173,7 +173,7 @@ def market_composite_index(config: dict=None, period=None, plot_output=False) ->
                     composite = composite_index(data, sectors, plot_output=plot_output, progress_bar=p) 
                     mci['tabular'] = {'mci': composite}
                     correlations = composite_correlation(data, sectors, composite_osc=composite, plot_output=plot_output, progress_bar=p)
-                    mci['tabular']['correlations'] = correlations
+                    mci['correlations'] = correlations
                     return mci
     return {}
 
