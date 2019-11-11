@@ -37,6 +37,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['properties'] = {}
     config['core'] = False
     config['tickers'] = ''
+    config['exports'] = {"run": False, "fields": []}
 
     config, list_of_tickers = header_options_parse(input_str, config)
     
@@ -115,11 +116,12 @@ def header_json_parse(key: str) -> list:
             props = core['Properties']
             interval = props['Interval']
             period = props['Period']
+            exports = core.get('Exports')
     
     else:
         return None
 
-    return [tickers, period, interval, props]
+    return [tickers, period, interval, props, exports]
 
 
 def key_parser(input_str: str) -> list:
@@ -178,6 +180,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['interval'] = core[2]
             config['properties'] = core[3]
             config['core'] = True
+            config['exports'] = core[4]
 
     if '--test' in i_keys:
         core = header_json_parse('--test')
@@ -187,6 +190,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['interval'] = core[2]
             config['properties'] = core[3]
             config['core'] = True
+            config['exports'] = core[4]
 
     if '--noindex' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'no_index')
@@ -196,7 +200,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(config, 'state', 'function run')
         config = add_str_to_dict_key(config, 'run_functions', 'export', type_='list')
         # No functions run, so no tickers should be present. Only metadata keys
-        config['exports'] = ticker_list_to_str(ticker_keys)
+        config['exports'] = {"run": True, "fields": ticker_list_to_str(ticker_keys)}
 
 
     # Configuration flags that append functions (requires '--function' flag)

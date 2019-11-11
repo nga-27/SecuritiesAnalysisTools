@@ -45,21 +45,23 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
 ###################################################################
 
 def metadata_to_dataset(config: dict):
-    metadata_file = "output/metadata.json"
-    if not os.path.exists(metadata_file):
-        print(f"WARNING: {metadata_file} does not exist. Exiting...")
-        return None
+    if config.get('exports', {}).get('run'):
+        print(f"Exporting datasets...")
+        metadata_file = "output/metadata.json"
+        if not os.path.exists(metadata_file):
+            print(f"WARNING: {metadata_file} does not exist. Exiting...")
+            return None
 
-    with open(metadata_file) as json_file:
-        m_data = json.load(json_file)
-        json_file.close()
+        with open(metadata_file) as json_file:
+            m_data = json.load(json_file)
+            json_file.close()
 
-        job = metadata_key_filter(config['exports'], m_data)
-        full_data = collate_data(job, m_data)
-        groomed_data = groom_data(full_data)
-        t_key = list(full_data.keys())[0]
+            job = metadata_key_filter(config['exports']['fields'], m_data)
+            full_data = collate_data(job, m_data)
+            groomed_data = groom_data(full_data)
+            export_data(groomed_data)
 
-        # export_data(full_data)
+            print(f"Exporting datasets complete.")
         
 
 
@@ -113,7 +115,6 @@ def collate_data(job: dict, metadata: dict):
             if attr is None:
                 attr = metadata['_METRICS_'].get(att, {}).get('tabular')
                 if attr is None:
-                    print(f"{att} has no 'tabular' key.")
                     continue
             
             # Flatten tree, if necessary
@@ -141,22 +142,39 @@ def collate_data(job: dict, metadata: dict):
 
 def groom_data(data: dict) -> dict:
     min_length = 100000
+    new_data = dict()
     for fund in data.keys():
         for key in data[fund].keys():
-            print(f"{key}: {len(data[fund][key])}")
             if len(data[fund][key]) < min_length:
                 min_length = len(data[fund][key])
 
-    print(f"MIN LEN: {min_length}")
-    return data
+    for fund in data.keys():
+        new_data[fund] = dict()
+        for key in data[fund].keys():
+            len_old = len(data[fund][key])
+            new_data[fund][key] = data[fund][key][len_old - min_length: len_old]
+            
+    return new_data
 
 
 def export_data(all_data: dict):
+    exports = dict()
     for fund in all_data.keys():
-        print(fund)
         index = all_data[fund].get('futures-index', [])
         df = pd.DataFrame.from_dict(all_data[fund])
         if len(index) != 0:
             df.set_index('futures-index')
+        exports[fund] = df.copy()
+
+    pathname = 'output/'
+    if not os.path.exists(pathname):
+        os.mkdir(pathname)
+    pathname += 'datasets/'
+    if not os.path.exists(pathname):
+        os.mkdir(pathname)
+    
+    for fund in exports.keys():
+        filepath = pathname + fund + '.csv'
+        exports[fund].to_csv(filepath)
 
         

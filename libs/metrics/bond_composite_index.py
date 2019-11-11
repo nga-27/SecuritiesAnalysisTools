@@ -85,6 +85,9 @@ def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Trea
 
         composite2.append(s)
     p.uptick()
+    
+    max_ = np.max(np.abs(composite2))
+    composite2 = [x / max_ for x in composite2]
 
     if bond_type == 'International':
         data_to_plot = international_index_generator(data)

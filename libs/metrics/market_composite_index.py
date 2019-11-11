@@ -60,6 +60,10 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
         composite2.append(s)
     progress_bar.uptick()
 
+    max_ = np.max(np.abs(composite2))
+    composite2 = [x / max_ for x in composite2]
+    progress_bar.uptick()
+
     if plot_output:
         dual_plotting(data['^GSPC']['Close'], composite2, y1_label='S&P500', y2_label='MCI', title='Market Composite Index')
     else:
@@ -167,13 +171,14 @@ def market_composite_index(config: dict=None, period=None, plot_output=False) ->
                     mci = dict()
                     data, sectors = metrics_initializer(period=period)
 
-                    p = ProgressBar(len(sectors)*2+5, name='Market Composite Index')
+                    p = ProgressBar(len(sectors)*2+6, name='Market Composite Index')
                     p.start()
 
                     composite = composite_index(data, sectors, plot_output=plot_output, progress_bar=p) 
                     mci['tabular'] = {'mci': composite}
                     correlations = composite_correlation(data, sectors, composite_osc=composite, plot_output=plot_output, progress_bar=p)
                     mci['correlations'] = correlations
+                    p.end()
                     return mci
     return {}
 

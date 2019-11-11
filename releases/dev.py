@@ -38,7 +38,7 @@ from libs.utils import candlestick
 
 # Imports that drive custom metrics for market analysis
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
-from libs.metrics import future_returns
+from libs.metrics import future_returns, metadata_to_dataset
 
 # Imports that create final products and show progress doing so
 from libs.utils import ProgressBar, start_header
@@ -170,6 +170,8 @@ def technical_analysis(config: dict):
 
     slide_creator(analysis, config=config)
     output_to_json(analysis)
+
+    metadata_to_dataset(config=config)
 
     remove_temp_dir()
 

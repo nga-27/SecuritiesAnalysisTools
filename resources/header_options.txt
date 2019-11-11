@@ -26,3 +26,9 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --relative_strength :       run True Strength (vs. S&P500) function for funds 
 --obv               :       run On Balance Volume (OBV) function for funds; "--on_balance_volume" also supported 
 --moving_average    :       run Moving Average (MA) function for funds; "--ma" also supported
+
+AVAILABLE EXPORTS:  :       (current fields for specific tabular metrics exports)
+
+how to run          :       "--export-dataset vpu VNQ VtI rsi macD ReLaTiVe_strength"
+tabular fields      :       'statistics', 'macd', 'rsi', 'relative_strength', 'mci', 'correlation', 'futures'
+default             :       "--export-dataset " -> ALL available tickers and ALL available tabular metrics
