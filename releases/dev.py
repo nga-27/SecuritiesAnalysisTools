@@ -28,7 +28,7 @@ from libs.features import feature_detection_head_and_shoulders, feature_plotter
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data, has_critical_error
+from libs.utils import download_data, has_critical_error, get_api_metadata
 
 # Imports that control function-only inputs
 from libs.functions import only_functions_handler
@@ -52,9 +52,9 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.20'
-_DATE_REVISION_ = '2019-11-21'
+_DATE_REVISION_ = '2019-11-22'
 ################################
-PROCESS_STEPS_DEV = 11
+PROCESS_STEPS_DEV = 12
 
 def technical_analysis(config: dict):
 
@@ -98,10 +98,14 @@ def technical_analysis(config: dict):
         create_sub_temp_dir(fund_name)
 
         analysis[fund_name] = {}
-        analysis[fund_name]['statistics'] = get_high_level_stats(fund)
 
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()
+
+        analysis[fund_name]['metadata'] = get_api_metadata(fund_name)
+        p.uptick()
+
+        analysis[fund_name]['statistics'] = get_high_level_stats(fund)
 
         start = date_extractor(fund.index[0], _format='str')
         end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
