@@ -6,6 +6,7 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 import libs.utils.stable_yf as styf
+from .progress_bar import ProgressBar
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -138,15 +139,23 @@ AVAILABLE_KEYS = {
     "recommendations": get_recommendations
 }
 
-def get_api_metadata(fund_ticker: str):
+def get_api_metadata(fund_ticker: str, pb: ProgressBar=None):
     metadata = {}
     ticker = yf.Ticker(fund_ticker)
+    if pb is not None: pb.uptick(increment=0.2)
     st_tick = styf.Ticker(fund_ticker)
+    if pb is not None: pb.uptick(increment=0.2)
 
     metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
     metadata['info'] = AVAILABLE_KEYS.get('info')(ticker, st_tick)
+
+    if pb is not None: pb.uptick(increment=0.25)
+    
     metadata['financials'] = AVAILABLE_KEYS.get('financials')(ticker, st_tick)
     metadata['balance_sheet'] = AVAILABLE_KEYS.get('balance')(ticker, st_tick)
+
+    if pb is not None: pb.uptick(increment=0.1)
+
     metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker, st_tick)
     metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker, st_tick)
     metadata['recommendations'] = AVAILABLE_KEYS.get('recommendations')(ticker, st_tick)
@@ -154,6 +163,7 @@ def get_api_metadata(fund_ticker: str):
     metadata['recommendations']['tabular'] = calculate_recommendation_curve(metadata['recommendations'])
     # EPS needs some other figures to make it correct, but ok for now.
     metadata['eps'] = calculate_eps(metadata)
+    if pb is not None: pb.uptick(increment=0.25)
 
     return metadata
 

@@ -5,9 +5,9 @@ ProgressBar utility class
 class ProgressBar(object):
 
     def __init__(self, total_items: int, name: str=''):
-        self.total = total_items
+        self.total = float(total_items)
         self.name = name + ' Progress'
-        self.iteration = 0
+        self.iteration = 0.0
         self.length_of_bar = 0
 
 
@@ -20,8 +20,8 @@ class ProgressBar(object):
     def end(self):
         self.printProgressBar(self.total, self.total, prefix=self.name)
 
-    def uptick(self):
-        self.iteration += 1
+    def uptick(self, increment=1.0):
+        self.iteration += increment
         self.printProgressBar(self.iteration, self.total, prefix=self.name)
  
     def interrupt(self, message: str=''):
@@ -47,8 +47,8 @@ class ProgressBar(object):
             length      - Optional  : character length of bar (Int)
             fill        - Optional  : bar fill character (Str)
         """
-        percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-        filledLength = int(length * iteration // total)
+        percent = ("{0:." + str(decimals) + "f}").format(100.0 * (float(iteration) / float(total)))
+        filledLength = int(float(length) * float(iteration) // float(total))
         bar = fill * filledLength + '-' * (length - filledLength)
         pBar = '\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix)
         self.length_of_bar = len(pBar)

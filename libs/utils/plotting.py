@@ -180,7 +180,7 @@ def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, f
     plt.clf()
 
 
-def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=False, filename=''):
+def bar_chart(data: list, x_=[], position: pd.DataFrame=[], name='', saveFig=False, filename=''):
     """ Exclusively used for MACD """
     register_matplotlib_converters()
     if len(x_) < 1:
@@ -192,8 +192,10 @@ def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=Fal
     for bar in data:
         if bar > 0.0:
             colors.append('green')
-        else:
+        elif bar < 0.0:
             colors.append('red')
+        else:
+            colors.append('black')
 
     fig, ax1 = plt.subplots()
     barlist = ax1.bar(x, data, width=1, color=colors)

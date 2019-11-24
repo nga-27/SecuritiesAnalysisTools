@@ -52,7 +52,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.20'
-_DATE_REVISION_ = '2019-11-22'
+_DATE_REVISION_ = '2019-11-24'
 ################################
 PROCESS_STEPS_DEV = 12
 
@@ -102,8 +102,7 @@ def technical_analysis(config: dict):
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()
 
-        analysis[fund_name]['metadata'] = get_api_metadata(fund_name)
-        p.uptick()
+        analysis[fund_name]['metadata'] = get_api_metadata(fund_name, pb=p)
 
         analysis[fund_name]['statistics'] = get_high_level_stats(fund)
 
@@ -113,14 +112,13 @@ def technical_analysis(config: dict):
         analysis[fund_name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
         analysis[fund_name]['name'] = fund_name
 
-        chart, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=fund_name, plot_output=False)
+        _, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=fund_name, plot_output=False, prog_bar=p)
         analysis[fund_name]['clustered_osc'] = dat
-        p.uptick()
 
         analysis[fund_name]['rsi'] = RSI(fund, name=fund_name, plot_output=True, out_suppress=True)
         p.uptick()
 
-        on_balance_volume(fund, plot_output=False, name=fund_name)
+        analysis[fund_name]['obv'] = on_balance_volume(fund, plot_output=False, name=fund_name)
         p.uptick()
 
         triple_moving_average(fund, plot_output=False, name=fund_name)
@@ -177,6 +175,6 @@ def technical_analysis(config: dict):
 
     metadata_to_dataset(config=config)
 
-    remove_temp_dir()
+    # remove_temp_dir()
 
 

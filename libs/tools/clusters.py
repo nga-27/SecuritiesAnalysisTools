@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting, date_extractor
+from libs.utils import dual_plotting, date_extractor, ProgressBar
 
 from .ultimate_oscillator import ultimate_oscillator 
 from .rsi import RSI
@@ -104,10 +104,10 @@ def generate_cluster(position: pd.DataFrame, function: str, name='') -> list:
         clusters = clustering(clusters, med, weight=2)
         clusters = clustering(clusters, slow, weight=2)
         clusters = clustering(clusters, fastr, weight=2)
-        clusters = clustering(clusters, medr, weight=4)
+        clusters = clustering(clusters, medr, weight=5)
         clusters = clustering(clusters, slowr, weight=3)
         clusters = clustering(clusters, fastu, weight=1)
-        clusters = clustering(clusters, medu, weight=3)
+        clusters = clustering(clusters, medu, weight=2)
         clusters = clustering(clusters, slowu, weight=2)
     else:
         clusters = clustering(clusters, fast)
@@ -123,11 +123,18 @@ def export_cluster_nasit_signal(position: pd.DataFrame, function: str='full_stoc
     return clusters
 
 
-def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: str='full_stochastic', filter_thresh=7, wma=True) -> dict:
+def cluster_oscs(   position: pd.DataFrame, 
+                    name='', 
+                    plot_output=True, 
+                    function: str='full_stochastic', 
+                    filter_thresh=7, 
+                    wma=True,
+                    prog_bar: ProgressBar=None) -> dict:
     """ 2-3-5-8 multiplier comparing several different osc lengths """
     cluster_oscs = {}
     
     clusters = generate_cluster(position, function)
+    if prog_bar is not None: prog_bar.uptick(increment=0.5)
 
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = windowed_ma_list(clusters, interval=3)
@@ -142,6 +149,8 @@ def cluster_oscs(position: pd.DataFrame, name='', plot_output=True, function: st
     else:
         filename = name + '/clustering_{}_{}.png'.format(name, function)
         dual_plotting(position['Close'], clusters, 'Price', 'Clustered Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)
+
+    if prog_bar is not None: prog_bar.uptick(increment=0.5)
 
     if wma:
         return clusters_wma, cluster_oscs
