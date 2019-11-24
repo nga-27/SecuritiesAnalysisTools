@@ -293,8 +293,6 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> 
     sup.sort()
     maj.sort()
 
-    
-
     # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
     # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
     # length of plotting to accomodate.
@@ -359,10 +357,10 @@ def find_resistance_support_lines(  data: pd.DataFrame,
     c = colorize_plots(len(Yp), primary_plot_index=len(Yp)-1)
 
     if plot_output:
-        generic_plotting(Yp, x_=Xp2, colors=c, title=f'{name} Major Resistance & Support')
+        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name} Major Resistance & Support')
     else:
         filename = f"{name}/resist_support_{name}.png"
-        generic_plotting(Yp, x_=Xp2, colors=c, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
+        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
 
     analysis = detailed_analysis([Yr, Ys, Yc], data, key_args={'Colors': c})
     return analysis

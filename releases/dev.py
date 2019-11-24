@@ -175,6 +175,6 @@ def technical_analysis(config: dict):
 
     metadata_to_dataset(config=config)
 
-    # remove_temp_dir()
+    remove_temp_dir()
 
 

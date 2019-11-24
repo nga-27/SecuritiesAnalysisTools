@@ -8,7 +8,7 @@ from .error_handler import has_critical_error
 from .formatting import name_parser, index_extractor, fund_list_extractor, index_appender
 from .formatting import dates_extractor_list, date_extractor, get_daterange, dates_convert_from_index
 
-from .plotting import dual_plotting, generic_plotting, histogram, bar_chart, specialty_plotting, shape_plotting
+from .plotting import dual_plotting, generic_plotting, bar_chart, specialty_plotting, shape_plotting
 from .plotting import candlestick
 
 from .progress_bar import ProgressBar

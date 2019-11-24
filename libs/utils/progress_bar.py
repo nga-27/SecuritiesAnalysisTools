@@ -9,6 +9,7 @@ class ProgressBar(object):
         self.name = name + ' Progress'
         self.iteration = 0.0
         self.length_of_bar = 0
+        self.has_finished = False
 
 
     def start(self):
@@ -54,5 +55,6 @@ class ProgressBar(object):
         self.length_of_bar = len(pBar)
         print(pBar, end = '\r')
         # Print New Line on Complete
-        if iteration == total: 
+        if iteration == total and not self.has_finished: 
+            self.has_finished = True
             print()

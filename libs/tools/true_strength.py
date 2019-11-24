@@ -175,9 +175,9 @@ def relative_strength( fundA_name: str,
         dates = dates[0:len(rat)]
 
     if plot_output:
-        generic_plotting([rat], x_=dates, title=title)
+        generic_plotting([rat], x=dates, title=title)
     else:
         filename = fundA_name +'/relative_strength_{}.png'.format(fundA_name)
-        generic_plotting([rat], x_=dates, title=title, saveFig=True, filename=filename)
+        generic_plotting([rat], x=dates, title=title, saveFig=True, filename=filename)
 
     return r_strength

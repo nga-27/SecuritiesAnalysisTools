@@ -97,7 +97,7 @@ def composite_correlation(data: dict, sectors: list, composite_osc=None, progres
 
         plots = [corrs[x] for x in corrs.keys()]
         legend = [x for x in corrs.keys()]
-        generic_plotting(plots, x_=dates, title='MCI Correlations', legend=legend, saveFig=(not plot_output), filename='MCI_correlations.png')
+        generic_plotting(plots, x=dates, title='MCI Correlations', legend=legend, saveFig=(not plot_output), filename='MCI_correlations.png')
         progress_bar.uptick()
 
         max_ = np.max(net_correlation)

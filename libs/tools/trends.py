@@ -73,7 +73,6 @@ def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) 
     return overall_trend
 
 
-
 def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 25, 12]) -> dict:
     """ Determines long, med, and short trend of a position """
     tlong = get_trend(position, style='sma', ma_size=config[0])
@@ -201,10 +200,10 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
     C.append('black')
     
     if plot_output:
-        generic_plotting(Y, x_=X, colors=C, title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+        generic_plotting(Y, x=X, colors=C, title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
     else:
         filename = f"{name}/trendline_{name}.png"
-        generic_plotting(Y, x_=X, colors=C, 
+        generic_plotting(Y, x=X, colors=C, 
                             title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
                             saveFig=True, filename=filename)
 
@@ -403,8 +402,6 @@ def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: 
             sub['current'] = False
 
         sub = attribute_analysis(fund, x, y_list[i], sub)
-
-        # print(f"current trend: {sub['type']}, {sub['length']}, {sub['start']}, {sub['end']}")
 
         analysis.append(sub)
 

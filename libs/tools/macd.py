@@ -30,10 +30,10 @@ def generate_macd_signal(fund: pd.DataFrame, plotting=True, name='') -> list:
     x = dates_extractor_list(fund)
     name2 = name + ' - MACD'
     if plotting:
-        bar_chart(macd, position=fund, x_=x, name=name2)
+        bar_chart(macd, position=fund, x=x, title=name2)
     else:
         filename = name + '/macd_bar_{}.png'.format(name)
-        bar_chart(macd, position=fund, x_=x, name=name2, saveFig=True, filename=filename)
+        bar_chart(macd, position=fund, x=x, title=name2, saveFig=True, filename=filename)
 
     return macd, macd_ema
 
