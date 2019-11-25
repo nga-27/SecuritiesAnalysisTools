@@ -71,9 +71,9 @@ def feature_detection(features: list) -> dict:
             n2 = features[3][1]
             vol_T = features[2][2]
             if (features[4][1] < m2) and (features[4][1] > n2) and (features[4][2] < vol_L):
-                m3 = features[4][1]
-                n3 = features[5][1]
-                vol_R = features[4][2]
+                # m3 = features[4][1]
+                # n3 = features[5][1]
+                # vol_R = features[4][2]
                 neckline = {'slope': 0.0, 'intercept': 0.0}
                 slope = (n2 - n1) / float(features[3][0] - features[1][0])
                 neckline['slope'] = float(slope)

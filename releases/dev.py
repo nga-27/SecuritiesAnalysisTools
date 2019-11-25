@@ -111,11 +111,10 @@ def technical_analysis(config: dict):
 
         analysis[fund_name]['statistics'] = get_high_level_stats(fund)
 
-        _, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=fund_name, plot_output=False, prog_bar=p)
+        _, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=fund_name, plot_output=False, progress_bar=p)
         analysis[fund_name]['clustered_osc'] = dat
 
-        analysis[fund_name]['rsi'] = RSI(fund, name=fund_name, plot_output=True, out_suppress=True)
-        p.uptick()
+        analysis[fund_name]['rsi'] = RSI(fund, name=fund_name, plot_output=True, out_suppress=True, progress_bar=p)
 
         analysis[fund_name]['obv'] = on_balance_volume(fund, plot_output=False, name=fund_name)
         p.uptick()

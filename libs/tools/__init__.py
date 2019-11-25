@@ -14,7 +14,7 @@ from .rsi import RSI
 from .ultimate_oscillator import ultimate_oscillator
 from .full_stochastic import full_stochastic
 
-from .clusters import cluster_oscs, export_cluster_nasit_signal
+from .clusters import cluster_oscs
 
 from .macd import mov_avg_convergence_divergence 
 

@@ -57,11 +57,11 @@ def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
     return dates 
 
 
-def generate_cluster(position: pd.DataFrame, function: str, name='') -> list:
+def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None) -> list:
     """ subfunction to do clustering (removed from main for flexibility) """
     clusters = []
 
-    for i in range(len(position)):
+    for _ in range(len(position)):
         clusters.append(0)
 
     if function == 'full_stochastic':
@@ -98,6 +98,8 @@ def generate_cluster(position: pd.DataFrame, function: str, name='') -> list:
     else:
         print(f'Warning: Unrecognized function input of {function} in cluster_oscs.')
         return None
+
+    if p_bar is not None: p_bar.uptick(increment=0.25)
     
     if function == 'all':
         clusters = clustering(clusters, fast, weight=1)
@@ -114,27 +116,39 @@ def generate_cluster(position: pd.DataFrame, function: str, name='') -> list:
         clusters = clustering(clusters, med)
         clusters = clustering(clusters, slow)
 
+    if p_bar is not None: p_bar.uptick(increment=0.25)
+
     return clusters
 
 
-def export_cluster_nasit_signal(position: pd.DataFrame, function: str='full_stochastic') -> list:
-    clusters = generate_cluster(position, function)
-    #nasit_signal = nasit_cluster_signal(clusters)
-    return clusters
+def cluster_oscs( position: pd.DataFrame, **kwargs):
+    """
+    2-3-5-8 multiplier comparing several different osc lengths
 
+    args:
+        position:       (pd.DataFrame) list of y-value datasets to be plotted (multiple)
 
-def cluster_oscs(   position: pd.DataFrame, 
-                    name='', 
-                    plot_output=True, 
-                    function: str='full_stochastic', 
-                    filter_thresh=7, 
-                    wma=True,
-                    prog_bar: ProgressBar=None) -> dict:
-    """ 2-3-5-8 multiplier comparing several different osc lengths """
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        function:       (str) type of oscillator; DEFAULT='full_stochastic' 
+                                (others: ultimate, rsi, all, market)
+        wma:            (bool) output signal is filtered by windowed moving average; DEFAULT=True
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        cluster_oscs:   (dict) contains all clustered oscillator informatio
+        clusters:       (list) clustered oscillator signal
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    function = kwargs.get('function', 'full_stochastic')
+    wma = kwargs.get('wma', True)
+    prog_bar = kwargs.get('progress_bar', None)
+
     cluster_oscs = {}
     
     clusters = generate_cluster(position, function)
-    if prog_bar is not None: prog_bar.uptick(increment=0.5)
 
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = windowed_ma_list(clusters, interval=3)
