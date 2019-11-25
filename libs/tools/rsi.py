@@ -170,12 +170,14 @@ def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14, out_s
     if not out_suppress:
         name2 = name + ' - RSI'
         if plot_output:
-            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2)
-            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2)
+            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', title=name2)
+            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', title=name2)
         else:
             filename1 = name +'/RSI_{}.png'.format(name)
             filename2 = name +'/RSI_indicator_{}.png'.format(name)
-            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2, saveFig=True, filename=filename1)
-            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2, saveFig=True, filename=filename2)
+            dual_plotting(  position['Close'], RSI, 'Position Price', 'RSI', 
+                            title=name2, saveFig=True, filename=filename1)
+            dual_plotting(  position['Close'], plotting, 'Position Price', 'RSI Indicators', 
+                            title=name2, saveFig=True, filename=filename2)
         
     return rsi_swings

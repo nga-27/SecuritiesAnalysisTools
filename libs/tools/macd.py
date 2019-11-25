@@ -237,11 +237,11 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, plot_output=False, name='
 
     name2 = name + ' - MACD: '
     if plot_output:
-        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2)
+        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
     else:
         filename = name +'/macd_{}.png'.format(name)
-        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2, saveFig=True, filename=filename)
+        dual_plotting(  fund['Close'], macd_sig, 'Position Price', 'MACD', title=name2, saveFig=True, filename=filename)
 
     return macd
 

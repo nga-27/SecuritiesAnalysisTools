@@ -194,13 +194,11 @@ def ultimate_oscillator(position: pd.DataFrame, name='', config: list=[7, 14, 28
     if not out_suppress:
         name2 = name + ' - Ultimate Oscillator'
         if plot_output:
-            dual_plotting(stats['Close'], ult_osc, 'Position Price', 'Ultimate Oscillator', 'Trading Days', title=name2)
-            dual_plotting(stats['Close'], plots, 'Position Price', 'Buy-Sell Signal', 'Trading Days', title=name2)
-            #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
-            #dual_plotting(position['Close'], nasit_signal, 'price', 'clustered nasit', 'trading days', title=name)
+            dual_plotting(stats['Close'], ult_osc, 'Position Price', 'Ultimate Oscillator', title=name2)
+            dual_plotting(stats['Close'], plots, 'Position Price', 'Buy-Sell Signal', title=name2)
         else:
             filename = name +'/ultimate_osc_{}.png'.format(name)
-            dual_plotting(stats['Close'], ult_osc, 'Position Price', 'Ultimate Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)
-            dual_plotting(stats['Close'], plots, 'Position Price', 'Buy-Sell Signal', 'Trading Days', title=name2, saveFig=True, filename=filename)
+            dual_plotting(stats['Close'], ult_osc, 'Position Price', 'Ultimate Oscillator', title=name2, saveFig=True, filename=filename)
+            dual_plotting(stats['Close'], plots, 'Position Price', 'Buy-Sell Signal', title=name2, saveFig=True, filename=filename)
 
     return ultimate

@@ -6,7 +6,7 @@ import warnings, pprint, math
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
-from libs.utils import generic_plotting, dates_convert_from_index
+from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
 
 from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
 
@@ -108,7 +108,7 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 
 
 
 def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
-                    name: str='', interval: list=[4, 8, 16, 32] ):
+                    name: str='', interval: list=[4, 8, 16, 32], progress_bar: ProgressBar=None ):
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -118,6 +118,8 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
     maxes_y = []
     maxes_x = []
     all_x = []
+
+    increment = 0.7 / (float(len(interval)) * 3)
 
     for i, period in enumerate(interval):
         ma_size = period
@@ -144,6 +146,8 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
             if y[0] not in all_x:
                 all_x.append(y[0])
 
+        if progress_bar is not None: progress_bar.uptick(increment=increment)
+
     zipped_min = list(zip(mins_x, mins_y))
     zipped_min.sort(key=lambda x: x[0])
     mins_x = [x[0] for x in zipped_min]
@@ -165,6 +169,8 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
     X1, Y1 = get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term)
     X2, Y2 = get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term)
     X3, Y3 = get_lines_from_period(fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term)
+
+    if progress_bar is not None: progress_bar.uptick(increment=increment*4.0)
 
     X = []
     Y = []
@@ -190,8 +196,11 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
         Y.append(Y3[i])
         C.append('red')
         L.append('near')
+    if progress_bar is not None: progress_bar.uptick(increment=increment*4.0)
 
     analysis_list = generate_analysis(fund, x_list=X, y_list=Y, len_list=L, color_list=C)
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
     X = dates_convert_from_index(fund, X)
 
@@ -206,6 +215,8 @@ def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
         generic_plotting(Y, x=X, colors=C, 
                             title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
                             saveFig=True, filename=filename)
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.2)
 
     return analysis_list
 

@@ -144,11 +144,12 @@ def cluster_oscs(   position: pd.DataFrame,
     
     name2 = name + ' - Clustering: ' + function
     if plot_output:
-        dual_plotting(position['Close'], clusters, 'Position Price', 'Clustered Oscillator', 'Trading Days', title=name2)
+        dual_plotting(position['Close'], clusters, 'Position Price', 'Clustered Oscillator', x_label='Trading Days', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
     else:
         filename = name + '/clustering_{}_{}.png'.format(name, function)
-        dual_plotting(position['Close'], clusters, 'Price', 'Clustered Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)
+        dual_plotting(  y1=position['Close'], y2=clusters, y1_label='Price', y2_label='Clustered Oscillator', 
+                        x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
     if prog_bar is not None: prog_bar.uptick(increment=0.5)
 

@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import generic_plotting, dates_convert_from_index
+from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
 
 """
     1. Combine points backward (i.e. for time=34 combine 34's and 21's)
@@ -317,10 +317,13 @@ def remove_dates_from_close(df: pd.DataFrame) -> list:
 def find_resistance_support_lines(  data: pd.DataFrame, 
                                     plot_output: bool=True,
                                     name: str='',
-                                    timeframes: list=[13, 21, 34, 55]) -> dict:
+                                    timeframes: list=[13, 21, 34, 55],
+                                    progress_bar: ProgressBar=None) -> dict:
     resist_support_lines = {}
     resist_support_lines['support'] = {}
     resist_support_lines['resistance'] = {}
+
+    increment = 0.5 / (float(len(timeframes)))
 
     support = {}
     resistance = {}
@@ -339,9 +342,11 @@ def find_resistance_support_lines(  data: pd.DataFrame,
         sorted_resistance = sort_and_group(resistance)
         resist_support_lines['resistance'][str(time)] = cluster_notables(sorted_resistance, data)
 
+        if progress_bar is not None: progress_bar.uptick(increment=increment)
+
     Xs, Ys, Xr, Yr = get_plot_content(data, resist_support_lines, selected_timeframe=str(timeframes[len(timeframes)-1]))
-    # generic_plotting(Ys, x_=Xs, title=f'{name} Support')
-    # generic_plotting(Yr, x_=Xr, title=f'{name} Resistance')
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.2)
 
     Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
     # Odd list behavior when no res/sup lines drawn on appends, so if-else to fix
@@ -356,13 +361,19 @@ def find_resistance_support_lines(  data: pd.DataFrame,
         Yp = [remove_dates_from_close(data)]
     c = colorize_plots(len(Yp), primary_plot_index=len(Yp)-1)
 
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+
     if plot_output:
         generic_plotting(Yp, x=Xp2, colors=c, title=f'{name} Major Resistance & Support')
     else:
         filename = f"{name}/resist_support_{name}.png"
         generic_plotting(Yp, x=Xp2, colors=c, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
 
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+
     analysis = detailed_analysis([Yr, Ys, Yc], data, key_args={'Colors': c})
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    
     return analysis
 
 

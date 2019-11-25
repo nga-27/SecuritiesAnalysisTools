@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import shape_plotting, generic_plotting
+from libs.utils import shape_plotting, generic_plotting, ProgressBar
 from libs.tools import exponential_ma, windowed_ma_list
 
 from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
@@ -189,20 +189,23 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
 
 
 
-def feature_detection_head_and_shoulders(fund: pd.DataFrame, name: str, plot_output=True) -> list:
+def feature_detection_head_and_shoulders(fund: pd.DataFrame, name: str, plot_output=True, progress_bar: ProgressBar=None) -> list:
     """ PUBLIC FUNCTION: Complete detection of n sizes and features. """
     head_shoulders = []
     shapes = []
 
     FILTER = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 19, 26, 35, 51]
+    increment = 1.0 / float(len(FILTER)+1)
 
     for filt in FILTER:
         d_temp = {'filter_size': filt, "content": {}}
-        hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=filt, name=name, shapes=shapes)
+        hs2, _, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=filt, name=name, shapes=shapes)
         d_temp['content'] = hs2
         d_temp = cleanse_to_json(d_temp)
         head_shoulders.append(d_temp)
+        if progress_bar is not None: progress_bar.uptick(increment=increment)
 
     feature_plotter(fund, shapes, name=name, feature='head_and_shoulders', plot_output=plot_output)
+    if progress_bar is not None: progress_bar.uptick(increment=increment)
 
     return head_shoulders

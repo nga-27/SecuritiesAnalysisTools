@@ -27,7 +27,7 @@ class ProgressBar(object):
  
     def interrupt(self, message: str=''):
         clearBar = ''
-        for i in range(self.length_of_bar):
+        for _ in range(self.length_of_bar):
             clearBar += ' '
         clearBar += '\r'
         print(clearBar)
@@ -53,8 +53,9 @@ class ProgressBar(object):
         bar = fill * filledLength + '-' * (length - filledLength)
         pBar = '\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix)
         self.length_of_bar = len(pBar)
+        
         print(pBar, end = '\r')
+        
         # Print New Line on Complete
-        if iteration == total and not self.has_finished: 
-            self.has_finished = True
-            print()
+        if iteration == total: 
+            print('')

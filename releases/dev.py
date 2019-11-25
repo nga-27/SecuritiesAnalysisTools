@@ -99,18 +99,17 @@ def technical_analysis(config: dict):
 
         analysis[fund_name] = {}
 
+        start = date_extractor(fund.index[0], _format='str')
+        end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
+        analysis[fund_name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
+        analysis[fund_name]['name'] = fund_name
+
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()
 
         analysis[fund_name]['metadata'] = get_api_metadata(fund_name, pb=p)
 
         analysis[fund_name]['statistics'] = get_high_level_stats(fund)
-
-        start = date_extractor(fund.index[0], _format='str')
-        end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
-
-        analysis[fund_name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
-        analysis[fund_name]['name'] = fund_name
 
         _, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=fund_name, plot_output=False, prog_bar=p)
         analysis[fund_name]['clustered_osc'] = dat
@@ -140,25 +139,23 @@ def technical_analysis(config: dict):
             p.uptick()
 
         # Support and Resistance Analysis
-        analysis[fund_name]['support_resistance'] = find_resistance_support_lines(fund, name=fund_name, plot_output=False)
-        p.uptick()
+        analysis[fund_name]['support_resistance'] = find_resistance_support_lines(fund, name=fund_name, plot_output=False, progress_bar=p)
 
         # Feature Detection Block
         analysis[fund_name]['features'] = {}
-        analysis[fund_name]['features']['head_shoulders'] = feature_detection_head_and_shoulders(fund, name=fund_name, plot_output=False)
-        p.uptick()
+        analysis[fund_name]['features']['head_shoulders'] = feature_detection_head_and_shoulders(fund, name=fund_name, plot_output=False, progress_bar=p)
 
         filename = f"{fund_name}/candlestick_{fund_name}"
-        candlestick(fund, title=fund_name, filename=filename, saveFig=True)
-        p.uptick()
+        candlestick(fund, title=fund_name, filename=filename, saveFig=True, progress_bar=p)
 
         # Get Trendlines
-        analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False)
-        p.uptick()
+        analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False, progress_bar=p)
 
         # Various Fund-specific Metrics
         analysis[fund_name]['futures'] = future_returns(fund, to_json=True)
         p.uptick()
+
+        p.end()
 
 
     # test_competitive(data, analysis)
