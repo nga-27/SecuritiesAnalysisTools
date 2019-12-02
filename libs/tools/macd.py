@@ -3,6 +3,7 @@ import numpy as np
 
 from .moving_average import exponential_ma, exponential_ma_list
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
+from libs.utils import ProgressBar
 
 """
 Moving Average Convergence / Divergence (MACD)
@@ -30,10 +31,10 @@ def generate_macd_signal(fund: pd.DataFrame, plotting=True, name='') -> list:
     x = dates_extractor_list(fund)
     name2 = name + ' - MACD'
     if plotting:
-        bar_chart(macd, position=fund, x_=x, name=name2)
+        bar_chart(macd, position=fund, x=x, title=name2)
     else:
         filename = name + '/macd_bar_{}.png'.format(name)
-        bar_chart(macd, position=fund, x_=x, name=name2, saveFig=True, filename=filename)
+        bar_chart(macd, position=fund, x=x, title=name2, saveFig=True, filename=filename)
 
     return macd, macd_ema
 
@@ -216,11 +217,27 @@ def get_macd_state(macd: list) -> str:
             return 'weakly_bearish'
 
 
+def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
+    """
+    Moving Average Convergence Divergence (MACD)
 
+    args:
+        fund:           (pd.DataFrame) fund historical data
 
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        progress_bar:   (ProgressBar) DEFAULT=None
 
-def mov_avg_convergence_divergence(fund: pd.DataFrame, plot_output=False, name='') -> dict:
+    returns:
+        macd:           (dict) contains all ma information in regarding macd
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    progress_bar = kwargs.get('progress_bar', None)
+
     macd_sig, _ = generate_macd_signal(fund, plotting=plot_output, name=name) 
+    if progress_bar is not None: progress_bar.uptick(increment=0.5)
 
     macd = {}
 
@@ -228,20 +245,24 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, plot_output=False, name='
     
     macd['period_value'] = get_macd_value(macd_sig, value_type='current')
     macd['group_value'] = get_macd_value(macd_sig, value_type='group')
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
     macd['current_trend'] = get_macd_trend(macd_sig, trend_type='current')
     macd['group_trend'] = get_macd_trend(macd_sig, trend_type='group')
 
     macd['change'] = get_macd_value(macd_sig, value_type='change')
     macd['tabular'] = macd_sig
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
     name2 = name + ' - MACD: '
     if plot_output:
-        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2)
+        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
     else:
         filename = name +'/macd_{}.png'.format(name)
-        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', 'Trading Days', title=name2, saveFig=True, filename=filename)
+        dual_plotting(  fund['Close'], macd_sig, 'Position Price', 'MACD', title=name2, saveFig=True, filename=filename)
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.3)
 
     return macd
 

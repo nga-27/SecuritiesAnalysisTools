@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import shape_plotting, generic_plotting
+from libs.utils import shape_plotting, generic_plotting, ProgressBar
 from libs.tools import exponential_ma, windowed_ma_list
 
 from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
@@ -71,9 +71,9 @@ def feature_detection(features: list) -> dict:
             n2 = features[3][1]
             vol_T = features[2][2]
             if (features[4][1] < m2) and (features[4][1] > n2) and (features[4][2] < vol_L):
-                m3 = features[4][1]
-                n3 = features[5][1]
-                vol_R = features[4][2]
+                # m3 = features[4][1]
+                # n3 = features[5][1]
+                # vol_R = features[4][2]
                 neckline = {'slope': 0.0, 'intercept': 0.0}
                 slope = (n2 - n1) / float(features[3][0] - features[1][0])
                 neckline['slope'] = float(slope)
@@ -84,10 +84,6 @@ def feature_detection(features: list) -> dict:
                     # Head and shoulders -> bearish
                     detected['type'] = 'bearish'
                     detected['neckline'] = neckline #{'slope': 0.0, 'intercept': 0.0}
-                    # slope = (n2 - n1) / float(features[3][0] - features[1][0])
-                    # detected['neckline']['slope'] = slope
-                    # intercept = n1 - slope * float(features[1][0])
-                    # detected['neckline']['intercept'] = intercept
                     detected['indexes'] = features.copy()
                     detected['stats'] = {'width': 0, 'avg': 0.0, 'stdev': 0.0, 'percent': 0.0}
                     detected['stats']['width'] = features[4][0] - features[0][0]
@@ -96,8 +92,6 @@ def feature_detection(features: list) -> dict:
                     detected['stats']['avg'] = float(np.round(np.mean(f), 3))
                     detected['stats']['stdev'] = float(np.round(np.std(f), 3))
                     detected['stats']['percent'] = float(np.round(100.0 * np.std(f) / np.mean(f), 3))
-                    # print(f"volumes: L {vol_L}, T {vol_T}, R {vol_R}")
-                    # print(f"neckline: {neckline}, line {line}, point {features[5][1]}")
 
 
     else:
@@ -110,9 +104,9 @@ def feature_detection(features: list) -> dict:
             n2 = features[3][1]
             vol_T = features[3][2]
             if (features[4][1] > m2) and (features[4][1] < n2) and (vol_T > vol_L):
-                m3 = features[4][1]
-                n3 = features[5][1]
-                vol_R = features[4][2]
+                # m3 = features[4][1]
+                # n3 = features[5][1]
+                # vol_R = features[4][2]
                 neckline = {'slope': 0.0, 'intercept': 0.0}
                 slope = (n2 - n1) / float(features[3][0] - features[1][0])
                 neckline['slope'] = float(slope)
@@ -136,8 +130,6 @@ def feature_detection(features: list) -> dict:
                     detected['stats']['avg'] = np.round(np.mean(f), 3)
                     detected['stats']['stdev'] = np.round(np.std(f), 3)
                     detected['stats']['percent'] = np.round(100.0 * np.std(f) / np.mean(f), 3)
-                    # print(f"volumes: L {vol_L}, T {vol_T}, R {vol_R}")
-                    # print(f"neckline: {neckline}, line {line}, point {features[5][1]}")
 
     return detected
 
@@ -189,20 +181,40 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
 
 
 
-def feature_detection_head_and_shoulders(fund: pd.DataFrame, name: str, plot_output=True) -> list:
-    """ PUBLIC FUNCTION: Complete detection of n sizes and features. """
+def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
+    """
+    PUBLIC FUNCTION: Complete detection of n sizes and features.
+
+    args:
+        fund:           (pd.DataFrame) fund historical data
+
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        head_shoulders: (list) list of all head-shoulders features detected
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    progress_bar = kwargs.get('progress_bar', None)
+
     head_shoulders = []
     shapes = []
 
     FILTER = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 19, 26, 35, 51]
+    increment = 1.0 / float(len(FILTER)+1)
 
     for filt in FILTER:
         d_temp = {'filter_size': filt, "content": {}}
-        hs2, ma, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=filt, name=name, shapes=shapes)
+        hs2, _, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=filt, name=name, shapes=shapes)
         d_temp['content'] = hs2
         d_temp = cleanse_to_json(d_temp)
         head_shoulders.append(d_temp)
+        if progress_bar is not None: progress_bar.uptick(increment=increment)
 
     feature_plotter(fund, shapes, name=name, feature='head_and_shoulders', plot_output=plot_output)
+    if progress_bar is not None: progress_bar.uptick(increment=increment)
 
     return head_shoulders

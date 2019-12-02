@@ -125,6 +125,7 @@ def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], pl
             #dual_plotting(position['Close'], nasit_signal, 'Position Price', 'Oscillator Signal', title='nasit_stoch')
         else:
             filename = name +'/stochastic_{}.png'.format(name)
-            dual_plotting(position['Close'], stochastic, 'Position Price', 'Stochastic Oscillator', 'Trading Days', title=name2, saveFig=True, filename=filename)
+            dual_plotting(  position['Close'], stochastic, 'Position Price', 'Stochastic Oscillator', 
+                            x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
     return full_stoch

@@ -7,6 +7,7 @@ import os
 from pandas.plotting import register_matplotlib_converters
 
 from .formatting import dates_extractor_list
+from .progress_bar import ProgressBar
 
 
 def plot_xaxis_disperse(axis_obj, every_nth: int=2, dynamic=True):
@@ -29,18 +30,32 @@ def plot_xaxis_disperse(axis_obj, every_nth: int=2, dynamic=True):
     return 
 
 
-def dual_plotting(
-    y1: list, 
-    y2: list, 
-    y1_label: str, 
-    y2_label: str, 
-    x_label: str='trading days',
-    x=[],
-    title='', 
-    saveFig=False,
-    filename='temp.png'):
+def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
+    """
+    args:
+        y1:         (list) y-value data to be plotted on y1-axis
+        y2:         (list) y-value data to be plotted on y2-axis
+        y1_label:   (str) label for y1 axis
+        y2_label:   (str) label for y2 axis
 
+    optional args:
+        x_label:    (str) label for x axis; DEFAULT='Trading Days'
+        x:          (list) x-value data; DEFAULT=[] (length of lists)
+        title:      (str) title of plot; DEFAULT=''
+        saveFig:    (bool) True will save as 'filename'; DEFAULT=False
+        filename:   (str) path to save plot; DEFAULT='temp_dual_plot.png'
+
+    returns:
+        None
+    """
     register_matplotlib_converters()
+
+    x_label = kwargs.get('x_label', 'Trading Days')
+    x = kwargs.get('x', [])
+    title = kwargs.get('title', '')
+    saveFig = kwargs.get('saveFig', False)
+    filename = kwargs.get('filename', 'temp_dual_plot.png')
+
     if len(x) < 1:
         x = dates_extractor_list(y1)
 
@@ -103,8 +118,32 @@ def dual_plotting(
     plt.clf()
 
 
-def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[], saveFig=False, filename=''):
+def generic_plotting(list_of_plots: list, **kwargs): 
+    """
+    args:
+        list_of_plots:  (list) list of y-value data sets to be plotted (multiple)
+
+    optional args:
+        x:              (list) x-value data; DEFAULT=[] (length of lists)
+        colors:         (list) color data for each plot; DEFAULT=[]
+        title:          (str) title of plot; DEFAULT=''
+        legend:         (list) list of plot labels in legend; DEFAULT=[] 
+        saveFig:        (bool) True will save as 'filename'; DEFAULT=False
+        filename:       (str) path to save plot; DEFAULT='temp_generic_plot.png'
+        ylabel:         (str) label for y axis; DEFAULT=''
+
+    returns:
+        None
+    """
     register_matplotlib_converters()
+
+    x = kwargs.get('x', [])
+    colors = kwargs.get('colors', [])
+    title = kwargs.get('title', '')
+    legend = kwargs.get('legend', [])
+    saveFig = kwargs.get('saveFig', False)
+    filename = kwargs.get('filename', 'temp_generic_plot')
+    ylabel = kwargs.get('ylabel', '')
 
     if len(colors) > 0:
         if len(colors) != len(list_of_plots):
@@ -113,7 +152,7 @@ def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[],
 
     fig, ax = plt.subplots()
     
-    if len(x_) < 1:
+    if len(x) < 1:
         x = dates_extractor_list(list_of_plots[0])
         for i, fig in enumerate(list_of_plots):
             if len(colors) > 0:
@@ -121,15 +160,15 @@ def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[],
             else:
                 plt.plot(x, fig)
     else:
-        if type(x_[0]) == list:
-            x = x_
+        if type(x[0]) == list:
+            x = x
             for i in range(len(list_of_plots)):
                 if len(colors) > 0:
                     plt.plot(x[i], list_of_plots[i], colors[i])
                 else:
                     plt.plot(x[i], list_of_plots[i])
         else:
-            x = x_
+            x = x
             for i, figy in enumerate(list_of_plots):
                 if len(colors) > 0:
                     plt.plot(x, figy, colors[i])
@@ -139,6 +178,8 @@ def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[],
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
+    if ylabel != '':
+        plt.ylabel(ylabel)
 
     plot_xaxis_disperse(ax)
 
@@ -156,46 +197,46 @@ def generic_plotting(list_of_plots: list, x_=[], colors=[], title='', legend=[],
     plt.clf()
 
 
-def histogram(data: list, position: pd.DataFrame='', bins=None, saveFig=False, filename=''):
-    """ Currently unused - Primarily used for MACD """
+def bar_chart(data: list, **kwargs): 
+    """
+    Exclusively used for MACD, On Balance Volume
+
+    args:
+        data:           (list) list of y-values to be plotted 
+
+    optional args:
+        x:              (list) x-value data; DEFAULT=[] (length of lists)
+        position:       (pd.DataFrame) fund data, plotted as normal plot; DEFAULT=[]
+        title:          (str) title of plot; DEFAULT=''
+        saveFig:        (bool) True will save as 'filename'; DEFAULT=False
+        filename:       (str) path to save plot; DEFAULT='temp_bar_chart.png'
+
+    returns:
+        None
+    """
     register_matplotlib_converters()
-    if bins is None:
-        bins = len(data)
-    plt.hist(data, bins=bins)
 
-    if len(position) > 0:
-        plt.plot(position['Close'])
+    x = kwargs.get('x', [])
+    position = kwargs.get('position', [])
+    title = kwargs.get('title', '')
+    saveFig = kwargs.get('saveFig', False)
+    filename = kwargs.get('filename', 'temp_bar_chart.png')
 
-    try:
-        if saveFig:
-            filename = 'output/temp/' + filename
-            if os.path.exists(filename):
-                os.remove(filename)
-            plt.savefig(filename)
-        else:
-            plt.show()
-    except:
-        print(f"plot failed to render in 'histogram'")
-    plt.close()
-    plt.clf()
-
-
-def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=False, filename=''):
-    """ Exclusively used for MACD """
-    register_matplotlib_converters()
-    if len(x_) < 1:
+    if len(x) < 1:
         x = list(range(len(data)))
     else:
-        x = x_
+        x = x
     
     colors = []
     for bar in data:
         if bar > 0.0:
             colors.append('green')
-        else:
+        elif bar < 0.0:
             colors.append('red')
+        else:
+            colors.append('black')
 
-    fig, ax1 = plt.subplots()
+    _, ax1 = plt.subplots()
     barlist = ax1.bar(x, data, width=1, color=colors)
     for i in range(1,len(data)):
         if data[i] > 0.0:
@@ -204,7 +245,7 @@ def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=Fal
         else:
             if data[i] > data[i-1]:
                 barlist[i].set_alpha(0.3)
-    plt.title(name)
+    plt.title(title)
 
     if len(position) > 0:
         ax2 = ax1.twinx()
@@ -221,18 +262,43 @@ def bar_chart(data: list, x_=[], position: pd.DataFrame='', name='', saveFig=Fal
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'bar_chart' of name: {name}")
+        print(f"plot failed to render in 'bar_chart' of name: {title}")
     plt.close()
     plt.clf()
 
 
 
-def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', legend=[], saveFig=False, filename=''):
+def specialty_plotting(list_of_plots: list, **kwargs): 
+    """
+    Plot various datasets against others (different y-axes)
+
+    args:
+        list_of_plots:  (list) list of y-value datasets to be plotted (multiple)
+
+    optional args:
+        x:              (list) x-value data; DEFAULT=[] (length of lists)
+        alt_ax_index:   (list) list of other y-value datasets to be plotted on other axis; DEFAULT=[]
+        title:          (str) title of plot; DEFAULT=''
+        legend:         (list) list of plot labels in legend; DEFAULT=[] 
+        saveFig:        (bool) True will save as 'filename'; DEFAULT=False
+        filename:       (str) path to save plot; DEFAULT='temp_specialty_plot.png'
+
+    returns:
+        None
+    """
     register_matplotlib_converters()
-    x = x_
-    if len(x_) < 1:
+
+    x = kwargs.get('x', [])
+    alt_ax_index = kwargs.get('alt_ax_index', [])
+    title = kwargs.get('title', '')
+    legend = kwargs.get('legend', [])
+    saveFig = kwargs.get('saveFig', False)
+    filename = kwargs.get('filename', 'temp_speciality_plot.png')
+
+    x = x
+    if len(x) < 1:
         x = dates_extractor_list(list_of_plots[0])
-    fig, ax = plt.subplots()
+    _, ax = plt.subplots()
 
     for i in range(len(list_of_plots)):
         if i not in alt_ax_index:
@@ -264,23 +330,39 @@ def specialty_plotting(list_of_plots: list, x_=[], alt_ax_index=[], title='', le
     plt.clf()
 
 
-def shape_plotting(main_plot: pd.DataFrame, shapeXY: list=[], feature='default', title='', legend=[], saveFig=False, filename=''):
-    """ Note, shapeXY is a list of dictionaries of coordinates and type """
+def shape_plotting(main_plot: pd.DataFrame, **kwargs): 
+    """
+    Note, shapeXY is a list of dictionaries of coordinates and type
+
+    args:
+        main_plot:      (pd.DataFrame) list of y-value datasets to be plotted (multiple)
+
+    optional args:
+        shapeXY:        (list) list of dictionaries making up shape data; DEFAULT=[]
+        feature:        (str) type of shape; DEFAULT='default' (others: 'head_and_shoulders')
+        title:          (str) title of plot; DEFAULT=''
+        legend:         (list) list of plot labels in legend; DEFAULT=[] 
+        saveFig:        (bool) True will save as 'filename'; DEFAULT=False
+        filename:       (str) path to save plot; DEFAULT='temp_shape_plot.png'
+
+    returns:
+        None
+    """
     register_matplotlib_converters()
 
-    fig, ax = plt.subplots()
+    shapeXY = kwargs.get('shapeXY', [])
+    feature = kwargs.get('feature', 'default')
+    title = kwargs.get('title', '')
+    legend = kwargs.get('legend', [])
+    saveFig = kwargs.get('saveFig', False)
+    filename = kwargs.get('filename', 'temp_shape_plot.png')
+
+    _, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
     
     x = [datetime.strptime(d, '%Y-%m-%d').date() for d in main_plot.index.astype(str)]
     plt.plot(x, main_plot)
 
-    # if type(main_plot) != list:
-    #     new_list = []
-    #     for i in range(len(main_plot)):
-    #         new_list.append(main_plot[i])
-    #     main_plot = new_list
-
-    # plt.plot(main_plot)
     xpts = plt.gca().get_lines()[0].get_xdata()
     ypts = plt.gca().get_lines()[0].get_ydata()
     """ CONVERT SHAPEXY (DICT OF ITEMS) TO DATE """
@@ -332,15 +414,39 @@ def shape_plotting(main_plot: pd.DataFrame, shapeXY: list=[], feature='default',
     plt.clf()
 
 
-def candlestick(data: pd.DataFrame, title='', legend=[], saveFig=False, filename=''):
+def candlestick(data: pd.DataFrame, **kwargs): 
+    """
+    Plot candlestick chart
+
+    args:
+        data:           (list) list of y-values to be plotted 
+
+    optional args:
+        title:          (str) title of plot; DEFAULT=''
+        legend:         (list) list of plot labels in legend; DEFAULT=[] 
+        saveFig:        (bool) True will save as 'filename'; DEFAULT=False
+        filename:       (str) path to save plot; DEFAULT='temp_candlestick.png'
+        progress_bar:   (ProgressBar) increments progressbar as processes data
+
+    returns:
+        None
+    """
     register_matplotlib_converters()
 
-    fig, ax = plt.subplots()
+    title = kwargs.get('title', '')
+    legend = kwargs.get('legend', [])
+    saveFig = kwargs.get('saveFig', False)
+    filename = kwargs.get('filename', 'temp_candlestick.png')
+    p_bar = kwargs.get('progress_bar', None)
+
+    _, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
     
     x = [datetime.strptime(d, '%Y-%m-%d').date() for d in data.index.astype(str)]
     plt.plot(x, data['Close'], alpha=0.01)
     
+    increment = 0.5 / float(len(data['Close']) + 1)
+
     for i in range(len(data['Close'])):
         op = data['Open'][i]
         close = data['Close'][i]
@@ -364,6 +470,8 @@ def candlestick(data: pd.DataFrame, title='', legend=[], saveFig=False, filename
         hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75, ls='-', alpha=1, color='black')
         plt.gca().add_line(hl)
 
+        if p_bar is not None: p_bar.uptick(increment=increment)
+
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
@@ -382,3 +490,5 @@ def candlestick(data: pd.DataFrame, title='', legend=[], saveFig=False, filename
         print(f"plot failed to render in 'shape plotting' of title: {title}")
     plt.close()
     plt.clf()
+
+    if p_bar is not None: p_bar.uptick(increment=0.5)

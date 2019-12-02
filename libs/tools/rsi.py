@@ -4,7 +4,7 @@ import numpy as np
 from libs.utils import dual_plotting, date_extractor
 
 
-def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
+def generate_rsi_signal(position: pd.DataFrame, period: int=14, p_bar=None) -> list:
     """ Generates a list of relative strength indicators """
     PERIOD = period
     change = []
@@ -12,6 +12,8 @@ def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
     for i in range(1, len(position['Close'])):
         per = (position['Close'][i] - position['Close'][i-1]) / position['Close'][i-1] * 100.0
         change.append(np.round(per, 6))
+
+    if p_bar is not None: p_bar.uptick(increment=0.15)
 
     RSI = []
     # gains, losses, rs
@@ -53,12 +55,14 @@ def generate_rsi_signal(position: pd.DataFrame, period: int=14) -> list:
 
         rsi = 100.0 - (100.0 / (1.0 + RS[i][2]))
         RSI.append(np.round(rsi, 6))
+
+    if p_bar is not None: p_bar.uptick(increment=0.15)
     
     return RSI
 
 
 
-def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> dict:
+def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, p_bar=None) -> dict:
     """ Find bullish / bearish and RSI indicators:
 
         1. go beyond threshold
@@ -74,6 +78,8 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
     swings['bullish'] = []
     swings['bearish'] = []
     indicator = []
+
+    increment = 0.3 / float(len(rsi_signal))
 
     state = 0
     minima = 0.0
@@ -152,30 +158,53 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list) -> d
         else:
             indicator.append(0.0)
 
+        if p_bar is not None: p_bar.uptick(increment=increment)
+
     return [indicator, swings]
 
 
 
-def RSI(position: pd.DataFrame, name='', plot_output=True, period: int=14, out_suppress=True) -> dict:
-    """ Relative Strength Indicator """
-    RSI = generate_rsi_signal(position, period=period)
+def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, period: int=14, out_suppress=True, progress_bar=None) -> dict:
+    """
+    Relative Strength Indicator
 
-    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI)
+    args:
+        position:       (pd.DataFrame) list of y-value datasets to be plotted (multiple)
+
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        period:         (int) size of RSI indicator; DEFAULT=14 
+        out_suppress:   (bool) output plot/prints are suppressed; DEFAULT=True
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        rsi_swings:     (dict) contains all rsi information
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    period = kwargs.get('period', 14)
+    out_suppress = kwargs.get('out_suppress', True)
+    progress_bar = kwargs.get('progress_bar', None)
+
+    RSI = generate_rsi_signal(position, period=period, p_bar=progress_bar)
+
+    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI, p_bar=progress_bar)
     rsi_swings['tabular'] = RSI
-
-    #print(plotting)
-    #nasit_signal = nasit_oscillator_signal(rsi_swings, plotting)
-    #rsi_swings['nasit'] = nasit_oscillator_score(rsi_swings, plotting)
 
     if not out_suppress:
         name2 = name + ' - RSI'
         if plot_output:
-            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2)
-            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2)
+            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', title=name2)
+            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', title=name2)
         else:
             filename1 = name +'/RSI_{}.png'.format(name)
             filename2 = name +'/RSI_indicator_{}.png'.format(name)
-            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', 'Trading Days', title=name2, saveFig=True, filename=filename1)
-            dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', 'Trading Days', title=name2, saveFig=True, filename=filename2)
+            dual_plotting(  position['Close'], RSI, 'Position Price', 'RSI', 
+                            title=name2, saveFig=True, filename=filename1)
+            dual_plotting(  position['Close'], plotting, 'Position Price', 'RSI Indicators', 
+                            title=name2, saveFig=True, filename=filename2)
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.4)
         
     return rsi_swings

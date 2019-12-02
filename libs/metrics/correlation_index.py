@@ -6,7 +6,21 @@ from libs.utils import download_data_indexes, index_appender, ProgressBar
 from libs.utils import dual_plotting
 from libs.tools import beta_comparison_list
 
-def correlation_composite_index(config: dict, plot_output=True):
+def correlation_composite_index(config: dict, **kwargs):
+    """
+    Correlation Composite Index (CCI)
+
+    args:
+        config:         (dict) controlling config dictionary; DEFAULT=None
+
+    optional args:
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+
+    returns:
+        corr            (dict) contains all correlation items
+    """
+    plot_output = kwargs.get('plot_output', True)
+
     corr = dict()
     if config.get('properties', {}).get('Indexes', {}).get('Correlation', {}).get('run', False):
         config['duration'] = config.get('properties', {}).get('Indexes', {}).get('Correlation', {}).get('type', 'long')

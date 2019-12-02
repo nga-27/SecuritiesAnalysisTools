@@ -110,7 +110,21 @@ def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Trea
     return composite2 
 
 
-def bond_composite_index(config: dict, plot_output=False):
+def bond_composite_index(config: dict, **kwargs):
+    """
+    Bond Composite Index (BCI)
+
+    args:
+        config:         (dict) controlling config dictionary; DEFAULT=None
+
+    optional args:
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+
+    returns:
+        None
+    """
+    plot_output = kwargs.get('plot_output', True)
+
     period = config['period']
     properties = config['properties']
     

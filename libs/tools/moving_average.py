@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np 
 import math 
 
+from libs.utils import generic_plotting, specialty_plotting
+
 def exponential_ma(fund: pd.DataFrame, interval: int) -> list:
     ema = []
     k = 2.0 / (float(interval) + 1.0)
@@ -38,16 +40,10 @@ def windowed_ma_list(item: list, interval: int) -> list:
         return item
     for i in range(left):
         wma.append(item[i])
-        # if math.isnan(item[i]):
-        #     print(f"NaN on item {i}")
     for i in range(left, len(item)-left):
         wma.append(np.mean(item[i-(left):i+(left)]))
-        # if math.isnan(item[i]):
-        #     print(f"NaN on item {i}")
     for i in range(len(item)-left, len(item)):
         wma.append(item[i])
-        # if math.isnan(item[i]):
-        #     print(f"NaN on item {i}")
 
     return wma 
 
@@ -84,9 +80,26 @@ def simple_ma_list(item: list, interval: int) -> list:
     return ma 
 
 
+def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
+    """
+    Triple Moving Avg:  3 simple moving averages of "config" length
 
-def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plot_output=True, name='') -> list:
-    from libs.utils import generic_plotting
+    args:
+        fund:           (pd.DataFrame) fund historical data
+
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        config:         (list of ints) list of moving average time periods; DEFAULT=[12, 50, 200]
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        tma:            (dict) contains all ma information in "short", "medium", and "long" keys
+    """
+    name = kwargs.get('name', '')
+    config = kwargs.get('config', [12, 50, 200])
+    plot_output = kwargs.get('plot_output', True)
+    progress_bar = kwargs.get('progress_bar', None)
 
     tshort = []
     tmed = []
@@ -98,18 +111,25 @@ def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plot_output=
         tshort.append(fund['Close'][i])
         tmed.append(fund['Close'][i])
         tlong.append(fund['Close'][i])
+    if progress_bar is not None: progress_bar.uptick(increment=0.05)
+
     for i in range(config[0], config[1]):
         tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
         tmed.append(fund['Close'][i])
         tlong.append(fund['Close'][i])
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+
     for i in range(config[1], config[2]):
         tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
         tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
         tlong.append(fund['Close'][i])
+    if progress_bar is not None: progress_bar.uptick(increment=0.25)
+
     for i in range(config[2], tot_len):
         tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
         tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
         tlong.append(np.mean(fund['Close'][i-config[2]:i+1]))
+    if progress_bar is not None: progress_bar.uptick(increment=0.5)
 
     name2 = name + ' - Simple Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
     legend = ['Price', f'{config[0]}-SMA', f'{config[1]}-SMA', f'{config[2]}-SMA']
@@ -119,12 +139,19 @@ def triple_moving_average(fund: pd.DataFrame, config=[12, 50, 200], plot_output=
         filename = name +'/simple_moving_averages_{}.png'.format(name)
         generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2, saveFig=True, filename=filename)
 
-    return tshort, tmed, tlong
+    tma = dict()
+    tma['short'] = {'period': config[0]}
+    tma['medium'] = {'period': config[1]} 
+    tma['long'] = {'period': config[2]}
+    tma['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+
+    return tma
 
 
 
 def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], plot_output=True, name='') -> list:
-    from libs.utils import generic_plotting
 
     tshort = exponential_ma(fund, config[0])
     tmed = exponential_ma(fund, config[1])
@@ -141,19 +168,47 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], plot_output=T
     return tshort, tmed, tlong
 
 
-def moving_average_swing_trade(fund: pd.DataFrame, function: str='ema', config=[], plot_output=True, name=''):
-    """ can output details later """
-    from libs.utils import specialty_plotting
+def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
+    """
+    Triple Moving Avg:  3 simple moving averages of "config" length
+
+    args:
+        fund:           (pd.DataFrame) fund historical data
+
+    optional args:
+        function:       (str) type of filtering scheme; DEFAULT='ema'
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        config:         (list of ints) list of moving average time periods; DEFAULT=[]
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        mast:           (dict) contains all ma information in "short", "medium", "long", and "swing" keys
+    """
+    function = kwargs.get('function', 'ema')
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    config = kwargs.get('config', [])
+    progress_bar = kwargs.get('progress_bar', None)
 
     swings = []
-    # TODO: utilize 'function' feature
-    if config == []:
-        sh, me, ln = triple_exp_mov_average(fund, plot_output=False, name=name)
+    if function == 'sma':
+        if config == []:
+            sh, me, ln = triple_moving_average(fund, plot_output=False, name=name)
+        else:
+            sh, me, ln = triple_moving_average(fund, config=config, plot_output=False, name=name)
     else:
-        sh, me, ln = triple_exp_mov_average(fund, config=config, plot_output=False, name=name)
+        if config == []:
+            sh, me, ln = triple_exp_mov_average(fund, plot_output=False, name=name)
+        else:
+            sh, me, ln = triple_exp_mov_average(fund, config=config, plot_output=False, name=name)
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.5)
 
     prev_state = 3
     hold = 'none'
+    pb = int(len(sh) / 4)
+    pb = [pb * (i+1) - 2 for i in range(4)]
     for i in range(len(sh)):
         state, hold = state_management(fund['Close'][i], sh[i], me[i], ln[i], prev_state, hold=hold)
         if state == 1:
@@ -173,6 +228,8 @@ def moving_average_swing_trade(fund: pd.DataFrame, function: str='ema', config=[
         else:
             swings.append(0.0)
         prev_state = state
+        if i in pb:
+            if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
     name2 = name + ' - Swing Trade EMAs'
     legend = ['Price', 'Short-EMA', 'Medium-EMA', 'Long-EMA', 'Swing Signal']
@@ -181,6 +238,17 @@ def moving_average_swing_trade(fund: pd.DataFrame, function: str='ema', config=[
     else:
         filename = name +'/swing_trades_ema_{}.png'.format(name)
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4] , legend=['Swing Signal'], title=name2, saveFig=True, filename=filename)
+
+    mast = dict()
+    mast['tabular'] = {}
+    mast['tabular']['short'] = sh
+    mast['tabular']['medium'] = me
+    mast['tabular']['long'] = ln
+    mast['tabular']['swing'] = swings
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+
+    return mast
 
 
 

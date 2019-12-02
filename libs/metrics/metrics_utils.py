@@ -6,6 +6,8 @@ import json
 import os
 import pprint
 
+from libs.utils import ProgressBar
+
 SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
 ACCEPTED_ATTS = ['statistics', 
     'macd', 
@@ -13,13 +15,35 @@ ACCEPTED_ATTS = ['statistics',
     'relative_strength', 
     'mci', 
     'correlation',
-    'futures'
+    'futures',
+    'moving_average',
+    'swing_trade'
 ]
 
 """ Utilities for creating data metrics for plotting later """
 
-def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=False):
+def future_returns(fund: pd.DataFrame, **kwargs):
+    """
+    Future Returns      Logging data of "futures" time period vs. a past time period
+
+    args:
+        fund:           (pd.DataFrame) fund historical data
+
+    optional args:
+        futures         (list) list of time windows for future trading days; DEFAULT=[5, 15, 45, 90]
+        to_json         (bool) True outputs dates as json-stringifiable; DEFAULT=False
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        future:         (dict) future data
+    """
+    futures = kwargs.get('futures', [5, 15, 45, 90])
+    to_json = kwargs.get('to_json', False)
+    progress_bar = kwargs.get('progress_bar', None)
+
     fr_data = {}
+
+    increment = 1.0 / float(len(futures) + 1)
     for future in futures:
         f_data = []
         for i in range(len(fund['Close'])-future):
@@ -30,6 +54,7 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
         for i in range(future):
             f_data.append(0.0)
         fr_data[str(future)] = f_data.copy()
+        if progress_bar is not None: progress_bar.uptick(increment=increment)
     f_data = []
     for i in range(len(fund.index)):
         f_data.append(fund.index[i].strftime("%Y-%m-%d"))
@@ -39,6 +64,7 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
         df.set_index('index', inplace=True)
         return df 
     future = {'tabular': fr_data}
+    if progress_bar is not None: progress_bar.uptick(increment=increment)
     return future
 
 
@@ -125,7 +151,14 @@ def collate_data(job: dict, metadata: dict):
                         sub_keys = attr[key].keys()
                         for sub in sub_keys:
                             if type(attr[key][sub]) == dict:
-                                print(f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub].keys()}")
+                                sub_sub_keys = attr[key].keys()
+                                for sub_sub in sub_sub_keys:
+                                    if type(attr[key][sub][sub_sub]) == dict:
+                                        print(f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                    else:
+                                        new_name = [att, str(key), str(sub), str(sub_sub)]
+                                        new_name = '-'.join(new_name)
+                                        all_data[ticker][new_name] = attr[key][sub][sub_sub]
                             else:
                                 new_name = [att, str(key), str(sub)]
                                 new_name = '-'.join(new_name)

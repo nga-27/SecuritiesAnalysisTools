@@ -1,0 +1,30 @@
+{
+    "Sector": {
+        "Technology": "VGT",
+        "Communication Services": "VOX",
+        "Industrials": "VIS",
+        "Consumer Defensive": "VDC",
+        "Energy": "VDE",
+        "Healthcare": "VHT",
+        "Utilities": "VPU",
+        "Real Estate": "VNQ",
+        "Basic Materials": "VAW",
+        "Financials": "VFH",
+        "Financial Services": "VFH",
+        "Consumer Discretionary": "VCR",
+        "Consumer Cyclical": "VCR"
+    }, 
+    "Comparison": {
+        "VGT": ["AAPL", "MSFT", "V"],
+        "VOX": ["FB", "GOOG", "T"],
+        "VIS": ["BA", "HON", "UTX", "UNP"],
+        "VDC": ["PG", "KO", "PEP", "WMT"],
+        "VDE": ["XOM", "CVX"],
+        "VHT": ["JNJ", "UNH", "MRK", "PFE"],
+        "VPU": ["NEE", "DUK", "D", "SO"],
+        "VNQ": ["AMT", "CCI", "PLD"],
+        "VAW": ["LIN", "ECL", "SHW", "APD"],
+        "VFH": ["JPM", "BAC", "BRK-B", "WFC"],
+        "VCR": ["AMZN", "HD", "MCD"]
+    }
+}

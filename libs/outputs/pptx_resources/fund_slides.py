@@ -101,13 +101,13 @@ def add_fund_content(prs, fund: str, analysis: dict):
             width = Inches(10.5)
             slide.shapes.add_picture(content, left, top, height=height, width=width)
 
-        price_pt = analysis[fund]['statistics']['current_price']
-        price_chg_p = analysis[fund]['statistics']['current_percent_change']
-        price_chg = analysis[fund]['statistics']['current_change']
+        price_pt = np.round(analysis[fund]['statistics']['current_price'],2)
+        price_chg_p = np.round(analysis[fund]['statistics']['current_percent_change'],3)
+        price_chg = np.round(analysis[fund]['statistics']['current_change'],2)
         if price_chg > 0.0:
-            price_str = f"${price_pt} +{np.round(price_chg,2)} (+{np.round(price_chg_p,3)}%)"
+            price_str = f"${price_pt} +{price_chg} (+{price_chg_p}%)"
         else:
-            price_str = f"${price_pt} {np.round(price_chg,2)} ({np.round(price_chg_p,3)}%)"
+            price_str = f"${price_pt} {price_chg} ({price_chg_p}%)"
 
         # Slide #1 of content
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
