@@ -13,7 +13,9 @@ ACCEPTED_ATTS = ['statistics',
     'relative_strength', 
     'mci', 
     'correlation',
-    'futures'
+    'futures',
+    'moving_average',
+    'swing_trade'
 ]
 
 """ Utilities for creating data metrics for plotting later """
@@ -125,7 +127,14 @@ def collate_data(job: dict, metadata: dict):
                         sub_keys = attr[key].keys()
                         for sub in sub_keys:
                             if type(attr[key][sub]) == dict:
-                                print(f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub].keys()}")
+                                sub_sub_keys = attr[key].keys()
+                                for sub_sub in sub_sub_keys:
+                                    if type(attr[key][sub][sub_sub]) == dict:
+                                        print(f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                    else:
+                                        new_name = [att, str(key), str(sub), str(sub_sub)]
+                                        new_name = '-'.join(new_name)
+                                        all_data[ticker][new_name] = attr[key][sub][sub_sub]
                             else:
                                 new_name = [att, str(key), str(sub)]
                                 new_name = '-'.join(new_name)

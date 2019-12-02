@@ -148,11 +148,13 @@ def cluster_oscs( position: pd.DataFrame, **kwargs):
 
     cluster_oscs = {}
     
-    clusters = generate_cluster(position, function)
+    clusters = generate_cluster(position, function, p_bar=prog_bar)
 
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = windowed_ma_list(clusters, interval=3)
+    if prog_bar is not None: prog_bar.uptick(increment=0.1)
     dates = cluster_dates(clusters_wma, position) 
+    if prog_bar is not None: prog_bar.uptick(increment=0.2)
     cluster_oscs['clustered type'] = function
     cluster_oscs[function] = dates
     
@@ -165,7 +167,7 @@ def cluster_oscs( position: pd.DataFrame, **kwargs):
         dual_plotting(  y1=position['Close'], y2=clusters, y1_label='Price', y2_label='Clustered Oscillator', 
                         x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
-    if prog_bar is not None: prog_bar.uptick(increment=0.5)
+    if prog_bar is not None: prog_bar.uptick(increment=0.2)
 
     if wma:
         return clusters_wma, cluster_oscs

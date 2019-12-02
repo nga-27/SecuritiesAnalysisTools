@@ -130,6 +130,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
         legend:         (list) list of plot labels in legend; DEFAULT=[] 
         saveFig:        (bool) True will save as 'filename'; DEFAULT=False
         filename:       (str) path to save plot; DEFAULT='temp_generic_plot.png'
+        ylabel:         (str) label for y axis; DEFAULT=''
 
     returns:
         None
@@ -142,6 +143,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
     legend = kwargs.get('legend', [])
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_generic_plot')
+    ylabel = kwargs.get('ylabel', '')
 
     if len(colors) > 0:
         if len(colors) != len(list_of_plots):
@@ -176,6 +178,8 @@ def generic_plotting(list_of_plots: list, **kwargs):
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
+    if ylabel != '':
+        plt.ylabel(ylabel)
 
     plot_xaxis_disperse(ax)
 

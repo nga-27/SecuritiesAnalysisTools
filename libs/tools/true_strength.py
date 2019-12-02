@@ -4,8 +4,8 @@ import os
 
 from libs.utils import generic_plotting, shape_plotting
 from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list, date_extractor
-
-# Relative strength ratio 
+from libs.utils import ProgressBar
+from libs.utils import api_sector_match, api_sector_funds
 
 def basic_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
     ratio = []
@@ -58,7 +58,7 @@ def normalized_ratio_lists(fundA: list, fundB: list) -> list:
 
 
 
-def period_strength(fund_name: str, tickers: dict, periods: list, config: dict, sector: str='') -> list:
+def period_strength(fund_name: str, tickers: dict, periods: list, config: dict, sector: str='', sector_data: dict=None) -> list:
     """
     Try to provide ratio evaluations of 'fund' vs. market and sector
     Args:
@@ -75,8 +75,8 @@ def period_strength(fund_name: str, tickers: dict, periods: list, config: dict, 
     if sp is not None:
         hasSP = True
     if sector != '':
-        if sector in tickers.keys():
-            sec = tickers[sector]
+        if sector_data is not None:
+            sec = sector_data
             hasSector = True 
 
     fund = tickers[fund_name]
@@ -131,53 +131,120 @@ def get_SP500_df(tickers: dict, config: dict) -> pd.DataFrame:
     return None 
 
 
-def is_fund_match(fundA: pd.DataFrame, fundB: pd.DataFrame) -> bool:
-    lenA = len(fundA['Close'])
-    lenB = len(fundB['Close'])
-    if lenA == lenB:
-        indCheck = int(np.floor(float(lenA)/3.0))
-        if fundA['Close'][indCheck] == fundB['Close'][indCheck]:
-            indCheck = int(np.floor(float(lenA) / 4.0 * 3.0))
-            if fundA['Open'][indCheck] == fundB['Open'][indCheck]:
-                return True
-    return False 
+def relative_strength( primary_name: str, full_data_dict: dict, **kwargs ) -> dict:
+    """
+    Relative Strength:          Compare a fund vs. market, sector, and/or other fund
 
+    args:
+        primary_name:           (str) primary fund to compare against
+        full_data_dict:         (dict) all retrieved funds by fund name
 
-def relative_strength( fundA_name: str,  
-    full_data_dict: dict,
-    fundB_name: str='',
-    config: dict=None,
-    sector: str='', 
-    plot_output=True ) -> dict:
+    optional args:
+        secondary_fund_names:   (list) fund names to compare against; DEFAULT=[]
+        meta:                   (dict) "metadata" from api calls
+        config:                 (dict) control config dictionary of software package; DEFAULT=None
+        sector:                 (str) sector fund (if in full_data_dict) for comparison; DEFAULT=''
+        plot_output:            (bool) True to render plot in realtime; DEFAULT=True
+        progress_bar:           (ProgressBar) DEFAULT=None
+
+    returns:
+        r_strength:             (dict) contains all relative strength information
+    """
+    secondary_fund_names = kwargs.get('secondary_fund_names', [])
+    config = kwargs.get('config', None)
+    sector = kwargs.get('sector', '')
+    plot_output = kwargs.get('plot_output', True)
+    progress_bar = kwargs.get('progress_bar', None)
+    meta = kwargs.get('meta', None)
+    sector_data = kwargs.get('sector_data', {})
+
+    comp_funds = []
+    comp_data = {}
+    if meta is not None:
+        match = meta.get('info', {}).get('sector')
+        if match is not None:
+            fund_len = {
+                'length': len(full_data_dict[primary_name]['Close']), 
+                'start': full_data_dict[primary_name].index[0], 
+                'end': full_data_dict[primary_name].index[len(full_data_dict[primary_name]['Close'])-1]
+            }
+            match_fund, match_data = api_sector_match(match, config, fund_len=fund_len)
+            if match_fund is not None:
+                comp_funds, comp_data = api_sector_funds(match_fund, config, fund_len=fund_len)
+                if match_data is None:
+                    match_data = full_data_dict
+                sector = match_fund
+                sector_data = match_data
+
+    if progress_bar is not None: progress_bar.uptick(increment=0.3)
 
     r_strength = dict()
-    if fundB_name == '':
-        fundB_name = fundA_name
-    positionB = full_data_dict[fundB_name]
-    title = 'Strength: {} - {}'.format(fundA_name, fundB_name)
-    if sector == '':
-        sp = get_SP500_df(full_data_dict, config)
-        if sp is not None and is_fund_match(full_data_dict[fundA_name], full_data_dict[fundB_name]):
-            positionB = sp 
-            title = 'Strength: {} vs. ^GSPC'.format(fundA_name)
-            
-    rat = normalized_ratio(full_data_dict[fundA_name], positionB)
-    st = period_strength(fundA_name, full_data_dict, config=config, periods=[20, 50, 100], sector=sector)
 
-    r_strength['tabular'] = rat
-    r_strength['period'] = st
+    rat_sp = []
+    rat_sector = [] 
+    rat_secondaries = []
+    secondary_names = []
+    secondary_fund_names.extend(comp_funds)
+
+    for key in comp_data.keys():
+        if sector_data.get(key) is None:
+            sector_data[key] = comp_data[key]
+
+    sp = get_SP500_df(full_data_dict, config)
+    if sp is not None: 
+        rat_sp = normalized_ratio(full_data_dict[primary_name], sp)            
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
     
-    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
-    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
-    # length of plotting to accomodate.
+    if len(sector_data) > 0:
+        rat_sector = normalized_ratio(full_data_dict[primary_name], sector_data[sector])
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+
+    if len(secondary_fund_names) > 0:
+        for sfund in secondary_fund_names:
+            if full_data_dict.get(sfund) is not None:
+                rat_secondaries.append(normalized_ratio(full_data_dict[primary_name], full_data_dict[sfund]))
+                secondary_names.append(sfund)
+            elif sector_data.get(sfund) is not None:
+                rat_secondaries.append(normalized_ratio(full_data_dict[primary_name], sector_data[sfund]))
+                secondary_names.append(sfund)
+    if progress_bar is not None: progress_bar.uptick(increment=0.2)
+
+    st = period_strength(primary_name, full_data_dict, config=config, periods=[20, 50, 100], sector=sector, sector_data=sector_data.get(sector, None))
+
+    r_strength['market'] = {'tabular': rat_sp, 'comparison': 'S&P500'}
+    r_strength['sector'] = {'tabular': rat_sector, 'comparison': sector}
+    r_strength['period'] = st
+    r_strength['secondary'] = [{'tabular': second, 'comparison': secondary_names[i]} for i, second in enumerate(rat_secondaries)]
+    
     dates = dates_extractor_list(full_data_dict[list(full_data_dict.keys())[0]])
-    if len(rat) < len(dates):
-        dates = dates[0:len(rat)]
+    if len(rat_sp) < len(dates):
+        dates = dates[0:len(rat_sp)]
+
+    output_data = []
+    legend = []
+    if len(rat_sp) > 0: 
+        output_data.append(rat_sp)
+        legend.append("vs. S&P 500")
+    if len(rat_sector) > 0: 
+        output_data.append(rat_sector)
+        legend.append(f"vs. Sector ({sector})")
+    if len(rat_secondaries) > 0:
+        for i, rat in enumerate(rat_secondaries):
+            output_data.append(rat)
+            legend.append(f"vs. {secondary_names[i]}")
+
+    r_strength['tabular'] = {}
+    for i, out_data in enumerate(output_data):
+        r_strength['tabular'][str(legend[i])] = out_data
+
+    title = f"Relative Strength of {primary_name}"
+    if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
     if plot_output:
-        generic_plotting([rat], x=dates, title=title)
+        generic_plotting(output_data, x=dates, title=title, legend=legend, ylabel='Difference Ratio')
     else:
-        filename = fundA_name +'/relative_strength_{}.png'.format(fundA_name)
-        generic_plotting([rat], x=dates, title=title, saveFig=True, filename=filename)
+        filename = primary_name +'/relative_strength_{}.png'.format(primary_name)
+        generic_plotting(output_data, x=dates, title=title, saveFig=True, filename=filename, legend=legend, ylabel='Difference Ratio')
 
+    if progress_bar is not None: progress_bar.uptick(increment=0.2)
     return r_strength

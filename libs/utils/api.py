@@ -1,12 +1,16 @@
 import yfinance as yf 
 import pandas as pd 
 import numpy as np 
+import json 
+import os
+import pprint
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 import libs.utils.stable_yf as styf
 from .progress_bar import ProgressBar
+from .data import download_single_fund, download_data_indexes
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -139,17 +143,32 @@ AVAILABLE_KEYS = {
     "recommendations": get_recommendations
 }
 
-def get_api_metadata(fund_ticker: str, pb: ProgressBar=None):
+
+def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
+    """
+    Get Api Metadata
+
+    args:
+        fund_ticker:    (str) fund name
+
+    optional args:
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        metadata:       (dict) contains all financial metadata available
+    """
+    pb = kwargs.get('progress_bar', None)
+
     metadata = {}
     ticker = yf.Ticker(fund_ticker)
     if pb is not None: pb.uptick(increment=0.2)
     st_tick = styf.Ticker(fund_ticker)
-    if pb is not None: pb.uptick(increment=0.2)
+    if pb is not None: pb.uptick(increment=0.3)
 
     metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
     metadata['info'] = AVAILABLE_KEYS.get('info')(ticker, st_tick)
 
-    if pb is not None: pb.uptick(increment=0.25)
+    if pb is not None: pb.uptick(increment=0.2)
     
     metadata['financials'] = AVAILABLE_KEYS.get('financials')(ticker, st_tick)
     metadata['balance_sheet'] = AVAILABLE_KEYS.get('balance')(ticker, st_tick)
@@ -163,7 +182,7 @@ def get_api_metadata(fund_ticker: str, pb: ProgressBar=None):
     metadata['recommendations']['tabular'] = calculate_recommendation_curve(metadata['recommendations'])
     # EPS needs some other figures to make it correct, but ok for now.
     metadata['eps'] = calculate_eps(metadata)
-    if pb is not None: pb.uptick(increment=0.25)
+    if pb is not None: pb.uptick(increment=0.2)
 
     return metadata
 
@@ -245,4 +264,41 @@ def calculate_eps(meta: dict) -> dict:
             eps['eps'].append(np.round(earn / shares, 3))
 
     return eps
-    
+
+
+def api_sector_match(sector: str, config: dict, fund_len=None):
+    sector_match_file = "resources/sectors.json"
+    if not os.path.exists(sector_match_file):
+        print(f"Warning: sector file '{sector_match_file}' not found.")
+        return None, None
+
+    with open(sector_match_file) as f:
+        matcher = json.load(f)
+        matched = matcher.get("Sector", {}).get(sector)
+        if matched is None:
+            return None, None 
+        
+        tickers = config.get('tickers', '').split(' ')
+        if matched in tickers:
+            return matched, None
+        fund_data = download_single_fund(matched, config, fund_len=fund_len)
+        return matched, fund_data
+
+
+def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
+    sector_match_file = "resources/sectors.json"
+    if not os.path.exists(sector_match_file):
+        print(f"Warning: sector file '{sector_match_file}' not found.")
+        return [], {}
+
+    if sector_fund is None:
+        return [], {}
+    with open(sector_match_file) as f:
+        matcher = json.load(f)
+        matched = matcher.get("Comparison", {}).get(sector_fund)
+        if matched is None:
+            return [], {}
+        
+        tickers = ' '.join(matched)
+        fund_data, _ = download_data_indexes(indexes=matched, tickers=tickers, fund_len=fund_len)
+        return matched, fund_data

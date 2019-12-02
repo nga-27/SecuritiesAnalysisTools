@@ -52,7 +52,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.20'
-_DATE_REVISION_ = '2019-11-24'
+_DATE_REVISION_ = '2019-12-01'
 ################################
 PROCESS_STEPS_DEV = 12
 
@@ -107,7 +107,7 @@ def technical_analysis(config: dict):
         p = ProgressBar(config['process_steps'], name=fund_name)
         p.start()
 
-        analysis[fund_name]['metadata'] = get_api_metadata(fund_name, pb=p)
+        analysis[fund_name]['metadata'] = get_api_metadata(fund_name, progress_bar=p)
 
         analysis[fund_name]['statistics'] = get_high_level_stats(fund)
 
@@ -116,22 +116,18 @@ def technical_analysis(config: dict):
 
         analysis[fund_name]['rsi'] = RSI(fund, name=fund_name, plot_output=True, out_suppress=True, progress_bar=p)
 
-        analysis[fund_name]['obv'] = on_balance_volume(fund, plot_output=False, name=fund_name)
-        p.uptick()
+        analysis[fund_name]['obv'] = on_balance_volume(fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        triple_moving_average(fund, plot_output=False, name=fund_name)
-        p.uptick()
+        analysis[fund_name]['moving_average'] = triple_moving_average(fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        moving_average_swing_trade(fund, plot_output=False, name=fund_name)
-        p.uptick()
+        analysis[fund_name]['swing_trade'] = moving_average_swing_trade(fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        analysis[fund_name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=False, name=fund_name)
-        p.uptick()
+        analysis[fund_name]['macd'] = mov_avg_convergence_divergence(fund, plot_output=False, name=fund_name, progress_bar=p)
 
         if 'no_index' not in config['state']:
             analysis[fund_name]['relative_strength'] = relative_strength(   fund_name, full_data_dict=data, config=config, 
-                                                                            plot_output=False)
-            p.uptick()
+                                                                            plot_output=False, meta=analysis[fund_name]['metadata'],
+                                                                            progress_bar=p)
             beta, rsqd = beta_comparison(fund, data['^GSPC'])
             analysis[fund_name]['beta'] = beta 
             analysis[fund_name]['r_squared'] = rsqd
