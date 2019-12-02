@@ -147,8 +147,7 @@ def technical_analysis(config: dict):
         analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False, progress_bar=p)
 
         # Various Fund-specific Metrics
-        analysis[fund_name]['futures'] = future_returns(fund, to_json=True)
-        p.uptick()
+        analysis[fund_name]['futures'] = future_returns(fund, to_json=True, progress_bar=p)
 
         p.end()
 
@@ -156,9 +155,9 @@ def technical_analysis(config: dict):
     # test_competitive(data, analysis)
 
     analysis['_METRICS_'] = {}
-    analysis['_METRICS_']['mci'] = market_composite_index(config=config)
+    analysis['_METRICS_']['mci'] = market_composite_index(config=config, plot_output=False)
 
-    bond_composite_index(config=config)
+    bond_composite_index(config=config, plot_output=False)
     
     analysis['_METRICS_']['correlation'] = correlation_composite_index(config=config, plot_output=False)
 

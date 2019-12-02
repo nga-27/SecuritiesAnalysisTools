@@ -133,6 +133,17 @@ def bull_bear_th(osc, start, thresh, bull_bear='bull'):
 
 
 def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> list:
+    """
+    Beta Comparison 
+
+    args:
+        fund:           (pd.DataFrame) fund historical data
+        benchmark:      (pd.DataFrame) a particular benchmark's fund historical data
+
+    returns:
+        beta:           (float) 
+        rsqd:           (float)
+    """
     tot_len = len(fund['Close'])
     if pd.isna(fund['Close'][len(fund['Close'])-1]):
         tot_len -= 1

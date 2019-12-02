@@ -107,8 +107,26 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 
     return trend_analysis
 
 
-def get_trendlines( fund: pd.DataFrame, plot_output: bool=True,
-                    name: str='', interval: list=[4, 8, 16, 32], progress_bar: ProgressBar=None ):
+def get_trendlines( fund: pd.DataFrame, **kwargs ):
+    """
+    Get Trendlines
+
+    args:
+        fund:           (pd.DataFrame) fund historical data
+
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        interval:       (list of ints) list of trend window time periods; DEFAULT=[4, 8, 16, 32]
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        analysis_list:  (list) contains all trend lines determined by algorithm
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    interval = kwargs.get('interval', [4, 8, 16, 32])
+    progress_bar = kwargs.get('progress_bar', None)
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)

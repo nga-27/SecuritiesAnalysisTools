@@ -6,6 +6,8 @@ import json
 import os
 import pprint
 
+from libs.utils import ProgressBar
+
 SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
 ACCEPTED_ATTS = ['statistics', 
     'macd', 
@@ -20,8 +22,28 @@ ACCEPTED_ATTS = ['statistics',
 
 """ Utilities for creating data metrics for plotting later """
 
-def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=False):
+def future_returns(fund: pd.DataFrame, **kwargs):
+    """
+    Future Returns      Logging data of "futures" time period vs. a past time period
+
+    args:
+        fund:           (pd.DataFrame) fund historical data
+
+    optional args:
+        futures         (list) list of time windows for future trading days; DEFAULT=[5, 15, 45, 90]
+        to_json         (bool) True outputs dates as json-stringifiable; DEFAULT=False
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        future:         (dict) future data
+    """
+    futures = kwargs.get('futures', [5, 15, 45, 90])
+    to_json = kwargs.get('to_json', False)
+    progress_bar = kwargs.get('progress_bar', None)
+
     fr_data = {}
+
+    increment = 1.0 / float(len(futures) + 1)
     for future in futures:
         f_data = []
         for i in range(len(fund['Close'])-future):
@@ -32,6 +54,7 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
         for i in range(future):
             f_data.append(0.0)
         fr_data[str(future)] = f_data.copy()
+        if progress_bar is not None: progress_bar.uptick(increment=increment)
     f_data = []
     for i in range(len(fund.index)):
         f_data.append(fund.index[i].strftime("%Y-%m-%d"))
@@ -41,6 +64,7 @@ def future_returns(fund: pd.DataFrame, futures: list=[5, 15, 45, 90], to_json=Fa
         df.set_index('index', inplace=True)
         return df 
     future = {'tabular': fr_data}
+    if progress_bar is not None: progress_bar.uptick(increment=increment)
     return future
 
 

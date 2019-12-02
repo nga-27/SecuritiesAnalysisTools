@@ -148,7 +148,24 @@ def composite_correlation(data: dict, sectors: list, composite_osc=None, progres
     return correlations
 
 
-def market_composite_index(config: dict=None, period=None, plot_output=False) -> dict:
+def market_composite_index(**kwargs) -> dict:
+    """
+    Market Composite Index (MCI)
+
+    args:
+
+    optional args:
+        config:         (dict) controlling config dictionary; DEFAULT=None
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        period:         (str) time period for data (e.g. '2y'); DEFAULT=None
+
+    returns:
+        mci:            (dict) contains all mci information 
+    """
+    config = kwargs.get('config')
+    period = kwargs.get('period')
+    plot_output = kwargs.get('plot_output', True)
+
     if config is not None:
         period = config['period']
         properties = config['properties']

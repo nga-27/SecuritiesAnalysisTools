@@ -314,11 +314,27 @@ def remove_dates_from_close(df: pd.DataFrame) -> list:
     return fixed_list
 
 
-def find_resistance_support_lines(  data: pd.DataFrame, 
-                                    plot_output: bool=True,
-                                    name: str='',
-                                    timeframes: list=[13, 21, 34, 55],
-                                    progress_bar: ProgressBar=None) -> dict:
+def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
+    """
+    Find Resistance / Support Lines
+
+    args:
+        data:           (pd.DataFrame) fund historical data
+
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        timeframes:     (list) time windows for feature discovery; DEFAULT=[13, 21, 34, 55]
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        analysis:       (dict) contains all trendline information
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    timeframes = kwargs.get('timeframes', [13, 21, 34, 55])
+    progress_bar = kwargs.get('progress_bar', None)
+
     resist_support_lines = {}
     resist_support_lines['support'] = {}
     resist_support_lines['resistance'] = {}
