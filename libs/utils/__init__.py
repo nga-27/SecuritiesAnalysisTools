@@ -12,3 +12,5 @@ from .plotting import dual_plotting, generic_plotting, bar_chart, specialty_plot
 from .plotting import candlestick
 
 from .progress_bar import ProgressBar
+
+from .constants import TEXT_COLOR_MAP, SP500

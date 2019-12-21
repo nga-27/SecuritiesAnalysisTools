@@ -19,7 +19,7 @@ _DATE_REVISION_ = '2019-12-01'
 ################################
 
 # Imports that create final products and show progress doing so
-from libs.utils import start_header
+from libs.utils import start_header, TEXT_COLOR_MAP
 
 # Imports that run operations and functions for the program
 from releases.release_1 import technical_analysis as r1
@@ -27,6 +27,9 @@ from releases.prod import technical_analysis as prod
 from releases.dev import technical_analysis as dev
 
 class App:
+
+    normal_color = TEXT_COLOR_MAP["white"]
+    prod_color = TEXT_COLOR_MAP["green"]
 
     def __init__(self):
         self.config = dict()
@@ -37,7 +40,7 @@ class App:
 
         if 'run' in self.config['state']:
             self.config['release'] = False
-            print("~~~~ PRODUCTION ENVIRONMENT ~~~~")
+            print(f"{self.prod_color}~~~~ PRODUCTION ENVIRONMENT ~~~~{self.normal_color}")
             print(" ")
             prod(self.config)
 

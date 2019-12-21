@@ -8,16 +8,22 @@ import glob
 import time
 import json 
 
+from .constants import TEXT_COLOR_MAP
+
+outline_color = TEXT_COLOR_MAP["blue"]
+normal_color = TEXT_COLOR_MAP["white"]
+author_color = TEXT_COLOR_MAP["purple"]
+
 def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI', options: str=None) -> dict:
     print(" ")
-    print("----------------------------------")
-    print("-   Securities Analysis Tools    -")
-    print("-                                -")
-    print("-            nga-27              -")
-    print("-                                -")
-    print(f"-       version: {version}          -")
-    print(f"-       updated: {update_release}      -")
-    print("----------------------------------")
+    print(f"{outline_color}----------------------------------")
+    print(f"-{normal_color}   Securities Analysis Tools    {outline_color}-")
+    print(f"-                                -")
+    print(f"-{author_color}            nga-27              {outline_color}-")
+    print(f"-                                -")
+    print(f"-{normal_color}       version: {version}          {outline_color}-")
+    print(f"-{normal_color}       updated: {update_release}      {outline_color}-")
+    print(f"----------------------------------{normal_color}")
     print(" ")
 
     time.sleep(1)

@@ -29,6 +29,7 @@ from libs.features import feature_detection_head_and_shoulders, feature_plotter
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 from libs.utils import download_data, has_critical_error, get_api_metadata
+from libs.utils import TEXT_COLOR_MAP, SP500
 
 # Imports that control function-only inputs
 from libs.functions import only_functions_handler
@@ -51,10 +52,13 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.20'
-_DATE_REVISION_ = '2019-12-01'
+_VERSION_ = '0.1.21'
+_DATE_REVISION_ = '2019-12-21'
 ################################
 PROCESS_STEPS_DEV = 12
+
+header_color = TEXT_COLOR_MAP["blue"]
+normal_color = TEXT_COLOR_MAP["white"]
 
 def technical_analysis(config: dict):
 
@@ -62,7 +66,7 @@ def technical_analysis(config: dict):
     if config['release'] == True:
         # Use only after release!
         print(" ")
-        print("~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]")
+        print(f"{header_color}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{normal_color}")
         config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
         config['process_steps'] = PROCESS_STEPS_DEV
 
@@ -94,7 +98,9 @@ def technical_analysis(config: dict):
     for fund_name in funds:
         
         fund = data[fund_name]
-        print(f"~~{fund_name}~~")
+        fund_print = SP500.get(fund_name, fund_name)
+        print("")
+        print(f"~~{fund_print}~~")
         create_sub_temp_dir(fund_name)
 
         analysis[fund_name] = {}
@@ -104,7 +110,7 @@ def technical_analysis(config: dict):
         analysis[fund_name]['dates_covered'] = {'start': str(start), 'end': str(end)} 
         analysis[fund_name]['name'] = fund_name
 
-        p = ProgressBar(config['process_steps'], name=fund_name)
+        p = ProgressBar(config['process_steps'], name=fund_print)
         p.start()
 
         analysis[fund_name]['metadata'] = get_api_metadata(fund_name, progress_bar=p)

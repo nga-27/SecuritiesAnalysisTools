@@ -10,6 +10,7 @@ from libs.outputs.pptx_resources import make_fund_slides
 def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
     """ High-level function for converting inventors spreadsheet to slides """
 
+    print("")
     print("Starting presentation creation.")
     if config is not None:
         year = config['date_release'].split('-')[0]
