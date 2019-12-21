@@ -13,10 +13,17 @@ from .constants import TEXT_COLOR_MAP
 outline_color = TEXT_COLOR_MAP["blue"]
 normal_color = TEXT_COLOR_MAP["white"]
 author_color = TEXT_COLOR_MAP["purple"]
+
 opt_title_color = TEXT_COLOR_MAP["green"]
 opt_name_color = TEXT_COLOR_MAP["cyan"]
 
+logo_main_color = TEXT_COLOR_MAP["purple_bold"]
+logo_other_color = TEXT_COLOR_MAP["blue_bold"]
+logo_copyrt_color = TEXT_COLOR_MAP["green_bold"]
+
 def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI', options: str=None) -> dict:
+    logo_renderer()
+
     print(" ")
     print(f"{outline_color}----------------------------------")
     print(f"-{normal_color}   Securities Analysis Tools    {outline_color}-")
@@ -172,6 +179,26 @@ def header_options_print(options_read_lines):
         print(nline)
     # print(options_read)
     print(" ")
+
+
+def logo_renderer():
+    MAIN_LOGO_LINES = 8
+    logo_file = 'resources/logo.txt'
+    if os.path.exists(logo_file):
+        fs = open(logo_file, 'r')
+        logo_lines = fs.readlines()
+        fs.close()
+        print(" ")
+        for i, line in enumerate(logo_lines):
+            if i < MAIN_LOGO_LINES:
+                line = line.replace("\n", "")
+                line = line.replace("{", f"{logo_other_color}")
+                line = f"{logo_main_color}{line}{normal_color}"
+            else:
+                line = f"{logo_copyrt_color}{line}{normal_color}"
+            print(line)
+        print("\r\n\r\n")
+        time.sleep(1)
 
 
 ####################################################################
