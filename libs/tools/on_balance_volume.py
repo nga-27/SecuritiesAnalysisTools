@@ -4,7 +4,7 @@ from datetime import datetime
 
 from .moving_average import simple_ma_list, exponential_ma_list, windowed_ma_list
 from libs.utils import generic_plotting, dual_plotting, bar_chart
-from libs.utils import dates_extractor_list, ProgressBar
+from libs.utils import dates_extractor_list, ProgressBar, SP500
 
 def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: float=2.5, name='', progress_bar=None) -> list:
 
@@ -61,7 +61,8 @@ def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: flo
     if progress_bar is not None: progress_bar.uptick(increment=0.125)
 
     x = dates_extractor_list(fund)
-    name2 = name + ' - On Balance Volume'
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - On Balance Volume'
     if plot_output:
         dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price', y2_label='On Balance Volume', x_label='Trading Days', title=name2)
         dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2)

@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-from libs.utils import date_extractor, shape_plotting, generic_plotting
+from libs.utils import date_extractor, shape_plotting, generic_plotting, SP500
 
 def local_extrema(filtered: list, raw=False) -> dict:
     """
@@ -185,8 +185,9 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_an
     """
     Plots a rectangle of where the feature was detected overlayed on the ticker signal.
     """
+    name2 = SP500.get(name, name)
     filename = name + f'/{feature}_{name}.png'
-    title = f'{name} Feature Detection: '
+    title = f'{name2} Feature Detection: '
     if feature == 'head_and_shoulders':
         title += 'Head and Shoulders'
 

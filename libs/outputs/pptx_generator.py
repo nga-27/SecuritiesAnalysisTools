@@ -5,7 +5,10 @@ from libs.outputs.pptx_resources import title_presentation
 from libs.outputs.pptx_resources import intro_slide 
 from libs.outputs.pptx_resources import make_BCI_slides, make_MCI_slides, make_CCI_slides
 from libs.outputs.pptx_resources import make_fund_slides
+from libs.utils import TEXT_COLOR_MAP
 
+pptx_name_color = TEXT_COLOR_MAP["purple"]
+normal_color = TEXT_COLOR_MAP["white"]
 
 def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
     """ High-level function for converting inventors spreadsheet to slides """
@@ -38,4 +41,4 @@ def slide_creator(analysis: dict, config: dict=None, year=None, version=None):
     title = f"Financial Analysis {year}.pptx"
     prs.save(f"{out_dir}{title}")
     
-    print(f"Presentation '{title}' created.")
+    print(f"Presentation '{pptx_name_color}{title}{normal_color}' created.")

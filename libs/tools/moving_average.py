@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np 
 import math 
 
-from libs.utils import generic_plotting, specialty_plotting
+from libs.utils import generic_plotting, specialty_plotting, SP500
 
 def exponential_ma(fund: pd.DataFrame, interval: int) -> list:
     ema = []
@@ -131,7 +131,8 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         tlong.append(np.mean(fund['Close'][i-config[2]:i+1]))
     if progress_bar is not None: progress_bar.uptick(increment=0.5)
 
-    name2 = name + ' - Simple Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Simple Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
     legend = ['Price', f'{config[0]}-SMA', f'{config[1]}-SMA', f'{config[2]}-SMA']
     if plot_output:
         generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2)
@@ -157,7 +158,8 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], plot_output=T
     tmed = exponential_ma(fund, config[1])
     tlong = exponential_ma(fund, config[2])
 
-    name2 = name + ' - Exp Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Exp Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
     legend = ['Price', f'{config[0]}-EMA', f'{config[1]}-EMA', f'{config[2]}-EMA']
     if plot_output:
         generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2)
@@ -231,7 +233,8 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
         if i in pb:
             if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
-    name2 = name + ' - Swing Trade EMAs'
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Swing Trade EMAs'
     legend = ['Price', 'Short-EMA', 'Medium-EMA', 'Long-EMA', 'Swing Signal']
     if plot_output:
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4] , legend=legend, title=name2)

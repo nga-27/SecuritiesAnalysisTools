@@ -4,6 +4,8 @@ from pptx.dml.color import RGBColor
 from datetime import datetime
 import os 
 
+from libs.utils import SP500
+
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
 TITLE_CONTENT_SLIDE = 1
@@ -17,6 +19,8 @@ PICTURE_W_CAPTION_SLIDE = 8
 
 
 def slide_title_header(slide, fund: str, include_time=True, price_details=''):
+    fund = SP500.get(fund, fund)
+    
     left = Inches(0) #Inches(3.86)
     top = Inches(0)
     width = height = Inches(0.5)

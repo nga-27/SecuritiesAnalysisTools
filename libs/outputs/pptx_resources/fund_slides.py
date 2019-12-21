@@ -8,7 +8,7 @@ import os
 import glob 
 import datetime
 
-from libs.utils import fund_list_extractor, windows_compatible_file_parse
+from libs.utils import fund_list_extractor, windows_compatible_file_parse, SP500
 from libs.tools import trend_simple_forecast
 
 from .slide_utils import slide_title_header, color_to_RGB
@@ -37,6 +37,8 @@ def add_fund_content(prs, fund: str, analysis: dict):
     content_dir = f'output/temp/{fund}/'
     if os.path.exists(content_dir):
         # Title slide for a fund
+        fund_name = SP500.get(fund, fund)
+
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         top = Inches(0.1)
         left = Inches(4)
@@ -47,7 +49,7 @@ def add_fund_content(prs, fund: str, analysis: dict):
 
         p = text_frame.paragraphs[0]
         p.alignment = PP_ALIGN.CENTER
-        p.text = f'{fund}'
+        p.text = f'{fund_name}'
         p.font.bold = True
         p.font.size = Pt(60)
         p.font.name = 'Arial'

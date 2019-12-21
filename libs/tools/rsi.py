@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting, date_extractor
+from libs.utils import dual_plotting, date_extractor, SP500
 
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14, p_bar=None) -> list:
@@ -193,13 +193,14 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, p
     rsi_swings['tabular'] = RSI
 
     if not out_suppress:
-        name2 = name + ' - RSI'
+        name3 = SP500.get(name, name)
+        name2 = name3 + ' - RSI'
         if plot_output:
             dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', title=name2)
             dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', title=name2)
         else:
-            filename1 = name +'/RSI_{}.png'.format(name)
-            filename2 = name +'/RSI_indicator_{}.png'.format(name)
+            filename1 = name + '/RSI_{}.png'.format(name)
+            filename2 = name + '/RSI_indicator_{}.png'.format(name)
             dual_plotting(  position['Close'], RSI, 'Position Price', 'RSI', 
                             title=name2, saveFig=True, filename=filename1)
             dual_plotting(  position['Close'], plotting, 'Position Price', 'RSI Indicators', 

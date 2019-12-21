@@ -13,6 +13,8 @@ from .constants import TEXT_COLOR_MAP
 outline_color = TEXT_COLOR_MAP["blue"]
 normal_color = TEXT_COLOR_MAP["white"]
 author_color = TEXT_COLOR_MAP["purple"]
+opt_title_color = TEXT_COLOR_MAP["green"]
+opt_name_color = TEXT_COLOR_MAP["cyan"]
 
 def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI', options: str=None) -> dict:
     print(" ")
@@ -153,6 +155,25 @@ def ticker_list_to_str(ticker_list: list) -> str:
         tick_str += tick + ' '
     return tick_str
 
+
+def header_options_print(options_read_lines):
+    print(" ")
+    for line in options_read_lines:
+        nline = line.replace("\n", "")
+        if len(nline) > 0:
+            if nline[0].isupper():
+                # Pattern 1 - Title lines of options
+                nline = f"{opt_title_color}{nline}{normal_color}"
+            else:
+                # Pattern 2 - Individual names colorized
+                if '{' in nline:
+                    nline = nline.replace("{", f"{opt_name_color}")
+                    nline = nline.replace("}", f"{normal_color}")
+        print(nline)
+    # print(options_read)
+    print(" ")
+
+
 ####################################################################
 
 def header_options_parse(input_str: str, config: dict) -> list:
@@ -166,11 +187,9 @@ def header_options_parse(input_str: str, config: dict) -> list:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
             fs = open(options_file, 'r')
-            options_read = fs.read()
+            options_read = fs.readlines() #fs.read()
             fs.close()
-            print(" ")
-            print(options_read)
-            print(" ")
+            header_options_print(options_read)
         else:
             print(f"ERROR - NO {options_file} found.")
             print(" ")

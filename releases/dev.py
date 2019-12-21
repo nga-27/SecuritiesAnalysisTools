@@ -147,7 +147,7 @@ def technical_analysis(config: dict):
         analysis[fund_name]['features']['head_shoulders'] = feature_detection_head_and_shoulders(fund, name=fund_name, plot_output=False, progress_bar=p)
 
         filename = f"{fund_name}/candlestick_{fund_name}"
-        candlestick(fund, title=fund_name, filename=filename, saveFig=True, progress_bar=p)
+        candlestick(fund, title=fund_print, filename=filename, saveFig=True, progress_bar=p)
 
         # Get Trendlines
         analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False, progress_bar=p)

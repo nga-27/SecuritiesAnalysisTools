@@ -6,7 +6,7 @@ import warnings, pprint, math
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
-from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
+from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
 
 from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
 
@@ -226,12 +226,13 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     Y.append(fund['Close'])
     C.append('black')
     
+    name2 = SP500.get(name, name)
     if plot_output:
-        generic_plotting(Y, x=X, colors=C, title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+        generic_plotting(Y, x=X, colors=C, title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
     else:
         filename = f"{name}/trendline_{name}.png"
         generic_plotting(Y, x=X, colors=C, 
-                            title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                            title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
                             saveFig=True, filename=filename)
 
     if progress_bar is not None: progress_bar.uptick(increment=0.2)

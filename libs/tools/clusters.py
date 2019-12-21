@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import dual_plotting, date_extractor, ProgressBar
+from libs.utils import dual_plotting, date_extractor, ProgressBar, SP500
 
 from .ultimate_oscillator import ultimate_oscillator 
 from .rsi import RSI
@@ -158,7 +158,8 @@ def cluster_oscs( position: pd.DataFrame, **kwargs):
     cluster_oscs['clustered type'] = function
     cluster_oscs[function] = dates
     
-    name2 = name + ' - Clustering: ' + function
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Clustering: ' + function
     if plot_output:
         dual_plotting(position['Close'], clusters, 'Position Price', 'Clustered Oscillator', x_label='Trading Days', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
