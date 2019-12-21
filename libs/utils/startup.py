@@ -22,8 +22,6 @@ logo_other_color = TEXT_COLOR_MAP["blue_bold"]
 logo_copyrt_color = TEXT_COLOR_MAP["green_bold"]
 
 def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI', options: str=None) -> dict:
-    logo_renderer()
-
     print(" ")
     print(f"{outline_color}----------------------------------")
     print(f"-{normal_color}   Securities Analysis Tools    {outline_color}-")

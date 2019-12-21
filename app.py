@@ -19,7 +19,7 @@ _DATE_REVISION_ = '2019-12-01'
 ################################
 
 # Imports that create final products and show progress doing so
-from libs.utils import start_header, TEXT_COLOR_MAP
+from libs.utils import start_header, TEXT_COLOR_MAP, logo_renderer
 
 # Imports that run operations and functions for the program
 from releases.release_1 import technical_analysis as r1
@@ -36,6 +36,7 @@ class App:
         self.isEnabled = True
 
     def run(self):
+        logo_renderer()
         self.config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
 
         if 'run' in self.config['state']:
