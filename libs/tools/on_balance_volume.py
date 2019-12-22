@@ -5,6 +5,7 @@ from datetime import datetime
 from .moving_average import simple_ma_list, exponential_ma_list, windowed_ma_list
 from libs.utils import generic_plotting, dual_plotting, bar_chart
 from libs.utils import dates_extractor_list, ProgressBar, SP500
+from .trends import get_trendlines
 
 def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: float=2.5, name='', progress_bar=None) -> list:
 
@@ -99,16 +100,22 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     filter_factor = kwargs.get('filter_factor', 5.0)
     progress_bar = kwargs.get('progress_bar', None)
 
-    _, ofilter = generate_obv_signal(fund, plot_output=plot_output, filter_factor=filter_factor, name=name, progress_bar=progress_bar)
+    obv, ofilter = generate_obv_signal(fund, plot_output=plot_output, filter_factor=filter_factor, name=name, progress_bar=progress_bar)
     dates = [index.strftime('%Y-%m-%d') for index in fund.index] 
-    
-    # fund_wma = windowed_ma_list(list(fund['Close']), interval=6)
-    # obv_wma = windowed_ma_list(obv, interval=6)
 
-    # TODO: (?) apply trend analysis to find divergences
+    # Apply trend analysis to find divergences
+    data = dict()
+    data['Close'] = obv 
+    data['index'] = fund.index
+    data2 = pd.DataFrame.from_dict(data)
+    data2.set_index('index', inplace=True)
+
     obv_dict = dict()
     obv_dict['tabular'] = ofilter
     obv_dict['dates'] = dates
+
+    sub_name = f"obv_{name}"
+    obv_dict['trends'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[2,4,7,11])
 
     return obv_dict 
 

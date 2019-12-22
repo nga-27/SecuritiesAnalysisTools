@@ -127,6 +127,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     plot_output = kwargs.get('plot_output', True)
     interval = kwargs.get('interval', [4, 8, 16, 32])
     progress_bar = kwargs.get('progress_bar', None)
+    sub_name = kwargs.get('sub_name', name)
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -230,7 +231,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     if plot_output:
         generic_plotting(Y, x=X, colors=C, title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
     else:
-        filename = f"{name}/trendline_{name}.png"
+        filename = f"{name}/trendline_{sub_name}.png"
         generic_plotting(Y, x=X, colors=C, 
                             title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
                             saveFig=True, filename=filename)
