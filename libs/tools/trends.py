@@ -272,6 +272,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             while (count < len(mins_x)) and (mins_x[count] < start):
                 count += 1
                 st_count = count
+            end_count = st_count
             while (count < len(mins_x)) and (mins_x[count] < end):
                 count += 1
                 end_count = count

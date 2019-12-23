@@ -132,6 +132,11 @@ def add_fund_content(prs, fund: str, analysis: dict):
         slide = slide_title_header(slide, fund, price_details=price_str)
         indexes.append(len(prs.slides)-1)
 
+        # Slide #5 of content
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = slide_title_header(slide, fund, price_details=price_str)
+        indexes.append(len(prs.slides)-1)
+
         content = content_dir + '*.png'
         pics = glob.glob(content)
         fund_analysis = analysis[fund]
@@ -164,7 +169,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'simple_moving_averages' in part:
+        if 'obv2' in part:
             left = Inches(0.0)
             top = Inches(4.1)
             height = Inches(3.0)
@@ -201,7 +206,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             width = Inches(6.5)
             prs.slides[slide_indices[1]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'head_and_shoulders' in part:
+        if 'simple_moving_averages' in part:
             left = Inches(6.5)
             top = Inches(4.1)
             height = Inches(3.0)
@@ -210,18 +215,27 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
 
         # Slide #3
 
+        if 'head_and_shoulders' in part:
+            left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        # Slide #4
+
         if 'resist_support' in part:
             left = Inches(0)
             top = Inches(1.55)
             height = Inches(4.7)
             width = Inches(7)
-            prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
+            prs.slides[slide_indices[3]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
             left = Inches(7)
             top = Inches(0.25)
             height = Inches(4.7)
             width = Inches(4)
-            txbox = prs.slides[slide_indices[2]].shapes.add_textbox(left, top, width, height)
+            txbox = prs.slides[slide_indices[3]].shapes.add_textbox(left, top, width, height)
             
             tf = txbox.text_frame
             p = tf.paragraphs[0]
@@ -239,7 +253,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             if num_srs * 0.33 > 6.0:
                 table_height = Inches(6.0)
 
-            table_placeholder = prs.slides[slide_indices[2]].shapes.add_table(
+            table_placeholder = prs.slides[slide_indices[3]].shapes.add_table(
                                                     num_srs, 
                                                     2,
                                                     left_loc,
@@ -254,30 +268,24 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             for i, maj in enumerate(fund_analysis['support_resistance']['major S&R']):
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
-                # fl = maj['Change'].split('%')[0]
-                # if float(fl) >= 0.0:
-                #     table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
-                #     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0xeb, 0x0e, 0x1d)
-                # else:
-                #     table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
-                #     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = RGBColor(0x33, 0xb3, 0x2e)
                 color = color_to_RGB(maj['Color'])
                 table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
                 table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
 
-        # Slide 4
+        # Slide 5
+
         if 'trendline' in part:
             left = Inches(0)
             top = Inches(1.55)
             height = Inches(4.7)
             width = Inches(7)
-            prs.slides[slide_indices[3]].shapes.add_picture(header+part, left, top, height=height, width=width)
+            prs.slides[slide_indices[4]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
             left = Inches(6.5)
             top = Inches(0.25)
             height = Inches(4.7)
             width = Inches(4)
-            txbox = prs.slides[slide_indices[3]].shapes.add_textbox(left, top, width, height)
+            txbox = prs.slides[slide_indices[4]].shapes.add_textbox(left, top, width, height)
             
             tf = txbox.text_frame
             p = tf.paragraphs[0]
@@ -311,7 +319,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             left_loc = Inches(left_start + adj_left)
             top_loc = Inches(0.75)
 
-            table_placeholder = prs.slides[slide_indices[3]].shapes.add_table(
+            table_placeholder = prs.slides[slide_indices[4]].shapes.add_table(
                                                     num_rows, 
                                                     num_cols,
                                                     left_loc,

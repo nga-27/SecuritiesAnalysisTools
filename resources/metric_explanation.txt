@@ -7,7 +7,7 @@ Fund Charting:
 1. Clustered Oscillators - proprietary weighting summation of Stochastic, RSI, and Ultimate Oscillators. The higher the signal, the more of a SELL. The more negative a signal, the more of a BUY.
 2. Moving Average Convergence/Divergence (MACD) - momentum indicator of EMA(12) - EMA(26). [More] positive signals means a strong positive/growth trend in price.
 3. Simple Moving Averages (SMA) - momentum indicators that suggest support/resistance levels as well
-4. On Balance Volume - monitoring large buys/sells of a fund by institutional ["smart"] managers. Negative signals means institutional SELL (sometimes means price will drop). Positive signals mean institutional BUY.
+4. On Balance Volume (OBV) - leading indicator; monitors large buys/sells of a fund by institutional ["smart"] managers. Apply trendlines to OBV signal. Changes: negative/red signals mean institutional SELL (sometimes means price will drop). Positive/green signals mean institutional BUY.
 5. Strength vs. Benchmark - overall view of growth in time period vs. S&P500
 6. Exponential Moving Averages (EMA) - momentum indicators that suggest support/resistance levels as well
 7. Swing Trading - looking for conditions in moving averages where bullish or bearish signals derive from signal crossings. Higher the signal, more of a SELL. Lower the signal, more of a BUY.

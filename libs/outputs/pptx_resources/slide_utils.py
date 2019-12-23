@@ -109,7 +109,7 @@ def intro_slide(prs):
         for i in range(1,len(content)):
             p = text_frame.add_paragraph()
             p.text = content[i]
-            if i == 3:
+            if i == 5:
                 p.font.size = Pt(12)
                 p.font.bold = True
             else:

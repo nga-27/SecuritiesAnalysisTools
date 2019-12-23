@@ -63,15 +63,17 @@ def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: flo
 
     x = dates_extractor_list(fund)
     name3 = SP500.get(name, name)
-    name2 = name3 + ' - On Balance Volume'
+    name2 = name3 + ' - On Balance Volume (OBV)'
+    name4 = name3 + ' - Significant OBV Changes'
     if plot_output:
         dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price', y2_label='On Balance Volume', x_label='Trading Days', title=name2)
         dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2)
     else:
         filename = name +'/obv_{}.png'.format(name)
-        # filename2 = name +'/obv2_{}.png'.format(name)
+        filename2 = name +'/obv2_{}.png'.format(name)
         # dual_plotting(fund['Close'], ofilter_agg_ma, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2, saveFig=True, filename=filename2)
-        bar_chart(ofilter, x=x, position=fund, title=name2, saveFig=True, filename=filename)
+        bar_chart(ofilter, x=x, position=fund, title=name4, saveFig=True, filename=filename)
+        dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price', y2_label='On Balance Volume', x_label='Trading Days', title=name2, saveFig=True, filename=filename2)
 
     if progress_bar is not None: progress_bar.uptick(increment=0.125)
 
@@ -114,8 +116,16 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     obv_dict['tabular'] = ofilter
     obv_dict['dates'] = dates
 
-    sub_name = f"obv_{name}"
-    obv_dict['trends'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[2,4,7,11])
+    sub_name = f"trend_obv_{name}"
+    obv_dict['trends'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output)
+
+    # obv_dict['trends'] = dict()
+    # sub_name = f"obv_{name}"
+    # obv_dict['trends']['short'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[2,4,7,11])
+    # sub_name = f"obv_{name}_medium"
+    # obv_dict['trends']['long'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[8,14,22,32])
+    # sub_name = f"obv_{name}_long"
+    # obv_dict['trends']['long'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[30,48,68,90])
 
     return obv_dict 
 
