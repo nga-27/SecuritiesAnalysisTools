@@ -162,7 +162,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'macd_bar' in part:
+        if 'volume' in part:
             left = Inches(6.5)
             top = Inches(1.1)
             height = Inches(3.0)
@@ -176,7 +176,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'obv' in part:
+        if 'obv_diff' in part:
             left = Inches(6.5)
             top = Inches(4.1)
             height = Inches(3.0)
@@ -217,6 +217,13 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
 
         if 'head_and_shoulders' in part:
             left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'macd_bar' in part:
+            left = Inches(6.5)
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)

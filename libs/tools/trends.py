@@ -119,6 +119,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
         plot_output:    (bool) True to render plot in realtime; DEFAULT=True
         interval:       (list of ints) list of trend window time periods; DEFAULT=[4, 8, 16, 32]
         progress_bar:   (ProgressBar) DEFAULT=None
+        sub_name:       (str) file extension within 'name' directory; DEFAULT=name
 
     returns:
         analysis_list:  (list) contains all trend lines determined by algorithm

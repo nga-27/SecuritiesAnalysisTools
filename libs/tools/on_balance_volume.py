@@ -61,17 +61,29 @@ def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: flo
 
     if progress_bar is not None: progress_bar.uptick(increment=0.125)
 
+    volume = []
+    volume.append(fund['Volume'][0])
+    for i in range(1, len(fund['Volume'])):
+        if fund['Close'][i] - fund['Close'][i-1] < 0:
+            volume.append(-1.0 * fund['Volume'][i])
+        else:
+            volume.append(fund['Volume'][i])
+
     x = dates_extractor_list(fund)
     name3 = SP500.get(name, name)
     name2 = name3 + ' - On Balance Volume (OBV)'
     name4 = name3 + ' - Significant OBV Changes'
+    name5 = name3 + ' - Volume'
     if plot_output:
         dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price', y2_label='On Balance Volume', x_label='Trading Days', title=name2)
         dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2)
+        bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
     else:
-        filename = name +'/obv_{}.png'.format(name)
+        filename = name +'/obv_diff_{}.png'.format(name)
         filename2 = name +'/obv2_{}.png'.format(name)
+        filename3 = name + '/volume_{}.png'.format(name)
         # dual_plotting(fund['Close'], ofilter_agg_ma, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2, saveFig=True, filename=filename2)
+        bar_chart(volume, x=x, position=fund, title=name5, saveFig=True, filename=filename3, all_positive=True)
         bar_chart(ofilter, x=x, position=fund, title=name4, saveFig=True, filename=filename)
         dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price', y2_label='On Balance Volume', x_label='Trading Days', title=name2, saveFig=True, filename=filename2)
 
@@ -116,7 +128,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     obv_dict['tabular'] = ofilter
     obv_dict['dates'] = dates
 
-    sub_name = f"trend_obv_{name}"
+    sub_name = f"obv3_{name}"
     obv_dict['trends'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output)
 
     # obv_dict['trends'] = dict()

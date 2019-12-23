@@ -210,6 +210,7 @@ def bar_chart(data: list, **kwargs):
         title:          (str) title of plot; DEFAULT=''
         saveFig:        (bool) True will save as 'filename'; DEFAULT=False
         filename:       (str) path to save plot; DEFAULT='temp_bar_chart.png'
+        positive:       (bool) True plots all color bars positively; DEFAULT=False
 
     returns:
         None
@@ -221,6 +222,7 @@ def bar_chart(data: list, **kwargs):
     title = kwargs.get('title', '')
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_bar_chart.png')
+    all_positive = kwargs.get('all_positive', False)
 
     if len(x) < 1:
         x = list(range(len(data)))
@@ -228,13 +230,20 @@ def bar_chart(data: list, **kwargs):
         x = x
     
     colors = []
+    positive = []
     for bar in data:
         if bar > 0.0:
+            positive.append(bar)
             colors.append('green')
         elif bar < 0.0:
+            positive.append(-1.0 * bar)
             colors.append('red')
         else:
+            positive.append(bar)
             colors.append('black')
+
+    if all_positive:
+        data = positive
 
     _, ax1 = plt.subplots()
     barlist = ax1.bar(x, data, width=1, color=colors)
