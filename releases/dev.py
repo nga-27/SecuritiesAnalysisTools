@@ -23,7 +23,7 @@ from libs.tools import get_trendlines, get_trend_analysis
 from libs.tools import get_high_level_stats
 
 # Imports that support functions doing feature detection
-from libs.features import feature_detection_head_and_shoulders, feature_plotter
+from libs.features import feature_detection_head_and_shoulders, feature_plotter, analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
@@ -148,6 +148,8 @@ def technical_analysis(config: dict):
 
         filename = f"{fund_name}/candlestick_{fund_name}"
         candlestick(fund, title=fund_print, filename=filename, saveFig=True, progress_bar=p)
+
+        analysis[fund_name]['price_gaps'] = analyze_price_gaps(fund, name=fund_name, plot_output=False, progress_bar=p)
 
         # Get Trendlines
         analysis[fund_name]['trendlines'] = get_trendlines(fund, name=fund_name, plot_output=False, progress_bar=p)

@@ -221,6 +221,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'halt'
         return config, ticker_keys
 
+    if '--quit' in i_keys:
+        config['state'] = 'halt'
+        return config, ticker_keys
+
     # Configuration flags that append to states but do not return / force them
     if '--core' in i_keys:
         core = header_json_parse('--core')
