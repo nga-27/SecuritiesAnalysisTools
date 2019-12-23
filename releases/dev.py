@@ -53,7 +53,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.21'
-_DATE_REVISION_ = '2019-12-21'
+_DATE_REVISION_ = '2019-12-23'
 ################################
 PROCESS_STEPS_DEV = 12
 
@@ -120,7 +120,7 @@ def technical_analysis(config: dict):
         _, dat = cluster_oscs(fund, function='all', filter_thresh=3, name=fund_name, plot_output=False, progress_bar=p)
         analysis[fund_name]['clustered_osc'] = dat
 
-        analysis[fund_name]['rsi'] = RSI(fund, name=fund_name, plot_output=True, out_suppress=True, progress_bar=p)
+        analysis[fund_name]['rsi'] = RSI(fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
         analysis[fund_name]['obv'] = on_balance_volume(fund, plot_output=False, name=fund_name, progress_bar=p)
 

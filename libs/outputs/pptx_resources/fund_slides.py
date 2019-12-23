@@ -155,28 +155,28 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
         globbed = windows_compatible_file_parse(globber)
         part = globbed[3]
 
-        if 'cluster' in part:
+        if 'volume' in part:
             left = Inches(0)
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'volume' in part:
+        if 'RSI_standard' in part:
             left = Inches(6.5)
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'obv2' in part:
+        if 'macd_bar' in part:
             left = Inches(0.0)
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[0]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'obv_diff' in part:
+        if 'clustering' in part:
             left = Inches(6.5)
             top = Inches(4.1)
             height = Inches(3.0)
@@ -215,16 +215,23 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
 
         # Slide #3
 
-        if 'head_and_shoulders' in part:
+        if 'obv_standard' in part:
             left = Inches(0)
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
-        if 'macd_bar' in part:
+        if 'obv_diff' in part:
             left = Inches(6.5)
             top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
+        if 'head_and_shoulders' in part:
+            left = Inches(0.0)
+            top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)

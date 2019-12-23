@@ -163,8 +163,17 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, p_ba
     return [indicator, swings]
 
 
+def over_threshold_lists(overbought: float, oversold: float, fund_length: int) -> dict:
+    ovbt = []
+    ovsld = []
+    for _ in range(fund_length):
+        ovbt.append(overbought)
+        ovsld.append(oversold)
+    over_th = {"overbought": ovbt, "oversold": ovsld}
+    return over_th
 
-def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, period: int=14, out_suppress=True, progress_bar=None) -> dict:
+
+def RSI(position: pd.DataFrame, **kwargs) -> dict: 
     """
     Relative Strength Indicator
 
@@ -177,6 +186,9 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, p
         period:         (int) size of RSI indicator; DEFAULT=14 
         out_suppress:   (bool) output plot/prints are suppressed; DEFAULT=True
         progress_bar:   (ProgressBar) DEFAULT=None
+        overbought:     (float) threshold to trigger overbought/sell condition; DEFAULT=70.0
+        oversold:       (float) threshold to trigger oversold/buy condition; DEFAULT=30.0
+        auto_trend:     (bool) True calculates basic trend, applies to thresholds; DEFAULT=True
 
     returns:
         rsi_swings:     (dict) contains all rsi information
@@ -186,22 +198,29 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, p
     period = kwargs.get('period', 14)
     out_suppress = kwargs.get('out_suppress', True)
     progress_bar = kwargs.get('progress_bar', None)
+    overbought = kwargs.get('overbought', 70.0)
+    oversold = kwargs.get('oversold', 30.0)
+    auto_trend = kwargs.get('auto_trend', True)
 
     RSI = generate_rsi_signal(position, period=period, p_bar=progress_bar)
 
     plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI, p_bar=progress_bar)
     rsi_swings['tabular'] = RSI
+    rsi_swings['thresholds'] = {"overbought": overbought, "oversold": oversold}
+
+    over_thresholds = over_threshold_lists(overbought, oversold, len(position['Close']))
+    main_plots = [RSI, over_thresholds['overbought'], over_thresholds['oversold']]
 
     if not out_suppress:
         name3 = SP500.get(name, name)
         name2 = name3 + ' - RSI'
         if plot_output:
-            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', title=name2)
+            dual_plotting(position['Close'], main_plots, 'Position Price', 'RSI', title=name2)
             dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', title=name2)
         else:
-            filename1 = name + '/RSI_{}.png'.format(name)
+            filename1 = name + '/RSI_standard_{}.png'.format(name)
             filename2 = name + '/RSI_indicator_{}.png'.format(name)
-            dual_plotting(  position['Close'], RSI, 'Position Price', 'RSI', 
+            dual_plotting(  position['Close'], main_plots, 'Position Price', 'RSI', 
                             title=name2, saveFig=True, filename=filename1)
             dual_plotting(  position['Close'], plotting, 'Position Price', 'RSI Indicators', 
                             title=name2, saveFig=True, filename=filename2)

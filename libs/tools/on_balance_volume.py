@@ -80,7 +80,7 @@ def generate_obv_signal(fund: pd.DataFrame, plot_output=True, filter_factor: flo
         bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
     else:
         filename = name +'/obv_diff_{}.png'.format(name)
-        filename2 = name +'/obv2_{}.png'.format(name)
+        filename2 = name +'/obv_standard_{}.png'.format(name)
         filename3 = name + '/volume_{}.png'.format(name)
         # dual_plotting(fund['Close'], ofilter_agg_ma, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2, saveFig=True, filename=filename2)
         bar_chart(volume, x=x, position=fund, title=name5, saveFig=True, filename=filename3, all_positive=True)

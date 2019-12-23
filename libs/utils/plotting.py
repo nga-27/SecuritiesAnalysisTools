@@ -30,6 +30,14 @@ def plot_xaxis_disperse(axis_obj, every_nth: int=2, dynamic=True):
     return 
 
 
+def is_data_list(data) -> bool:
+    """ Determines if data provided is a list [of lists] or simply a vector of data """
+    for dat in data:
+        if type(dat) == list:
+            return True
+    return False
+
+
 def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     """
     args:
@@ -57,14 +65,21 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     filename = kwargs.get('filename', 'temp_dual_plot.png')
 
     if len(x) < 1:
-        x = dates_extractor_list(y1)
+        if is_data_list(y1):
+            x = dates_extractor_list(y1[0])
+        else:
+            x = dates_extractor_list(y1)
 
     fig, ax1 = plt.subplots()
-    color = 'tab:orange'
+    
+    if is_data_list(y2):
+        color = 'k'
+    else:
+        color = 'tab:orange'
     ax1.set_xlabel(x_label)
     
     list_setting = False
-    if type(y1[0]) == list:
+    if is_data_list(y1):
         list_setting = True
         ax1.set_ylabel(y1_label[0])
         for y in y1:
@@ -85,13 +100,20 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         color = 'k'
     else:
         color = 'tab:blue'
-    ax2.set_ylabel(y2_label, color=color)
-    ax2.plot(x, y2, color=color)
-    ax2.tick_params(axis='y', labelcolor=color)
-    ax2.grid()
-
-    fig.tight_layout()
-    plt.legend([y2_label])
+    
+    if is_data_list(y2):
+        ax2.set_ylabel(y2_label)
+        for y in y2:
+            ax2.plot(x, y)
+            ax2.tick_params(axis='y')
+            ax2.grid()
+        plt.legend([y2_label])
+    else:
+        ax2.set_ylabel(y2_label, color=color)
+        ax2.plot(x, y2, color=color)
+        ax2.tick_params(axis='y', labelcolor=color)
+        ax2.grid()
+        plt.legend([y2_label])
 
     plt.tight_layout()
     plot_xaxis_disperse(ax1)
@@ -109,7 +131,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
                 return 
             if os.path.exists(filename):
                 os.remove(filename)
-            plt.savefig(filename)
+            plt.savefig(filename, bbox_inches="tight")
         else:
             plt.show()
     except:
