@@ -595,3 +595,50 @@ def trend_simple_forecast(trend: dict, future_periods: list=[5, 10, 20], return_
         forecast['returns'] = prices
 
     return forecast
+
+
+def autotrend(data, **kwargs) -> list:
+    """
+    A more simplistic trend-determiner. Takes a dataset, finds "trend" for each listed period of "periods" and
+    returns either a 'slope' or other for all points in data.
+
+    args:
+        data:           (list, pd.DataFrame) data to find trends at each point
+    
+    optional args:
+        periods:        (list) look-back periods for trend analysis; DEFAULT=[]
+        weights:        (list) weighting for look-back periods; DEFAULT=[]
+        return_type:    (str) type of item to return in list; DEFAULT='slope'
+
+    returns:
+        trends:         (list) list of items desired in 'return_type'
+    """
+    periods = kwargs.get('periods', [])
+    weights = kwargs.get('weights', [])
+    return_type = kwargs.get('return_type', 'slope')
+
+    trend = []
+    for _ in range(len(data)):
+        trend.append(0.0)
+
+    periods = [int(period) for period in periods]
+    for j, period in enumerate(periods):
+        trends = []
+        for _ in range(period):
+            trends.append(0.0)
+
+        # X range will always be the same for any given period
+        x = list(range(period))
+        for i in range(period, len(data)):
+            y = data[i-period:i].copy()
+            reg = linregress(x, y)
+
+            if return_type == 'slope':
+                trends.append(reg[0])
+
+        wt = 1.0
+        if j < len(weights):
+            wt = weights[j]
+        for k, t in enumerate(trends):
+            trend[k] = trend[k] + (wt * t)
+    return trend
