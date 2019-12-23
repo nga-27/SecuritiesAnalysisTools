@@ -128,7 +128,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     plot_output = kwargs.get('plot_output', True)
     interval = kwargs.get('interval', [4, 8, 16, 32])
     progress_bar = kwargs.get('progress_bar', None)
-    sub_name = kwargs.get('sub_name', name)
+    sub_name = kwargs.get('sub_name', f"trendline_{name}")
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -232,7 +232,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     if plot_output:
         generic_plotting(Y, x=X, colors=C, title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
     else:
-        filename = f"{name}/trendline_{sub_name}.png"
+        filename = f"{name}/{sub_name}.png"
         generic_plotting(Y, x=X, colors=C, 
                             title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
                             saveFig=True, filename=filename)
@@ -609,6 +609,7 @@ def autotrend(data, **kwargs) -> list:
         periods:        (list) look-back periods for trend analysis; DEFAULT=[]
         weights:        (list) weighting for look-back periods; DEFAULT=[]
         return_type:    (str) type of item to return in list; DEFAULT='slope'
+        normalize:      (bool) True normalizes to max/min slopes; DEFAULT=False
 
     returns:
         trends:         (list) list of items desired in 'return_type'
@@ -616,6 +617,7 @@ def autotrend(data, **kwargs) -> list:
     periods = kwargs.get('periods', [])
     weights = kwargs.get('weights', [])
     return_type = kwargs.get('return_type', 'slope')
+    normalize = kwargs.get('normalize', False)
 
     trend = []
     for _ in range(len(data)):
@@ -641,4 +643,14 @@ def autotrend(data, **kwargs) -> list:
             wt = weights[j]
         for k, t in enumerate(trends):
             trend[k] = trend[k] + (wt * t)
+
+    if normalize:
+        max_factor = max(trend)
+        min_factor = min(trend)
+        for i in range(len(trend)):
+            if trend[i] < 0.0:
+                trend[i] = (trend[i] / min_factor) * -0.35
+            else:
+                trend[i] = (trend[i] / max_factor) * 0.35
+
     return trend

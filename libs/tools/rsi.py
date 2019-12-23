@@ -241,7 +241,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
 
     slope_trend = []
     if auto_trend:
-        slope_trend = autotrend(position['Close'], periods=[period*3, period*5.5, period*8], weights=[0.45, 0.33, 0.22])
+        slope_trend = autotrend(position['Close'], periods=[period*3, period*5.5, period*8], weights=[0.45, 0.33, 0.22], normalize=True)
 
     over_thresholds = over_threshold_lists(overbought, oversold, len(position['Close']), slope_list=slope_trend)
     if progress_bar is not None: progress_bar.uptick(increment=0.2)
