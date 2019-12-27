@@ -311,6 +311,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(config, 'run_functions', 'ma', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
+    if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
+        config = add_str_to_dict_key(config, 'run_functions', 'gaps', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
 
     # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in i_keys:

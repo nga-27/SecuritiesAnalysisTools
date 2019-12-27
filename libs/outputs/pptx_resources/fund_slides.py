@@ -236,6 +236,13 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict={}):
             width = Inches(6.5)
             prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
 
+        if 'price_gaps' in part:
+            left = Inches(6.5)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[2]].shapes.add_picture(header+part, left, top, height=height, width=width)
+
         # Slide #4
 
         if 'resist_support' in part:

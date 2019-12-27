@@ -425,6 +425,19 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
             box = plt.Line2D((x_shp_pts[4], x_shp_pts[4]), (np.min(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
 
+    elif (feature == 'price_gaps') and (shapeXY != []):
+        for oval in shapeXY:
+            x = xpts[oval['x']]
+            y = oval['y']
+            radius = oval['rad']
+            if oval['type'] == 'up':
+                color = 'g'
+            else:
+                color = 'r'
+
+            circle = plt.Circle((x,y), radius, color=color, fill=False)
+            plt.gcf().gca().add_artist(circle)
+
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)

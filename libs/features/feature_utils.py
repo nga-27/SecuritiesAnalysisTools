@@ -33,14 +33,6 @@ def local_extrema(filtered: list, raw=False) -> dict:
 
     else:
         extrema = raw_signal_extrema(filtered)
-        # print(f"extrema: {extrema}")
-        # y = []
-        # y2 = []
-        # for max_ in extrema['max']:
-        #     y.append(filtered[max_])
-        # for min_ in extrema['min']:
-        #     y2.append(filtered[min_])
-        # generic_plotting([y,y2], x_=[extrema['max'], extrema['min']], legend=['max', 'min'])
 
     return extrema
 
@@ -188,8 +180,11 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_an
     name2 = SP500.get(name, name)
     filename = name + f'/{feature}_{name}.png'
     title = f'{name2} Feature Detection: '
+
     if feature == 'head_and_shoulders':
         title += 'Head and Shoulders'
+    elif feature == 'price_gaps':
+        title += 'Price Gaps'
 
     saveFig = not plot_output
 

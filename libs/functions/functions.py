@@ -7,7 +7,7 @@ from libs.metrics import metadata_to_dataset
 from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs, RSI
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
-from libs.features import feature_detection_head_and_shoulders
+from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 ticker_color = TEXT_COLOR_MAP["cyan"]
 normal_color = TEXT_COLOR_MAP["white"]
@@ -44,8 +44,9 @@ def only_functions_handler(config: dict):
         obv_function(config)
     if 'ma' in config['run_functions']:
         ma_function(config)
+    if 'gaps' in config['run_functions']:
+        price_gap_function(config)
     
-
 
 ###############################################################################
 
@@ -150,6 +151,14 @@ def ma_function(config: dict):
         if fund != '^GSPC':
             print(f"Triple Moving Average of {ticker_color}{fund}{normal_color}...")
             triple_moving_average(data[fund], name=fund, plot_output=True)
+
+
+def price_gap_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Price Gap Analysis of {ticker_color}{fund}{normal_color}...")
+            analyze_price_gaps(data[fund], name=fund, plot_output=True)
 
 
 

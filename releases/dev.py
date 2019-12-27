@@ -55,7 +55,7 @@ from test import test_competitive
 _VERSION_ = '0.1.21'
 _DATE_REVISION_ = '2019-12-26'
 ################################
-PROCESS_STEPS_DEV = 12
+PROCESS_STEPS_DEV = 13
 
 header_color = TEXT_COLOR_MAP["blue"]
 normal_color = TEXT_COLOR_MAP["white"]
