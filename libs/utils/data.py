@@ -4,7 +4,12 @@ import math
 import yfinance as yf 
 
 from .formatting import get_daterange, fund_list_extractor
+from .constants import TEXT_COLOR_MAP
 
+ticker_color = TEXT_COLOR_MAP["cyan"]
+normal_color = TEXT_COLOR_MAP["white"]
+error_color = TEXT_COLOR_MAP["red"]
+note_color = TEXT_COLOR_MAP["yellow"]
 
 def download_data_indexes(indexes: list, tickers: str, period: str='2y', interval='1d', start=None, end=None, fund_len=None) -> list:
     if (start is not None) and (end is not None):
@@ -29,10 +34,10 @@ def download_data(config: dict) -> list:
     daterange = get_daterange(period=period)
     
     if daterange[0] is None:
-        print(f'Fetching data for {ticker_print} for {period} at {interval} intervals...')
+        print(f'Fetching data for {ticker_color}{ticker_print}{normal_color} for {period} at {interval} intervals...')
         data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
     else: 
-        print(f'Fetching data for {ticker_print} from dates {daterange[0]} to {daterange[1]}...')
+        print(f'Fetching data for {ticker_color}{ticker_print}{normal_color} from dates {daterange[0]} to {daterange[1]}...')
         data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
     print(" ")
 
@@ -55,10 +60,12 @@ def download_single_fund(fund: str, config: dict, fund_len=None) -> dict:
     daterange = get_daterange(period=period)
     
     if daterange[0] is None:
-        print(f'Fetching sector data for {ticker}...')
+        print("")
+        print(f'Fetching sector data for {ticker_color}{ticker}{normal_color}...')
         data = yf.download(tickers=ticker, period=period, interval=interval, group_by='ticker')
     else: 
-        print(f'Fetching sector data for {ticker}...')
+        print("")
+        print(f'Fetching sector data for {ticker_color}{ticker}{normal_color}...')
         data = yf.download(tickers=ticker, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
     print(" ")
 
@@ -183,13 +190,13 @@ def filter_nan(frame_list: pd.DataFrame, fund_name=None, column_key=None, fund_l
     if corrected and (fund_name is not None):
         message, info = get_status_message(status)
         if 'Unknown/unfixable nan' in message:
-            print(f"WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
-            print(f"----> Content: {info}")
+            print(f"{error_color}WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
+            print(f"----> Content: {info}{normal_color}")
         elif 'Generic progression nan' in message:
-            print(f"Note: 'NaN' found on {fund_name}. Type: '{message}': Corrected OK.")
-            print(f"----> Content: {info}")
+            print(f"{note_color}Note: 'NaN' found on {fund_name}. Type: '{message}': Corrected OK.")
+            print(f"----> Content: {info}{normal_color}")
         else:
-            print(f"Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.")
+            print(f"{note_color}Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.{normal_color}")
         
     return new_list
 

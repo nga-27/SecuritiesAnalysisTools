@@ -8,16 +8,29 @@ import glob
 import time
 import json 
 
+from .constants import TEXT_COLOR_MAP
+
+outline_color = TEXT_COLOR_MAP["blue"]
+normal_color = TEXT_COLOR_MAP["white"]
+author_color = TEXT_COLOR_MAP["purple"]
+
+opt_title_color = TEXT_COLOR_MAP["green"]
+opt_name_color = TEXT_COLOR_MAP["cyan"]
+
+logo_main_color = TEXT_COLOR_MAP["purple_bold"]
+logo_other_color = TEXT_COLOR_MAP["blue_bold"]
+logo_copyrt_color = TEXT_COLOR_MAP["green_bold"]
+
 def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI', options: str=None) -> dict:
     print(" ")
-    print("----------------------------------")
-    print("-   Securities Analysis Tools    -")
-    print("-                                -")
-    print("-            nga-27              -")
-    print("-                                -")
-    print(f"-       version: {version}          -")
-    print(f"-       updated: {update_release}      -")
-    print("----------------------------------")
+    print(f"{outline_color}----------------------------------")
+    print(f"-{normal_color}   Securities Analysis Tools    {outline_color}-")
+    print(f"-                                -")
+    print(f"-{author_color}            nga-27              {outline_color}-")
+    print(f"-                                -")
+    print(f"-{normal_color}       version: {version}          {outline_color}-")
+    print(f"-{normal_color}       updated: {update_release}      {outline_color}-")
+    print(f"----------------------------------{normal_color}")
     print(" ")
 
     time.sleep(1)
@@ -147,6 +160,45 @@ def ticker_list_to_str(ticker_list: list) -> str:
         tick_str += tick + ' '
     return tick_str
 
+
+def header_options_print(options_read_lines):
+    print(" ")
+    for line in options_read_lines:
+        nline = line.replace("\n", "")
+        if len(nline) > 0:
+            if nline[0].isupper():
+                # Pattern 1 - Title lines of options
+                nline = f"{opt_title_color}{nline}{normal_color}"
+            else:
+                # Pattern 2 - Individual names colorized
+                if '{' in nline:
+                    nline = nline.replace("{", f"{opt_name_color}")
+                    nline = nline.replace("}", f"{normal_color}")
+        print(nline)
+    # print(options_read)
+    print(" ")
+
+
+def logo_renderer():
+    MAIN_LOGO_LINES = 8
+    logo_file = 'resources/logo.txt'
+    if os.path.exists(logo_file):
+        fs = open(logo_file, 'r')
+        logo_lines = fs.readlines()
+        fs.close()
+        print(" ")
+        for i, line in enumerate(logo_lines):
+            if i < MAIN_LOGO_LINES:
+                line = line.replace("\n", "")
+                line = line.replace("{", f"{logo_other_color}")
+                line = f"{logo_main_color}{line}{normal_color}"
+            else:
+                line = f"{logo_copyrt_color}{line}{normal_color}"
+            print(line)
+        print("\r\n\r\n")
+        time.sleep(1)
+
+
 ####################################################################
 
 def header_options_parse(input_str: str, config: dict) -> list:
@@ -160,14 +212,16 @@ def header_options_parse(input_str: str, config: dict) -> list:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
             fs = open(options_file, 'r')
-            options_read = fs.read()
+            options_read = fs.readlines() #fs.read()
             fs.close()
-            print(" ")
-            print(options_read)
-            print(" ")
+            header_options_print(options_read)
         else:
             print(f"ERROR - NO {options_file} found.")
             print(" ")
+        config['state'] = 'halt'
+        return config, ticker_keys
+
+    if '--quit' in i_keys:
         config['state'] = 'halt'
         return config, ticker_keys
 
@@ -255,6 +309,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     if ('--ma' in i_keys) or ('--moving_average' in i_keys):
         config = add_str_to_dict_key(config, 'run_functions', 'ma', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
+        config = add_str_to_dict_key(config, 'run_functions', 'gaps', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
 

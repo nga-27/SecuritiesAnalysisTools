@@ -1,8 +1,9 @@
 import pandas as pd 
 import numpy as np 
+import math
 
-from libs.utils import dual_plotting, date_extractor
-
+from libs.utils import dual_plotting, generic_plotting, date_extractor, SP500
+from .trends import autotrend
 
 def generate_rsi_signal(position: pd.DataFrame, period: int=14, p_bar=None) -> list:
     """ Generates a list of relative strength indicators """
@@ -62,35 +63,50 @@ def generate_rsi_signal(position: pd.DataFrame, period: int=14, p_bar=None) -> l
 
 
 
-def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, p_bar=None) -> dict:
-    """ Find bullish / bearish and RSI indicators:
-
+def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, **kwargs) -> dict:
+    """ 
+    Find bullish / bearish and RSI indicators:
         1. go beyond threshold
         2. go back within thresholds
         3. have local minima/maxima inside thresholds
         4. exceed max/min (bull/bear) of previous maxima/minima
-    """
 
-    LOW_TH = 30.0
-    HIGH_TH = 70.0
+    args:
+        position:       (pd.DataFrame) fund data
+        rsi_signal:     (list) pure RSI signal
+
+    optional args:
+        p_bar:          (ProgressBar) DEFAULT=None
+        thresholds:     (dict) contains lists of oversold/overbought thresholds; DEFAULT={}
+    """
+    p_bar = kwargs.get('p_bar', None)
+    thresholds = kwargs.get('thresholds', None)
+
+    if thresholds is None:
+        thresholds = dict()
+        thresholds['oversold'] = [30.0] * len(position['Close'])
+        thresholds['overbought'] = [70.0] * len(position['Close'])
+
+    LOW_TH = thresholds['oversold'] 
+    HIGH_TH = thresholds['overbought'] 
 
     swings = {}
     swings['bullish'] = []
     swings['bearish'] = []
     indicator = []
 
-    increment = 0.3 / float(len(rsi_signal))
+    increment = 0.2 / float(len(rsi_signal))
 
     state = 0
     minima = 0.0
     maxima = 0.0
     for i in range(len(rsi_signal)):
         
-        if (state == 0) and (rsi_signal[i] < LOW_TH):
+        if (state == 0) and (rsi_signal[i] < LOW_TH[i]):
             # Start of a bullish signal
             state = 1
             indicator.append(0.0)
-        elif (state == 1) and (rsi_signal[i] > LOW_TH):
+        elif (state == 1) and (rsi_signal[i] > LOW_TH[i]):
             state = 2
             maxima = rsi_signal[i]
             indicator.append(0.0)
@@ -102,7 +118,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, p_ba
                 state = 3
             indicator.append(0.0)
         elif (state == 3):
-            if rsi_signal[i] < LOW_TH:
+            if rsi_signal[i] < LOW_TH[i]:
                 # Failed attempted breakout
                 state = 1
             if rsi_signal[i] < minima:
@@ -122,10 +138,10 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, p_ba
                 indicator.append(0.0)
 
 
-        elif (state == 0) and (rsi_signal[i] > HIGH_TH):
+        elif (state == 0) and (rsi_signal[i] > HIGH_TH[i]):
             state = 5
             indicator.append(0.0)
-        elif (state == 5) and (rsi_signal[i] < HIGH_TH):
+        elif (state == 5) and (rsi_signal[i] < HIGH_TH[i]):
             state = 6
             minima = rsi_signal[i]
             indicator.append(0.0)
@@ -137,7 +153,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, p_ba
                 state = 7
             indicator.append(0.0)
         elif (state == 7):
-            if rsi_signal[i] > HIGH_TH:
+            if rsi_signal[i] > HIGH_TH[i]:
                 # Failed attempted breakout
                 state = 5
             if rsi_signal[i] > maxima:
@@ -163,8 +179,36 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_signal: list, p_ba
     return [indicator, swings]
 
 
+def over_threshold_lists(overbought: float, oversold: float, fund_length: int, slope_list=[]) -> dict:
+    ovbt = []
+    ovsld = []
+    if len(slope_list) == 0:
+        for _ in range(fund_length):
+            ovbt.append(overbought)
+            ovsld.append(oversold)
+    else:
+        for slope in slope_list:
+            if slope > 0.1:
+                # 'Up' trend, oversold rises proportionally
+                ovbt.append(overbought)
+                sl = (slope - 0.1) * -15.0
+                sld = (10.0 - (10.0 * math.exp(sl))) + oversold
+                ovsld.append(sld)
+            elif slope < -0.1:
+                # 'Down' trend, overbought drops proportionally
+                sl = (slope + 0.1) * 15.0
+                bot = overbought - (10.0 - (10.0 * math.exp(sl)))
+                ovbt.append(bot)
+                ovsld.append(oversold)
+            else:
+                ovbt.append(overbought)
+                ovsld.append(oversold)
 
-def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, period: int=14, out_suppress=True, progress_bar=None) -> dict:
+    over_th = {"overbought": ovbt, "oversold": ovsld}
+    return over_th
+
+
+def RSI(position: pd.DataFrame, **kwargs) -> dict: 
     """
     Relative Strength Indicator
 
@@ -177,6 +221,9 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, p
         period:         (int) size of RSI indicator; DEFAULT=14 
         out_suppress:   (bool) output plot/prints are suppressed; DEFAULT=True
         progress_bar:   (ProgressBar) DEFAULT=None
+        overbought:     (float) threshold to trigger overbought/sell condition; DEFAULT=70.0
+        oversold:       (float) threshold to trigger oversold/buy condition; DEFAULT=30.0
+        auto_trend:     (bool) True calculates basic trend, applies to thresholds; DEFAULT=True
 
     returns:
         rsi_swings:     (dict) contains all rsi information
@@ -186,25 +233,39 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict: #name='', plot_output=True, p
     period = kwargs.get('period', 14)
     out_suppress = kwargs.get('out_suppress', True)
     progress_bar = kwargs.get('progress_bar', None)
+    overbought = kwargs.get('overbought', 70.0)
+    oversold = kwargs.get('oversold', 30.0)
+    auto_trend = kwargs.get('auto_trend', True)
 
     RSI = generate_rsi_signal(position, period=period, p_bar=progress_bar)
 
-    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI, p_bar=progress_bar)
+    slope_trend = []
+    if auto_trend:
+        slope_trend = autotrend(position['Close'], periods=[period*3, period*5.5, period*8], weights=[0.45, 0.33, 0.22], normalize=True)
+
+    over_thresholds = over_threshold_lists(overbought, oversold, len(position['Close']), slope_list=slope_trend)
+    if progress_bar is not None: progress_bar.uptick(increment=0.2)
+
+    plotting, rsi_swings = determine_rsi_swing_rejection(position, RSI, p_bar=progress_bar, thresholds=over_thresholds)
     rsi_swings['tabular'] = RSI
+    rsi_swings['thresholds'] = {"overbought": overbought, "oversold": oversold}
+
+    main_plots = [RSI, over_thresholds['overbought'], over_thresholds['oversold']]
 
     if not out_suppress:
-        name2 = name + ' - RSI'
+        name3 = SP500.get(name, name)
+        name2 = name3 + ' - RSI'
         if plot_output:
-            dual_plotting(position['Close'], RSI, 'Position Price', 'RSI', title=name2)
+            dual_plotting(position['Close'], main_plots, 'Position Price', 'RSI', title=name2)
             dual_plotting(position['Close'], plotting, 'Position Price', 'RSI Indicators', title=name2)
         else:
-            filename1 = name +'/RSI_{}.png'.format(name)
-            filename2 = name +'/RSI_indicator_{}.png'.format(name)
-            dual_plotting(  position['Close'], RSI, 'Position Price', 'RSI', 
+            filename1 = name + '/RSI_standard_{}.png'.format(name)
+            filename2 = name + '/RSI_indicator_{}.png'.format(name)
+            dual_plotting(  position['Close'], main_plots, 'Position Price', 'RSI', 
                             title=name2, saveFig=True, filename=filename1)
             dual_plotting(  position['Close'], plotting, 'Position Price', 'RSI Indicators', 
                             title=name2, saveFig=True, filename=filename2)
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.4)
+    if progress_bar is not None: progress_bar.uptick(increment=0.3)
         
     return rsi_swings

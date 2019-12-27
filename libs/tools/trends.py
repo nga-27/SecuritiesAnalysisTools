@@ -6,7 +6,7 @@ import warnings, pprint, math
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
-from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
+from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
 
 from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
 
@@ -119,6 +119,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
         plot_output:    (bool) True to render plot in realtime; DEFAULT=True
         interval:       (list of ints) list of trend window time periods; DEFAULT=[4, 8, 16, 32]
         progress_bar:   (ProgressBar) DEFAULT=None
+        sub_name:       (str) file extension within 'name' directory; DEFAULT=name
 
     returns:
         analysis_list:  (list) contains all trend lines determined by algorithm
@@ -127,6 +128,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     plot_output = kwargs.get('plot_output', True)
     interval = kwargs.get('interval', [4, 8, 16, 32])
     progress_bar = kwargs.get('progress_bar', None)
+    sub_name = kwargs.get('sub_name', f"trendline_{name}")
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -226,12 +228,13 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     Y.append(fund['Close'])
     C.append('black')
     
+    name2 = SP500.get(name, name)
     if plot_output:
-        generic_plotting(Y, x=X, colors=C, title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+        generic_plotting(Y, x=X, colors=C, title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
     else:
-        filename = f"{name}/trendline_{name}.png"
+        filename = f"{name}/{sub_name}.png"
         generic_plotting(Y, x=X, colors=C, 
-                            title=f"{name} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                            title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
                             saveFig=True, filename=filename)
 
     if progress_bar is not None: progress_bar.uptick(increment=0.2)
@@ -270,6 +273,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             while (count < len(mins_x)) and (mins_x[count] < start):
                 count += 1
                 st_count = count
+            end_count = st_count
             while (count < len(mins_x)) and (mins_x[count] < end):
                 count += 1
                 end_count = count
@@ -591,3 +595,62 @@ def trend_simple_forecast(trend: dict, future_periods: list=[5, 10, 20], return_
         forecast['returns'] = prices
 
     return forecast
+
+
+def autotrend(data, **kwargs) -> list:
+    """
+    A more simplistic trend-determiner. Takes a dataset, finds "trend" for each listed period of "periods" and
+    returns either a 'slope' or other for all points in data.
+
+    args:
+        data:           (list, pd.DataFrame) data to find trends at each point
+    
+    optional args:
+        periods:        (list) look-back periods for trend analysis; DEFAULT=[]
+        weights:        (list) weighting for look-back periods; DEFAULT=[]
+        return_type:    (str) type of item to return in list; DEFAULT='slope'
+        normalize:      (bool) True normalizes to max/min slopes; DEFAULT=False
+
+    returns:
+        trends:         (list) list of items desired in 'return_type'
+    """
+    periods = kwargs.get('periods', [])
+    weights = kwargs.get('weights', [])
+    return_type = kwargs.get('return_type', 'slope')
+    normalize = kwargs.get('normalize', False)
+
+    trend = []
+    for _ in range(len(data)):
+        trend.append(0.0)
+
+    periods = [int(period) for period in periods]
+    for j, period in enumerate(periods):
+        trends = []
+        for _ in range(period):
+            trends.append(0.0)
+
+        # X range will always be the same for any given period
+        x = list(range(period))
+        for i in range(period, len(data)):
+            y = data[i-period:i].copy()
+            reg = linregress(x, y)
+
+            if return_type == 'slope':
+                trends.append(reg[0])
+
+        wt = 1.0
+        if j < len(weights):
+            wt = weights[j]
+        for k, t in enumerate(trends):
+            trend[k] = trend[k] + (wt * t)
+
+    if normalize:
+        max_factor = max(trend)
+        min_factor = min(trend)
+        for i in range(len(trend)):
+            if trend[i] < 0.0:
+                trend[i] = (trend[i] / min_factor) * -0.35
+            else:
+                trend[i] = (trend[i] / max_factor) * 0.35
+
+    return trend

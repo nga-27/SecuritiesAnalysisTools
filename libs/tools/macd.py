@@ -3,7 +3,7 @@ import numpy as np
 
 from .moving_average import exponential_ma, exponential_ma_list
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, SP500
 
 """
 Moving Average Convergence / Divergence (MACD)
@@ -254,7 +254,8 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     macd['tabular'] = macd_sig
     if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
-    name2 = name + ' - MACD: '
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - MACD: '
     if plot_output:
         dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)

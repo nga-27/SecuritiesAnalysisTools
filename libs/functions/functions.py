@@ -1,16 +1,19 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import download_data, has_critical_error
+from libs.utils import download_data, has_critical_error, TEXT_COLOR_MAP
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import metadata_to_dataset
 from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs, RSI
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
-from libs.features import feature_detection_head_and_shoulders
+from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
+
+ticker_color = TEXT_COLOR_MAP["cyan"]
+normal_color = TEXT_COLOR_MAP["white"]
 
 def only_functions_handler(config: dict):
-    print(f"Running functions: {config['run_functions']} for {config['tickers']}")
+    print(f"Running functions: {config['run_functions']} for {ticker_color}{config['tickers']}{normal_color}")
 
     if 'export' in config['run_functions']:
         # Non-dashed inputs will cause issues beyond export if not returning.
@@ -41,8 +44,9 @@ def only_functions_handler(config: dict):
         obv_function(config)
     if 'ma' in config['run_functions']:
         ma_function(config)
+    if 'gaps' in config['run_functions']:
+        price_gap_function(config)
     
-
 
 ###############################################################################
 
@@ -66,7 +70,7 @@ def trends_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"Trends of {fund}...")
+            print(f"Trends of {ticker_color}{fund}{normal_color}...")
             get_trendlines(data[fund], plot_output=True, name=fund)
 
 
@@ -74,7 +78,7 @@ def support_resistance_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"Support & Resistance of {fund}...")
+            print(f"Support & Resistance of {ticker_color}{fund}{normal_color}...")
             find_resistance_support_lines(data[fund], plot_output=True, name=fund)
 
 
@@ -82,7 +86,7 @@ def cluster_oscs_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"Clustered Oscillators of {fund}...")
+            print(f"Clustered Oscillators of {ticker_color}{fund}{normal_color}...")
             cluster_oscs(data[fund], name=fund, plot_output=True, function='all')
 
 
@@ -90,7 +94,7 @@ def head_and_shoulders_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"Head and Shoulders feature detection of {fund}...")
+            print(f"Head and Shoulders feature detection of {ticker_color}{fund}{normal_color}...")
             feature_detection_head_and_shoulders(data[fund], name=fund, plot_output=True)
 
 
@@ -112,7 +116,7 @@ def rsi_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"RSI of {fund}...")
+            print(f"RSI of {ticker_color}{fund}{normal_color}...")
             RSI(data[fund], name=fund, plot_output=True, out_suppress=False)
 
 
@@ -120,7 +124,7 @@ def macd_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"MACD of {fund}...")
+            print(f"MACD of {ticker_color}{fund}{normal_color}...")
             mov_avg_convergence_divergence(data[fund], name=fund, plot_output=True)
 
 
@@ -129,7 +133,7 @@ def relative_strength_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"Relative Strength of {fund} compared to S&P500...")
+            print(f"Relative Strength of {ticker_color}{fund}{normal_color} compared to S&P500...")
             relative_strength(fund, full_data_dict=data, config=config, plot_output=True)
 
 
@@ -137,7 +141,7 @@ def obv_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"On Balance Volume of {fund}...")
+            print(f"On Balance Volume of {ticker_color}{fund}{normal_color}...")
             on_balance_volume(data[fund], name=fund, plot_output=True)
 
 
@@ -145,8 +149,16 @@ def ma_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"Triple Moving Average of {fund}...")
+            print(f"Triple Moving Average of {ticker_color}{fund}{normal_color}...")
             triple_moving_average(data[fund], name=fund, plot_output=True)
+
+
+def price_gap_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Price Gap Analysis of {ticker_color}{fund}{normal_color}...")
+            analyze_price_gaps(data[fund], name=fund, plot_output=True)
 
 
 

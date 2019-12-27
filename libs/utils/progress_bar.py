@@ -1,29 +1,34 @@
 """
 ProgressBar utility class
 """
+from .constants import TEXT_COLOR_MAP
+
+color_bar = TEXT_COLOR_MAP["white"]
+color_normal = TEXT_COLOR_MAP["white"]
+color_fund = TEXT_COLOR_MAP["cyan"]
 
 class ProgressBar(object):
 
     def __init__(self, total_items: int, name: str=''):
         self.total = float(total_items)
-        self.name = name + ' Progress'
+        self.name = name
         self.iteration = 0.0
         self.length_of_bar = 0
         self.has_finished = False
 
 
     def start(self):
-        self.printProgressBar(self.iteration, self.total, prefix=self.name)
+        self.printProgressBar(self.iteration, self.total, obj=self.name)
 
     def update(self, iteration: int):
-        self.printProgressBar(iteration, self.total, prefix=self.name)
+        self.printProgressBar(iteration, self.total, obj=self.name)
 
     def end(self):
-        self.printProgressBar(self.total, self.total, prefix=self.name)
+        self.printProgressBar(self.total, self.total, obj=self.name)
 
     def uptick(self, increment=1.0):
         self.iteration += increment
-        self.printProgressBar(self.iteration, self.total, prefix=self.name)
+        self.printProgressBar(self.iteration, self.total, obj=self.name)
  
     def interrupt(self, message: str=''):
         clearBar = ''
@@ -36,7 +41,7 @@ class ProgressBar(object):
 
 
     # Print iterations progress - courtesy of Greenstick (stackoverflow: https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
-    def printProgressBar (self, iteration, total, prefix='Progress', suffix='Complete', decimals = 1, length = 50, fill = '█'):
+    def printProgressBar (self, iteration, total, obj='', prefix='Progress', suffix='Complete', decimals = 1, length = 50, fill = '█'):
         """
         Call in a loop to create terminal progress bar
         @params:
@@ -50,8 +55,9 @@ class ProgressBar(object):
         """
         percent = ("{0:." + str(decimals) + "f}").format(100.0 * (float(iteration) / float(total)))
         filledLength = int(float(length) * float(iteration) // float(total))
-        bar = fill * filledLength + '-' * (length - filledLength)
-        pBar = '\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix)
+        bar = fill * filledLength + '.' * (length - filledLength)
+
+        pBar = f"\r {color_fund}{obj}{color_normal} {prefix} {color_bar}|{bar}|{color_normal} {percent}% {suffix}"
         self.length_of_bar = len(pBar)
         
         print(pBar, end = '\r')

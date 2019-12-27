@@ -4,7 +4,7 @@ import os
 
 from libs.utils import generic_plotting, shape_plotting
 from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list, date_extractor
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, SP500
 from libs.utils import api_sector_match, api_sector_funds
 
 def basic_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
@@ -237,7 +237,8 @@ def relative_strength( primary_name: str, full_data_dict: dict, **kwargs ) -> di
     for i, out_data in enumerate(output_data):
         r_strength['tabular'][str(legend[i])] = out_data
 
-    title = f"Relative Strength of {primary_name}"
+    primary_name2 = SP500.get(primary_name, primary_name)
+    title = f"Relative Strength of {primary_name2}"
     if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
     if plot_output:

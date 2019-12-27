@@ -1,7 +1,7 @@
 import pandas as pd 
 import numpy as np 
 
-from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
+from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
 
 """
     1. Combine points backward (i.e. for time=34 combine 34's and 21's)
@@ -379,11 +379,12 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
 
     if progress_bar is not None: progress_bar.uptick(increment=0.1)
 
+    name2 = SP500.get(name, name)
     if plot_output:
-        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name} Major Resistance & Support')
+        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name2} Major Resistance & Support')
     else:
         filename = f"{name}/resist_support_{name}.png"
-        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name} Major Resistance & Support', saveFig=True, filename=filename)
+        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name2} Major Resistance & Support', saveFig=True, filename=filename)
 
     if progress_bar is not None: progress_bar.uptick(increment=0.1)
 

@@ -5,7 +5,7 @@ from .moving_average import windowed_ma_list, windowed_ema_list
 from .moving_average import triple_moving_average, moving_average_swing_trade
 
 from .trends import get_trend, get_trend_analysis
-from .trends import get_trendlines, trend_simple_forecast
+from .trends import get_trendlines, trend_simple_forecast, autotrend
 from .resistance_support import find_resistance_support_lines
 
 from .true_strength import relative_strength

@@ -30,6 +30,14 @@ def plot_xaxis_disperse(axis_obj, every_nth: int=2, dynamic=True):
     return 
 
 
+def is_data_list(data) -> bool:
+    """ Determines if data provided is a list [of lists] or simply a vector of data """
+    for dat in data:
+        if type(dat) == list:
+            return True
+    return False
+
+
 def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     """
     args:
@@ -57,14 +65,21 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     filename = kwargs.get('filename', 'temp_dual_plot.png')
 
     if len(x) < 1:
-        x = dates_extractor_list(y1)
+        if is_data_list(y1):
+            x = dates_extractor_list(y1[0])
+        else:
+            x = dates_extractor_list(y1)
 
     fig, ax1 = plt.subplots()
-    color = 'tab:orange'
+    
+    if is_data_list(y2):
+        color = 'k'
+    else:
+        color = 'tab:orange'
     ax1.set_xlabel(x_label)
     
     list_setting = False
-    if type(y1[0]) == list:
+    if is_data_list(y1):
         list_setting = True
         ax1.set_ylabel(y1_label[0])
         for y in y1:
@@ -85,13 +100,20 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         color = 'k'
     else:
         color = 'tab:blue'
-    ax2.set_ylabel(y2_label, color=color)
-    ax2.plot(x, y2, color=color)
-    ax2.tick_params(axis='y', labelcolor=color)
-    ax2.grid()
-
-    fig.tight_layout()
-    plt.legend([y2_label])
+    
+    if is_data_list(y2):
+        ax2.set_ylabel(y2_label)
+        for y in y2:
+            ax2.plot(x, y)
+            ax2.tick_params(axis='y')
+            ax2.grid()
+        plt.legend([y2_label])
+    else:
+        ax2.set_ylabel(y2_label, color=color)
+        ax2.plot(x, y2, color=color)
+        ax2.tick_params(axis='y', labelcolor=color)
+        ax2.grid()
+        plt.legend([y2_label])
 
     plt.tight_layout()
     plot_xaxis_disperse(ax1)
@@ -109,7 +131,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
                 return 
             if os.path.exists(filename):
                 os.remove(filename)
-            plt.savefig(filename)
+            plt.savefig(filename, bbox_inches="tight")
         else:
             plt.show()
     except:
@@ -210,6 +232,7 @@ def bar_chart(data: list, **kwargs):
         title:          (str) title of plot; DEFAULT=''
         saveFig:        (bool) True will save as 'filename'; DEFAULT=False
         filename:       (str) path to save plot; DEFAULT='temp_bar_chart.png'
+        positive:       (bool) True plots all color bars positively; DEFAULT=False
 
     returns:
         None
@@ -221,6 +244,7 @@ def bar_chart(data: list, **kwargs):
     title = kwargs.get('title', '')
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_bar_chart.png')
+    all_positive = kwargs.get('all_positive', False)
 
     if len(x) < 1:
         x = list(range(len(data)))
@@ -228,13 +252,20 @@ def bar_chart(data: list, **kwargs):
         x = x
     
     colors = []
+    positive = []
     for bar in data:
         if bar > 0.0:
+            positive.append(bar)
             colors.append('green')
         elif bar < 0.0:
+            positive.append(-1.0 * bar)
             colors.append('red')
         else:
+            positive.append(bar)
             colors.append('black')
+
+    if all_positive:
+        data = positive
 
     _, ax1 = plt.subplots()
     barlist = ax1.bar(x, data, width=1, color=colors)
@@ -393,6 +424,19 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
             plt.gca().add_line(box)
             box = plt.Line2D((x_shp_pts[4], x_shp_pts[4]), (np.min(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
+
+    elif (feature == 'price_gaps') and (shapeXY != []):
+        for oval in shapeXY:
+            x = xpts[oval['x']]
+            y = oval['y']
+            radius = oval['rad']
+            if oval['type'] == 'up':
+                color = 'g'
+            else:
+                color = 'r'
+
+            circle = plt.Circle((x,y), radius, color=color, fill=False)
+            plt.gcf().gca().add_artist(circle)
 
     plt.title(title)
     if len(legend) > 0:

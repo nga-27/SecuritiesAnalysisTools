@@ -1,5 +1,6 @@
 OPTIONS:
 
+--quit              :       exits program without running any functionality
 --core              :       normal operation run with parameters found in core.json
 --test              :       similar to '--core' but with test.json (for testing only)
 --noindex           :       does not include S&P500 index, omits comparison operations
@@ -14,18 +15,18 @@ VERSIONS:           :       (flags for versioning)
 
 FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUIRES --function flag
 
---mci               :       run Market Composite Index (MCI)
---bci               :       run Bond Composite Index (BCI)
---trend             :       run trendline analysis for a fund
---sr                :       run support/resistance line analysis; "--support_resistance" and "--rs" also supported
---clustered         :       run clustered oscillators for 'all'; "--clustered_osc" also supported
---head_shoulders    :       run head and shoulders function
---corr              :       run correlation index; use "--short" for 2y period (vs. entire history)
---rsi               :       run Relative Strength Index (RSI) function for funds
---macd              :       run Moving Average Convergence Divergence (MACD) function for funds
---relative_strength :       run True Strength (vs. S&P500) function for funds 
---obv               :       run On Balance Volume (OBV) function for funds; "--on_balance_volume" also supported 
---moving_average    :       run Moving Average (MA) function for funds; "--ma" also supported
+--mci               :       run {Market Composite Index} (MCI)
+--bci               :       run {Bond Composite Index} (BCI)
+--trend             :       run {Trendline} analysis for a fund
+--sr                :       run {Support/Resistance Line} analysis; "--support_resistance" and "--rs" also supported
+--clustered         :       run {Clustered Oscillators} for 'all'; "--clustered_osc" also supported
+--head_shoulders    :       run feature detection of {Head and Shoulders} function
+--corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history)
+--rsi               :       run {Relative Strength Index} (RSI) function for funds
+--macd              :       run {Moving Average Convergence Divergence} (MACD) function for funds
+--relative_strength :       run {'True' Strength} (vs. S&P500) function for funds 
+--obv               :       run {On Balance Volume} (OBV) function for funds; "--on_balance_volume" also supported 
+--moving_average    :       run {Moving Average} (MA) function for funds; "--ma" also supported
 
 AVAILABLE EXPORTS:  :       (current fields for specific tabular metrics exports)
 
