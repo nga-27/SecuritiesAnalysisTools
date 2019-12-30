@@ -17,6 +17,8 @@
     "Exports": {
         "run": true,
         "fields": ""
+    },"Keys": {
+        "Volatility_Quotient": ""
     },
     "Ticker Symbols" :
     [

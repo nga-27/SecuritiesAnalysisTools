@@ -4,6 +4,7 @@ import numpy as np
 import json 
 import os
 import pprint
+import requests
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -11,10 +12,18 @@ from dateutil.relativedelta import relativedelta
 import libs.utils.stable_yf as styf
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
+from .constants import TEXT_COLOR_MAP
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
+    Obtains "Volatility Quotient" (VQ) from Tradestops.com
 """
+
+VQ_API_BASE_URL = "https://sts.tradesmith.com/api/StsApiService/get-sts-values/"
+TRADESTOPS_URL = "https://tradestops.com/investment-calculator/"
+
+WARN_COLOR = TEXT_COLOR_MAP["yellow"]
+NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 def get_dividends(ticker):
     div = dict()
@@ -182,6 +191,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     metadata['recommendations']['tabular'] = calculate_recommendation_curve(metadata['recommendations'])
     # EPS needs some other figures to make it correct, but ok for now.
     metadata['eps'] = calculate_eps(metadata)
+    metadata['volatility_quotient'] = get_volatility_quotient(fund_ticker)
     if pb is not None: pb.uptick(increment=0.2)
 
     return metadata
@@ -288,7 +298,7 @@ def api_sector_match(sector: str, config: dict, fund_len=None):
 def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
     sector_match_file = "resources/sectors.json"
     if not os.path.exists(sector_match_file):
-        print(f"Warning: sector file '{sector_match_file}' not found.")
+        print(f"{WARN_COLOR}Warning: sector file '{sector_match_file}' not found.{NORMAL_COLOR}")
         return [], {}
 
     if sector_fund is None:
@@ -302,3 +312,32 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
         tickers = ' '.join(matched)
         fund_data, _ = download_data_indexes(indexes=matched, tickers=tickers, fund_len=fund_len)
         return matched, fund_data
+
+#####################################################
+
+def get_volatility_quotient(ticker_str: str, **kwargs):
+    json_path = ''
+    if os.path.exists('core.json'):
+        json_path = 'core.json'
+    elif os.path.exists('test.json'):
+        json_path = 'test.json'
+
+    if os.path.exists(json_path):
+        with open(json_path) as json_file: 
+            core = json.load(json_file)
+            key = core.get("Keys", {}).get("Volatility_Quotient", "")
+            ticker_str = ticker_str.upper()
+            url = f"{VQ_API_BASE_URL}{key}/{ticker_str}"
+
+            response = requests.get(url)
+            r = response.json()
+            if response.status_code != 200:
+                print("")
+                print(f"{WARN_COLOR}Volatility Quotient failed on {ticker_str} request: '{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL_COLOR}")
+                print("")
+                return ""
+
+            vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get("StopPriceLong", "")}
+            return vq 
+
+    return ""
