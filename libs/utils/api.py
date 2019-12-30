@@ -19,7 +19,11 @@ from .constants import TEXT_COLOR_MAP
     Obtains "Volatility Quotient" (VQ) from Tradestops.com
 """
 
-VQ_API_BASE_URL = "https://sts.tradesmith.com/api/StsApiService/get-sts-values/"
+VQ_API_BASE_URL = "https://sts.tradesmith.com/api/StsApiService/"
+VQ_VALUES_PARAM = "get-sts-values/"
+VQ_LOOKUP_PARAM = "search-symbol/"
+VQ_DEEP_ANALYSIS_PARAM = "get-tmc-data/"
+
 TRADESTOPS_URL = "https://tradestops.com/investment-calculator/"
 
 WARN_COLOR = TEXT_COLOR_MAP["yellow"]
@@ -191,8 +195,10 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     metadata['recommendations']['tabular'] = calculate_recommendation_curve(metadata['recommendations'])
     # EPS needs some other figures to make it correct, but ok for now.
     metadata['eps'] = calculate_eps(metadata)
-    metadata['volatility_quotient'] = get_volatility_quotient(fund_ticker)
-    if pb is not None: pb.uptick(increment=0.2)
+    if pb is not None: pb.uptick(increment=0.1)
+
+    metadata['volatility'] = get_volatility(fund_ticker)
+    if pb is not None: pb.uptick(increment=0.1)
 
     return metadata
 
@@ -315,7 +321,8 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
 
 #####################################################
 
-def get_volatility_quotient(ticker_str: str, **kwargs):
+def get_volatility(ticker_str: str, **kwargs):
+    vq = {}
     json_path = ''
     if os.path.exists('core.json'):
         json_path = 'core.json'
@@ -327,7 +334,7 @@ def get_volatility_quotient(ticker_str: str, **kwargs):
             core = json.load(json_file)
             key = core.get("Keys", {}).get("Volatility_Quotient", "")
             ticker_str = ticker_str.upper()
-            url = f"{VQ_API_BASE_URL}{key}/{ticker_str}"
+            url = f"{VQ_API_BASE_URL}{VQ_VALUES_PARAM}{key}/{ticker_str}"
 
             response = requests.get(url)
             r = response.json()
@@ -335,9 +342,31 @@ def get_volatility_quotient(ticker_str: str, **kwargs):
                 print("")
                 print(f"{WARN_COLOR}Volatility Quotient failed on {ticker_str} request: '{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL_COLOR}")
                 print("")
-                return ""
+                return vq
 
             vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get("StopPriceLong", "")}
+
+            url = f"{VQ_API_BASE_URL}{VQ_LOOKUP_PARAM}{key}/{ticker_str}/20"
+            response = requests.get(url)
+            r = response.json()
+            if response.status_code == 200:
+                val = None
+                for tick in r.get('Symbols', []):
+                    if tick['Symbol'] == ticker_str:
+                        val = tick["SymbolId"]
+                        break
+                if val is not None:
+                    now = datetime.now()
+                    start = now - relativedelta(years=10)
+                    start_str = start.strftime('%Y-%m-%d')
+                    now_str = now.strftime('%Y-%m-%d')
+
+                    url = f"{VQ_API_BASE_URL}{VQ_DEEP_ANALYSIS_PARAM}{key}/{val}/{start_str}/{now_str}"
+                    response = requests.get(url)
+                    r = response.json()
+                    if response.status_code == 200:
+                        vq['analysis'] = r
+
             return vq 
 
-    return ""
+    return vq
