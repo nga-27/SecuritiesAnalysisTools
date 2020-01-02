@@ -1,7 +1,7 @@
-import yfinance as yf 
-import pandas as pd 
-import numpy as np 
-import json 
+import yfinance as yf
+import pandas as pd
+import numpy as np
+import json
 import os
 import pprint
 import requests
@@ -29,6 +29,7 @@ TRADESTOPS_URL = "https://tradestops.com/investment-calculator/"
 WARN_COLOR = TEXT_COLOR_MAP["yellow"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
+
 def get_dividends(ticker):
     div = dict()
     try:
@@ -40,6 +41,7 @@ def get_dividends(ticker):
         div['dates'] = []
     return div
 
+
 def get_info(ticker, st):
     try:
         info = ticker.info
@@ -49,6 +51,7 @@ def get_info(ticker, st):
         except:
             info = dict()
     return info
+
 
 def get_financials(ticker, st):
     try:
@@ -64,6 +67,7 @@ def get_financials(ticker, st):
             fin = dict()
     return fin
 
+
 def get_balance_sheet(ticker, st):
     try:
         t = ticker.balance_sheet
@@ -77,7 +81,8 @@ def get_balance_sheet(ticker, st):
         except:
             bal = dict()
     return bal
-        
+
+
 def get_cashflow(ticker, st):
     try:
         t = ticker.cashflow
@@ -92,10 +97,11 @@ def get_cashflow(ticker, st):
             cash = dict()
     return cash
 
+
 def get_earnings(ticker, st):
     earn = dict()
     try:
-        t = ticker.earnings 
+        t = ticker.earnings
         ey = dict()
         ey['period'] = list(t.index)
         ey['revenue'] = [r for r in t['Revenue']]
@@ -109,7 +115,7 @@ def get_earnings(ticker, st):
         earn['quarterly'] = eq
     except:
         try:
-            t = st.earnings 
+            t = st.earnings
             ey = dict()
             ey['period'] = list(t.index)
             ey['revenue'] = [r for r in t['Revenue']]
@@ -120,13 +126,23 @@ def get_earnings(ticker, st):
             eq['period'] = list(q.index)
             eq['revenue'] = [r for r in q['Revenue']]
             eq['earnings'] = [e for e in t['Earnings']]
-            earn['quarterly'] = eq 
+            earn['quarterly'] = eq
         except:
             earn['yearly'] = {}
             earn['quarterly'] = {}
     return earn
 
+
 def get_recommendations(ticker, st):
+    """[summary]
+
+    Arguments:
+        ticker {[type]} -- [description]
+        st {[type]} -- [description]
+
+    Returns:
+        [type] -- [description]
+    """
     recom = dict()
     try:
         t = ticker.recommendations
@@ -174,31 +190,39 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
 
     metadata = {}
     ticker = yf.Ticker(fund_ticker)
-    if pb is not None: pb.uptick(increment=0.2)
+    if pb is not None:
+        pb.uptick(increment=0.2)
     st_tick = styf.Ticker(fund_ticker)
-    if pb is not None: pb.uptick(increment=0.3)
+    if pb is not None:
+        pb.uptick(increment=0.3)
 
     metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
     metadata['info'] = AVAILABLE_KEYS.get('info')(ticker, st_tick)
 
-    if pb is not None: pb.uptick(increment=0.2)
-    
+    if pb is not None:
+        pb.uptick(increment=0.2)
+
     metadata['financials'] = AVAILABLE_KEYS.get('financials')(ticker, st_tick)
     metadata['balance_sheet'] = AVAILABLE_KEYS.get('balance')(ticker, st_tick)
 
-    if pb is not None: pb.uptick(increment=0.1)
+    if pb is not None:
+        pb.uptick(increment=0.1)
 
     metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker, st_tick)
     metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker, st_tick)
-    metadata['recommendations'] = AVAILABLE_KEYS.get('recommendations')(ticker, st_tick)
-    
-    metadata['recommendations']['tabular'] = calculate_recommendation_curve(metadata['recommendations'])
+    metadata['recommendations'] = AVAILABLE_KEYS.get(
+        'recommendations')(ticker, st_tick)
+
+    metadata['recommendations']['tabular'] = calculate_recommendation_curve(
+        metadata['recommendations'])
     # EPS needs some other figures to make it correct, but ok for now.
     metadata['eps'] = calculate_eps(metadata)
-    if pb is not None: pb.uptick(increment=0.1)
+    if pb is not None:
+        pb.uptick(increment=0.1)
 
     metadata['volatility'] = get_volatility(fund_ticker)
-    if pb is not None: pb.uptick(increment=0.1)
+    if pb is not None:
+        pb.uptick(increment=0.1)
 
     return metadata
 
@@ -229,7 +253,7 @@ def calculate_recommendation_curve(recoms: dict) -> dict:
             sum_ = [firms[key]['grade'] for key in firms.keys()]
             grades.append(np.mean(sum_))
 
-        tabular['grades'] = grades 
+        tabular['grades'] = grades
         tabular['dates'] = dates
 
     return tabular
@@ -275,7 +299,7 @@ def calculate_eps(meta: dict) -> dict:
     if shares and q_earnings:
         eps['period'] = []
         eps['eps'] = []
-        for i,earn in enumerate(q_earnings['earnings']):
+        for i, earn in enumerate(q_earnings['earnings']):
             eps['period'].append(q_earnings['period'][i])
             eps['eps'].append(np.round(earn / shares, 3))
 
@@ -292,8 +316,8 @@ def api_sector_match(sector: str, config: dict, fund_len=None):
         matcher = json.load(f)
         matched = matcher.get("Sector", {}).get(sector)
         if matched is None:
-            return None, None 
-        
+            return None, None
+
         tickers = config.get('tickers', '').split(' ')
         if matched in tickers:
             return matched, None
@@ -304,7 +328,8 @@ def api_sector_match(sector: str, config: dict, fund_len=None):
 def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
     sector_match_file = "resources/sectors.json"
     if not os.path.exists(sector_match_file):
-        print(f"{WARN_COLOR}Warning: sector file '{sector_match_file}' not found.{NORMAL_COLOR}")
+        print(
+            f"{WARN_COLOR}Warning: sector file '{sector_match_file}' not found.{NORMAL_COLOR}")
         return [], {}
 
     if sector_fund is None:
@@ -314,12 +339,14 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
         matched = matcher.get("Comparison", {}).get(sector_fund)
         if matched is None:
             return [], {}
-        
+
         tickers = ' '.join(matched)
-        fund_data, _ = download_data_indexes(indexes=matched, tickers=tickers, fund_len=fund_len)
+        fund_data, _ = download_data_indexes(
+            indexes=matched, tickers=tickers, fund_len=fund_len)
         return matched, fund_data
 
 #####################################################
+
 
 def get_volatility(ticker_str: str, **kwargs):
     vq = {}
@@ -330,7 +357,7 @@ def get_volatility(ticker_str: str, **kwargs):
         json_path = 'test.json'
 
     if os.path.exists(json_path):
-        with open(json_path) as json_file: 
+        with open(json_path) as json_file:
             core = json.load(json_file)
             key = core.get("Keys", {}).get("Volatility_Quotient", "")
             ticker_str = ticker_str.upper()
@@ -344,9 +371,11 @@ def get_volatility(ticker_str: str, **kwargs):
                 print("")
                 return vq
 
-            vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get("StopPriceLong", ""), "latest_price": r.get("LatestClose")}
+            vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get(
+                "StopPriceLong", ""), "latest_price": r.get("LatestClose")}
             vq['last_max'] = r.get('LastMax')
-            if vq['last_max'] is None: vq['last_max'] = {"Date": "n/a", "Price": "n/a"}
+            if vq['last_max'] is None:
+                vq['last_max'] = {"Date": "n/a", "Price": "n/a"}
 
             url = f"{VQ_API_BASE_URL}{VQ_LOOKUP_PARAM}{key}/{ticker_str}/20"
             response = requests.get(url)
@@ -369,6 +398,6 @@ def get_volatility(ticker_str: str, **kwargs):
                     if response.status_code == 200:
                         vq['analysis'] = r
 
-            return vq 
+            return vq
 
     return vq
