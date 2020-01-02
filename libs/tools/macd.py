@@ -1,5 +1,5 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 
 from .moving_average import exponential_ma, exponential_ma_list
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
@@ -14,6 +14,7 @@ Moving Average Convergence / Divergence (MACD)
 
     TODO: speed of crossovers can be a signal of overbought / oversold 
 """
+
 
 def generate_macd_signal(fund: pd.DataFrame, plotting=True, name='') -> list:
     """
@@ -34,12 +35,13 @@ def generate_macd_signal(fund: pd.DataFrame, plotting=True, name='') -> list:
         bar_chart(macd, position=fund, x=x, title=name2)
     else:
         filename = name + '/macd_bar_{}.png'.format(name)
-        bar_chart(macd, position=fund, x=x, title=name2, saveFig=True, filename=filename)
+        bar_chart(macd, position=fund, x=x, title=name2,
+                  saveFig=True, filename=filename)
 
     return macd, macd_ema
 
 
-def get_macd_trend(macd: list, trend_type: str='current') -> str:
+def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
     if trend_type == 'current':
         if macd[len(macd)-1] > macd[len(macd)-2]:
             return 'rising'
@@ -49,7 +51,7 @@ def get_macd_trend(macd: list, trend_type: str='current') -> str:
     elif trend_type == 'group':
         if macd[len(macd)-1] > 0.0:
             state = 1
-        else: 
+        else:
             state = 0
         if state == 1:
             i = len(macd)-1
@@ -89,7 +91,7 @@ def get_macd_value(macd: list, value_type='current', index=-1) -> float:
     if value_type == 'current':
         macd_max = np.max(np.abs(macd))
         return macd[len(macd)-1] / macd_max * 100.0
-    
+
     elif value_type == 'group':
         macd_max = get_group_max(macd, index=index)
         if macd_max == 0.0:
@@ -103,10 +105,11 @@ def get_macd_value(macd: list, value_type='current', index=-1) -> float:
         macd_max = get_group_max(macd)
         if macd_max == 0.0:
             return 0.0
-        val = (macd[len(macd)-1] - macd_ema[len(macd_ema)-1]) / macd_max * 100.0
-        return val 
-    
-    else: 
+        val = (macd[len(macd)-1] - macd_ema[len(macd_ema)-1]) / \
+            macd_max * 100.0
+        return val
+
+    else:
         return None
 
 
@@ -114,7 +117,7 @@ def get_group_range(signal: list, index: int) -> list:
     """ [start_index, end_index] """
     if signal[index] > 0.0:
         state = 1
-    else: 
+    else:
         state = 0
 
     start = index
@@ -150,7 +153,7 @@ def get_group_range(signal: list, index: int) -> list:
                 end += 1
 
     return [start, end, (end-start+1)]
-        
+
 
 def get_group_max(signal: list, index=-1) -> float:
     if index == -1:
@@ -183,7 +186,6 @@ def get_group_duration_factor(signal: list, index: int, f_type='signal') -> floa
     else:
         return 1.0
     return factor
-    
 
 
 def has_crossover(signal: list, interval=3) -> str:
@@ -193,15 +195,15 @@ def has_crossover(signal: list, interval=3) -> str:
         return 'crossover_bearish'
     else:
         return None
-    
+
 
 def get_macd_state(macd: list) -> str:
     """
     states: 'strongly', 'weakly', 'crossover' + bear/bullish
-    """ 
+    """
     cross = has_crossover(macd)
     if cross is not None:
-        return cross 
+        return cross
     intensity = get_macd_value(macd, value_type='group')
     factor = get_group_duration_factor(macd, len(macd)-1, f_type='state')
     intensity = intensity / factor
@@ -236,34 +238,39 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     progress_bar = kwargs.get('progress_bar', None)
 
-    macd_sig, _ = generate_macd_signal(fund, plotting=plot_output, name=name) 
-    if progress_bar is not None: progress_bar.uptick(increment=0.5)
+    macd_sig, _ = generate_macd_signal(fund, plotting=plot_output, name=name)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.5)
 
     macd = {}
 
     macd['state'] = get_macd_state(macd_sig)
-    
+
     macd['period_value'] = get_macd_value(macd_sig, value_type='current')
     macd['group_value'] = get_macd_value(macd_sig, value_type='group')
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
 
     macd['current_trend'] = get_macd_trend(macd_sig, trend_type='current')
     macd['group_trend'] = get_macd_trend(macd_sig, trend_type='group')
 
     macd['change'] = get_macd_value(macd_sig, value_type='change')
     macd['tabular'] = macd_sig
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - MACD: '
     if plot_output:
-        dual_plotting(fund['Close'], macd_sig, 'Position Price', 'MACD', title=name2)
+        dual_plotting(fund['Close'], macd_sig,
+                      'Position Price', 'MACD', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
     else:
-        filename = name +'/macd_{}.png'.format(name)
-        dual_plotting(  fund['Close'], macd_sig, 'Position Price', 'MACD', title=name2, saveFig=True, filename=filename)
+        filename = name + '/macd_{}.png'.format(name)
+        dual_plotting(fund['Close'], macd_sig, 'Position Price',
+                      'MACD', title=name2, saveFig=True, filename=filename)
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.3)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.3)
 
     return macd
-
