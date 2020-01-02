@@ -339,7 +339,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
 
             datax = list(range(max_range[0], max_range[1]))
             datay = [reg[0] * float(x) + reg[1] for x in datax]
-            if not math.isnan(datay[0]):
+            if (len(datay) > 0) and (not math.isnan(datay[0])):
                 X.append(datax)
                 Y.append(datay)
 
