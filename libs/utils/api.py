@@ -344,7 +344,9 @@ def get_volatility(ticker_str: str, **kwargs):
                 print("")
                 return vq
 
-            vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get("StopPriceLong", "")}
+            vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get("StopPriceLong", ""), "latest_price": r.get("LatestClose")}
+            vq['last_max'] = r.get('LastMax')
+            if vq['last_max'] is None: vq['last_max'] = {"Date": "n/a", "Price": "n/a"}
 
             url = f"{VQ_API_BASE_URL}{VQ_LOOKUP_PARAM}{key}/{ticker_str}/20"
             response = requests.get(url)

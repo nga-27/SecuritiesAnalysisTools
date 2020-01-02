@@ -70,7 +70,17 @@ def add_fund_content(prs, fund: str, analysis: dict):
             table_width = Inches(2.4)
             table_height = Inches(1.4)
 
-            table_placeholder = slide.shapes.add_table( 3, 
+            vq = analysis[fund].get('metadata', {}).get('volatility', {}).get('VQ')
+            has_vq = False
+            rows = 3
+            if vq is not None:
+                has_vq = True
+                rows = 6
+                stop_loss = analysis[fund].get('metadata', {}).get('volatility', {}).get('stop_loss')
+                print(f"vol: {analysis[fund].get('metadata', {}).get('volatility', {}).get('last_max')}")
+                high_close = analysis[fund].get('metadata', {}).get('volatility', {}).get('last_max', {}).get('Price', 'n/a')
+
+            table_placeholder = slide.shapes.add_table( rows, 
                                                         2,
                                                         left_loc,
                                                         top_loc,
@@ -85,9 +95,17 @@ def add_fund_content(prs, fund: str, analysis: dict):
             table.cell(2,0).text = 'R-Squared'
             table.cell(2,1).text = str(np.round(analysis[fund]['r_squared'], 5))
 
+            if has_vq:
+                table.cell(3,0).text = 'Volatility Quotient'
+                table.cell(3,1).text = str(vq)
+                table.cell(4,0).text = 'Stop Loss'
+                table.cell(4,1).text = str(stop_loss)
+                table.cell(5,0).text = 'Last High Close'
+                table.cell(5,1).text = str(high_close)
+
             table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
             table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
-            for i in range(1,3):
+            for i in range(1, rows):
                 table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(14)
                 table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(14)
             has_beta = True
