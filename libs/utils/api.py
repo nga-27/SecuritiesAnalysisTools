@@ -187,6 +187,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         metadata:       (dict) contains all financial metadata available
     """
     pb = kwargs.get('progress_bar', None)
+    max_close = kwargs.get('max_close', None)
 
     metadata = {}
     ticker = yf.Ticker(fund_ticker)
@@ -220,7 +221,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     if pb is not None:
         pb.uptick(increment=0.1)
 
-    metadata['volatility'] = get_volatility(fund_ticker)
+    metadata['volatility'] = get_volatility(fund_ticker, max_close=max_close)
     if pb is not None:
         pb.uptick(increment=0.1)
 
@@ -349,7 +350,10 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
 
 
 def get_volatility(ticker_str: str, **kwargs):
+    max_close = kwargs.get('max_close', None)
+    is_SP500 = False
     vq = {}
+
     json_path = ''
     if os.path.exists('core.json'):
         json_path = 'core.json'
@@ -361,6 +365,11 @@ def get_volatility(ticker_str: str, **kwargs):
             core = json.load(json_file)
             key = core.get("Keys", {}).get("Volatility_Quotient", "")
             ticker_str = ticker_str.upper()
+
+            if ticker_str == '^GSPC':
+                ticker_str = 'SPY'
+                is_SP500 = True
+
             url = f"{VQ_API_BASE_URL}{VQ_VALUES_PARAM}{key}/{ticker_str}"
 
             response = requests.get(url)
@@ -376,6 +385,11 @@ def get_volatility(ticker_str: str, **kwargs):
             vq['last_max'] = r.get('LastMax')
             if vq['last_max'] is None:
                 vq['last_max'] = {"Date": "n/a", "Price": "n/a"}
+
+            if is_SP500 and max_close is not None:
+                vq['last_max'] = {"Date": "n/a", "Price": max_close}
+                ratio = (100.0 - vq['VQ']) / 100.0
+                vq['stop_loss'] = np.round(ratio * vq['last_max']['Price'], 2)
 
             url = f"{VQ_API_BASE_URL}{VQ_LOOKUP_PARAM}{key}/{ticker_str}/20"
             response = requests.get(url)
