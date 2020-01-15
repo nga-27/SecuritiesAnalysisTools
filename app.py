@@ -14,17 +14,18 @@
 """
 
 ################################
-_VERSION_ = '0.1.21'
-_DATE_REVISION_ = '2019-12-26'
+from releases.prod import technical_analysis as prod
+from releases.dev import technical_analysis as dev
+from releases.release_1 import technical_analysis as r1
+from libs.utils import start_header, TEXT_COLOR_MAP, logo_renderer
+_VERSION_ = '0.1.22'
+_DATE_REVISION_ = '2020-01-15'
 ################################
 
 # Imports that create final products and show progress doing so
-from libs.utils import start_header, TEXT_COLOR_MAP, logo_renderer
 
 # Imports that run operations and functions for the program
-from releases.release_1 import technical_analysis as r1
-from releases.prod import technical_analysis as prod 
-from releases.dev import technical_analysis as dev
+
 
 class App:
 
@@ -37,11 +38,13 @@ class App:
 
     def run(self):
         logo_renderer()
-        self.config = start_header(update_release=_DATE_REVISION_, version=_VERSION_, options=True)
+        self.config = start_header(
+            update_release=_DATE_REVISION_, version=_VERSION_, options=True)
 
         if 'run' in self.config['state']:
             self.config['release'] = False
-            print(f"{self.prod_color}~~~~ PRODUCTION ENVIRONMENT ~~~~{self.normal_color}")
+            print(
+                f"{self.prod_color}~~~~ PRODUCTION ENVIRONMENT ~~~~{self.normal_color}")
             print(" ")
             prod(self.config)
 
@@ -60,9 +63,7 @@ class App:
         print('Done.')
 
 
-
 app = App()
 
 if __name__ == '__main__':
     app.run()
-
