@@ -1,6 +1,5 @@
 {
-    "Properties": 
-    {
+    "Properties": {
         "Period": "2y",
         "Interval": "1d",
         "Indexes": {
@@ -8,7 +7,7 @@
             "Corporate Bond": true,
             "Treasury Bond": true,
             "International Bond": true,
-            "Correlation" : {
+            "Correlation": {
                 "run": false,
                 "type": "long"
             }
@@ -17,11 +16,11 @@
     "Exports": {
         "run": true,
         "fields": ""
-    },"Keys": {
+    },
+    "Keys": {
         "Volatility_Quotient": ""
     },
-    "Ticker Symbols" :
-    [
+    "Ticker Symbols": [
         "VWINX",
         "VTSAX",
         "VHT"

@@ -1,6 +1,5 @@
 {
-    "Properties": 
-    {
+    "Properties": {
         "Period": "1y",
         "Interval": "1d",
         "Indexes": {
@@ -8,7 +7,7 @@
             "Corporate Bond": true,
             "Treasury Bond": true,
             "International Bond": true,
-            "Correlation" : {
+            "Correlation": {
                 "run": true,
                 "type": "short"
             }
@@ -21,8 +20,7 @@
     "Keys": {
         "Volatility_Quotient": ""
     },
-    "Ticker Symbols" :
-    [
+    "Ticker Symbols": [
         "AAPL",
         "GLD"
     ]
