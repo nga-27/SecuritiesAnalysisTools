@@ -42,14 +42,20 @@ def get_dividends(ticker):
     return div
 
 
-def get_info(ticker, st):
-    try:
-        info = ticker.info
-    except:
+def get_info(ticker, st, force_holdings=False):
+    if force_holdings:
         try:
             info = st.info
         except:
             info = dict()
+    else:
+        try:
+            info = ticker.info
+        except:
+            try:
+                info = st.info
+            except:
+                info = dict()
     return info
 
 
@@ -198,7 +204,8 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         pb.uptick(increment=0.3)
 
     metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
-    metadata['info'] = AVAILABLE_KEYS.get('info')(ticker, st_tick)
+    metadata['info'] = AVAILABLE_KEYS.get('info')(
+        ticker, st_tick, force_holdings=True)
 
     if pb is not None:
         pb.uptick(increment=0.2)
