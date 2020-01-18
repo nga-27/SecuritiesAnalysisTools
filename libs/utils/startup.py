@@ -1,12 +1,12 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-import os 
+import os
 import shutil
 import glob
 import time
-import json 
+import json
 
 from .constants import TEXT_COLOR_MAP
 
@@ -21,7 +21,8 @@ logo_main_color = TEXT_COLOR_MAP["purple_bold"]
 logo_other_color = TEXT_COLOR_MAP["blue_bold"]
 logo_copyrt_color = TEXT_COLOR_MAP["green_bold"]
 
-def start_header(update_release: str='2019-06-04', version: str='0.1.01', default='VTI', options: str=None) -> dict:
+
+def start_header(update_release: str = '2019-06-04', version: str = '0.1.01', default='VTI', options: str = None) -> dict:
     print(" ")
     print(f"{outline_color}----------------------------------")
     print(f"-{normal_color}   Securities Analysis Tools    {outline_color}-")
@@ -37,7 +38,8 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config = dict()
 
     if options is not None:
-        input_str = input("Enter ticker symbols (e.g. 'aapl MSFT') and tags (see --options): ")
+        input_str = input(
+            "Enter ticker symbols (e.g. 'aapl MSFT') and tags (see --options): ")
     else:
         input_str = input("Enter ticker symbols (e.g. 'aapl MSFT'): ")
 
@@ -53,7 +55,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     config['exports'] = {"run": False, "fields": []}
 
     config, list_of_tickers = header_options_parse(input_str, config)
-    
+
     if config['state'] == 'halt':
         return config
     if config['state'] == 'function':
@@ -66,8 +68,8 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
     else:
         if config['core'] == False:
             config['tickers'] = ticker_list_to_str(list_of_tickers)
-            config['tickers'] = config['tickers'].strip()        
-    
+            config['tickers'] = config['tickers'].strip()
+
     config['tickers'] = config['tickers'].upper()
     ticker_print = ''
 
@@ -85,8 +87,7 @@ def start_header(update_release: str='2019-06-04', version: str='0.1.01', defaul
             ticker_print += ', and S&P500'
     config['ticker print'] = ticker_print
     print(" ")
-    return config 
-
+    return config
 
 
 def remove_whitespace(config: dict, default: str) -> list:
@@ -130,7 +131,7 @@ def header_json_parse(key: str) -> list:
             interval = props['Interval']
             period = props['Period']
             exports = core.get('Exports')
-    
+
     else:
         return None
 
@@ -212,7 +213,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         options_file = 'resources/header_options.txt'
         if os.path.exists(options_file):
             fs = open(options_file, 'r')
-            options_read = fs.readlines() #fs.read()
+            options_read = fs.readlines()  # fs.read()
             fs.close()
             header_options_print(options_read)
         else:
@@ -252,73 +253,92 @@ def header_options_parse(input_str: str, config: dict) -> list:
     # Exporting of data from metadata.json to dataframe-like file
     if '--export-dataset' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'function run')
-        config = add_str_to_dict_key(config, 'run_functions', 'export', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'export', type_='list')
         # No functions run, so no tickers should be present. Only metadata keys
-        config['exports'] = {"run": True, "fields": ticker_list_to_str(ticker_keys)}
-
+        config['exports'] = {"run": True,
+                             "fields": ticker_list_to_str(ticker_keys)}
 
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in i_keys:
-        config = add_str_to_dict_key(config, 'run_functions', 'mci', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'mci', type_='list')
 
     if '--bci' in i_keys:
-        config = add_str_to_dict_key(config, 'run_functions', 'bci', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'bci', type_='list')
 
     if '--trend' in i_keys:
         config['tickers'] = ticker_list_to_str(ticker_keys)
-        config = add_str_to_dict_key(config, 'run_functions', 'trend', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'trend', type_='list')
 
     if '--support_resistance' in i_keys:
         config['tickers'] = ticker_list_to_str(ticker_keys)
-        config = add_str_to_dict_key(config, 'run_functions', 'support_resistance', type_='list')
-    
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'support_resistance', type_='list')
+
     if ('--sr' in i_keys) or ('--rs' in i_keys) or ('--support_resistance' in i_keys):
         config['tickers'] = ticker_list_to_str(ticker_keys)
-        config = add_str_to_dict_key(config, 'run_functions', 'support_resistance', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'support_resistance', type_='list')
 
     if ('--clustered' in i_keys) or ('--clustered_osc' in i_keys):
         config['tickers'] = ticker_list_to_str(ticker_keys)
-        config = add_str_to_dict_key(config, 'run_functions', 'clustered_oscs', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'clustered_oscs', type_='list')
 
     if ('--head_shoulders' in i_keys) or ('--hs' in i_keys):
         config['tickers'] = ticker_list_to_str(ticker_keys)
-        config = add_str_to_dict_key(config, 'run_functions', 'head_shoulders', type_='list')
-    
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'head_shoulders', type_='list')
+
     if ('--corr' in i_keys) or ('--correlation' in i_keys):
-        config = add_str_to_dict_key(config, 'run_functions', 'correlation', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'correlation', type_='list')
         if '--short' in i_keys:
             config['duration'] = 'short'
         else:
             config['duration'] = 'long'
 
     if '--rsi' in i_keys:
-        config = add_str_to_dict_key(config, 'run_functions', 'rsi', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'rsi', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if '--macd' in i_keys:
-        config = add_str_to_dict_key(config, 'run_functions', 'macd', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'macd', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if '--relative_strength' in i_keys:
-        config = add_str_to_dict_key(config, 'run_functions', 'relative_strength', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'relative_strength', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if ('--obv' in i_keys) or ('--on_balance_volume' in i_keys):
-        config = add_str_to_dict_key(config, 'run_functions', 'obv', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'obv', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if ('--ma' in i_keys) or ('--moving_average' in i_keys):
-        config = add_str_to_dict_key(config, 'run_functions', 'ma', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'ma', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
-        config = add_str_to_dict_key(config, 'run_functions', 'gaps', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'gaps', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if ('--vq' in i_keys) or ('--stop_loss' in i_keys):
-        config = add_str_to_dict_key(config, 'run_functions', 'vq', type_='list')
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'vq', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
+    if ('--nasit_funds' in i_keys) or ('--nf' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'nf', type_='list')
 
     # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in i_keys:
@@ -341,7 +361,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--r2' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'r2')
         return config, ticker_keys
-        
+
     config = add_str_to_dict_key(config, 'state', 'run')
     return config, ticker_keys
 
@@ -353,6 +373,5 @@ def add_str_to_dict_key(content: dict, key: str, item: str, type_='string'):
     if len(content[key]) > 0:
         content[key] += f", {item}"
     else:
-        content[key] += item 
+        content[key] += item
     return content
-    
