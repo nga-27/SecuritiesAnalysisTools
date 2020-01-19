@@ -1,8 +1,8 @@
+import warnings, pprint, math
 import pandas as pd 
 import numpy as np 
 from datetime import datetime
 from scipy.stats import linregress
-import warnings, pprint, math
 
 from .math_functions import linear_regression
 from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
@@ -12,16 +12,32 @@ from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
 
 TREND_PTS = [2, 3, 6]
 
-def get_trend(position: pd.DataFrame, style: str='sma', ma_size: int=50, date_range: list=[]) -> dict:
-    """ generates a trend of a given position and features of trend
+def get_trend(position: pd.DataFrame, **kwargs) -> dict:
+    """Get Trend
+
+    Generates a trend of a given position and features of trend
 
     Styles:
         'sma' - small moving average (uses 'ma_size')
         'ema' - exponential moving average (uses 'ma_size')
     Date_range:
         list -> [start_date, end_date] -> ['2018-04-18', '2019-01-20']
-
+    
+    Arguments:
+        position {pd.DataFrame}
+    
+    Keyword Arguments:
+        style {str} -- (default: {'sma'})
+        ma_size {int} -- (default: {50})
+        date_range {list} -- (default: {[]})
+    
+    Returns:
+        dict -- trends
     """
+    style = kwargs.get('style', 'sma')
+    ma_size = kwargs.get('ma_size', 50)
+    date_range = kwargs.get('date_range', [])
+
     trend = {}
 
     if style == 'sma':
@@ -230,7 +246,8 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     
     name2 = SP500.get(name, name)
     if plot_output:
-        generic_plotting(Y, x=X, colors=C, title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+        generic_plotting(Y, x=X, colors=C, 
+                            title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
     else:
         filename = f"{name}/{sub_name}.png"
         generic_plotting(Y, x=X, colors=C, 

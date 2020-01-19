@@ -1,5 +1,5 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 
 from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
 
@@ -17,17 +17,34 @@ CLUSTER_THRESHOLD = 0.7
 MAJOR_GROUP_THRESHOLD = 1.1
 NUM_NEAREST_LINES = 7
 
+
 def truncate_points(X: list, Y: list) -> list:
     new_X = []
     new_Y = []
-    for i,x in enumerate(X):
+    for i, x in enumerate(X):
         if x not in new_X:
             new_X.append(x)
             new_Y.append(Y[i])
     return new_X, new_Y
 
 
-def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_type='windowed') -> list:
+def find_points(data: pd.DataFrame, timeframe: int, **kwargs) -> list:
+    """Find Points
+
+    Arguments:
+        data {pd.DataFrame} 
+        timeframe {int} -- time window (number of periods)
+
+    Keyword Arguments:
+        line_type {str} -- (default: {'support'})
+        filter_type {str} -- signal filter (default: {'windowed'})
+
+    Returns:
+        list -- list of points
+    """
+    line_type = kwargs.get('line_type', 'support')
+    filter_type = kwargs.get('filter_type', 'windowed')
+
     total_entries = len(data['Close'])
     if pd.isna(data['Close'][total_entries-1]):
         total_entries -= 1
@@ -54,7 +71,7 @@ def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_
 
             X.append(point)
             Y.append(val)
-            
+
             sect_count += 1
 
     if filter_type == 'convolution':
@@ -73,7 +90,7 @@ def find_points(data: pd.DataFrame, timeframe: int, line_type='support', filter_
 
             X.append(point)
             Y.append(val)
-            
+
             sect_count += 1
         X, Y = truncate_points(X, Y)
 
@@ -118,7 +135,8 @@ def cluster_notables(sorted_x: list, data: pd.DataFrame) -> list:
     sub = []
     sub.append(sorted_x[0])
     for i in range(1, len(sorted_x)):
-        val = (data['Close'][sorted_x[i]] - data['Close'][sub[len(sub)-1]]) / data['Close'][sub[len(sub)-1]] * 100.0
+        val = (data['Close'][sorted_x[i]] - data['Close']
+               [sub[len(sub)-1]]) / data['Close'][sub[len(sub)-1]] * 100.0
         if (val > -1*CLUSTER_THRESHOLD) and (val < CLUSTER_THRESHOLD):
             sub.append(sorted_x[i])
         else:
@@ -138,7 +156,7 @@ def cluster_notables(sorted_x: list, data: pd.DataFrame) -> list:
     return lines
 
 
-def get_plot_content(data: pd.DataFrame, rs_lines: dict, selected_timeframe: str='144'):
+def get_plot_content(data: pd.DataFrame, rs_lines: dict, selected_timeframe: str = '144'):
     Xs = []
     Ys = []
     Xs.append(list(range(len(data['Close']))))
@@ -197,7 +215,8 @@ def res_sup_unions(Yr: list, Xr: list, Ys: list, Xs: list):
                     Xu.pop(len(Xu)-1)
                 start = min(Xc[i-1][0], Xc[i][0])
                 end = max(Xc[i-1][len(Xc[i-1])-1], Xc[i][len(Xc[i])-1])
-                y = [np.round(np.mean([Yc[i-1][0], Yc[i][0]]), 2)] * (end-start)
+                y = [np.round(np.mean([Yc[i-1][0], Yc[i][0]]), 2)
+                     ] * (end-start)
                 x = list(range(start, end))
                 Xu.append(x)
                 Yu.append(y)
@@ -230,7 +249,8 @@ def get_nearest_lines(ylist: list, cur_price: float, support_resistance='support
             y_color = 'black'
             if len(color) > 0:
                 y_color = color[y]
-            keys.append({'Price': f"{ylist[y]}", 'Change': f"{percent}%", 'Color': y_color})
+            keys.append(
+                {'Price': f"{ylist[y]}", 'Change': f"{percent}%", 'Color': y_color})
         return keys
 
     elif support_resistance == 'support':
@@ -250,23 +270,30 @@ def get_nearest_lines(ylist: list, cur_price: float, support_resistance='support
         if support_resistance == 'support':
             if (count - NUM_NEAREST_LINES) < 0:
                 for i in range(count, -1, modifier):
-                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
-                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
-            else: 
+                    percent = np.round(
+                        (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append(
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+            else:
                 for i in range(count, count - NUM_NEAREST_LINES, -1):
-                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
-                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+                    percent = np.round(
+                        (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append(
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
         else:
             if (count + NUM_NEAREST_LINES) >= len(ylist) - 1:
                 for i in range(count, len(ylist), modifier):
-                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
-                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
-            else: 
+                    percent = np.round(
+                        (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append(
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+            else:
                 for i in range(count, count + NUM_NEAREST_LINES, modifier):
-                    percent = np.round((ylist[i] - cur_price) / cur_price * 100.0, 3)
-                    keys.append({'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+                    percent = np.round(
+                        (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    keys.append(
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
     return keys
-
 
 
 def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> dict:
@@ -293,16 +320,19 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> 
     sup.sort()
     maj.sort()
 
-    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of 
+    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of
     # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
     # length of plotting to accomodate.
     analysis['current price'] = data['Close'][len(data['Close'])-1]
     if pd.isna(analysis['current price']):
         analysis['current price'] = data['Close'][len(data['Close'])-2]
 
-    analysis['supports'] = get_nearest_lines(maj, analysis['current price'], support_resistance='support')
-    analysis['resistances'] = get_nearest_lines(maj, analysis['current price'], support_resistance='resistance')
-    analysis['major S&R'] = get_nearest_lines(maj, analysis['current price'], support_resistance='major', color=colors)
+    analysis['supports'] = get_nearest_lines(
+        maj, analysis['current price'], support_resistance='support')
+    analysis['resistances'] = get_nearest_lines(
+        maj, analysis['current price'], support_resistance='resistance')
+    analysis['major S&R'] = get_nearest_lines(
+        maj, analysis['current price'], support_resistance='major', color=colors)
 
     return analysis
 
@@ -345,24 +375,30 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     resistance = {}
     for time in timeframes:
         support[str(time)] = {}
-        x, y = find_points(data, line_type='support', timeframe=time, filter_type='windowed')
+        x, y = find_points(data, line_type='support',
+                           timeframe=time, filter_type='windowed')
         support[str(time)]['x'] = x
         support[str(time)]['y'] = y
         sorted_support = sort_and_group(support)
-        resist_support_lines['support'][str(time)] = cluster_notables(sorted_support, data)
+        resist_support_lines['support'][str(
+            time)] = cluster_notables(sorted_support, data)
 
         resistance[str(time)] = {}
         x2, y2 = find_points(data, line_type='resistance', timeframe=time)
         resistance[str(time)]['x'] = x2
         resistance[str(time)]['y'] = y2
         sorted_resistance = sort_and_group(resistance)
-        resist_support_lines['resistance'][str(time)] = cluster_notables(sorted_resistance, data)
+        resist_support_lines['resistance'][str(
+            time)] = cluster_notables(sorted_resistance, data)
 
-        if progress_bar is not None: progress_bar.uptick(increment=increment)
+        if progress_bar is not None:
+            progress_bar.uptick(increment=increment)
 
-    Xs, Ys, Xr, Yr = get_plot_content(data, resist_support_lines, selected_timeframe=str(timeframes[len(timeframes)-1]))
+    Xs, Ys, Xr, Yr = get_plot_content(
+        data, resist_support_lines, selected_timeframe=str(timeframes[len(timeframes)-1]))
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.2)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.2)
 
     Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
     # Odd list behavior when no res/sup lines drawn on appends, so if-else to fix
@@ -373,24 +409,29 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
         Xp2.append(data.index)
         Yp.append(remove_dates_from_close(data))
     else:
-        Xp2 = data.index 
+        Xp2 = data.index
         Yp = [remove_dates_from_close(data)]
     c = colorize_plots(len(Yp), primary_plot_index=len(Yp)-1)
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
 
     name2 = SP500.get(name, name)
     if plot_output:
-        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name2} Major Resistance & Support')
+        generic_plotting(Yp, x=Xp2, colors=c,
+                         title=f'{name2} Major Resistance & Support')
     else:
         filename = f"{name}/resist_support_{name}.png"
-        generic_plotting(Yp, x=Xp2, colors=c, title=f'{name2} Major Resistance & Support', saveFig=True, filename=filename)
+        generic_plotting(
+            Yp, x=Xp2, colors=c, title=f'{name2} Major Resistance & Support', saveFig=True, filename=filename)
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
 
     analysis = detailed_analysis([Yr, Ys, Yc], data, key_args={'Colors': c})
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
-    
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
+
     return analysis
 
 

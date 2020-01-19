@@ -1,6 +1,7 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 from scipy.stats import linregress
+
 
 def linear_regression(x_list, y_list) -> list:
     """ returns [m_slope, intercept] """
@@ -19,7 +20,6 @@ def linear_regression(x_list, y_list) -> list:
     return [m_slope, intercept]
 
 
-
 def local_minima(pricing) -> list:
     """ returns: minimas = [traded_day, value] """
     pricing = list(pricing)
@@ -30,39 +30,39 @@ def local_minima(pricing) -> list:
     min_ind = 0
 
     for pt in range(len(pricing)):
-        
+
         if dropping == False:
             if (pricing[pt] < min_val):
                 dropping = True
 
             min_val = pricing[pt]
-            min_ind = pt 
+            min_ind = pt
 
-        else: 
+        else:
             if (pricing[pt] > min_val):
                 minimas.append([min_ind, min_val])
-                dropping = False 
+                dropping = False
 
-            min_ind = pt 
+            min_ind = pt
             min_val = pricing[pt]
 
-    return minimas         
+    return minimas
 
 
 def lower_low(data, start_val, start_ind) -> list:
     """ Looks for a bounce (rise) then lower low """
     data = list(data)
-    track_ind = start_ind 
-    track_val = start_val 
+    track_ind = start_ind
+    track_val = start_val
 
     # 0: first descent or rise; 1: lower low (in progress); 2: rise (lowest low found/not found)
-    bounce_state = 0 
+    bounce_state = 0
     lows = []
 
     for price in range(start_ind, len(data)):
 
         if (data[price] < start_val) and (bounce_state < 2):
-            track_ind = price 
+            track_ind = price
             track_val = data[price]
             bounce_state = 1
 
@@ -71,31 +71,30 @@ def lower_low(data, start_val, start_ind) -> list:
 
         if (data[price] < track_val) and (bounce_state > 1):
             bounce_state = 3
-            track_ind = price 
+            track_ind = price
             track_val = data[price]
 
         if (data[price] > track_val) and (bounce_state == 3):
             bounce_state = 4
             lows.append([track_val, track_ind])
-            
 
-    return lows 
+    return lows
 
 
 def higher_high(data, start_val, start_ind) -> list:
     """ Looks for a bounce (rise) then lower low """
     data = list(data)
-    track_ind = start_ind 
-    track_val = start_val 
+    track_ind = start_ind
+    track_val = start_val
 
     # 0: first descent or rise; 1: lower low (in progress); 2: rise (lowest low found/not found)
-    bounce_state = 0 
+    bounce_state = 0
     highs = []
 
     for price in range(start_ind, len(data)):
 
         if (data[price] > start_val) and (bounce_state < 2):
-            track_ind = price 
+            track_ind = price
             track_val = data[price]
             bounce_state = 1
 
@@ -104,15 +103,14 @@ def higher_high(data, start_val, start_ind) -> list:
 
         if (data[price] > track_val) and (bounce_state > 1):
             bounce_state = 3
-            track_ind = price 
+            track_ind = price
             track_val = data[price]
 
         if (data[price] < track_val) and (bounce_state == 3):
             bounce_state = 4
             highs.append([track_val, track_ind])
-            
 
-    return highs 
+    return highs
 
 
 def bull_bear_th(osc, start, thresh, bull_bear='bull'):
@@ -129,7 +127,7 @@ def bull_bear_th(osc, start, thresh, bull_bear='bull'):
                 return count
             count += 1
 
-    return None 
+    return None
 
 
 def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> list:
@@ -152,16 +150,18 @@ def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> list:
     fund_return.append(0.0)
     bench_return = []
     bench_return.append(0.0)
-    for i in range(1,tot_len):
-        ret = (fund['Close'][i]-fund['Close'][i-1]) / fund['Close'][i-1] * 100.0
+    for i in range(1, tot_len):
+        ret = (fund['Close'][i]-fund['Close'][i-1]) / \
+            fund['Close'][i-1] * 100.0
         fund_return.append(ret)
-        ret = (benchmark['Close'][i]-benchmark['Close'][i-1]) / benchmark['Close'][i-1] * 100.0
+        ret = (benchmark['Close'][i]-benchmark['Close']
+               [i-1]) / benchmark['Close'][i-1] * 100.0
         bench_return.append(ret)
 
     # slope, intercept, r-correlation, p-value, stderr
     beta_figures = linregress(bench_return, fund_return)
     rsqd = beta_figures[2]**2
-    
+
     return beta_figures[0], rsqd
 
 
@@ -172,7 +172,7 @@ def beta_comparison_list(fund: list, benchmark: list) -> list:
     fund_return.append(0.0)
     bench_return = []
     bench_return.append(0.0)
-    for i in range(1,tot_len):
+    for i in range(1, tot_len):
         ret = (fund[i]-fund[i-1]) / fund[i-1] * 100.0
         fund_return.append(ret)
         ret = (benchmark[i]-benchmark[i-1]) / benchmark[i-1] * 100.0
@@ -181,6 +181,5 @@ def beta_comparison_list(fund: list, benchmark: list) -> list:
     # slope, intercept, r-correlation, p-value, stderr
     beta_figures = linregress(bench_return, fund_return)
     rsqd = beta_figures[2]**2
-    
-    return beta_figures[0], rsqd
 
+    return beta_figures[0], rsqd
