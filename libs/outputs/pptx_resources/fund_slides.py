@@ -1,12 +1,12 @@
-from pptx.util import Inches, Pt
-from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
-
-import pandas as pd
-import numpy as np
 import os
 import glob
 import datetime
+import pandas as pd
+import numpy as np
+
+from pptx.util import Inches, Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN
 
 from libs.utils import fund_list_extractor, windows_compatible_file_parse, SP500
 from libs.tools import trend_simple_forecast
@@ -26,14 +26,14 @@ PICTURE_W_CAPTION_SLIDE = 8
 
 
 def make_fund_slides(prs, analysis: dict):
-    """[summary]
+    """Make Fund Slides
 
     Arguments:
-        prs {[type]} -- [description]
-        analysis {dict} -- [description]
+        prs {pptx obj} -- presentation
+        analysis {dict} -- full data 
 
     Returns:
-        [type] -- [description]
+        prs -- pptx presentation object
     """
     funds = analysis.keys()
     for fund in funds:

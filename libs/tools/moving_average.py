@@ -1,8 +1,9 @@
-import pandas as pd 
-import numpy as np 
-import math 
+import math
+import pandas as pd
+import numpy as np
 
 from libs.utils import generic_plotting, specialty_plotting, SP500
+
 
 def exponential_ma(fund: pd.DataFrame, interval: int) -> list:
     ema = []
@@ -14,7 +15,7 @@ def exponential_ma(fund: pd.DataFrame, interval: int) -> list:
         if i != interval-1:
             ema[i] = ema[i-1] * (1.0 - k) + fund['Close'][i] * k
 
-    return ema 
+    return ema
 
 
 def exponential_ma_list(item: list, interval: int) -> list:
@@ -30,7 +31,7 @@ def exponential_ma_list(item: list, interval: int) -> list:
     else:
         ema = item
 
-    return ema 
+    return ema
 
 
 def windowed_ma_list(item: list, interval: int) -> list:
@@ -45,7 +46,7 @@ def windowed_ma_list(item: list, interval: int) -> list:
     for i in range(len(item)-left, len(item)):
         wma.append(item[i])
 
-    return wma 
+    return wma
 
 
 def windowed_ema_list(item: list, interval: int, weight_strength=2.0) -> list:
@@ -77,7 +78,7 @@ def simple_ma_list(item: list, interval: int) -> list:
         av = np.mean(item[i-(interval-1):i+1])
         ma.append(av)
 
-    return ma 
+    return ma
 
 
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
@@ -111,45 +112,54 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         tshort.append(fund['Close'][i])
         tmed.append(fund['Close'][i])
         tlong.append(fund['Close'][i])
-    if progress_bar is not None: progress_bar.uptick(increment=0.05)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.05)
 
     for i in range(config[0], config[1]):
         tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
         tmed.append(fund['Close'][i])
         tlong.append(fund['Close'][i])
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
 
     for i in range(config[1], config[2]):
         tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
         tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
         tlong.append(fund['Close'][i])
-    if progress_bar is not None: progress_bar.uptick(increment=0.25)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.25)
 
     for i in range(config[2], tot_len):
         tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
         tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
         tlong.append(np.mean(fund['Close'][i-config[2]:i+1]))
-    if progress_bar is not None: progress_bar.uptick(increment=0.5)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.5)
 
     name3 = SP500.get(name, name)
-    name2 = name3 + ' - Simple Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
-    legend = ['Price', f'{config[0]}-SMA', f'{config[1]}-SMA', f'{config[2]}-SMA']
+    name2 = name3 + \
+        ' - Simple Moving Averages [{}, {}, {}]'.format(
+            config[0], config[1], config[2])
+    legend = ['Price', f'{config[0]}-SMA',
+              f'{config[1]}-SMA', f'{config[2]}-SMA']
     if plot_output:
-        generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2)
+        generic_plotting([fund['Close'], tshort, tmed, tlong],
+                         legend=legend, title=name2)
     else:
-        filename = name +'/simple_moving_averages_{}.png'.format(name)
-        generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2, saveFig=True, filename=filename)
+        filename = name + '/simple_moving_averages_{}.png'.format(name)
+        generic_plotting([fund['Close'], tshort, tmed, tlong],
+                         legend=legend, title=name2, saveFig=True, filename=filename)
 
     tma = dict()
     tma['short'] = {'period': config[0]}
-    tma['medium'] = {'period': config[1]} 
+    tma['medium'] = {'period': config[1]}
     tma['long'] = {'period': config[2]}
     tma['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
 
     return tma
-
 
 
 def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], plot_output=True, name='') -> list:
@@ -159,13 +169,18 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], plot_output=T
     tlong = exponential_ma(fund, config[2])
 
     name3 = SP500.get(name, name)
-    name2 = name3 + ' - Exp Moving Averages [{}, {}, {}]'.format(config[0], config[1], config[2])
-    legend = ['Price', f'{config[0]}-EMA', f'{config[1]}-EMA', f'{config[2]}-EMA']
+    name2 = name3 + \
+        ' - Exp Moving Averages [{}, {}, {}]'.format(
+            config[0], config[1], config[2])
+    legend = ['Price', f'{config[0]}-EMA',
+              f'{config[1]}-EMA', f'{config[2]}-EMA']
     if plot_output:
-        generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2)
+        generic_plotting([fund['Close'], tshort, tmed, tlong],
+                         legend=legend, title=name2)
     else:
-        filename = name +'/exp_moving_averages_{}.png'.format(name)
-        generic_plotting([fund['Close'], tshort, tmed, tlong], legend=legend, title=name2, saveFig=True, filename=filename)
+        filename = name + '/exp_moving_averages_{}.png'.format(name)
+        generic_plotting([fund['Close'], tshort, tmed, tlong],
+                         legend=legend, title=name2, saveFig=True, filename=filename)
 
     return tshort, tmed, tlong
 
@@ -196,23 +211,29 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     swings = []
     if function == 'sma':
         if config == []:
-            sh, me, ln = triple_moving_average(fund, plot_output=False, name=name)
+            sh, me, ln = triple_moving_average(
+                fund, plot_output=False, name=name)
         else:
-            sh, me, ln = triple_moving_average(fund, config=config, plot_output=False, name=name)
+            sh, me, ln = triple_moving_average(
+                fund, config=config, plot_output=False, name=name)
     else:
         if config == []:
-            sh, me, ln = triple_exp_mov_average(fund, plot_output=False, name=name)
+            sh, me, ln = triple_exp_mov_average(
+                fund, plot_output=False, name=name)
         else:
-            sh, me, ln = triple_exp_mov_average(fund, config=config, plot_output=False, name=name)
+            sh, me, ln = triple_exp_mov_average(
+                fund, config=config, plot_output=False, name=name)
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.5)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.5)
 
     prev_state = 3
     hold = 'none'
     pb = int(len(sh) / 4)
     pb = [pb * (i+1) - 2 for i in range(4)]
     for i in range(len(sh)):
-        state, hold = state_management(fund['Close'][i], sh[i], me[i], ln[i], prev_state, hold=hold)
+        state, hold = state_management(
+            fund['Close'][i], sh[i], me[i], ln[i], prev_state, hold=hold)
         if state == 1:
             # Bullish Reversal
             swings.append(-2.0)
@@ -231,16 +252,19 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
             swings.append(0.0)
         prev_state = state
         if i in pb:
-            if progress_bar is not None: progress_bar.uptick(increment=0.1)
+            if progress_bar is not None:
+                progress_bar.uptick(increment=0.1)
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Swing Trade EMAs'
     legend = ['Price', 'Short-EMA', 'Medium-EMA', 'Long-EMA', 'Swing Signal']
     if plot_output:
-        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4] , legend=legend, title=name2)
+        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[
+                           4], legend=legend, title=name2)
     else:
-        filename = name +'/swing_trades_ema_{}.png'.format(name)
-        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4] , legend=['Swing Signal'], title=name2, saveFig=True, filename=filename)
+        filename = name + '/swing_trades_ema_{}.png'.format(name)
+        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
+                           'Swing Signal'], title=name2, saveFig=True, filename=filename)
 
     mast = dict()
     mast['tabular'] = {}
@@ -249,10 +273,10 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     mast['tabular']['long'] = ln
     mast['tabular']['swing'] = swings
 
-    if progress_bar is not None: progress_bar.uptick(increment=0.1)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
 
     return mast
-
 
 
 def state_management(price: float, sht: float, med: float, lng: float, prev_state: int, hold='bull'):
@@ -270,7 +294,7 @@ def state_management(price: float, sht: float, med: float, lng: float, prev_stat
         8 - enter into bearish from non-full bearish
     """
     if ((sht > med) and (med > lng) and (prev_state == 2)):
-        state =  1
+        state = 1
     elif ((sht < med) and (med < lng) and (prev_state == 4)):
         state = 5
     elif ((sht < med) and (med > lng)):
@@ -281,7 +305,7 @@ def state_management(price: float, sht: float, med: float, lng: float, prev_stat
         state = 4
     elif ((price < sht) and (sht < med) and (med < lng) and (prev_state != 8) and (hold != 'bear')):
         hold = 'bear'
-        state =  8
+        state = 8
     elif ((price > sht) and (sht > med) and (med > lng) and (prev_state != 7) and (hold != 'bull')):
         hold = 'bull'
         state = 7
@@ -296,5 +320,3 @@ def state_management(price: float, sht: float, med: float, lng: float, prev_stat
         state = 3
 
     return state, hold
-
-    

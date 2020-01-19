@@ -11,7 +11,6 @@ VERSIONS:           :       (flags for versioning)
 
 --dev               :       most recent updates, pushed frequently, possibly unstable
 --prod              :       default behavior; more updated than release, less than dev, but more stable
---r1                :       run release_1.py (deprecated version)
 
 FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUIRES --function flag
 
@@ -21,7 +20,7 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --sr                :       run {Support/Resistance Line} analysis; "--support_resistance" and "--rs" also supported
 --clustered         :       run {Clustered Oscillators} for 'all'; "--clustered_osc" also supported
 --head_shoulders    :       run feature detection of {Head and Shoulders} function
---corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history)
+--corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history); "--cci" also supported
 --rsi               :       run {Relative Strength Index} (RSI) function for funds
 --macd              :       run {Moving Average Convergence Divergence} (MACD) function for funds
 --relative_strength :       run {'True' Strength} (vs. S&P500) function for funds 
@@ -29,6 +28,7 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --moving_average    :       run {Moving Average} (MA) function for funds; "--ma" also supported
 --gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
 --vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
+--nf                :       run {Nasit Funds} for funds; "--nasit_funds" also supported
 
 AVAILABLE EXPORTS:  :       (current fields for specific tabular metrics exports)
 

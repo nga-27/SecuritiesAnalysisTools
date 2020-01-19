@@ -3,19 +3,19 @@ ProgressBar utility class
 """
 from .constants import TEXT_COLOR_MAP
 
-color_bar = TEXT_COLOR_MAP["white"]
-color_normal = TEXT_COLOR_MAP["white"]
-color_fund = TEXT_COLOR_MAP["cyan"]
+BAR_COLOR = TEXT_COLOR_MAP["white"]
+NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+FUND_COLOR = TEXT_COLOR_MAP["cyan"]
+
 
 class ProgressBar(object):
 
-    def __init__(self, total_items: int, name: str=''):
+    def __init__(self, total_items: int, name: str = ''):
         self.total = float(total_items)
         self.name = name
         self.iteration = 0.0
         self.length_of_bar = 0
         self.has_finished = False
-
 
     def start(self):
         self.printProgressBar(self.iteration, self.total, obj=self.name)
@@ -29,8 +29,8 @@ class ProgressBar(object):
     def uptick(self, increment=1.0):
         self.iteration += increment
         self.printProgressBar(self.iteration, self.total, obj=self.name)
- 
-    def interrupt(self, message: str=''):
+
+    def interrupt(self, message: str = ''):
         clearBar = ''
         for _ in range(self.length_of_bar):
             clearBar += ' '
@@ -38,10 +38,9 @@ class ProgressBar(object):
         print(clearBar)
         print(message)
 
-
-
     # Print iterations progress - courtesy of Greenstick (stackoverflow: https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
-    def printProgressBar (self, iteration, total, obj='', prefix='Progress', suffix='Complete', decimals = 1, length = 50, fill = '█'):
+
+    def printProgressBar(self, iteration, total, obj='', prefix='Progress', suffix='Complete', decimals=1, length=50, fill='█'):
         """
         Call in a loop to create terminal progress bar
         @params:
@@ -53,15 +52,16 @@ class ProgressBar(object):
             length      - Optional  : character length of bar (Int)
             fill        - Optional  : bar fill character (Str)
         """
-        percent = ("{0:." + str(decimals) + "f}").format(100.0 * (float(iteration) / float(total)))
+        percent = ("{0:." + str(decimals) + "f}").format(100.0 *
+                                                         (float(iteration) / float(total)))
         filledLength = int(float(length) * float(iteration) // float(total))
         bar = fill * filledLength + '.' * (length - filledLength)
 
-        pBar = f"\r {color_fund}{obj}{color_normal} {prefix} {color_bar}|{bar}|{color_normal} {percent}% {suffix}"
+        pBar = f"\r {FUND_COLOR}{obj}{NORMAL_COLOR} {prefix} {BAR_COLOR}|{bar}|{NORMAL_COLOR} {percent}% {suffix}"
         self.length_of_bar = len(pBar)
-        
-        print(pBar, end = '\r')
-        
+
+        print(pBar, end='\r')
+
         # Print New Line on Complete
-        if iteration == total: 
+        if iteration == total:
             print('')

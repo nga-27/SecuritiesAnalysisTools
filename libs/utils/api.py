@@ -1,10 +1,10 @@
-import yfinance as yf
-import pandas as pd
-import numpy as np
 import json
 import os
 import pprint
 import requests
+import yfinance as yf
+import pandas as pd
+import numpy as np
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -42,14 +42,20 @@ def get_dividends(ticker):
     return div
 
 
-def get_info(ticker, st):
-    try:
-        info = ticker.info
-    except:
+def get_info(ticker, st, force_holdings=False):
+    if force_holdings:
         try:
             info = st.info
         except:
             info = dict()
+    else:
+        try:
+            info = ticker.info
+        except:
+            try:
+                info = st.info
+            except:
+                info = dict()
     return info
 
 
@@ -133,15 +139,15 @@ def get_earnings(ticker, st):
     return earn
 
 
-def get_recommendations(ticker, st):
+def get_recommendations(ticker, st) -> dict:
     """[summary]
 
     Arguments:
-        ticker {[type]} -- [description]
-        st {[type]} -- [description]
+        ticker {Ticker} -- current yf Ticker object
+        st {Ticker} -- stable version of 0.1.50 of yf Ticker object
 
     Returns:
-        [type] -- [description]
+        dict -- recommendations
     """
     recom = dict()
     try:
@@ -198,7 +204,8 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         pb.uptick(increment=0.3)
 
     metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
-    metadata['info'] = AVAILABLE_KEYS.get('info')(ticker, st_tick)
+    metadata['info'] = AVAILABLE_KEYS.get('info')(
+        ticker, st_tick, force_holdings=True)
 
     if pb is not None:
         pb.uptick(increment=0.2)

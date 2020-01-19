@@ -1,12 +1,13 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 from datetime import datetime, timedelta
 
 from libs.utils import download_data_indexes, index_appender, ProgressBar
 from libs.utils import dual_plotting
 from libs.tools import beta_comparison_list
 
-def correlation_composite_index(config: dict, **kwargs):
+
+def correlation_composite_index(config: dict, **kwargs) -> dict:
     """
     Correlation Composite Index (CCI)
 
@@ -23,13 +24,22 @@ def correlation_composite_index(config: dict, **kwargs):
 
     corr = dict()
     if config.get('properties', {}).get('Indexes', {}).get('Correlation', {}).get('run', False):
-        config['duration'] = config.get('properties', {}).get('Indexes', {}).get('Correlation', {}).get('type', 'long')
+        config['duration'] = config.get('properties', {}).get(
+            'Indexes', {}).get('Correlation', {}).get('type', 'long')
         data, sectors = metrics_initializer(config['duration'])
         corr = get_correlation(data, sectors, plot_output=plot_output)
     return corr
 
 
-def metrics_initializer(duration: str='long') -> list:
+def metrics_initializer(duration: str = 'long') -> list:
+    """Metrics Initializer
+
+    Keyword Arguments:
+        duration {str} -- duration of view (default: {'long'})
+
+    Returns:
+        list -- data downloaded and sector list
+    """
     tickers = 'VGT VHT VCR VDC VFH VDE VIS VOX VNQ VPU VAW'
     START = '2005-01-01'
     sectors = tickers.split(' ')
@@ -39,15 +49,27 @@ def metrics_initializer(duration: str='long') -> list:
     print(" ")
     print('Fetching Correlation Composite Index funds...')
     if duration == 'short':
-        # data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, period='5y', interval='1d')
         START = datetime.today() - timedelta(days=900)
         START = START.strftime('%Y-%m-%d')
-    data, _ = download_data_indexes(indexes=all_tickers, tickers=tickers, start=START, end=date, interval='1d')
+    data, _ = download_data_indexes(
+        indexes=all_tickers, tickers=tickers, start=START, end=date, interval='1d')
     print(" ")
     return data, sectors
 
 
 def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
+    """Get Correlation
+
+    Arguments:
+        data {dict} -- downloaded data
+        sectors {list} -- sector list
+
+    Keyword Arguments:
+        plot_output {bool} -- (default: {True})
+
+    Returns:
+        dict -- object with correlations
+    """
     PERIOD_LENGTH = [100, 50, 25]
     corr_data = dict()
 
@@ -56,7 +78,8 @@ def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
         start_pt = max(PERIOD_LENGTH)
         ups = int(np.ceil((tot_len-start_pt)/250.0))
 
-        progress_bar = ProgressBar(11*ups*len(PERIOD_LENGTH) + 1, name="Correlation Composite Index")
+        progress_bar = ProgressBar(
+            11*ups*len(PERIOD_LENGTH) + 1, name="Correlation Composite Index")
         progress_bar.start()
 
         corrs = {}
@@ -69,7 +92,8 @@ def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
                 corrs[sector] = []
                 counter = 0
                 for i in range(start_pt, tot_len):
-                    _, rsqd = beta_comparison_list(data[sector]['Close'][i-period:i], data['^GSPC']['Close'][i-period:i])
+                    _, rsqd = beta_comparison_list(
+                        data[sector]['Close'][i-period:i], data['^GSPC']['Close'][i-period:i])
                     corrs[sector].append(rsqd)
                     nc[i-start_pt] += rsqd
                     counter += 1
@@ -86,26 +110,26 @@ def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
             norm_corr.append(norm)
         net_correlation = norm_corr.copy()
 
-        dual_plotting(  net_correlation, 
-                        data['^GSPC']['Close'][start_pt:tot_len], 
-                        x=dates,
-                        y1_label=legend, 
-                        y2_label='S&P500', 
-                        title='CCI Net Correlation', 
-                        saveFig=(not plot_output), 
-                        filename='CCI_net_correlation.png')
+        dual_plotting(net_correlation,
+                      data['^GSPC']['Close'][start_pt:tot_len],
+                      x=dates,
+                      y1_label=legend,
+                      y2_label='S&P500',
+                      title='CCI Net Correlation',
+                      saveFig=(not plot_output),
+                      filename='CCI_net_correlation.png')
 
         str_dates = []
         for date in dates:
             str_dates.append(date.strftime("%Y-%m-%d"))
-        
+
         corr_data['tabular'] = {}
         for i, nc_period in enumerate(net_correlation):
             corr_data[legend[i]] = {}
             corr_data[legend[i]]['data'] = nc_period.copy()
             corr_data[legend[i]]['date'] = str_dates.copy()
-            corr_data['tabular'][legend[i]] =  nc_period.copy()
-        corr_data['tabular']['date'] =  str_dates.copy()
+            corr_data['tabular'][legend[i]] = nc_period.copy()
+        corr_data['tabular']['date'] = str_dates.copy()
         progress_bar.end()
 
     return corr_data

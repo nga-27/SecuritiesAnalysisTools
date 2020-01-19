@@ -1,9 +1,16 @@
-""" A general catch-all of small-sided functions """
 import pandas as pd
 import numpy as np
 
 
 def get_high_level_stats(fund: pd.DataFrame) -> dict:
+    """Get High Level Stats
+
+    Arguments:
+        fund {pd.DataFrame}
+
+    Returns:
+        dict -- statistics
+    """
     stats = {}
 
     len_of_fund = len(fund['Close'])

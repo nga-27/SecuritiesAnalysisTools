@@ -1,10 +1,11 @@
-import pandas as pd 
-import numpy as np 
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-import os 
+import os
 import shutil
 import glob
+from datetime import datetime, timedelta
+import pandas as pd
+import numpy as np
+from dateutil.relativedelta import relativedelta
+
 
 def configure_temp_dir():
     """ for outputting, as well as temp files """
@@ -24,7 +25,7 @@ def create_sub_temp_dir(name):
         os.mkdir('output/temp/' + name + '/')
 
 
-def windows_compatible_file_parse(extension: str, parser: str='/', desired_len=4, bad_parse='\\') -> list:
+def windows_compatible_file_parse(extension: str, parser: str = '/', desired_len=4, bad_parse='\\') -> list:
     globbed = extension.split('/')
     if len(globbed) < desired_len:
         end = globbed[desired_len-2].split(bad_parse)

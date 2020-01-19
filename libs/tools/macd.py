@@ -5,22 +5,28 @@ from .moving_average import exponential_ma, exponential_ma_list
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 from libs.utils import ProgressBar, SP500
 
-"""
-Moving Average Convergence / Divergence (MACD)
-    * macd = EMA(12) - EMA(26)
-    * macd_val = macd - macd_EMA(9)
-    
-    * "trend-following momentum indicator"
 
-    TODO: speed of crossovers can be a signal of overbought / oversold 
-"""
+# TODO: speed of crossovers can be a signal of overbought / oversold
 
 
-def generate_macd_signal(fund: pd.DataFrame, plotting=True, name='') -> list:
-    """
+def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> list:
+    """Generate MACD Signal
     macd = ema(12) - ema(26)
     'signal' = macd(ema(9))
+
+    Arguments:
+        fund {pd.DataFrame}
+
+    Keyword Arguments:
+        plotting {bool} -- (default: {True})
+        name {str} -- (default: {''})
+
+    Returns:
+        list -- signal
     """
+    plotting = kwargs.get('plotting', True)
+    name = kwargs.get('name', '')
+
     emaTw = exponential_ma(fund, interval=12)
     emaTs = exponential_ma(fund, interval=26)
     macd = []

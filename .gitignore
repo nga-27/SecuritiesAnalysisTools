@@ -6,3 +6,4 @@ securities/*.csv
 output/*
 core.json
 test.json
+nasit.json

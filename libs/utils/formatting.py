@@ -1,22 +1,23 @@
-import pandas as pd 
-import numpy as np 
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-import os 
+import os
 import shutil
 import glob
 import time
-import json 
+import json
+from datetime import datetime, timedelta
+import pandas as pd
+import numpy as np
+from dateutil.relativedelta import relativedelta
 
-import yfinance as yf 
+import yfinance as yf
+
 
 def name_parser(name: str) -> str:
     """ parses file name to generate fund name """
     name = name.split('.')[0]
     name = name.split('/')
     name = name[len(name)-1]
-    return name 
-    
+    return name
+
 
 def index_extractor(tickers) -> str:
     """ tickers is a str of tickers, separated by a space """
@@ -25,9 +26,9 @@ def index_extractor(tickers) -> str:
 
     for key in potential_indexes:
         if key in tickers:
-            ind = key 
+            ind = key
 
-    return ind 
+    return ind
 
 
 def index_appender(tickers: str) -> str:
@@ -36,7 +37,7 @@ def index_appender(tickers: str) -> str:
     return tickers
 
 
-def fund_list_extractor(ticker_df: dict, config: dict=None) -> list:
+def fund_list_extractor(ticker_df: dict, config: dict = None) -> list:
     """ Extracts fund names from ticker_df for accessing later """
     funds = []
     if config is not None:
@@ -77,11 +78,11 @@ def date_extractor(date, _format=None):
     elif _format == 'iso':
         dateX = date2.isoformat()
     else:
-        dateX = date2 
+        dateX = date2
     return dateX
 
 
-def get_daterange(period: str='1y') -> list:
+def get_daterange(period: str = '1y') -> list:
     # Note: deprecated for more robust fix of mutual fund responses
     """
     fulltime = datetime.now().strftime('%H:%M:%S')
@@ -138,4 +139,3 @@ def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list, to_str=Fals
                 new_xlist.append(date)
             new_l_of_xls.append(new_xlist)
     return new_l_of_xls
-

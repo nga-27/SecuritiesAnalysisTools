@@ -38,7 +38,8 @@ from libs.functions import only_functions_handler
 from libs.utils import candlestick
 
 # Imports that drive custom metrics for market analysis
-from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
+from libs.metrics import market_composite_index, bond_composite_index
+from libs.metrics import correlation_composite_index, type_composite_index
 from libs.metrics import future_returns, metadata_to_dataset
 
 # Imports that create final products and show progress doing so
@@ -52,13 +53,13 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.22'
-_DATE_REVISION_ = '2020-01-15'
+_VERSION_ = '0.1.23'
+_DATE_REVISION_ = '2020-01-18'
 ################################
 PROCESS_STEPS_DEV = 13
 
-header_color = TEXT_COLOR_MAP["blue"]
-normal_color = TEXT_COLOR_MAP["white"]
+HEADER_COLOR = TEXT_COLOR_MAP["blue"]
+NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
 def technical_analysis(config: dict):
@@ -68,7 +69,7 @@ def technical_analysis(config: dict):
         # Use only after release!
         print(" ")
         print(
-            f"{header_color}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{normal_color}")
+            f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{NORMAL_COLOR}")
         config = start_header(update_release=_DATE_REVISION_,
                               version=_VERSION_, options=True)
         config['process_steps'] = PROCESS_STEPS_DEV
@@ -185,6 +186,9 @@ def technical_analysis(config: dict):
     bond_composite_index(config=config, plot_output=False)
 
     analysis['_METRICS_']['correlation'] = correlation_composite_index(
+        config=config, plot_output=False)
+
+    analysis['_METRICS_']['tci'] = type_composite_index(
         config=config, plot_output=False)
 
     slide_creator(analysis, config=config)

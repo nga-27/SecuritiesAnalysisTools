@@ -38,7 +38,8 @@ from libs.functions import only_functions_handler
 from libs.utils import candlestick
 
 # Imports that drive custom metrics for market analysis
-from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
+from libs.metrics import market_composite_index, bond_composite_index
+from libs.metrics import correlation_composite_index, type_composite_index
 from libs.metrics import future_returns, metadata_to_dataset
 
 # Imports that create final products and show progress doing so
@@ -53,8 +54,8 @@ from test import test_competitive
 
 PROCESS_STEPS = 13
 ################################
-_VERSION_ = '0.1.22'
-_DATE_REVISION_ = '2020-01-15'
+_VERSION_ = '0.1.23'
+_DATE_REVISION_ = '2020-01-18'
 ################################
 
 
@@ -181,6 +182,9 @@ def technical_analysis(config: dict):
     bond_composite_index(config=config, plot_output=False)
 
     analysis['_METRICS_']['correlation'] = correlation_composite_index(
+        config=config, plot_output=False)
+
+    analysis['_METRICS_']['tci'] = type_composite_index(
         config=config, plot_output=False)
 
     slide_creator(analysis, config=config)

@@ -5,10 +5,11 @@ Outputs a json file with entire 'analysis' data. Currently, file is relatively u
 in saved form. Can be used later with more complex ML or analytical tools.
 """
 
-import pandas as pd 
-import numpy as np 
-import json 
+import json
 import os
+import pandas as pd
+import numpy as np
+
 
 def metadata_copy(data: dict) -> dict:
     """ Speciality copy function to remove tabulars, etc. Pops selected tabular keys/data """
@@ -20,8 +21,8 @@ def metadata_copy(data: dict) -> dict:
             # if 'features' in meta[key].keys():
             #     for feature in meta[key]['features']:
             #         for feat in range(len(meta[key]['features'][feature]['features'])):
-                        # Array of 'feature' features
-                        # meta[key]['features'][feature]['features'][feat].pop('indexes')
+            # Array of 'feature' features
+            # meta[key]['features'][feature]['features'][feat].pop('indexes')
 
     return meta
 

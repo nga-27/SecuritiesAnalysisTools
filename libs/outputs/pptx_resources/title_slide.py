@@ -1,9 +1,7 @@
-# from pptx import Presentation
+from datetime import datetime
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
-
-from datetime import datetime
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -23,13 +21,13 @@ def title_presentation(prs, year: str, VERSION: str, wide_ratio=True):
     width = int(16 * height / 9)
     prs.slide_width = width
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    
+
     LEFT_INCHES = 6
     left = Inches(LEFT_INCHES)
     top = Inches(2.45)
     text = slide.shapes.add_textbox(left, top, Inches(1), Inches(1))
     text_frame = text.text_frame
-    
+
     p = text_frame.paragraphs[0]
     p.alignment = PP_ALIGN.CENTER
     p.text = f'Securities Analysis'
@@ -66,4 +64,4 @@ def title_presentation(prs, year: str, VERSION: str, wide_ratio=True):
     p3.font.color.rgb = RGBColor(0x30, 0x9c, 0x4f)
     p3.font.name = 'Arial'
 
-    return prs 
+    return prs

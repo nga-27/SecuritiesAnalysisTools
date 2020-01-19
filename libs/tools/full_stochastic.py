@@ -1,12 +1,12 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 
 from libs.utils import dual_plotting, date_extractor
-#from libs.utils import nasit_oscillator_score, nasit_oscillator_signal 
+
 
 def generate_full_stoch_signal(position: pd.DataFrame, config=[14, 3, 3]) -> list:
     """ Generates signal
-    
+
     Returns:
         [k_smooth, d_sma] - features of full_stochastic signal
 
@@ -28,8 +28,6 @@ def generate_full_stoch_signal(position: pd.DataFrame, config=[14, 3, 3]) -> lis
         low = np.min(lows)
         high = np.max(highs)
 
-        s = [low, high, position['Close'][i]]
-
         # For very low cost funds with no movement over range, will be NaN
         if low != high:
             K = (position['Close'][i] - low) / (high - low) * 100.0
@@ -44,7 +42,7 @@ def generate_full_stoch_signal(position: pd.DataFrame, config=[14, 3, 3]) -> lis
         # Find 'Simple Moving Average' (SMA) of k2
         d_sma.append(np.average(k_smooth[i-(config[2]-1):i+1]))
 
-    return [k_smooth, d_sma] 
+    return [k_smooth, d_sma]
 
 
 def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
@@ -69,7 +67,7 @@ def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
 
     stochastic = []
 
-    indicator = 0 # 0 is neutral, 1,2 is oversold, 3,4: is overbought
+    indicator = 0  # 0 is neutral, 1,2 is oversold, 3,4: is overbought
     for i in range(len(position['Close'])):
 
         if k_smooth[i] > SELL_TH:
@@ -80,7 +78,8 @@ def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
             stochastic.append(0)
         elif (indicator == 4) and (k_smooth[i] < SELL_TH):
             indicator = 0
-            full_stoch['bearish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+            full_stoch['bearish'].append(
+                [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
             stochastic.append(1)
 
         elif k_smooth[i] < BUY_TH:
@@ -91,7 +90,8 @@ def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
             stochastic.append(0)
         elif (indicator == 2) and (k_smooth[i] > BUY_TH):
             indicator = 0
-            full_stoch['bullish'].append([date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+            full_stoch['bullish'].append(
+                [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
             stochastic.append(-1)
 
         else:
@@ -100,8 +100,7 @@ def get_full_stoch_features(position: pd.DataFrame, features: list) -> list:
     return [stochastic, full_stoch]
 
 
-
-def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], plot_output=True, out_suppress=True) -> dict:
+def full_stochastic(position: pd.DataFrame, name='', config: list = [14, 3, 3], plot_output=True, out_suppress=True) -> dict:
     """ During a trend, increase config to avoid false signals:
         ex: downtrend, larger config will minimize false 'overbought' readings
 
@@ -111,21 +110,18 @@ def full_stochastic(position: pd.DataFrame, name='', config: list=[14, 3, 3], pl
         typical configs: [14,3,3], [10,3,3], [20, 5, 5]
     """
 
-    feature_list = generate_full_stoch_signal(position, config=config) 
+    feature_list = generate_full_stoch_signal(position, config=config)
 
     stochastic, full_stoch = get_full_stoch_features(position, feature_list)
-    
-    #nasit_signal = nasit_oscillator_signal(full_stoch, stochastic)
-    #full_stoch['nasit'] = nasit_oscillator_score(full_stoch, stochastic)
 
     if not out_suppress:
         name2 = name + ' - Stochastic'
         if plot_output:
-            dual_plotting(position['Close'], stochastic, 'Position Price', 'Oscillator Signal', title=name2)
-            #dual_plotting(position['Close'], nasit_signal, 'Position Price', 'Oscillator Signal', title='nasit_stoch')
+            dual_plotting(position['Close'], stochastic,
+                          'Position Price', 'Oscillator Signal', title=name2)
         else:
-            filename = name +'/stochastic_{}.png'.format(name)
-            dual_plotting(  position['Close'], stochastic, 'Position Price', 'Stochastic Oscillator', 
-                            x_label='Trading Days', title=name2, saveFig=True, filename=filename)
+            filename = name + '/stochastic_{}.png'.format(name)
+            dual_plotting(position['Close'], stochastic, 'Position Price', 'Stochastic Oscillator',
+                          x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
     return full_stoch
