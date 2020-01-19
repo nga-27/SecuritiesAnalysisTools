@@ -58,8 +58,8 @@ _DATE_REVISION_ = '2020-01-18'
 ################################
 PROCESS_STEPS_DEV = 13
 
-header_color = TEXT_COLOR_MAP["blue"]
-normal_color = TEXT_COLOR_MAP["white"]
+HEADER_COLOR = TEXT_COLOR_MAP["blue"]
+NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
 def technical_analysis(config: dict):
@@ -69,7 +69,7 @@ def technical_analysis(config: dict):
         # Use only after release!
         print(" ")
         print(
-            f"{header_color}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{normal_color}")
+            f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{NORMAL_COLOR}")
         config = start_header(update_release=_DATE_REVISION_,
                               version=_VERSION_, options=True)
         config['process_steps'] = PROCESS_STEPS_DEV
@@ -196,4 +196,4 @@ def technical_analysis(config: dict):
 
     metadata_to_dataset(config=config)
 
-    # remove_temp_dir()
+    remove_temp_dir()
