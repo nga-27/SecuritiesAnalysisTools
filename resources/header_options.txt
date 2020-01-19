@@ -11,7 +11,6 @@ VERSIONS:           :       (flags for versioning)
 
 --dev               :       most recent updates, pushed frequently, possibly unstable
 --prod              :       default behavior; more updated than release, less than dev, but more stable
---r1                :       run release_1.py (deprecated version)
 
 FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUIRES --function flag
 
