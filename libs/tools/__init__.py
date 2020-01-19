@@ -16,8 +16,8 @@ from .full_stochastic import full_stochastic
 
 from .clusters import cluster_oscs
 
-from .macd import mov_avg_convergence_divergence 
+from .macd import mov_avg_convergence_divergence
 
-from .on_balance_volume import on_balance_volume 
+from .on_balance_volume import on_balance_volume
 
 from .statistics import get_high_level_stats

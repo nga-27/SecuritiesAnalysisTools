@@ -7,23 +7,27 @@ import numpy as np
 from libs.utils import download_data, has_critical_error, TEXT_COLOR_MAP
 from libs.utils import get_volatility, generic_plotting
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
+from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
 from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs, RSI
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
-ticker_color = TEXT_COLOR_MAP["cyan"]
-normal_color = TEXT_COLOR_MAP["white"]
+TICKER_COLOR = TEXT_COLOR_MAP["cyan"]
+NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 WARNING_COLOR = TEXT_COLOR_MAP["yellow"]
 
 
 def only_functions_handler(config: dict):
     if config.get('run_functions') == ['nf']:
-        print(f"Running {ticker_color}NASIT{normal_color} generation...")
+        print(f"Running {TICKER_COLOR}NASIT{NORMAL_COLOR} generation...")
+    elif (config.get('run_functions') == ['tci']) or (config.get('run_functions') == ['bci']) or (config.get('run_functions') == ['mci']):
+        print(
+            f"Running {TICKER_COLOR}{config.get('run_functions')[0].upper()}{NORMAL_COLOR}...")
     else:
         print(
-            f"Running functions: {config['run_functions']} for {ticker_color}{config['tickers']}{normal_color}")
+            f"Running functions: {config['run_functions']} for {TICKER_COLOR}{config['tickers']}{NORMAL_COLOR}")
 
     if 'export' in config['run_functions']:
         # Non-dashed inputs will cause issues beyond export if not returning.
@@ -34,6 +38,8 @@ def only_functions_handler(config: dict):
         mci_function(config)
     if 'bci' in config['run_functions']:
         bci_function(config)
+    if 'tci' in config['run_functions']:
+        tci_function(config)
     if 'trend' in config['run_functions']:
         trends_function(config)
     if 'support_resistance' in config['run_functions']:
@@ -81,11 +87,19 @@ def bci_function(config: dict):
     bond_composite_index(config, plot_output=True)
 
 
+def tci_function(config: dict):
+    config['properties'] = config.get('properties', {})
+    config['properties']['Indexes'] = config['properties'].get('Indexes', {})
+    config['properties']['Indexes']['Type Sector'] = config['properties']['Indexes'].get(
+        'Type Sector', True)
+    type_composite_index(config=config, plot_output=True)
+
+
 def trends_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"Trends of {ticker_color}{fund}{normal_color}...")
+            print(f"Trends of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             get_trendlines(data[fund], plot_output=True, name=fund)
 
 
@@ -94,7 +108,7 @@ def support_resistance_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"Support & Resistance of {ticker_color}{fund}{normal_color}...")
+                f"Support & Resistance of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             find_resistance_support_lines(
                 data[fund], plot_output=True, name=fund)
 
@@ -104,7 +118,7 @@ def cluster_oscs_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"Clustered Oscillators of {ticker_color}{fund}{normal_color}...")
+                f"Clustered Oscillators of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             cluster_oscs(data[fund], name=fund,
                          plot_output=True, function='all')
 
@@ -114,7 +128,7 @@ def head_and_shoulders_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"Head and Shoulders feature detection of {ticker_color}{fund}{normal_color}...")
+                f"Head and Shoulders feature detection of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             feature_detection_head_and_shoulders(
                 data[fund], name=fund, plot_output=True)
 
@@ -138,7 +152,7 @@ def rsi_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"RSI of {ticker_color}{fund}{normal_color}...")
+            print(f"RSI of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             RSI(data[fund], name=fund, plot_output=True, out_suppress=False)
 
 
@@ -146,7 +160,7 @@ def macd_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"MACD of {ticker_color}{fund}{normal_color}...")
+            print(f"MACD of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             mov_avg_convergence_divergence(
                 data[fund], name=fund, plot_output=True)
 
@@ -157,7 +171,7 @@ def relative_strength_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"Relative Strength of {ticker_color}{fund}{normal_color} compared to S&P500...")
+                f"Relative Strength of {TICKER_COLOR}{fund}{NORMAL_COLOR} compared to S&P500...")
             relative_strength(fund, full_data_dict=data,
                               config=config, plot_output=True)
 
@@ -167,7 +181,7 @@ def obv_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"On Balance Volume of {ticker_color}{fund}{normal_color}...")
+                f"On Balance Volume of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             on_balance_volume(data[fund], name=fund, plot_output=True)
 
 
@@ -176,7 +190,7 @@ def ma_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"Triple Moving Average of {ticker_color}{fund}{normal_color}...")
+                f"Triple Moving Average of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             triple_moving_average(data[fund], name=fund, plot_output=True)
 
 
@@ -185,7 +199,7 @@ def price_gap_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"Price Gap Analysis of {ticker_color}{fund}{normal_color}...")
+                f"Price Gap Analysis of {TICKER_COLOR}{fund}{NORMAL_COLOR}...")
             analyze_price_gaps(data[fund], name=fund, plot_output=True)
 
 
@@ -197,7 +211,7 @@ def vq_function(config: dict):
         if fund != '^GSPC':
             vq = get_volatility(fund)
             print(
-                f"{ticker_color}{fund}{normal_color} Volatility Quotient (VQ): {vq.get('VQ')}")
+                f"{TICKER_COLOR}{fund}{NORMAL_COLOR} Volatility Quotient (VQ): {vq.get('VQ')}")
             print(f"Current Price: ${vq.get('latest_price')}")
             print(f"Stop Loss price: ${vq.get('stop_loss')}")
             print(
@@ -211,7 +225,7 @@ def nasit_generation_function(config: dict):
     nasit_file = 'nasit.json'
     if not os.path.exists(nasit_file):
         print(
-            f"{WARNING_COLOR}WARNING: 'nasit.json' not found. Exiting...{normal_color}")
+            f"{WARNING_COLOR}WARNING: 'nasit.json' not found. Exiting...{NORMAL_COLOR}")
         return
     with open(nasit_file) as f:
         nasit = json.load(f)
@@ -270,7 +284,7 @@ def nasit_extraction(data: dict, config: dict, by_price=True):
     fund = nasit_build(t_data, subs, has_cash=has_cash, by_price=by_price)
 
     print(
-        f"NASIT generation of {ticker_color}{data.get('ticker')}{normal_color} complete.")
+        f"NASIT generation of {TICKER_COLOR}{data.get('ticker')}{NORMAL_COLOR} complete.")
     print("")
     return fund
 

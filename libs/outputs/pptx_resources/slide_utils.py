@@ -1,8 +1,8 @@
+import os
+from datetime import datetime
+
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-
-from datetime import datetime
-import os 
 
 from libs.utils import SP500
 
@@ -20,15 +20,15 @@ PICTURE_W_CAPTION_SLIDE = 8
 
 def slide_title_header(slide, fund: str, include_time=True, price_details=''):
     fund = SP500.get(fund, fund)
-    
-    left = Inches(0) #Inches(3.86)
+
+    left = Inches(0)  # Inches(3.86)
     top = Inches(0)
     width = height = Inches(0.5)
     txbox = slide.shapes.add_textbox(left, top, width, height)
     tf = txbox.text_frame
 
     p = tf.paragraphs[0]
-    p.text = fund 
+    p.text = fund
     p.font.size = Pt(36)
     p.font.name = 'Arial'
     p.font.bold = True
@@ -39,16 +39,16 @@ def slide_title_header(slide, fund: str, include_time=True, price_details=''):
         p.font.bold = False
         p.font.name = 'Arial'
         p.text = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    
+
     if price_details != '':
-        left = Inches(2) 
+        left = Inches(2)
         top = Inches(0.1)
         width = height = Inches(0.5)
         txbox = slide.shapes.add_textbox(left, top, width, height)
         tf = txbox.text_frame
 
         p = tf.paragraphs[0]
-        p.text = fund 
+        p.text = fund
         p.font.size = Pt(24)
         p.font.name = 'Arial'
         p.font.bold = True
@@ -59,7 +59,6 @@ def slide_title_header(slide, fund: str, include_time=True, price_details=''):
         else:
             p.font.color.rgb = color_to_RGB('red')
 
-
     return slide
 
 
@@ -69,11 +68,11 @@ def subtitle_header(slide, title: str):
     left = Inches(0.42)
     width = height = Inches(0.5)
     txtbox = slide.shapes.add_textbox(left, top, width, height)
-    text_frame = txtbox.text_frame 
+    text_frame = txtbox.text_frame
 
     p = text_frame.paragraphs[0]
-    p.text = title 
-    p.font.bold = False 
+    p.text = title
+    p.font.bold = False
     p.font.size = Pt(22)
     p.font.name = 'Times New Roman'
 
@@ -82,7 +81,8 @@ def subtitle_header(slide, title: str):
 
 def intro_slide(prs):
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, 'Explanation of Analysis', include_time=False)
+    slide = slide_title_header(
+        slide, 'Explanation of Analysis', include_time=False)
 
     if os.path.exists('resources/metric_explanation.txt'):
         filer = open('resources/metric_explanation.txt', 'r')
@@ -103,10 +103,10 @@ def intro_slide(prs):
         text_frame.word_wrap = True
 
         p = text_frame.paragraphs[0]
-        p.text = content[0] 
+        p.text = content[0]
         p.font.size = Pt(12)
         p.font.bold = True
-        for i in range(1,len(content)):
+        for i in range(1, len(content)):
             p = text_frame.add_paragraph()
             p.text = content[i]
             if i == 5:

@@ -16,7 +16,6 @@
 ################################
 from releases.prod import technical_analysis as prod
 from releases.dev import technical_analysis as dev
-from releases.release_1 import technical_analysis as r1
 from libs.utils import start_header, TEXT_COLOR_MAP, logo_renderer
 _VERSION_ = '0.1.22'
 _DATE_REVISION_ = '2020-01-15'
@@ -51,10 +50,6 @@ class App:
         if 'dev' in self.config['state']:
             self.config['release'] = True
             dev(self.config)
-
-        if 'r1' in self.config['state']:
-            self.config['release'] = True
-            r1()
 
         if 'r2' in self.config['state']:
             self.config['release'] = True

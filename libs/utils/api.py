@@ -1,10 +1,10 @@
-import yfinance as yf
-import pandas as pd
-import numpy as np
 import json
 import os
 import pprint
 import requests
+import yfinance as yf
+import pandas as pd
+import numpy as np
 
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -139,15 +139,15 @@ def get_earnings(ticker, st):
     return earn
 
 
-def get_recommendations(ticker, st):
+def get_recommendations(ticker, st) -> dict:
     """[summary]
 
     Arguments:
-        ticker {[type]} -- [description]
-        st {[type]} -- [description]
+        ticker {Ticker} -- current yf Ticker object
+        st {Ticker} -- stable version of 0.1.50 of yf Ticker object
 
     Returns:
-        [type] -- [description]
+        dict -- recommendations
     """
     recom = dict()
     try:

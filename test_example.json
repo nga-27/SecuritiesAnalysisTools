@@ -4,6 +4,7 @@
         "Interval": "1d",
         "Indexes": {
             "Market Sector": false,
+            "Type Sector": true,
             "Corporate Bond": true,
             "Treasury Bond": true,
             "International Bond": true,

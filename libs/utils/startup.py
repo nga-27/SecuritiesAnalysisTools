@@ -268,6 +268,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'bci', type_='list')
 
+    if '--tci' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'tci', type_='list')
+
     if '--trend' in i_keys:
         config['tickers'] = ticker_list_to_str(ticker_keys)
         config = add_str_to_dict_key(
@@ -293,7 +297,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'head_shoulders', type_='list')
 
-    if ('--corr' in i_keys) or ('--correlation' in i_keys):
+    if ('--corr' in i_keys) or ('--correlation' in i_keys) or ('--cci' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'correlation', type_='list')
         if '--short' in i_keys:

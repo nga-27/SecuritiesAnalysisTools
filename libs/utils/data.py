@@ -1,26 +1,60 @@
-import pandas as pd 
-import numpy as np 
 import math
-import yfinance as yf 
+import pandas as pd
+import numpy as np
+import yfinance as yf
 
 from .formatting import get_daterange, fund_list_extractor
 from .constants import TEXT_COLOR_MAP
 
-ticker_color = TEXT_COLOR_MAP["cyan"]
-normal_color = TEXT_COLOR_MAP["white"]
-error_color = TEXT_COLOR_MAP["red"]
-note_color = TEXT_COLOR_MAP["yellow"]
+TICKER_COLOR = TEXT_COLOR_MAP["cyan"]
+NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+ERROR_COLOR = TEXT_COLOR_MAP["red"]
+NOTE_COLOR = TEXT_COLOR_MAP["yellow"]
 
-def download_data_indexes(indexes: list, tickers: str, period: str='2y', interval='1d', start=None, end=None, fund_len=None) -> list:
+
+def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
+    """Download Data Indexes
+
+    Arguments:
+        indexes {list} -- list of funds
+        tickers {str} -- ticker string (e.g. "MMM VTI")
+
+    Keyword Arguments:
+        period {str} -- (default: {'2y'})
+        interval {str} -- (default: {'1d'})
+        start {str} -- date (default: {None})
+        end {str} -- date (default: {None})
+        fund_len {int} -- (default: {None})
+
+    Returns:
+        list -- data of funds, index list
+    """
+    period = kwargs.get('period', '2y')
+    interval = kwargs.get('interval', '1d')
+    start = kwargs.get('start')
+    end = kwargs.get('end')
+    fund_len = kwargs.get('fund_len')
+
     if (start is not None) and (end is not None):
-        data1 = yf.download(tickers=tickers, start=start, end=end, interval='1d', group_by='ticker')
+        data1 = yf.download(tickers=tickers, start=start,
+                            end=end, interval=interval, group_by='ticker')
     else:
-        data1 = yf.download(tickers=tickers, period=period, interval='1d', group_by='ticker')
-    data = data_format(data1, config=None, list_of_funds=indexes, fund_len=fund_len)
+        data1 = yf.download(tickers=tickers, period=period,
+                            interval=interval, group_by='ticker')
+    data = data_format(data1, config=None,
+                       list_of_funds=indexes, fund_len=fund_len)
     return data, indexes
 
 
 def download_data(config: dict) -> list:
+    """Download data (for functions)
+
+    Arguments:
+        config {dict} -- 
+
+    Returns:
+        list -- downloaded data, list of funds
+    """
     period = config.get('period', '2y')
     interval = config.get('interval', '1d')
     tickers = config['tickers']
@@ -30,15 +64,19 @@ def download_data(config: dict) -> list:
         period = '2y'
     if interval is None:
         interval = '1d'
-    
+
     daterange = get_daterange(period=period)
-    
+
     if daterange[0] is None:
-        print(f'Fetching data for {ticker_color}{ticker_print}{normal_color} for {period} at {interval} intervals...')
-        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
-    else: 
-        print(f'Fetching data for {ticker_color}{ticker_print}{normal_color} from dates {daterange[0]} to {daterange[1]}...')
-        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
+        print(
+            f'Fetching data for {TICKER_COLOR}{ticker_print}{NORMAL_COLOR} for {period} at {interval} intervals...')
+        data = yf.download(tickers=tickers, period=period,
+                           interval=interval, group_by='ticker')
+    else:
+        print(
+            f'Fetching data for {TICKER_COLOR}{ticker_print}{NORMAL_COLOR} from dates {daterange[0]} to {daterange[1]}...')
+        data = yf.download(tickers=tickers, period=period, interval=interval,
+                           group_by='ticker', start=daterange[0], end=daterange[1])
     print(" ")
 
     funds = fund_list_extractor(data, config=config)
@@ -56,26 +94,30 @@ def download_single_fund(fund: str, config: dict, fund_len=None) -> dict:
         period = '2y'
     if interval is None:
         interval = '1d'
-    
+
     daterange = get_daterange(period=period)
-    
+
     if daterange[0] is None:
         print("")
-        print(f'Fetching sector data for {ticker_color}{ticker}{normal_color}...')
-        data = yf.download(tickers=ticker, period=period, interval=interval, group_by='ticker')
-    else: 
+        print(
+            f'Fetching sector data for {TICKER_COLOR}{ticker}{NORMAL_COLOR}...')
+        data = yf.download(tickers=ticker, period=period,
+                           interval=interval, group_by='ticker')
+    else:
         print("")
-        print(f'Fetching sector data for {ticker_color}{ticker}{normal_color}...')
-        data = yf.download(tickers=ticker, period=period, interval=interval, group_by='ticker', start=daterange[0], end=daterange[1])
+        print(
+            f'Fetching sector data for {TICKER_COLOR}{ticker}{NORMAL_COLOR}...')
+        data = yf.download(tickers=ticker, period=period, interval=interval,
+                           group_by='ticker', start=daterange[0], end=daterange[1])
     print(" ")
 
-    data = data_format(data, config=config, single_fund_name=ticker, fund_len=fund_len)
+    data = data_format(data, config=config,
+                       single_fund_name=ticker, fund_len=fund_len)
 
     return data
 
 
-
-def add_status_message(status: list, new_message: str, message_index: int=None, key: str=None) -> str:
+def add_status_message(status: list, new_message: str, message_index: int = None, key: str = None) -> str:
     """ adds 'new_message' to status if it isn't added already """
     need_to_add = True
     for i, message in enumerate(status):
@@ -86,7 +128,8 @@ def add_status_message(status: list, new_message: str, message_index: int=None, 
             need_to_add = False
     if need_to_add:
         if key is not None:
-            status.append({'message': new_message, 'count': 1, 'info': [{key: message_index}]})
+            status.append({'message': new_message, 'count': 1,
+                           'info': [{key: message_index}]})
         else:
             status.append({'message': new_message, 'count': 1, 'info': []})
     return status
@@ -95,14 +138,13 @@ def add_status_message(status: list, new_message: str, message_index: int=None, 
 def get_status_message(status: list) -> str:
     message = ''
     info = ''
-    for i,item in enumerate(status):
+    for i, item in enumerate(status):
         message += f"{item['message']} ({item['count']})"
         info += f"{item['info']}"
         if i < len(status)-1:
             message += ', '
             info += ', '
     return message, info
-
 
 
 def data_format(data: pd.DataFrame, config: dict, list_of_funds=None, single_fund_name=None, fund_len=None) -> dict:
@@ -113,18 +155,24 @@ def data_format(data: pd.DataFrame, config: dict, list_of_funds=None, single_fun
             fund_keys = fund_list_extractor(data, config=config)
         else:
             fund_keys = [single_fund_name]
-    dates = data.index 
+    dates = data.index
 
     if 'Open' in data.keys():
         # Singular fund case
         df_dict = {}
         df_dict['Date'] = filter_date(dates.copy(), fund_len=fund_len)
-        df_dict['Open'] = filter_nan(data['Open'].copy(), fund_name=fund_keys[0], column_key='Open', fund_len=fund_len)
-        df_dict['Close'] = filter_nan(data['Close'].copy(), column_key='Close', fund_len=fund_len)
-        df_dict['High'] = filter_nan(data['High'].copy(), column_key='High', fund_len=fund_len)
-        df_dict['Low'] = filter_nan(data['Low'].copy(), column_key='Low', fund_len=fund_len)
-        df_dict['Adj Close'] = filter_nan(data['Adj Close'].copy(), column_key='Adj Close', fund_len=fund_len)
-        df_dict['Volume'] = filter_nan(data['Volume'].copy(), column_key='Volume', fund_len=fund_len)
+        df_dict['Open'] = filter_nan(data['Open'].copy(
+        ), fund_name=fund_keys[0], column_key='Open', fund_len=fund_len)
+        df_dict['Close'] = filter_nan(
+            data['Close'].copy(), column_key='Close', fund_len=fund_len)
+        df_dict['High'] = filter_nan(
+            data['High'].copy(), column_key='High', fund_len=fund_len)
+        df_dict['Low'] = filter_nan(
+            data['Low'].copy(), column_key='Low', fund_len=fund_len)
+        df_dict['Adj Close'] = filter_nan(
+            data['Adj Close'].copy(), column_key='Adj Close', fund_len=fund_len)
+        df_dict['Volume'] = filter_nan(
+            data['Volume'].copy(), column_key='Volume', fund_len=fund_len)
 
         df = pd.DataFrame.from_dict(df_dict)
         df = df.set_index('Date')
@@ -135,12 +183,18 @@ def data_format(data: pd.DataFrame, config: dict, list_of_funds=None, single_fun
         for fund in fund_keys:
             df_dict = {}
             df_dict['Date'] = filter_date(dates.copy(), fund_len=fund_len)
-            df_dict['Open'] = filter_nan(data[fund]['Open'].copy(), fund_name=fund, column_key='Open', fund_len=fund_len)
-            df_dict['Close'] = filter_nan(data[fund]['Close'].copy(), column_key='Close', fund_len=fund_len)
-            df_dict['High'] = filter_nan(data[fund]['High'].copy(), column_key='High', fund_len=fund_len)
-            df_dict['Low'] = filter_nan(data[fund]['Low'].copy(), column_key='Low', fund_len=fund_len)
-            df_dict['Adj Close'] = filter_nan(data[fund]['Adj Close'].copy(), column_key='Adj Close', fund_len=fund_len)
-            df_dict['Volume'] = filter_nan(data[fund]['Volume'].copy(), column_key='Volume', fund_len=fund_len)
+            df_dict['Open'] = filter_nan(data[fund]['Open'].copy(
+            ), fund_name=fund, column_key='Open', fund_len=fund_len)
+            df_dict['Close'] = filter_nan(
+                data[fund]['Close'].copy(), column_key='Close', fund_len=fund_len)
+            df_dict['High'] = filter_nan(
+                data[fund]['High'].copy(), column_key='High', fund_len=fund_len)
+            df_dict['Low'] = filter_nan(
+                data[fund]['Low'].copy(), column_key='Low', fund_len=fund_len)
+            df_dict['Adj Close'] = filter_nan(
+                data[fund]['Adj Close'].copy(), column_key='Adj Close', fund_len=fund_len)
+            df_dict['Volume'] = filter_nan(
+                data[fund]['Volume'].copy(), column_key='Volume', fund_len=fund_len)
 
             df = pd.DataFrame.from_dict(df_dict)
             df = df.set_index('Date')
@@ -150,7 +204,7 @@ def data_format(data: pd.DataFrame, config: dict, list_of_funds=None, single_fun
     return data_dict
 
 
-def filter_nan(frame_list: pd.DataFrame, fund_name=None, column_key=None, fund_len: dict=None) -> list:
+def filter_nan(frame_list: pd.DataFrame, fund_name=None, column_key=None, fund_len: dict = None) -> list:
     new_list = list(frame_list.copy())
     nans = list(np.where(pd.isna(frame_list) == True))[0]
 
@@ -176,32 +230,38 @@ def filter_nan(frame_list: pd.DataFrame, fund_name=None, column_key=None, fund_l
                 new_list[na] = new_list[na+1]
             elif (na != 0) and (na != len(new_list)-1) and (not math.isnan(new_list[na-1]) and (not math.isnan(new_list[na+1]))):
                 status = add_status_message(status, 'Row-inner nan')
-                new_list[na] = np.round(np.mean([new_list[na-1], new_list[na+1]]), 2)
+                new_list[na] = np.round(
+                    np.mean([new_list[na-1], new_list[na+1]]), 2)
             elif (na == len(new_list)-1) and (not math.isnan(new_list[na-1])):
                 status = add_status_message(status, 'Mutual Fund nan')
                 new_list[na] = new_list[na-1]
             elif not math.isnan(new_list[na-1]):
                 # More general case than above, different error.
-                status = add_status_message(status, 'Generic progression nan', na, column_key)
+                status = add_status_message(
+                    status, 'Generic progression nan', na, column_key)
                 new_list[na] = new_list[na-1]
             else:
-                status = add_status_message(status, 'Unknown/unfixable nan', na, column_key)
+                status = add_status_message(
+                    status, 'Unknown/unfixable nan', na, column_key)
 
     if corrected and (fund_name is not None):
         message, info = get_status_message(status)
         if 'Unknown/unfixable nan' in message:
-            print(f"{error_color}WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
-            print(f"----> Content: {info}{normal_color}")
+            print(
+                f"{ERROR_COLOR}WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
+            print(f"----> Content: {info}{NORMAL_COLOR}")
         elif 'Generic progression nan' in message:
-            print(f"{note_color}Note: 'NaN' found on {fund_name}. Type: '{message}': Corrected OK.")
-            print(f"----> Content: {info}{normal_color}")
+            print(
+                f"{NOTE_COLOR}Note: 'NaN' found on {fund_name}. Type: '{message}': Corrected OK.")
+            print(f"----> Content: {info}{NORMAL_COLOR}")
         else:
-            print(f"{note_color}Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.{normal_color}")
-        
+            print(
+                f"{NOTE_COLOR}Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.{NORMAL_COLOR}")
+
     return new_list
 
 
-def filter_date(dates, fund_len: dict=None):
+def filter_date(dates, fund_len: dict = None):
     if fund_len is not None:
         if len(dates) != fund_len['length']:
             if dates[0] != fund_len['start']:

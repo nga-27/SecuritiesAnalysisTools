@@ -1,16 +1,20 @@
-import pandas as pd 
-import numpy as np 
-import matplotlib.pyplot as plt 
-import matplotlib.dates as mdates
-from datetime import datetime
 import os
+from datetime import datetime
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from pandas.plotting import register_matplotlib_converters
 
 from .formatting import dates_extractor_list
 from .progress_bar import ProgressBar
+from .constants import TEXT_COLOR_MAP
+
+WARNING_COLOR = TEXT_COLOR_MAP["yellow"]
+NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
-def plot_xaxis_disperse(axis_obj, every_nth: int=2, dynamic=True):
+def plot_xaxis_disperse(axis_obj, every_nth: int = 2, dynamic=True):
     num_ticks = len(axis_obj.xaxis.get_ticklabels())
     tick_even = True
     if dynamic:
@@ -27,7 +31,7 @@ def plot_xaxis_disperse(axis_obj, every_nth: int=2, dynamic=True):
         else:
             if n % every_nth != 0:
                 label.set_visible(False)
-    return 
+    return
 
 
 def is_data_list(data) -> bool:
@@ -71,13 +75,13 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
             x = dates_extractor_list(y1)
 
     fig, ax1 = plt.subplots()
-    
+
     if is_data_list(y2):
         color = 'k'
     else:
         color = 'tab:orange'
     ax1.set_xlabel(x_label)
-    
+
     list_setting = False
     if is_data_list(y1):
         list_setting = True
@@ -100,7 +104,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         color = 'k'
     else:
         color = 'tab:blue'
-    
+
     if is_data_list(y2):
         ax2.set_ylabel(y2_label)
         for y in y2:
@@ -128,19 +132,19 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
                 # For functions, this directory may not exist.
                 plt.close(fig)
                 plt.clf()
-                return 
+                return
             if os.path.exists(filename):
                 os.remove(filename)
             plt.savefig(filename, bbox_inches="tight")
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'dual_plotting' of title: {title}")
+        print(f"{WARNING_COLOR} Warning: plot failed to render in 'dual_plotting' of title: {title}{NORMAL_COLOR}")
     plt.close('all')
     plt.clf()
 
 
-def generic_plotting(list_of_plots: list, **kwargs): 
+def generic_plotting(list_of_plots: list, **kwargs):
     """
     args:
         list_of_plots:  (list) list of y-value data sets to be plotted (multiple)
@@ -169,11 +173,12 @@ def generic_plotting(list_of_plots: list, **kwargs):
 
     if len(colors) > 0:
         if len(colors) != len(list_of_plots):
-            print(f"Warning: lengths of plots ({len(list_of_plots)}) and colors ({len(colors)}) do not match in generic_plotting.")
+            print(
+                f"{WARNING_COLOR}Warning: lengths of plots ({len(list_of_plots)}) and colors ({len(colors)}) do not match in generic_plotting.{NORMAL_COLOR}")
             return None
 
     fig, ax = plt.subplots()
-    
+
     if len(x) < 1:
         x = dates_extractor_list(list_of_plots[0])
         for i, fig in enumerate(list_of_plots):
@@ -214,12 +219,12 @@ def generic_plotting(list_of_plots: list, **kwargs):
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'generic_plotting' of title: {title}")
+        print(f"{WARNING_COLOR}Warning: plot failed to render in 'generic_plotting' of title: {title}{NORMAL_COLOR}")
     plt.close('all')
     plt.clf()
 
 
-def bar_chart(data: list, **kwargs): 
+def bar_chart(data: list, **kwargs):
     """
     Exclusively used for MACD, On Balance Volume
 
@@ -250,7 +255,7 @@ def bar_chart(data: list, **kwargs):
         x = list(range(len(data)))
     else:
         x = x
-    
+
     colors = []
     positive = []
     for bar in data:
@@ -269,7 +274,7 @@ def bar_chart(data: list, **kwargs):
 
     _, ax1 = plt.subplots()
     barlist = ax1.bar(x, data, width=1, color=colors)
-    for i in range(1,len(data)):
+    for i in range(1, len(data)):
         if data[i] > 0.0:
             if data[i] < data[i-1]:
                 barlist[i].set_alpha(0.3)
@@ -293,13 +298,12 @@ def bar_chart(data: list, **kwargs):
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'bar_chart' of name: {title}")
+        print(f"{WARNING_COLOR}Warning: plot failed to render in 'bar_chart' of name: {title}{NORMAL_COLOR}")
     plt.close()
     plt.clf()
 
 
-
-def specialty_plotting(list_of_plots: list, **kwargs): 
+def specialty_plotting(list_of_plots: list, **kwargs):
     """
     Plot various datasets against others (different y-axes)
 
@@ -334,7 +338,7 @@ def specialty_plotting(list_of_plots: list, **kwargs):
     for i in range(len(list_of_plots)):
         if i not in alt_ax_index:
             ax.plot(x, list_of_plots[i])
-    
+
     ax2 = ax.twinx()
     for i in range(len(list_of_plots)):
         if i in alt_ax_index:
@@ -356,12 +360,13 @@ def specialty_plotting(list_of_plots: list, **kwargs):
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'specialty plotting' of title: {title}")
+        print(
+            f"{WARNING_COLOR}Warning: plot failed to render in 'specialty plotting' of title: {title}{NORMAL_COLOR}")
     plt.close()
     plt.clf()
 
 
-def shape_plotting(main_plot: pd.DataFrame, **kwargs): 
+def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     """
     Note, shapeXY is a list of dictionaries of coordinates and type
 
@@ -390,8 +395,9 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
 
     _, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-    
-    x = [datetime.strptime(d, '%Y-%m-%d').date() for d in main_plot.index.astype(str)]
+
+    x = [datetime.strptime(d, '%Y-%m-%d').date()
+         for d in main_plot.index.astype(str)]
     plt.plot(x, main_plot)
 
     xpts = plt.gca().get_lines()[0].get_xdata()
@@ -399,12 +405,13 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     """ CONVERT SHAPEXY (DICT OF ITEMS) TO DATE """
 
     if feature == 'default':
-        dotted_line = plt.Line2D((xpts[40],xpts[len(xpts)-40]), (np.min(ypts), np.max(ypts)), lw=1, ls='-', alpha=0.5)
+        dotted_line = plt.Line2D((xpts[40], xpts[len(
+            xpts)-40]), (np.min(ypts), np.max(ypts)), lw=1, ls='-', alpha=0.5)
         plt.gca().add_line(dotted_line)
 
     elif (feature == 'head_and_shoulders') and (shapeXY != []):
         for shape in shapeXY:
-            
+
             y_shp_pts = []
             x_shp_pts = []
             if shape['type'] == 'bullish':
@@ -416,13 +423,17 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
                 # convert to date here
                 y_shp_pts.append(pt[1])
                 x_shp_pts.append(xpts[pt[0]])
-            box = plt.Line2D((x_shp_pts[0], x_shp_pts[4]), (np.min(y_shp_pts), np.min(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            box = plt.Line2D((x_shp_pts[0], x_shp_pts[4]), (np.min(y_shp_pts), np.min(
+                y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
-            box = plt.Line2D((x_shp_pts[0], x_shp_pts[0]), (np.min(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            box = plt.Line2D((x_shp_pts[0], x_shp_pts[0]), (np.min(y_shp_pts), np.max(
+                y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
-            box = plt.Line2D((x_shp_pts[0], x_shp_pts[4]), (np.max(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            box = plt.Line2D((x_shp_pts[0], x_shp_pts[4]), (np.max(y_shp_pts), np.max(
+                y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
-            box = plt.Line2D((x_shp_pts[4], x_shp_pts[4]), (np.min(y_shp_pts), np.max(y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
+            box = plt.Line2D((x_shp_pts[4], x_shp_pts[4]), (np.min(y_shp_pts), np.max(
+                y_shp_pts)), lw=2, ls='-.', alpha=0.75, color=colors)
             plt.gca().add_line(box)
 
     elif (feature == 'price_gaps') and (shapeXY != []):
@@ -435,7 +446,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
             else:
                 color = 'r'
 
-            circle = plt.Circle((x,y), radius, color=color, fill=False)
+            circle = plt.Circle((x, y), radius, color=color, fill=False)
             plt.gcf().gca().add_artist(circle)
 
     plt.title(title)
@@ -453,12 +464,12 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'shape plotting' of title: {title}")
+        print(f"{WARNING_COLOR}Warning: plot failed to render in 'shape plotting' of title: {title}{NORMAL_COLOR}")
     plt.close()
     plt.clf()
 
 
-def candlestick(data: pd.DataFrame, **kwargs): 
+def candlestick(data: pd.DataFrame, **kwargs):
     """
     Plot candlestick chart
 
@@ -485,10 +496,11 @@ def candlestick(data: pd.DataFrame, **kwargs):
 
     _, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-    
-    x = [datetime.strptime(d, '%Y-%m-%d').date() for d in data.index.astype(str)]
+
+    x = [datetime.strptime(d, '%Y-%m-%d').date()
+         for d in data.index.astype(str)]
     plt.plot(x, data['Close'], alpha=0.01)
-    
+
     increment = 0.5 / float(len(data['Close']) + 1)
 
     for i in range(len(data['Close'])):
@@ -505,16 +517,19 @@ def candlestick(data: pd.DataFrame, **kwargs):
                 op = data['Open'][i-1]
                 if op > close:
                     colors = 'red'
-                else: 
+                else:
                     colors = 'green'
         else:
             colors = 'red'
-        oc = plt.Line2D((x[i], x[i]), (op, close), lw=3, ls='-', alpha=1, color=colors)
+        oc = plt.Line2D((x[i], x[i]), (op, close), lw=3,
+                        ls='-', alpha=1, color=colors)
         plt.gca().add_line(oc)
-        hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75, ls='-', alpha=1, color='black')
+        hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75,
+                        ls='-', alpha=1, color='black')
         plt.gca().add_line(hl)
 
-        if p_bar is not None: p_bar.uptick(increment=increment)
+        if p_bar is not None:
+            p_bar.uptick(increment=increment)
 
     plt.title(title)
     if len(legend) > 0:
@@ -531,8 +546,9 @@ def candlestick(data: pd.DataFrame, **kwargs):
         else:
             plt.show()
     except:
-        print(f"plot failed to render in 'shape plotting' of title: {title}")
+        print(f"{WARNING_COLOR}Warning: plot failed to render in 'shape plotting' of title: {title}{NORMAL_COLOR}")
     plt.close()
     plt.clf()
 
-    if p_bar is not None: p_bar.uptick(increment=0.5)
+    if p_bar is not None:
+        p_bar.uptick(increment=0.5)

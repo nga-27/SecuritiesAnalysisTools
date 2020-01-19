@@ -107,7 +107,7 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list=[], config=[50, 
     return trend_analysis
 
 
-def get_trendlines( fund: pd.DataFrame, **kwargs ):
+def get_trendlines( fund: pd.DataFrame, **kwargs ): 
     """
     Get Trendlines
 
@@ -393,7 +393,7 @@ def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) 
     if (last_pt <= (top_thresh * fund['Close'][x_pt-1])) and (last_pt >= (bot_thresh * fund['Close'][x_pt-1])):
         return x_pt
     else:
-        while (last_pt > (top_thresh * fund['Close'][x_pt-1])) or (last_pt < (bot_thresh * fund['Close'][x_pt-1])):  
+        while (x_pt-1 > 0) and (((last_pt > (top_thresh * fund['Close'][x_pt-1]))) or (last_pt < (bot_thresh * fund['Close'][x_pt-1]))):  
             x_pt -= 1
             last_pt = intercept + slope * x_pt
     return x_pt      
