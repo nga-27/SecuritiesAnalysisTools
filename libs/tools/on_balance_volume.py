@@ -2,7 +2,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 
-from .moving_average import simple_ma_list, exponential_ma_list, windowed_ma_list
+from .moving_average import simple_moving_avg, exponential_moving_avg
 from libs.utils import generic_plotting, dual_plotting, bar_chart
 from libs.utils import dates_extractor_list, ProgressBar, SP500
 from .trends import get_trendlines
@@ -42,7 +42,7 @@ def generate_obv_signal(fund: pd.DataFrame, **kwargs) -> list:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)
 
-    obv_sig = simple_ma_list(obv, interval=9)
+    obv_sig = simple_moving_avg(obv, interval=9, data_type='list')
     obv_slope = []
     obv_diff = [ob - obv_sig[i] for i, ob in enumerate(obv)]
 
@@ -69,7 +69,7 @@ def generate_obv_signal(fund: pd.DataFrame, **kwargs) -> list:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)
 
-    slope_ma = exponential_ma_list(obv_slope, interval=3)
+    slope_ma = exponential_moving_avg(obv_slope, interval=3, data_type='list')
     slope_diff = []
     for i in range(len(slope_ma)):
         slope_diff.append(obv_slope[i] - slope_ma[i])

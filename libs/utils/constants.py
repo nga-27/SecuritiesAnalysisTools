@@ -16,3 +16,10 @@ TEXT_COLOR_MAP = {
 SP500 = {
     "^GSPC": "S&P500"
 }
+
+STANDARD_COLORS = {
+    "warning": TEXT_COLOR_MAP["yellow"],
+    "error": TEXT_COLOR_MAP["red"],
+    "normal": TEXT_COLOR_MAP["white"],
+    "ticker": TEXT_COLOR_MAP["cyan"]
+}

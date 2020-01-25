@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from .moving_average import exponential_ma, exponential_ma_list
+from .moving_average import exponential_moving_avg
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 from libs.utils import ProgressBar, SP500
 
@@ -27,14 +27,14 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> list:
     plotting = kwargs.get('plotting', True)
     name = kwargs.get('name', '')
 
-    emaTw = exponential_ma(fund, interval=12)
-    emaTs = exponential_ma(fund, interval=26)
+    emaTw = exponential_moving_avg(fund, interval=12)
+    emaTs = exponential_moving_avg(fund, interval=26)
     macd = []
 
     for i in range(len(emaTw)):
         macd.append(emaTw[i] - emaTs[i])
 
-    macd_ema = exponential_ma_list(macd, interval=9)
+    macd_ema = exponential_moving_avg(macd, interval=9, data_type='list')
     x = dates_extractor_list(fund)
     name2 = name + ' - MACD'
     if plotting:
@@ -68,7 +68,8 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                     group_size += 1
                 else:
                     state = 0
-            m_ema = exponential_ma_list(macd[i:len(macd)], interval=3)
+            m_ema = exponential_moving_avg(
+                macd[i:len(macd)], interval=3, data_type='list')
             if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
                 return 'rising'
             else:
@@ -82,7 +83,8 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                     group_size += 1
                 else:
                     state = 0
-            m_ema = exponential_ma_list(macd[i:len(macd)], interval=3)
+            m_ema = exponential_moving_avg(
+                macd[i:len(macd)], interval=3, data_type='list')
             if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
                 return 'rising'
             else:
@@ -107,7 +109,7 @@ def get_macd_value(macd: list, value_type='current', index=-1) -> float:
         return macd[index] / np.abs(macd_max) * 100.0
 
     elif value_type == 'change':
-        macd_ema = exponential_ma_list(macd, interval=3)
+        macd_ema = exponential_moving_avg(macd, interval=3, data_type='list')
         macd_max = get_group_max(macd)
         if macd_max == 0.0:
             return 0.0

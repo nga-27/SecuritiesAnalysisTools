@@ -5,77 +5,126 @@ import numpy as np
 from libs.utils import generic_plotting, specialty_plotting, SP500
 
 
-def exponential_ma(fund: pd.DataFrame, interval: int) -> list:
+def exponential_moving_avg(dataset, interval: int, **kwargs) -> list:
+    """Exponential Moving Average
+
+    Arguments:
+        dataset -- tabular data, either list or pd.DataFrame
+        interval {int} -- window to exponential moving average
+
+    Optional Args:
+        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
+        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
+
+    Returns:
+        list -- filtered data
+    """
+    data_type = kwargs.get('data_type', 'DataFrame')
+    key = kwargs.get('key', 'Close')
+
+    if data_type == 'DataFrame':
+        data = list(dataset[key])
+    else:
+        data = dataset
+
     ema = []
     k = 2.0 / (float(interval) + 1.0)
     for i in range(interval-1):
-        ema.append(fund['Close'][i])
-    for i in range(interval-1, len(fund['Close'])):
-        ema.append(np.mean(fund['Close'][i-(interval-1):i+1]))
+        ema.append(data[i])
+    for i in range(interval-1, len(data)):
+        ema.append(np.mean(data[i-(interval-1):i+1]))
         if i != interval-1:
-            ema[i] = ema[i-1] * (1.0 - k) + fund['Close'][i] * k
+            ema[i] = ema[i-1] * (1.0 - k) + data[i] * k
 
     return ema
 
 
-def exponential_ma_list(item: list, interval: int) -> list:
-    ema = []
-    k = 2.0 / (float(interval) + 1.0)
-    if len(item) > interval:
-        for i in range(interval-1):
-            ema.append(item[i])
-        for i in range(interval-1, len(item)):
-            ema.append(np.mean(item[i-(interval-1):i+1]))
-            if i != interval-1:
-                ema[i] = ema[i-1] * (1.0 - k) + item[i] * k
+def windowed_moving_avg(dataset, interval: int, **kwargs) -> list:
+    """Windowed Moving Average
+
+    Arguments:
+        dataset -- tabular data, either list or pd.DataFrame
+        interval {int} -- window to windowed moving average
+
+    Optional Args:
+        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
+        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
+        filter_type {str} -- either 'simple' or 'exponential' (default: {'simple'})
+        weight_strength {float} -- numerator for ema weight (default: {2.0})
+
+    Returns:
+        list -- filtered data
+    """
+    data_type = kwargs.get('data_type', 'DataFrame')
+    key = kwargs.get('key', 'Close')
+    filter_type = kwargs.get('filter_type', 'simple')
+    weight_strength = kwargs.get('weight_strength', 2.0)
+
+    if data_type == 'DataFrame':
+        data = list(dataset[key])
     else:
-        ema = item
+        data = dataset
 
-    return ema
-
-
-def windowed_ma_list(item: list, interval: int) -> list:
-    left = int(np.floor(float(interval) / 2))
     wma = []
-    if left == 0:
-        return item
-    for i in range(left):
-        wma.append(item[i])
-    for i in range(left, len(item)-left):
-        wma.append(np.mean(item[i-(left):i+(left)]))
-    for i in range(len(item)-left, len(item)):
-        wma.append(item[i])
+
+    if filter_type == 'simple':
+        left = int(np.floor(float(interval) / 2))
+        if left == 0:
+            return data
+        for i in range(left):
+            wma.append(data[i])
+        for i in range(left, len(data)-left):
+            wma.append(np.mean(data[i-(left):i+(left)]))
+        for i in range(len(data)-left, len(data)):
+            wma.append(data[i])
+
+    elif filter_type == 'exponential':
+        left = int(np.floor(float(interval) / 2))
+        weight = weight_strength / (float(interval) + 1.0)
+        if weight > 1.0:
+            weight = 1.0
+        for i in range(left):
+            wma.append(data[i])
+        for i in range(left, len(data)-left):
+            sum_len = len(data[i-(left):i+(left)]) - 1
+            sum_vals = np.sum(data[i-(left):i+(left)])
+            sum_vals -= data[i]
+            sum_vals = sum_vals / float(sum_len)
+            sum_vals = data[i] * weight + sum_vals * (1.0 - weight)
+            wma.append(sum_vals)
+        for i in range(len(data)-left, len(data)):
+            wma.append(data[i])
 
     return wma
 
 
-def windowed_ema_list(item: list, interval: int, weight_strength=2.0) -> list:
-    left = int(np.floor(float(interval) / 2))
-    weight = weight_strength / (float(interval) + 1.0)
-    if weight > 1.0:
-        weight = 1.0
-    wma = []
-    for i in range(left):
-        wma.append(item[i])
-    for i in range(left, len(item)-left):
-        sum_len = len(item[i-(left):i+(left)]) - 1
-        sum_vals = np.sum(item[i-(left):i+(left)])
-        sum_vals -= item[i]
-        sum_vals = sum_vals / float(sum_len)
-        sum_vals = item[i] * weight + sum_vals * (1.0 - weight)
-        wma.append(sum_vals)
-    for i in range(len(item)-left, len(item)):
-        wma.append(item[i])
+def simple_moving_avg(dataset, interval: int, **kwargs) -> list:
+    """Simple Moving Average
 
-    return wma
+    Arguments:
+        dataset -- tabular data, either list or pd.DataFrame
+        interval {int} -- window to windowed moving average
 
+    Optional Args:
+        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
+        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
 
-def simple_ma_list(item: list, interval: int) -> list:
+    Returns:
+        list -- filtered data
+    """
+    data_type = kwargs.get('data_type', 'DataFrame')
+    key = kwargs.get('key', 'Close')
+
+    if data_type == 'DataFrame':
+        data = list(dataset[key])
+    else:
+        data = dataset
+
     ma = []
     for i in range(interval-1):
-        ma.append(item[i])
-    for i in range(interval-1, len(item)):
-        av = np.mean(item[i-(interval-1):i+1])
+        ma.append(data[i])
+    for i in range(interval-1, len(data)):
+        av = np.mean(data[i-(interval-1):i+1])
         ma.append(av)
 
     return ma
@@ -164,9 +213,9 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
 
 def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], plot_output=True, name='') -> list:
 
-    tshort = exponential_ma(fund, config[0])
-    tmed = exponential_ma(fund, config[1])
-    tlong = exponential_ma(fund, config[2])
+    tshort = exponential_moving_avg(fund, config[0])
+    tmed = exponential_moving_avg(fund, config[1])
+    tlong = exponential_moving_avg(fund, config[2])
 
     name3 = SP500.get(name, name)
     name2 = name3 + \
