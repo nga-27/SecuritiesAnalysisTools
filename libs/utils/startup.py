@@ -344,6 +344,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'nf', type_='list')
 
+    if '--nf_now' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'nfnow', type_='list')
+
     # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in i_keys:
         config['state'] = 'dev'

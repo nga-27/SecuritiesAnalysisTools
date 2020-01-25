@@ -17,6 +17,8 @@ from libs.features import feature_detection_head_and_shoulders, analyze_price_ga
 TICKER_COLOR = TEXT_COLOR_MAP["cyan"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 WARNING_COLOR = TEXT_COLOR_MAP["yellow"]
+UP_COLOR = TEXT_COLOR_MAP["green"]
+DOWN_COLOR = TEXT_COLOR_MAP["red"]
 
 
 def only_functions_handler(config: dict):
@@ -66,6 +68,8 @@ def only_functions_handler(config: dict):
         vq_function(config)
     if 'nf' in config['run_functions']:
         nasit_generation_function(config)
+    if 'nfnow' in config['run_functions']:
+        nasit_generation_function(config, print_only=True)
 
 ###############################################################################
 
@@ -219,7 +223,7 @@ def vq_function(config: dict):
             print("")
 
 
-def nasit_generation_function(config: dict):
+def nasit_generation_function(config: dict, print_only=False):
     print(f"Generating Nasit funds...")
     print(f"")
     nasit_file = 'nasit.json'
@@ -232,9 +236,32 @@ def nasit_generation_function(config: dict):
         fund_list = nasit.get('Funds', [])
         nasit_funds = dict()
         for fund in fund_list:
-            nasit_funds[fund.get('ticker')] = nasit_extraction(fund, config)
+            t_data, has_cash = nasit_get_data(fund, config)
+            nasit_funds[fund.get('ticker')] = nasit_extraction(
+                fund, t_data, has_cash=has_cash)
             nasit_funds[f"{fund.get('ticker')}_ret"] = nasit_extraction(
-                fund, config, by_price=False)
+                fund, t_data, has_cash=has_cash, by_price=False)
+
+        if print_only:
+            for f in nasit_funds:
+                if "_ret" not in f:
+                    fund = f
+                    price = np.round(nasit_funds[f][-1], 2)
+                    change = np.round(price - nasit_funds[f][-2], 2)
+                    changep = np.round(
+                        (price - nasit_funds[f][-2]) / nasit_funds[f][-2] * 100.0, 3)
+                    if change > 0.0:
+                        color = UP_COLOR
+                    elif change < 0.0:
+                        color = DOWN_COLOR
+                    else:
+                        color = NORMAL_COLOR
+                    print("")
+                    print(
+                        f"{TICKER_COLOR}{fund}{color}   ${price} (${change}, {changep}%){NORMAL_COLOR}")
+            print("")
+            print("")
+            return
 
         df = pd.DataFrame(nasit_funds)
         out_file = 'output/NASIT.csv'
@@ -267,7 +294,7 @@ def function_data_download(config: dict) -> list:
     return data, fund_list
 
 
-def nasit_extraction(data: dict, config: dict, by_price=True):
+def nasit_get_data(data: dict, config: dict):
     subs = data.get('makeup', [])
     tickers = []
     has_cash = False
@@ -281,8 +308,12 @@ def nasit_extraction(data: dict, config: dict, by_price=True):
     config['tickers'] = ticker_str
     config['ticker print'] = ', '.join(tickers)
     t_data, _ = function_data_download(config)
-    fund = nasit_build(t_data, subs, has_cash=has_cash, by_price=by_price)
+    return t_data, has_cash
 
+
+def nasit_extraction(data: dict, ticker_data: list, has_cash=False, by_price=True):
+    subs = data.get('makeup', [])
+    fund = nasit_build(ticker_data, subs, has_cash=has_cash, by_price=by_price)
     print(
         f"NASIT generation of {TICKER_COLOR}{data.get('ticker')}{NORMAL_COLOR} complete.")
     print("")
