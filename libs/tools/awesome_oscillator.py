@@ -1,7 +1,8 @@
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar, dual_plotting
+from libs.utils import ProgressBar, dual_plotting, generic_plotting, bar_chart
+from libs.utils import dates_extractor_list
 from .moving_average import simple_moving_avg, exponential_moving_avg
 
 
@@ -70,6 +71,59 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
         diff = short_signal[i] - long_signal[i]
         signal.append(diff)
 
+    med_term = simple_moving_avg(signal, 14, data_type='list')
+    long_term = simple_moving_avg(signal, long_period, data_type='list')
+    signal, med_term, long_term = normalize_signals(
+        [signal, med_term, long_term])
+    triggers = ao_signal_trigger(signal, med_term, long_term)
+    x = dates_extractor_list(position)
+    name2 = name + ' - Awesome Oscillator'
+
     if plot_output:
         dual_plotting(position['Close'], signal, 'Price', 'Awesome')
+        dual_plotting([signal, med_term, long_term], position['Close'], [
+                      'Awesome', 'Medium', 'Long'], 'Price')
+        dual_plotting([signal, triggers], position['Close'], [
+                      'Awesome', 'Triggers'], 'Price')
+        bar_chart(signal, position=position, x=x, title=name2)
+    else:
+        filename = name + '/awesome_bar_{}'.format(name)
+        bar_chart(signal, position=position, x=x,
+                  saveFig=True, filename=filename, title=name2)
+
     return signal
+
+
+def ao_signal_trigger(signal: list, medium: list, longer: list) -> list:
+    trigger = []
+    for i, sig in enumerate(signal):
+        if (sig > 0.0) and (medium[i] > 0.0) and (longer[i] > 0.0):
+            if (sig > medium[i]) and (medium[i] > longer[i]):
+                trigger.append(1.0)
+            else:
+                trigger.append(0.0)
+        elif (sig < 0.0) and (medium[i] < 0.0) and (longer[i] < 0.0):
+            if (sig < medium[i]) and (medium[i] < longer[i]):
+                trigger.append(-1.0)
+            else:
+                trigger.append(0.0)
+        else:
+            trigger.append(0.0)
+
+    return trigger
+
+
+def normalize_signals(signals: list) -> list:
+    max_ = 0.0
+    for sig in signals:
+        m = np.max(np.abs(sig))
+        if m > max_:
+            max_ = m
+    for i in range(len(signals)):
+        new_sig = []
+        for pt in signals[i]:
+            pt2 = pt / max_
+            new_sig.append(pt2)
+        signals[i] = new_sig.copy()
+
+    return signals
