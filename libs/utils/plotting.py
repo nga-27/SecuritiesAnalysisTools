@@ -8,10 +8,10 @@ from pandas.plotting import register_matplotlib_converters
 
 from .formatting import dates_extractor_list
 from .progress_bar import ProgressBar
-from .constants import TEXT_COLOR_MAP
+from .constants import STANDARD_COLORS
 
-WARNING_COLOR = TEXT_COLOR_MAP["yellow"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
 
 
 def plot_xaxis_disperse(axis_obj, every_nth: int = 2, dynamic=True):
@@ -139,7 +139,8 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         else:
             plt.show()
     except:
-        print(f"{WARNING_COLOR} Warning: plot failed to render in 'dual_plotting' of title: {title}{NORMAL_COLOR}")
+        print(
+            f"{WARNING} Warning: plot failed to render in 'dual_plotting' of title: {title}{NORMAL}")
     plt.close('all')
     plt.clf()
 
@@ -174,7 +175,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
     if len(colors) > 0:
         if len(colors) != len(list_of_plots):
             print(
-                f"{WARNING_COLOR}Warning: lengths of plots ({len(list_of_plots)}) and colors ({len(colors)}) do not match in generic_plotting.{NORMAL_COLOR}")
+                f"{WARNING}Warning: lengths of plots ({len(list_of_plots)}) and colors ({len(colors)}) do not match in generic_plotting.{NORMAL}")
             return None
 
     fig, ax = plt.subplots()
@@ -219,7 +220,8 @@ def generic_plotting(list_of_plots: list, **kwargs):
         else:
             plt.show()
     except:
-        print(f"{WARNING_COLOR}Warning: plot failed to render in 'generic_plotting' of title: {title}{NORMAL_COLOR}")
+        print(
+            f"{WARNING}Warning: plot failed to render in 'generic_plotting' of title: {title}{NORMAL}")
     plt.close('all')
     plt.clf()
 
@@ -298,7 +300,8 @@ def bar_chart(data: list, **kwargs):
         else:
             plt.show()
     except:
-        print(f"{WARNING_COLOR}Warning: plot failed to render in 'bar_chart' of name: {title}{NORMAL_COLOR}")
+        print(
+            f"{WARNING}Warning: plot failed to render in 'bar_chart' of name: {title}{NORMAL}")
     plt.close()
     plt.clf()
 
@@ -361,7 +364,7 @@ def specialty_plotting(list_of_plots: list, **kwargs):
             plt.show()
     except:
         print(
-            f"{WARNING_COLOR}Warning: plot failed to render in 'specialty plotting' of title: {title}{NORMAL_COLOR}")
+            f"{WARNING}Warning: plot failed to render in 'specialty plotting' of title: {title}{NORMAL}")
     plt.close()
     plt.clf()
 
@@ -402,7 +405,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
 
     xpts = plt.gca().get_lines()[0].get_xdata()
     ypts = plt.gca().get_lines()[0].get_ydata()
-    """ CONVERT SHAPEXY (DICT OF ITEMS) TO DATE """
+    #  CONVERT SHAPEXY (DICT OF ITEMS) TO DATE
 
     if feature == 'default':
         dotted_line = plt.Line2D((xpts[40], xpts[len(
@@ -464,7 +467,8 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
         else:
             plt.show()
     except:
-        print(f"{WARNING_COLOR}Warning: plot failed to render in 'shape plotting' of title: {title}{NORMAL_COLOR}")
+        print(
+            f"{WARNING}Warning: plot failed to render in 'shape plotting' of title: {title}{NORMAL}")
     plt.close()
     plt.clf()
 
@@ -546,7 +550,8 @@ def candlestick(data: pd.DataFrame, **kwargs):
         else:
             plt.show()
     except:
-        print(f"{WARNING_COLOR}Warning: plot failed to render in 'shape plotting' of title: {title}{NORMAL_COLOR}")
+        print(
+            f"{WARNING}Warning: plot failed to render in 'shape plotting' of title: {title}{NORMAL}")
     plt.close()
     plt.clf()
 

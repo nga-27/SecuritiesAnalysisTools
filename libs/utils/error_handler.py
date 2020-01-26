@@ -1,11 +1,11 @@
 import pandas as pd
 import numpy as np
 
-from .constants import TEXT_COLOR_MAP
+from .constants import STANDARD_COLORS
 
-ERROR_COLOR = TEXT_COLOR_MAP["yellow"]
-NOTE_COLOR = TEXT_COLOR_MAP["white"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+ERROR = STANDARD_COLORS["error"]
+NOTE = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
 
 
 def has_critical_error(item, e_type: str, misc: dict = None) -> bool:
@@ -17,14 +17,14 @@ def has_critical_error(item, e_type: str, misc: dict = None) -> bool:
         for key in item.keys():
             if 'Close' not in item[key].keys():
                 print(
-                    f"{ERROR_COLOR}WARNING DataException: Invalid dataset, contains no list 'Close' for '{key}'.")
-                print(f"{NOTE_COLOR}Exiting...{NORMAL_COLOR}")
+                    f"{ERROR}WARNING DataException: Invalid dataset, contains no list 'Close' for '{key}'.")
+                print(f"{NOTE}Exiting...{NORMAL}")
                 return True
 
             if len(item[key]['Close']) == 0:
                 print(
-                    f"{ERROR_COLOR}WARNING DataException: Invalid dataset, has no listed data for 'Close' for '{key}'.")
-                print(f"{NOTE_COLOR}Exiting...{NORMAL_COLOR}")
+                    f"{ERROR}WARNING DataException: Invalid dataset, has no listed data for 'Close' for '{key}'.")
+                print(f"{NOTE}Exiting...{NORMAL}")
                 return True
 
             # Assumption is that point or mutual fund NaN errors will be corrected in data.py before this error handler
@@ -32,10 +32,10 @@ def has_critical_error(item, e_type: str, misc: dict = None) -> bool:
             if len(nans) > 0:
                 print("")
                 print(
-                    f"{ERROR_COLOR}WARNING DataException: Invalid dataset, contains {len(nans)} NaN item(s) for 'Close' for '{key}'.")
+                    f"{ERROR}WARNING DataException: Invalid dataset, contains {len(nans)} NaN item(s) for 'Close' for '{key}'.")
                 print(
                     f"---> This error is likely caused by '{key}' being an invalid or deprecated ticker symbol.")
-                print(f"{NOTE_COLOR}Exiting...{NORMAL_COLOR}")
+                print(f"{NOTE}Exiting...{NORMAL}")
                 return True
 
         return False

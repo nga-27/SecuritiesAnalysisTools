@@ -23,3 +23,9 @@ STANDARD_COLORS = {
     "normal": TEXT_COLOR_MAP["white"],
     "ticker": TEXT_COLOR_MAP["cyan"]
 }
+
+LOGO_COLORS = {
+    "main": TEXT_COLOR_MAP["purple_bold"],
+    "other": TEXT_COLOR_MAP["blue_bold"],
+    "copywrite": TEXT_COLOR_MAP["green_bold"]
+}

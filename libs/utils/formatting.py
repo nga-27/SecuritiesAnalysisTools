@@ -5,10 +5,7 @@ import time
 import json
 from datetime import datetime, timedelta
 import pandas as pd
-import numpy as np
 from dateutil.relativedelta import relativedelta
-
-import yfinance as yf
 
 
 def name_parser(name: str) -> str:
@@ -80,29 +77,6 @@ def date_extractor(date, _format=None):
     else:
         dateX = date2
     return dateX
-
-
-def get_daterange(period: str = '1y') -> list:
-    # Note: deprecated for more robust fix of mutual fund responses
-    """
-    fulltime = datetime.now().strftime('%H:%M:%S')
-    # Note, timing can be input to function if desired; central time
-    endtime = datetime.strptime('19:00:00', '%H:%M:%S').strftime('%H:%M:%S')
-    day_of_week = datetime.today().weekday()
-
-    if (day_of_week < 5):
-        # 0: monday, 6: sunday
-        if fulltime <= endtime:
-            # For mutual funds, take prior day range.
-            date = datetime.today()
-            y, m, d = period_parser(period)
-            new_end = date - timedelta(days=1)
-            new_start = new_end - relativedelta(years=y, months=m, days=d)
-            end = datetime.strftime(new_end, '%Y-%m-%d')
-            start = datetime.strftime(new_start, '%Y-%m-%d')
-            return [start, end]
-    """
-    return [None, None]
 
 
 def period_parser(period: str):

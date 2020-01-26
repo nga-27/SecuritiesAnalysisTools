@@ -1,10 +1,10 @@
 """
 ProgressBar utility class
 """
-from .constants import TEXT_COLOR_MAP
+from .constants import TEXT_COLOR_MAP, STANDARD_COLORS
 
 BAR_COLOR = TEXT_COLOR_MAP["white"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+NORMAL = STANDARD_COLORS["normal"]
 FUND_COLOR = TEXT_COLOR_MAP["cyan"]
 
 
@@ -57,7 +57,7 @@ class ProgressBar(object):
         filledLength = int(float(length) * float(iteration) // float(total))
         bar = fill * filledLength + '.' * (length - filledLength)
 
-        pBar = f"\r {FUND_COLOR}{obj}{NORMAL_COLOR} {prefix} {BAR_COLOR}|{bar}|{NORMAL_COLOR} {percent}% {suffix}"
+        pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} {percent}% {suffix}"
         self.length_of_bar = len(pBar)
 
         print(pBar, end='\r')

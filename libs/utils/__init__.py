@@ -6,11 +6,11 @@ from .api import get_api_metadata, api_sector_match, api_sector_funds, get_volat
 from .error_handler import has_critical_error
 
 from .formatting import name_parser, index_extractor, fund_list_extractor, index_appender
-from .formatting import dates_extractor_list, date_extractor, get_daterange, dates_convert_from_index
+from .formatting import dates_extractor_list, date_extractor, dates_convert_from_index
 
 from .plotting import dual_plotting, generic_plotting, bar_chart, specialty_plotting, shape_plotting
 from .plotting import candlestick
 
 from .progress_bar import ProgressBar
 
-from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, SP500
+from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS, SP500
