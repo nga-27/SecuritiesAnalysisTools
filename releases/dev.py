@@ -132,7 +132,7 @@ def technical_analysis(config: dict):
             fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
         analysis[fund_name]['awesome'] = awesome_oscillator(
-            fund, name=fund_name, plot_output=False, progress_bar=p)
+            fund, name=fund_name, plot_output=True, progress_bar=p)
 
         analysis[fund_name]['momentum_oscillator'] = momentum_oscillator(
             fund, name=fund_name, plot_output=False, progress_bar=p)

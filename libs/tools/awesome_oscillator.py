@@ -1,29 +1,23 @@
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar
-from .moving_average import simple_moving_avg
+from libs.utils import ProgressBar, dual_plotting
+from .moving_average import simple_moving_avg, exponential_moving_avg
 
 
 def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
-    """
-    Relative Strength Indicator
+    """Awesome Oscillator
 
-    args:
-        position:       (pd.DataFrame) list of y-value datasets to be plotted (multiple)
+    Arguments:
+        position {pd.DataFrame} -- fund data
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        period:         (int) size of RSI indicator; DEFAULT=14 
-        out_suppress:   (bool) output plot/prints are suppressed; DEFAULT=True
-        progress_bar:   (ProgressBar) DEFAULT=None
-        overbought:     (float) threshold to trigger overbought/sell condition; DEFAULT=70.0
-        oversold:       (float) threshold to trigger oversold/buy condition; DEFAULT=30.0
-        auto_trend:     (bool) True calculates basic trend, applies to thresholds; DEFAULT=True
+    Optional Args:
+        name {list} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {''})
+        progress_bar {ProgressBar} -- (default: {None})
 
-    returns:
-        rsi_swings:     (dict) contains all rsi information
+    Returns:
+        awesome_oscillator {dict} -- contains all ao information
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -33,6 +27,8 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
 
     signal = get_ao_signal(position, plot_output=plot_output,
                            name=name, progress_bar=progress_bar)
+
+    # TODO: signal can be averaged over time (long-term trend); NORMALIZE signal
 
     if progress_bar is not None:
         progress_bar.uptick(increment=1.0)
@@ -49,5 +45,31 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     name = kwargs.get('name', '')
 
     signal = []
+    mid_points = []
+    for i, high in enumerate(position['High']):
+        mid = (high + position['Low'][i]) / 2
+        mid_points.append(mid)
 
+    if filter_style == 'sma':
+        short_signal = simple_moving_avg(
+            mid_points, short_period, data_type='list')
+        long_signal = simple_moving_avg(
+            mid_points, long_period, data_type='list')
+    elif filter_style == 'ema':
+        short_signal = exponential_moving_avg(
+            mid_points, short_period, data_type='list')
+        long_signal = exponential_moving_avg(
+            mid_points, long_period, data_type='list')
+    else:
+        short_signal = []
+        long_signal = []
+
+    for i in range(long_period):
+        signal.append(0.0)
+    for i in range(long_period, len(long_signal)):
+        diff = short_signal[i] - long_signal[i]
+        signal.append(diff)
+
+    if plot_output:
+        dual_plotting(position['Close'], signal, 'Price', 'Awesome')
     return signal
