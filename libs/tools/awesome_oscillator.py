@@ -29,6 +29,9 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     signal = get_ao_signal(position, plot_output=plot_output,
                            name=name, progress_bar=progress_bar)
 
+    ao['tabular'] = signal
+    ao['features'] = ao_feature_detection(signal)
+
     # TODO: signal can be averaged over time (long-term trend); NORMALIZE signal
 
     if progress_bar is not None:
@@ -73,8 +76,10 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
 
     med_term = simple_moving_avg(signal, 14, data_type='list')
     long_term = simple_moving_avg(signal, long_period, data_type='list')
-    signal, med_term, long_term = normalize_signals(
+
+    signal, med_term, long_term = ao_normalize_signals(
         [signal, med_term, long_term])
+
     triggers = ao_signal_trigger(signal, med_term, long_term)
     x = dates_extractor_list(position)
     name2 = name + ' - Awesome Oscillator'
@@ -85,11 +90,11 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
                       'Awesome', 'Medium', 'Long'], 'Price')
         dual_plotting([signal, triggers], position['Close'], [
                       'Awesome', 'Triggers'], 'Price')
-        bar_chart(signal, position=position, x=x, title=name2)
+        bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
     else:
         filename = name + '/awesome_bar_{}'.format(name)
         bar_chart(signal, position=position, x=x,
-                  saveFig=True, filename=filename, title=name2)
+                  saveFig=True, filename=filename, title=name2, bar_delta=True)
 
     return signal
 
@@ -113,7 +118,7 @@ def ao_signal_trigger(signal: list, medium: list, longer: list) -> list:
     return trigger
 
 
-def normalize_signals(signals: list) -> list:
+def ao_normalize_signals(signals: list) -> list:
     max_ = 0.0
     for sig in signals:
         m = np.max(np.abs(sig))
@@ -127,3 +132,27 @@ def normalize_signals(signals: list) -> list:
         signals[i] = new_sig.copy()
 
     return signals
+
+
+def ao_feature_detection(signal: list) -> list:
+    features = []
+
+    # Zero-crossover feature detection
+    is_positive = signal[0] > 0.0
+    for i, sig in enumerate(signal):
+        if is_positive and (sig < 0.0):
+            feat = {'index': i, 'feature': 'zero crossover', 'type': 'bearish'}
+            features.append(feat)
+            is_positive = False
+        if (not is_positive) and (sig > 0.0):
+            feat = {'index': i, 'feature': 'zero crossover', 'type': 'bullish'}
+            features.append(feat)
+            is_positive = True
+
+    # "Twin Peaks" feature detection
+
+    # "Saucer" feature detection
+
+    features.sort(key=lambda x: x['index'])
+
+    return features

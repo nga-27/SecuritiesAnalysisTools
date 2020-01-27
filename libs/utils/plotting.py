@@ -240,6 +240,7 @@ def bar_chart(data: list, **kwargs):
         saveFig:        (bool) True will save as 'filename'; DEFAULT=False
         filename:       (str) path to save plot; DEFAULT='temp_bar_chart.png'
         positive:       (bool) True plots all color bars positively; DEFAULT=False
+        bar_delta:      (bool) True: y[i] > y[i-1] -> green, else red; DEFAULT=False
 
     returns:
         None
@@ -252,6 +253,7 @@ def bar_chart(data: list, **kwargs):
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_bar_chart.png')
     all_positive = kwargs.get('all_positive', False)
+    bar_delta = kwargs.get('bar_delta', False)
 
     if len(x) < 1:
         x = list(range(len(data)))
@@ -260,7 +262,8 @@ def bar_chart(data: list, **kwargs):
 
     colors = []
     positive = []
-    for bar in data:
+    bar_awesome = []
+    for i, bar in enumerate(data):
         if bar > 0.0:
             positive.append(bar)
             colors.append('green')
@@ -270,19 +273,33 @@ def bar_chart(data: list, **kwargs):
         else:
             positive.append(bar)
             colors.append('black')
+        if i == 0:
+            bar_awesome.append(colors[-1])
+        else:
+            if bar < data[i-1]:
+                bar_awesome.append('red')
+            elif bar > data[i-1]:
+                bar_awesome.append('green')
+            else:
+                bar_awesome.append(bar_awesome[-1])
 
     if all_positive:
         data = positive
 
     _, ax1 = plt.subplots()
-    barlist = ax1.bar(x, data, width=1, color=colors)
-    for i in range(1, len(data)):
-        if data[i] > 0.0:
-            if data[i] < data[i-1]:
-                barlist[i].set_alpha(0.3)
-        else:
-            if data[i] > data[i-1]:
-                barlist[i].set_alpha(0.3)
+    if bar_delta:
+        barlist = ax1.bar(x, data, width=1, color=bar_awesome)
+    else:
+        barlist = ax1.bar(x, data, width=1, color=colors)
+
+    if not bar_delta:
+        for i in range(1, len(data)):
+            if data[i] > 0.0:
+                if data[i] < data[i-1]:
+                    barlist[i].set_alpha(0.3)
+            else:
+                if data[i] > data[i-1]:
+                    barlist[i].set_alpha(0.3)
     plt.title(title)
 
     if len(position) > 0:
