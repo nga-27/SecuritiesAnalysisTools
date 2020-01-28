@@ -1,3 +1,4 @@
+import pprint
 import pandas as pd
 import numpy as np
 
@@ -85,7 +86,6 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     name2 = name + ' - Awesome Oscillator'
 
     if plot_output:
-        dual_plotting(position['Close'], signal, 'Price', 'Awesome')
         dual_plotting([signal, med_term, long_term], position['Close'], [
                       'Awesome', 'Medium', 'Long'], 'Price')
         dual_plotting([signal, triggers], position['Close'], [
@@ -150,9 +150,87 @@ def ao_feature_detection(signal: list) -> list:
             is_positive = True
 
     # "Twin Peaks" feature detection
+    tpd = twin_peaks_detection(signal)
+    for t in tpd:
+        features.append(t)
 
     # "Saucer" feature detection
 
     features.sort(key=lambda x: x['index'])
 
+    pprint.pprint(features)
+
     return features
+
+
+def twin_peaks_detection(signal: list) -> list:
+    tpd = []
+
+    is_positive = signal[0] > 0.0
+    min_ = 1.0
+    max_ = -1.0
+
+    if is_positive:
+        state = 'rise'
+    else:
+        state = 'drop'
+
+    for i in range(1, len(signal)):
+        if state == 'rise':
+            # Rising, looking for first peak
+            if signal[i] < signal[i-1]:
+                # Found, now heading down dip
+                max_ = signal[i-1]
+                state = 'pos_saddle'
+
+        if state == 'pos_saddle':
+            # First saddle, must stay above 0.  If dips, reset to negative start
+            if signal[i] < 0.0:
+                state = 'drop'
+            else:
+                if signal[i] > signal[i-1]:
+                    # End of saddle, begin rise again
+                    state = 'rise_2'
+
+        if state == 'rise_2':
+            if signal[i] < max_:
+                if signal[i] < signal[i-1]:
+                    # Condition found!
+                    state = 'bear_peaks'
+                    tp = {'index': i, 'feature': 'twin peaks', 'type': 'bearish'}
+                    tpd.append(tp)
+            else:
+                max_ = signal[i]
+                state = 'rise'
+
+        if state == 'bear_peaks':
+            if signal[i] < 0.0:
+                state = 'drop'
+
+        if state == 'drop':
+            if signal[i] > signal[i-1]:
+                min_ = signal[i-1]
+                state = 'neg_saddle'
+
+        if state == 'neg_saddle':
+            if signal[i] > 0.0:
+                state = 'rise'
+            else:
+                if signal[i] < signal[i-1]:
+                    state = 'drop_2'
+
+        if state == 'drop_2':
+            if signal[i] > min_:
+                if signal[i] > signal[i-1]:
+                    state = 'bull_peaks'
+                    tp = {'index': i, 'feature': 'twin peaks', 'type': 'bullish'}
+                    tpd.append(tp)
+            else:
+                min_ = signal[i]
+                state = 'drop'
+
+        if state == 'bull_peaks':
+            if signal[i] > 0.0:
+                state = 'rise'
+
+    return tpd
