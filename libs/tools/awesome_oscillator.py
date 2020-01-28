@@ -4,7 +4,7 @@ import numpy as np
 
 from libs.utils import ProgressBar, dual_plotting, generic_plotting, bar_chart
 from libs.utils import dates_extractor_list
-from .moving_average import simple_moving_avg, exponential_moving_avg
+from .moving_average import simple_moving_avg, exponential_moving_avg, windowed_moving_avg
 
 
 def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
@@ -31,12 +31,22 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
                            name=name, progress_bar=progress_bar)
 
     ao['tabular'] = signal
-    ao['features'] = ao_feature_detection(signal, position=position)
+    ao['features'] = ao_feature_detection(
+        signal, position=position, progress_bar=progress_bar)
 
-    integrator_differentiator(ao['features'], position, plot_output)
+    plus_minus, x_index = integrator_differentiator(
+        ao['features'], position, plot_output)
 
     if progress_bar is not None:
-        progress_bar.uptick(increment=1.0)
+        progress_bar.uptick(increment=0.1)
+
+    ao['pm'] = {'pm_data': plus_minus, 'indexes': x_index}
+
+    ao = awesome_metrics(position, ao, plot_output=plot_output,
+                         name=name, progress_bar=progress_bar)
+
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
     return ao
 
 
@@ -55,6 +65,9 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
         mid = (high + position['Low'][i]) / 2
         mid_points.append(mid)
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
     if filter_style == 'sma':
         short_signal = simple_moving_avg(
             mid_points, short_period, data_type='list')
@@ -69,17 +82,26 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
         short_signal = []
         long_signal = []
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
     for i in range(long_period):
         signal.append(0.0)
     for i in range(long_period, len(long_signal)):
         diff = short_signal[i] - long_signal[i]
         signal.append(diff)
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
     med_term = simple_moving_avg(signal, 14, data_type='list')
     long_term = simple_moving_avg(signal, long_period, data_type='list')
 
     signal, med_term, long_term = ao_normalize_signals(
         [signal, med_term, long_term])
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
 
     triggers = ao_signal_trigger(signal, med_term, long_term)
     x = dates_extractor_list(position)
@@ -95,6 +117,9 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
         filename = name + '/awesome_bar_{}'.format(name)
         bar_chart(signal, position=position, x=x,
                   saveFig=True, filename=filename, title=name2, bar_delta=True)
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
 
     return signal
 
@@ -134,7 +159,9 @@ def ao_normalize_signals(signals: list) -> list:
     return signals
 
 
-def ao_feature_detection(signal: list, position: pd.DataFrame = None) -> list:
+def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) -> list:
+    p_bar = kwargs.get('progress_bar')
+
     features = []
 
     # Zero-crossover feature detection
@@ -149,6 +176,9 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None) -> list:
             features.append(feat)
             is_positive = True
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
     # "Twin Peaks" feature detection
     tpd = twin_peaks_detection(signal)
     for t in tpd:
@@ -160,6 +190,9 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None) -> list:
         features.append(s)
 
     features.sort(key=lambda x: x['index'])
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
 
     return features
 
@@ -306,39 +339,88 @@ def saucer_detection(signal: list) -> list:
     return sd
 
 
-def integrator_differentiator(features: list, position: pd.DataFrame, plot_output: bool, name=''):
-    key = int(max(position['Close']) / 20.0)
+def integrator_differentiator(features: list, position: pd.DataFrame, plot_output: bool, name='') -> list:
+    base = int(max(position['Close']) / 20.0)
 
     plus_minus = []
     x_vals = []
     current_value = 0
     for feat in features:
         if feat['type'] == 'bullish':
-            current_value += key
+            current_value += base
             plus_minus.append(current_value)
             x_vals.append(feat['index'])
         if feat['type'] == 'bearish':
-            current_value -= key
+            current_value -= base
             plus_minus.append(current_value)
             x_vals.append(feat['index'])
 
-    pm_diff = [10 * key]
+    pm_data = [0]
     for i in range(1, len(plus_minus)):
         if plus_minus[i] > plus_minus[i-1]:
-            pm_diff.append(12 * key)
+            pm_data.append(1)
         elif plus_minus[i] < plus_minus[i-1]:
-            pm_diff.append(8 * key)
+            pm_data.append(-1)
         else:
-            pm_diff.append(10 * key)
+            pm_data.append(0)
 
+    return pm_data, x_vals
+
+
+def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    p_bar = kwargs.get('progress_bar')
+
+    weights = [1.0, 0.85, 0.5, 0.05]
+
+    # Convert features to a "tabular" array
+    tot_len = len(position['Close'])
+    metrics = [0.0] * tot_len
+    plus_minus = ao_dict.get('pm', {}).get('pm_data')
+    indexes = ao_dict.get('pm', {}).get('indexes', [])
+
+    for i, ind in enumerate(indexes):
+        metrics[ind] += float(plus_minus[i])
+
+        # Smooth the curves
+        if ind - 1 >= 0:
+            metrics[ind-1] += float(plus_minus[i]) * weights[1]
+        if ind + 1 < tot_len:
+            metrics[ind+1] += float(plus_minus[i]) * weights[1]
+        if ind - 2 >= 0:
+            metrics[ind-2] += float(plus_minus[i]) * weights[2]
+        if ind + 2 < tot_len:
+            metrics[ind+2] += float(plus_minus[i]) * weights[2]
+        if ind - 3 >= 0:
+            metrics[ind-3] += float(plus_minus[i]) * weights[3]
+        if ind + 3 < tot_len:
+            metrics[ind+3] += float(plus_minus[i]) * weights[3]
+
+    metrics2 = windowed_moving_avg(metrics, 7, data_type='list')
+    norm = ao_normalize_signals([metrics2])
+    metrics3 = norm[0]
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    ao_signal = ao_dict['tabular']
+
+    metrics4 = []
+    for i, met in enumerate(metrics3):
+        metrics4.append(met + ao_signal[i])
+
+    ao_dict['metrics'] = metrics4
+
+    title = 'Awesome Oscillator Metrics'
     if plot_output:
-        generic_plotting([position['Close'], plus_minus, pm_diff], x=[
-                         list(range(len(position))), x_vals, x_vals], title='Awesome Integrator / Differentiator',
-                         legend=['Price', 'Integration', 'Differentiation'])
+        dual_plotting(position['Close'], metrics4,
+                      'Price', 'Metrics', title=title)
     else:
-        filename = name + '/ao_diff_integ'
-        generic_plotting([position['Close'], plus_minus, pm_diff], x=[
-                         list(range(len(position))), x_vals, x_vals], title='Awesome Integrator / Differentiator',
-                         legend=['Price', 'Integration', 'Differentiation'],
-                         saveFig=True,
-                         filename=filename)
+        filename = name + '/awesome_metrics'
+        dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
+                      saveFig=True, filename=filename)
+
+    ao_dict.pop('pm')
+
+    return ao_dict
