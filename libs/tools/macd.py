@@ -60,9 +60,9 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
         else:
             state = 0
         if state == 1:
-            i = len(macd)-1
+            i = len(macd)-2
             group_size = 0
-            while (i >= 0) and (state == 1):
+            while (i > 0) and (state == 1):
                 if macd[i] > 0.0:
                     i -= 1
                     group_size += 1
@@ -75,9 +75,9 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
             else:
                 return 'falling'
         else:
-            i = len(macd)-1
+            i = len(macd)-2
             group_size = 0
-            while (i >= 0) and (state == 1):
+            while (i > 0) and (state == 1):
                 if macd[i] <= 0.0:
                     i -= 1
                     group_size += 1

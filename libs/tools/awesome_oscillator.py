@@ -31,9 +31,9 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
                            name=name, progress_bar=progress_bar)
 
     ao['tabular'] = signal
-    ao['features'] = ao_feature_detection(signal)
+    ao['features'] = ao_feature_detection(signal, position=position)
 
-    # TODO: signal can be averaged over time (long-term trend); NORMALIZE signal
+    integrator_differentiator(ao['features'], position, plot_output)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=1.0)
@@ -134,7 +134,7 @@ def ao_normalize_signals(signals: list) -> list:
     return signals
 
 
-def ao_feature_detection(signal: list) -> list:
+def ao_feature_detection(signal: list, position: pd.DataFrame = None) -> list:
     features = []
 
     # Zero-crossover feature detection
@@ -155,10 +155,11 @@ def ao_feature_detection(signal: list) -> list:
         features.append(t)
 
     # "Saucer" feature detection
+    saucer = saucer_detection(signal)
+    for s in saucer:
+        features.append(s)
 
     features.sort(key=lambda x: x['index'])
-
-    pprint.pprint(features)
 
     return features
 
@@ -182,8 +183,9 @@ def twin_peaks_detection(signal: list) -> list:
                 # Found, now heading down dip
                 max_ = signal[i-1]
                 state = 'pos_saddle'
+            continue
 
-        if state == 'pos_saddle':
+        elif state == 'pos_saddle':
             # First saddle, must stay above 0.  If dips, reset to negative start
             if signal[i] < 0.0:
                 state = 'drop'
@@ -191,8 +193,9 @@ def twin_peaks_detection(signal: list) -> list:
                 if signal[i] > signal[i-1]:
                     # End of saddle, begin rise again
                     state = 'rise_2'
+            continue
 
-        if state == 'rise_2':
+        elif state == 'rise_2':
             if signal[i] < max_:
                 if signal[i] < signal[i-1]:
                     # Condition found!
@@ -202,24 +205,28 @@ def twin_peaks_detection(signal: list) -> list:
             else:
                 max_ = signal[i]
                 state = 'rise'
+            continue
 
-        if state == 'bear_peaks':
+        elif state == 'bear_peaks':
             if signal[i] < 0.0:
                 state = 'drop'
+            continue
 
         if state == 'drop':
             if signal[i] > signal[i-1]:
                 min_ = signal[i-1]
                 state = 'neg_saddle'
+            continue
 
-        if state == 'neg_saddle':
+        elif state == 'neg_saddle':
             if signal[i] > 0.0:
                 state = 'rise'
             else:
                 if signal[i] < signal[i-1]:
                     state = 'drop_2'
+            continue
 
-        if state == 'drop_2':
+        elif state == 'drop_2':
             if signal[i] > min_:
                 if signal[i] > signal[i-1]:
                     state = 'bull_peaks'
@@ -228,9 +235,110 @@ def twin_peaks_detection(signal: list) -> list:
             else:
                 min_ = signal[i]
                 state = 'drop'
+            continue
 
-        if state == 'bull_peaks':
+        elif state == 'bull_peaks':
             if signal[i] > 0.0:
                 state = 'rise'
+            continue
 
     return tpd
+
+
+def saucer_detection(signal: list) -> list:
+    sd = []
+    if signal[0] > 0.0:
+        state = 'pos'
+    else:
+        state = 'neg'
+
+    for i in range(1, len(signal)):
+        if state == 'pos':
+            if signal[i] < 0.0:
+                state = 'neg'
+            elif signal[i] < signal[i-1]:
+                state = 'drop_1'
+            continue
+
+        elif state == 'drop_1':
+            if signal[i] < 0.0:
+                state = 'neg'
+            elif signal[i] < signal[i-1]:
+                state = 'drop_2'
+            else:
+                state = 'pos'
+            continue
+
+        elif state == 'drop_2':
+            if signal[i] < 0.0:
+                state = 'neg'
+            elif signal[i] > signal[i-1]:
+                state = 'pos'
+                s = {'index': i, 'feature': 'saucer', 'type': 'bullish'}
+                sd.append(s)
+            continue
+
+        elif state == 'neg':
+            if signal[i] > 0.0:
+                state = 'pos'
+            elif signal[i] > signal[i-1]:
+                state = 'rise_1'
+            continue
+
+        elif state == 'rise_1':
+            if signal[i] > 0.0:
+                state = 'pos'
+            elif signal[i] > signal[i-1]:
+                state = 'rise_2'
+            else:
+                state = 'neg'
+            continue
+
+        elif state == 'rise_2':
+            if signal[i] > 0.0:
+                state = 'pos'
+            elif signal[i] < signal[i-1]:
+                state = 'neg'
+                s = {'index': i, 'feature': 'saucer', 'type': 'bearish'}
+                sd.append(s)
+            continue
+
+    return sd
+
+
+def integrator_differentiator(features: list, position: pd.DataFrame, plot_output: bool, name=''):
+    key = int(max(position['Close']) / 20.0)
+
+    plus_minus = []
+    x_vals = []
+    current_value = 0
+    for feat in features:
+        if feat['type'] == 'bullish':
+            current_value += key
+            plus_minus.append(current_value)
+            x_vals.append(feat['index'])
+        if feat['type'] == 'bearish':
+            current_value -= key
+            plus_minus.append(current_value)
+            x_vals.append(feat['index'])
+
+    pm_diff = [10 * key]
+    for i in range(1, len(plus_minus)):
+        if plus_minus[i] > plus_minus[i-1]:
+            pm_diff.append(12 * key)
+        elif plus_minus[i] < plus_minus[i-1]:
+            pm_diff.append(8 * key)
+        else:
+            pm_diff.append(10 * key)
+
+    if plot_output:
+        generic_plotting([position['Close'], plus_minus, pm_diff], x=[
+                         list(range(len(position))), x_vals, x_vals], title='Awesome Integrator / Differentiator',
+                         legend=['Price', 'Integration', 'Differentiation'])
+    else:
+        filename = name + '/ao_diff_integ'
+        generic_plotting([position['Close'], plus_minus, pm_diff], x=[
+                         list(range(len(position))), x_vals, x_vals], title='Awesome Integrator / Differentiator',
+                         legend=['Price', 'Integration', 'Differentiation'],
+                         saveFig=True,
+                         filename=filename)
