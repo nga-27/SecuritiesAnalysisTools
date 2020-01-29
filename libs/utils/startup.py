@@ -336,6 +336,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'awesome', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
+    if '--momentum' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'momentum', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
     if ('--obv' in i_keys) or ('--on_balance_volume' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'obv', type_='list')

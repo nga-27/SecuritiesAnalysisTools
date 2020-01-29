@@ -11,7 +11,7 @@ from libs.metrics import market_composite_index, bond_composite_index, correlati
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
 from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs, RSI
-from libs.tools import awesome_oscillator
+from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
@@ -61,6 +61,8 @@ def only_functions_handler(config: dict):
         rsi_function(config)
     if 'awesome' in config['run_functions']:
         awesome_osc_function(config)
+    if 'momentum' in config['run_functions']:
+        momentum_osc_function(config)
     if 'macd' in config['run_functions']:
         macd_function(config)
     if 'relative_strength' in config['run_functions']:
@@ -173,6 +175,14 @@ def awesome_osc_function(config: dict):
         if fund != '^GSPC':
             print(f"Awesome Oscillator of {TICKER}{fund}{NORMAL}")
             awesome_oscillator(data[fund], name=fund, plot_output=True)
+
+
+def momentum_osc_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"(Chande) Momentum Oscillator of {TICKER}{fund}{NORMAL}")
+            momentum_oscillator(data[fund], name=fund, plot_output=True)
 
 
 def macd_function(config: dict):

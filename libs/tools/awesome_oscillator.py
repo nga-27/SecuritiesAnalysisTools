@@ -51,7 +51,22 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
 
 
 def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
+    """Get Awesome Oscillator Signal
 
+    Arguments:
+        position {pd.DataFrame} -- dataset of fund
+
+    Optional Args:
+        short_period {int} -- moving average period (default: {5})
+        long_period {int} -- moving average period (default: {34})
+        filter_style {str} -- moving average type, 'sma' or 'ema' (default: {'sma'})
+        plot_output {bool} -- True plots in realtime (default: {True})
+        p_bar {ProgressBar} -- (default: {None})
+        name {str} -- name of fund (default: {''})
+
+    Returns:
+        list -- awesome signal
+    """
     short_period = kwargs.get('short_period', 5)
     long_period = kwargs.get('long_period', 34)
     filter_style = kwargs.get('filter_style', 'sma')
@@ -160,6 +175,20 @@ def ao_normalize_signals(signals: list) -> list:
 
 
 def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) -> list:
+    """Awesome Oscillator Feature Detection
+
+    Arguments:
+        signal {list} -- Awesome oscillator signal
+
+    Keyword Arguments:
+        position {pd.DataFrame} -- fund data (default: {None})
+
+    Optional Args:
+        progress_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        list -- list of dictionaries describing features
+    """
     p_bar = kwargs.get('progress_bar')
 
     features = []
@@ -368,6 +397,22 @@ def integrator_differentiator(features: list, position: pd.DataFrame, plot_outpu
 
 
 def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
+    """Awesome Oscillator Metrics 
+
+    Combination of pure oscillator signal + weighted trigger signals
+
+    Arguments:
+        position {pd.DataFrame} -- fund
+        ao_dict {dict} -- awesome oscillator dictionary
+
+    Optional Args:
+        plot_output {bool} -- plots in real time if True (default: {True})
+        name {str} -- name of fund (default: {''})
+        progress_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- ao_dict w/ updated keys and data
+    """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
