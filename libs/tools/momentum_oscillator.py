@@ -3,6 +3,7 @@ import numpy as np
 
 from libs.utils import ProgressBar
 from libs.utils import dual_plotting
+from .moving_average import simple_moving_avg
 
 
 def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
@@ -14,6 +15,8 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     mo['tabular'] = generate_momentum_signal(position)
 
     # Check against signal line (9-day MA)
+    mo['bear_bull'] = compare_against_signal_line(
+        mo['tabular'], position=position)
 
     # Feature detection, primarily divergences (5% drop from peak1 then rise again to peak2?)
 
@@ -50,3 +53,25 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
                       'CMO', title='Momentum Oscillator')
 
     return signal
+
+
+def compare_against_signal_line(signal: list, **kwargs) -> list:
+    plot_output = kwargs.get('plot_output', True)
+    interval = kwargs.get('interval', 9)
+    position = kwargs.get('position', [])
+
+    signal_line = simple_moving_avg(signal, interval, data_type='list')
+    bear_bull = []
+    for i in range(len(signal)):
+        if signal[i] > signal_line[i]:
+            bear_bull.append(1.0)
+        elif signal[i] < signal_line[i]:
+            bear_bull.append(-1.0)
+        else:
+            bear_bull.append(0.0)
+
+    if plot_output:
+        dual_plotting(position['Close'], bear_bull,
+                      'Price', 'Bear_Bull', title='Bear Bull')
+
+    return bear_bull
