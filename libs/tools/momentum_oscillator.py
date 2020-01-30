@@ -19,6 +19,9 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
         mo['tabular'], position=position)
 
     # Feature detection, primarily divergences (5% drop from peak1 then rise again to peak2?)
+    mo['features'] = mo_feature_detection(mo['tabular'], position)
+
+    dual_plotting(position['Close'], mo['tabular'], 'price', 'momentum')
 
     # Metrics creation like in awesome oscillator
 
@@ -56,7 +59,7 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
 
 
 def compare_against_signal_line(signal: list, **kwargs) -> list:
-    plot_output = kwargs.get('plot_output', True)
+    plot_output = kwargs.get('plot_output', False)
     interval = kwargs.get('interval', 9)
     position = kwargs.get('position', [])
 
@@ -70,8 +73,75 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
         else:
             bear_bull.append(0.0)
 
-    if plot_output:
+    if plot_output and (len(position) > 0):
         dual_plotting(position['Close'], bear_bull,
                       'Price', 'Bear_Bull', title='Bear Bull')
 
     return bear_bull
+
+
+def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list:
+    p_bar = kwargs.get('progress_bar')
+
+    features = []
+    price_extrema = find_local_extrema(position['Close'])
+    signal_extrema = find_local_extrema(signal, threshold=0.40, points=True)
+
+    # Compare extrema to find divergences!
+
+    return features
+
+
+def find_local_extrema(position: list, threshold=0.03, points=False) -> list:
+    features = []
+    # Price divergence with signal
+    max_val = 0.0
+    max_ind = 0
+    min_val = 0.0
+    min_ind = 0
+    trend = 'none'
+
+    for i, close in enumerate(position):
+        if trend == 'none':
+            if close > max_val:
+                max_val = close
+                max_ind = i
+                trend = 'up'
+            else:
+                min_val = close
+                min_ind = i
+                trend = 'down'
+        elif trend == 'up':
+            if points:
+                denote = threshold * 100.0
+            else:
+                denote = max_val * threshold
+
+            if close > max_val:
+                max_val = close
+                max_ind = i
+            elif close < max_val - denote:
+                obj = {"val": max_val, "index": max_ind, "type": "max"}
+                print(obj)
+                features.append(obj)
+                trend = 'down'
+                min_val = close
+                min_ind = i
+        elif trend == 'down':
+            if points:
+                denote = threshold * 100.0
+            else:
+                denote = min_val * threshold
+
+            if close < min_val:
+                min_val = close
+                min_ind = i
+            elif close > min_val + denote:
+                obj = {"val": min_val, "index": min_ind, "type": "min"}
+                print(obj)
+                features.append(obj)
+                trend = 'up'
+                max_val = close
+                max_ind = i
+
+    return features
