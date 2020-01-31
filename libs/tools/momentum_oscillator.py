@@ -1,8 +1,10 @@
+from datetime import datetime
 import pandas as pd
 import numpy as np
 
 from libs.utils import ProgressBar
 from libs.utils import dual_plotting
+from libs.features import find_local_extrema
 from .moving_average import simple_moving_avg
 
 
@@ -83,65 +85,42 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
 def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list:
     p_bar = kwargs.get('progress_bar')
 
-    features = []
     price_extrema = find_local_extrema(position['Close'])
     signal_extrema = find_local_extrema(signal, threshold=0.40, points=True)
 
     # Compare extrema to find divergences!
+    features = feature_matches(
+        price_extrema, signal_extrema, position, signal)
 
     return features
 
 
-def find_local_extrema(position: list, threshold=0.03, points=False) -> list:
+def feature_matches(pos_extrema: list, mo_extrema: list,
+                    position: pd.DataFrame, mo_signal: list, **kwargs) -> list:
     features = []
-    # Price divergence with signal
-    max_val = 0.0
-    max_ind = 0
-    min_val = 0.0
-    min_ind = 0
-    trend = 'none'
+    closes = position['Close']
 
-    for i, close in enumerate(position):
-        if trend == 'none':
-            if close > max_val:
-                max_val = close
-                max_ind = i
-                trend = 'up'
-            else:
-                min_val = close
-                min_ind = i
-                trend = 'down'
-        elif trend == 'up':
-            if points:
-                denote = threshold * 100.0
-            else:
-                denote = max_val * threshold
-
-            if close > max_val:
-                max_val = close
-                max_ind = i
-            elif close < max_val - denote:
-                obj = {"val": max_val, "index": max_ind, "type": "max"}
-                print(obj)
+    # Look at mo_extrema vs closes
+    maxes = list(filter(lambda x: x['type'] == 'max', mo_extrema))
+    for i in range(1, len(maxes)):
+        if maxes[i]['val'] < maxes[i-1]['val']:
+            if closes[maxes[i]['index']] >= closes[maxes[i-1]['index']]:
+                # Bearish divergence
+                date = closes.index[maxes[i]['index']].strftime("%Y-%m-%d")
+                obj = {"index": maxes[i]['index'],
+                       "type": 'bearish', 'category': 'divergence',
+                       "date": date}
                 features.append(obj)
-                trend = 'down'
-                min_val = close
-                min_ind = i
-        elif trend == 'down':
-            if points:
-                denote = threshold * 100.0
-            else:
-                denote = min_val * threshold
 
-            if close < min_val:
-                min_val = close
-                min_ind = i
-            elif close > min_val + denote:
-                obj = {"val": min_val, "index": min_ind, "type": "min"}
-                print(obj)
+    mins = list(filter(lambda x: x['type'] == 'min', mo_extrema))
+    for i in range(1, len(mins)):
+        if mins[i]['val'] > mins[i-1]['val']:
+            if closes[mins[i]['index']] <= closes[mins[i-1]['index']]:
+                # Bullish divergence
+                date = closes.index[mins[i]['index']].strftime("%Y-%m-%d")
+                obj = {"index": mins[i]['index'],
+                       "type": 'bullish', 'category': 'divergence',
+                       "date": date}
                 features.append(obj)
-                trend = 'up'
-                max_val = close
-                max_ind = i
 
     return features

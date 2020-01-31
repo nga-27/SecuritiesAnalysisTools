@@ -233,7 +233,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'halt'
         return config, ticker_keys
 
-    if '--quit' in i_keys:
+    if ('--quit' in i_keys) or ('--q' in i_keys):
         config['state'] = 'halt'
         return config, ticker_keys
 
@@ -258,11 +258,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['core'] = True
             config['exports'] = core[4]
 
-    if '--noindex' in i_keys:
+    if ('--noindex' in i_keys) or ('--ni' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'no_index')
 
     # Exporting of data from metadata.json to dataframe-like file
-    if '--export-dataset' in i_keys:
+    if ('--export-dataset' in i_keys) or ('--export' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'function run')
         config = add_str_to_dict_key(
             config, 'run_functions', 'export', type_='list')
@@ -374,7 +374,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'dev'
         return config, ticker_keys
 
-    if '--function' in i_keys:
+    if ('--function' in i_keys) or ('--f' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'function run')
         return config, ticker_keys
 

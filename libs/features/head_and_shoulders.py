@@ -5,7 +5,7 @@ from libs.utils import shape_plotting, generic_plotting, ProgressBar
 from libs.tools import exponential_moving_avg, windowed_moving_avg
 
 from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
-from .feature_utils import local_extrema, feature_plotter, cleanse_to_json
+from .feature_utils import find_filtered_local_extrema, feature_plotter, cleanse_to_json
 
 
 def find_head_shoulders(extrema: dict, fund: pd.DataFrame) -> dict:
@@ -163,9 +163,9 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
     ma = windowed_moving_avg(
         fund['Close'], interval=FILTER_SIZE, data_type='list')
     if FILTER_SIZE == 0:
-        ex = local_extrema(ma, raw=True)
+        ex = find_filtered_local_extrema(ma, raw=True)
     else:
-        ex = local_extrema(ma)
+        ex = find_filtered_local_extrema(ma)
     r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE, ma_type='windowed')
 
     # Cleanse data sample for duplicates and errors

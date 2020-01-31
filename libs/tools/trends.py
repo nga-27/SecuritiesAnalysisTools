@@ -9,7 +9,7 @@ from .moving_average import simple_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
 from libs.utils import STANDARD_COLORS
 
-from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
+from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
 
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
@@ -168,7 +168,7 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
         weight_strength = 2.0 + (0.1 * float(i))
         ma = windowed_moving_avg(fund['Close'], interval=ma_size, weight_strength=weight_strength,
                                  data_type='list', filter_type='exponential')
-        ex = local_extrema(ma)
+        ex = find_filtered_local_extrema(ma)
         r = reconstruct_extrema(fund['Close'], extrema=ex, ma_size=ma_size, ma_type='windowed')
 
         # Cleanse data sample for duplicates and errors
