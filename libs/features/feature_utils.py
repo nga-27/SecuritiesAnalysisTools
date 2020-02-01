@@ -348,3 +348,19 @@ def cleanse_to_json(content: dict) -> dict:
             content['content']['features'][i]['indexes'][j][2] = vol
 
     return content
+
+
+def normalize_signals(signals: list) -> list:
+    max_ = 0.0
+    for sig in signals:
+        m = np.max(np.abs(sig))
+        if m > max_:
+            max_ = m
+    for i in range(len(signals)):
+        new_sig = []
+        for pt in signals[i]:
+            pt2 = pt / max_
+            new_sig.append(pt2)
+        signals[i] = new_sig.copy()
+
+    return signals

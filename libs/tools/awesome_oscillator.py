@@ -4,6 +4,7 @@ import numpy as np
 
 from libs.utils import ProgressBar, dual_plotting, generic_plotting, bar_chart
 from libs.utils import dates_extractor_list
+from libs.features import normalize_signals
 from .moving_average import simple_moving_avg, exponential_moving_avg, windowed_moving_avg
 
 
@@ -112,7 +113,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     med_term = simple_moving_avg(signal, 14, data_type='list')
     long_term = simple_moving_avg(signal, long_period, data_type='list')
 
-    signal, med_term, long_term = ao_normalize_signals(
+    signal, med_term, long_term = normalize_signals(
         [signal, med_term, long_term])
 
     if p_bar is not None:
@@ -156,22 +157,6 @@ def ao_signal_trigger(signal: list, medium: list, longer: list) -> list:
             trigger.append(0.0)
 
     return trigger
-
-
-def ao_normalize_signals(signals: list) -> list:
-    max_ = 0.0
-    for sig in signals:
-        m = np.max(np.abs(sig))
-        if m > max_:
-            max_ = m
-    for i in range(len(signals)):
-        new_sig = []
-        for pt in signals[i]:
-            pt2 = pt / max_
-            new_sig.append(pt2)
-        signals[i] = new_sig.copy()
-
-    return signals
 
 
 def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) -> list:
@@ -443,7 +428,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
             metrics[ind+3] += float(plus_minus[i]) * weights[3]
 
     metrics2 = windowed_moving_avg(metrics, 7, data_type='list')
-    norm = ao_normalize_signals([metrics2])
+    norm = normalize_signals([metrics2])
     metrics3 = norm[0]
 
     if p_bar is not None:
