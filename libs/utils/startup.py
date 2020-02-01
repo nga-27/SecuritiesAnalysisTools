@@ -261,6 +261,9 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--noindex' in i_keys) or ('--ni' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'no_index')
 
+    if '--suppress' in i_keys:
+        config = add_str_to_dict_key(config, 'state', 'suppress_pptx')
+
     # Exporting of data from metadata.json to dataframe-like file
     if ('--export-dataset' in i_keys) or ('--export' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'function run')
@@ -381,14 +384,6 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--prod' in i_keys:
         # default behavior
         config = add_str_to_dict_key(config, 'state', 'run')
-        return config, ticker_keys
-
-    if '--r1' in i_keys:
-        config = add_str_to_dict_key(config, 'state', 'r1')
-        return config, ticker_keys
-
-    if '--r2' in i_keys:
-        config = add_str_to_dict_key(config, 'state', 'r2')
         return config, ticker_keys
 
     config = add_str_to_dict_key(config, 'state', 'run')

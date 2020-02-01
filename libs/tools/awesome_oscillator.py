@@ -130,7 +130,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
                       'Awesome', 'Triggers'], 'Price')
         bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
     else:
-        filename = name + '/awesome_bar_{}'.format(name)
+        filename = name + f'/awesome_bar_{name}'
         bar_chart(signal, position=position, x=x,
                   saveFig=True, filename=filename, title=name2, bar_delta=True)
 
@@ -401,6 +401,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
+    period_change = kwargs.get('period_change', 5)
 
     weights = [1.0, 0.85, 0.5, 0.05]
 
@@ -440,14 +441,24 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
     for i, met in enumerate(metrics3):
         metrics4.append(met + ao_signal[i])
 
+    changes = []
+    min_ = min(metrics4) + 1.0
+    for _ in range(period_change):
+        changes.append(0.0)
+    for i in range(period_change, len(metrics4)):
+        c = (((metrics4[i] + min_) /
+              (metrics4[i-period_change] + min_)) - 1.0) * 100.0
+        changes.append(c)
+
     ao_dict['metrics'] = metrics4
+    ao_dict['changes'] = changes
 
     title = 'Awesome Oscillator Metrics'
     if plot_output:
         dual_plotting(position['Close'], metrics4,
                       'Price', 'Metrics', title=title)
     else:
-        filename = name + '/awesome_metrics'
+        filename = name + f'/awesome_metrics_{name}'
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

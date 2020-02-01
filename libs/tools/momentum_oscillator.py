@@ -28,7 +28,8 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
 
     mo = dict()
 
-    mo['tabular'] = generate_momentum_signal(position)
+    mo['tabular'] = generate_momentum_signal(
+        position, plot_output=plot_output, name=name)
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
 
@@ -47,7 +48,7 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.3)
 
     # Metrics creation like in awesome oscillator
-    mo = momentum_metrics(position, mo)
+    mo = momentum_metrics(position, mo, plot_output=plot_output, name=name)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
@@ -80,7 +81,7 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         dual_plotting(position['Close'], signal, 'Price',
                       'CMO', title='(Chande) Momentum Oscillator')
     else:
-        filename = name + '/momentum_oscillator'
+        filename = name + f'/momentum_oscillator_{name}'
         dual_plotting(position['Close'], signal, 'Price',
                       'CMO', title='(Chande) Momentum Oscillator',
                       filename=filename, saveFig=True)
@@ -171,6 +172,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    period_change = kwargs.get('period_change', 5)
 
     weights = [1.3, 0.85, 0.55, 0.1]
 
@@ -206,17 +208,27 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     norm_signal = normalize_signals([signal])[0]
 
     metrics4 = []
+    changes = []
     for i, met in enumerate(metrics):
         metrics4.append(met + norm_signal[i])
 
+    min_ = min(metrics4) + 1.0
+    for _ in range(period_change):
+        changes.append(0.0)
+    for i in range(period_change, len(metrics4)):
+        c = (((metrics4[i] + min_) /
+              (metrics4[i-period_change] + min_)) - 1.0) * 100.0
+        changes.append(c)
+
     mo_dict['metrics'] = metrics4
+    mo_dict['changes'] = changes
 
     title = '(Chande) Momentum Oscillator Metrics'
     if plot_output:
         dual_plotting(position['Close'], metrics4,
                       'Price', 'Metrics', title=title)
     else:
-        filename = name + '/momentum_metrics'
+        filename = name + f'/momentum_metrics_{name}'
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 
