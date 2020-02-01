@@ -82,10 +82,10 @@ def add_fund_content(prs, fund: str, analysis: dict):
             vq = analysis[fund].get('metadata', {}).get(
                 'volatility', {}).get('VQ')
             has_vq = False
-            rows = 3
+            rows = 4
             if vq is not None:
                 has_vq = True
-                rows = 6
+                rows = 7
                 stop_loss = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('stop_loss')
                 high_close = analysis[fund].get('metadata', {}).get(
@@ -101,19 +101,22 @@ def add_fund_content(prs, fund: str, analysis: dict):
 
             table.cell(0, 0).text = 'Attribute'
             table.cell(0, 1).text = ''
-            table.cell(1, 0).text = 'Beta'
-            table.cell(1, 1).text = str(np.round(analysis[fund]['beta'], 5))
-            table.cell(2, 0).text = 'R-Squared'
-            table.cell(2, 1).text = str(
+            table.cell(1, 0).text = 'Current Price'
+            table.cell(1, 1).text = '$' + \
+                str(np.round(analysis[fund]['statistics']['current_price'], 2))
+            table.cell(2, 0).text = 'Beta'
+            table.cell(2, 1).text = str(np.round(analysis[fund]['beta'], 5))
+            table.cell(3, 0).text = 'R-Squared'
+            table.cell(3, 1).text = str(
                 np.round(analysis[fund]['r_squared'], 5))
 
             if has_vq:
-                table.cell(3, 0).text = 'Volatility Quotient'
-                table.cell(3, 1).text = str(vq)
-                table.cell(4, 0).text = 'Stop Loss'
-                table.cell(4, 1).text = str(stop_loss)
-                table.cell(5, 0).text = 'Last High Close'
-                table.cell(5, 1).text = str(high_close)
+                table.cell(4, 0).text = 'Volatility Quotient'
+                table.cell(4, 1).text = str(vq)
+                table.cell(5, 0).text = 'Stop Loss'
+                table.cell(5, 1).text = str(stop_loss)
+                table.cell(6, 0).text = 'Last High Close'
+                table.cell(6, 1).text = str(high_close)
 
             table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
             table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
