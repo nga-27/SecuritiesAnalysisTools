@@ -133,6 +133,9 @@ def sort_and_group(points: dict) -> list:
 def cluster_notables(sorted_x: list, data: pd.DataFrame) -> list:
     clusters = []
     sub = []
+    if len(sorted_x) == 0:
+        return []
+
     sub.append(sorted_x[0])
     for i in range(1, len(sorted_x)):
         val = (data['Close'][sorted_x[i]] - data['Close']

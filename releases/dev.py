@@ -15,6 +15,7 @@
 
 # Imports that are custom tools that are the crux of this program
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
+from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
 from libs.tools import mov_avg_convergence_divergence, on_balance_volume
 from libs.tools import beta_comparison
@@ -53,10 +54,10 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.23'
-_DATE_REVISION_ = '2020-01-18'
+_VERSION_ = '0.1.24'
+_DATE_REVISION_ = '2020-02-01'
 ################################
-PROCESS_STEPS_DEV = 13
+PROCESS_STEPS_DEV = 15
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -129,6 +130,12 @@ def technical_analysis(config: dict):
 
         analysis[fund_name]['rsi'] = RSI(
             fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+
+        analysis[fund_name]['awesome'] = awesome_oscillator(
+            fund, name=fund_name, plot_output=False, progress_bar=p)
+
+        analysis[fund_name]['momentum_oscillator'] = momentum_oscillator(
+            fund, name=fund_name, plot_output=False, progress_bar=p)
 
         analysis[fund_name]['obv'] = on_balance_volume(
             fund, plot_output=False, name=fund_name, progress_bar=p)

@@ -3,13 +3,13 @@ import pandas as pd
 import numpy as np
 import yfinance as yf
 
-from .formatting import get_daterange, fund_list_extractor
-from .constants import TEXT_COLOR_MAP
+from .formatting import fund_list_extractor
+from .constants import STANDARD_COLORS
 
-TICKER_COLOR = TEXT_COLOR_MAP["cyan"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
-ERROR_COLOR = TEXT_COLOR_MAP["red"]
-NOTE_COLOR = TEXT_COLOR_MAP["yellow"]
+TICKER = STANDARD_COLORS["ticker"]
+NORMAL = STANDARD_COLORS["normal"]
+ERROR = STANDARD_COLORS["error"]
+NOTE = STANDARD_COLORS["warning"]
 
 
 def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
@@ -46,11 +46,11 @@ def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
     return data, indexes
 
 
-def download_data(config: dict) -> list:
+def download_data(config: dict, **kwargs) -> list:
     """Download data (for functions)
 
     Arguments:
-        config {dict} -- 
+        config {dict} -- full information dictionary of entire run
 
     Returns:
         list -- downloaded data, list of funds
@@ -59,24 +59,19 @@ def download_data(config: dict) -> list:
     interval = config.get('interval', '1d')
     tickers = config['tickers']
     ticker_print = config['ticker print']
+    start = kwargs.get('start')
+    end = kwargs.get('end')
 
-    if period is None:
-        period = '2y'
-    if interval is None:
-        interval = '1d'
-
-    daterange = get_daterange(period=period)
-
-    if daterange[0] is None:
+    if (start is not None) and (end is not None):
         print(
-            f'Fetching data for {TICKER_COLOR}{ticker_print}{NORMAL_COLOR} for {period} at {interval} intervals...')
-        data = yf.download(tickers=tickers, period=period,
-                           interval=interval, group_by='ticker')
+            f'Fetching data for {TICKER}{ticker_print}{NORMAL} from dates {start} to {end}...')
+        data = yf.download(tickers=tickers, period=period, interval=interval,
+                           group_by='ticker', start=start, end=end)
     else:
         print(
-            f'Fetching data for {TICKER_COLOR}{ticker_print}{NORMAL_COLOR} from dates {daterange[0]} to {daterange[1]}...')
-        data = yf.download(tickers=tickers, period=period, interval=interval,
-                           group_by='ticker', start=daterange[0], end=daterange[1])
+            f'Fetching data for {TICKER}{ticker_print}{NORMAL} for {period} at {interval} intervals...')
+        data = yf.download(tickers=tickers, period=period,
+                           interval=interval, group_by='ticker')
     print(" ")
 
     funds = fund_list_extractor(data, config=config)
@@ -85,30 +80,42 @@ def download_data(config: dict) -> list:
     return data, funds
 
 
-def download_single_fund(fund: str, config: dict, fund_len=None) -> dict:
+def download_single_fund(fund: str, config: dict, fund_len=None, **kwargs) -> dict:
+    """Download Single Fund (api, etc.)
+
+    Arguments:
+        fund {str} -- ticker symbol
+        config {dict} -- config dict that controls
+
+    Keyword Arguments:
+        fund_len {dict} -- start, end to correct datasets (default: {None})
+
+    Optional Arguments:
+        start {str} -- date of starting (default: {None})
+        end {str} -- date of ending (default: {None})
+
+    Returns:
+        dict -- [description]
+    """
     period = config.get('period', '2y')
     interval = config.get('interval', '1d')
     ticker = fund
+    start = kwargs.get('start')
+    end = kwargs.get('end')
 
-    if period is None:
-        period = '2y'
-    if interval is None:
-        interval = '1d'
-
-    daterange = get_daterange(period=period)
-
-    if daterange[0] is None:
+    if (start is not None) and (end is not None):
         print("")
         print(
-            f'Fetching sector data for {TICKER_COLOR}{ticker}{NORMAL_COLOR}...')
-        data = yf.download(tickers=ticker, period=period,
-                           interval=interval, group_by='ticker')
+            f'Fetching sector data for {TICKER}{ticker}{NORMAL}...')
+        data = yf.download(tickers=ticker, period=period, interval=interval,
+                           group_by='ticker', start=start, end=end)
     else:
         print("")
         print(
-            f'Fetching sector data for {TICKER_COLOR}{ticker}{NORMAL_COLOR}...')
-        data = yf.download(tickers=ticker, period=period, interval=interval,
-                           group_by='ticker', start=daterange[0], end=daterange[1])
+            f'Fetching sector data for {TICKER}{ticker}{NORMAL}...')
+        data = yf.download(tickers=ticker, period=period,
+                           interval=interval, group_by='ticker')
+
     print(" ")
 
     data = data_format(data, config=config,
@@ -147,7 +154,25 @@ def get_status_message(status: list) -> str:
     return message, info
 
 
-def data_format(data: pd.DataFrame, config: dict, list_of_funds=None, single_fund_name=None, fund_len=None) -> dict:
+def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
+    """Data Format (aligns data in a more accessible way)
+
+    Arguments:
+        data {pd.DataFrame} -- entire historical data of all funds
+        config {dict} -- controlling config structure
+
+    Optional Args:
+        list_of_funds {list} -- list of ticker symbols (default: {None})
+        single_fund_name {str} -- for single fund cases, is ticker name (default: {None})
+        fund_len {dict} -- start, end for error correction (default: {None})
+
+    Returns:
+        dict -- reformmated data, error checked
+    """
+    list_of_funds = kwargs.get('list_of_funds')
+    single_fund_name = kwargs.get('single_fund_name')
+    fund_len = kwargs.get('fund_len')
+
     data_dict = {}
     fund_keys = list_of_funds
     if list_of_funds is None:
@@ -204,7 +229,11 @@ def data_format(data: pd.DataFrame, config: dict, list_of_funds=None, single_fun
     return data_dict
 
 
-def filter_nan(frame_list: pd.DataFrame, fund_name=None, column_key=None, fund_len: dict = None) -> list:
+def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
+    fund_name = kwargs.get('fund_name')
+    column_key = kwargs.get('column_key')
+    fund_len = kwargs.get('fund_len')
+
     new_list = list(frame_list.copy())
     nans = list(np.where(pd.isna(frame_list) == True))[0]
 
@@ -248,15 +277,15 @@ def filter_nan(frame_list: pd.DataFrame, fund_name=None, column_key=None, fund_l
         message, info = get_status_message(status)
         if 'Unknown/unfixable nan' in message:
             print(
-                f"{ERROR_COLOR}WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
-            print(f"----> Content: {info}{NORMAL_COLOR}")
+                f"{ERROR}WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
+            print(f"----> Content: {info}{NORMAL}")
         elif 'Generic progression nan' in message:
             print(
-                f"{NOTE_COLOR}Note: 'NaN' found on {fund_name}. Type: '{message}': Corrected OK.")
-            print(f"----> Content: {info}{NORMAL_COLOR}")
+                f"{NOTE}Note: 'NaN' found on {fund_name}. Type: '{message}': Corrected OK.")
+            print(f"----> Content: {info}{NORMAL}")
         else:
             print(
-                f"{NOTE_COLOR}Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.{NORMAL_COLOR}")
+                f"{NOTE}Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.{NORMAL}")
 
     return new_list
 

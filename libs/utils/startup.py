@@ -8,40 +8,51 @@ import glob
 import time
 import json
 
-from .constants import TEXT_COLOR_MAP
+from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS
 
-outline_color = TEXT_COLOR_MAP["blue"]
-normal_color = TEXT_COLOR_MAP["white"]
-author_color = TEXT_COLOR_MAP["purple"]
+OUTLINE_COLOR = TEXT_COLOR_MAP["blue"]
+NORMAL = STANDARD_COLORS["normal"]
+AUTHOR_COLOR = TEXT_COLOR_MAP["purple"]
 
-opt_title_color = TEXT_COLOR_MAP["green"]
-opt_name_color = TEXT_COLOR_MAP["cyan"]
+OPT_TITLE_COLOR = TEXT_COLOR_MAP["green"]
+OPT_NAME_COLOR = TEXT_COLOR_MAP["cyan"]
 
-logo_main_color = TEXT_COLOR_MAP["purple_bold"]
-logo_other_color = TEXT_COLOR_MAP["blue_bold"]
-logo_copyrt_color = TEXT_COLOR_MAP["green_bold"]
+MAIN = LOGO_COLORS["main"]
+OTHER = LOGO_COLORS["other"]
+COPYWRITE = LOGO_COLORS["copywrite"]
 
 
-def start_header(update_release: str = '2019-06-04', version: str = '0.1.01', default='VTI', options: str = None) -> dict:
+def start_header(**kwargs) -> dict:
+    """Primary User Input Controller
+
+    Optional Args:
+        update_release {str} -- latest date of software release (default: {'2020-01-25'})
+        version {str} -- latest release version number (default: {0.1.24})
+        default {str} -- default ticker when none given (default: {'VTI'})
+
+    Returns:
+        dict -- [description]
+    """
+    update_release = kwargs.get('update_release', '2020-01-25')
+    version = kwargs.get('version', '0.1.24')
+    default = kwargs.get('default', 'VTI')
+
     print(" ")
-    print(f"{outline_color}----------------------------------")
-    print(f"-{normal_color}   Securities Analysis Tools    {outline_color}-")
+    print(f"{OUTLINE_COLOR}----------------------------------")
+    print(f"-{NORMAL}   Securities Analysis Tools    {OUTLINE_COLOR}-")
     print(f"-                                -")
-    print(f"-{author_color}            nga-27              {outline_color}-")
+    print(f"-{AUTHOR_COLOR}            nga-27              {OUTLINE_COLOR}-")
     print(f"-                                -")
-    print(f"-{normal_color}       version: {version}          {outline_color}-")
-    print(f"-{normal_color}       updated: {update_release}      {outline_color}-")
-    print(f"----------------------------------{normal_color}")
+    print(f"-{NORMAL}       version: {version}          {OUTLINE_COLOR}-")
+    print(f"-{NORMAL}       updated: {update_release}      {OUTLINE_COLOR}-")
+    print(f"----------------------------------{NORMAL}")
     print(" ")
 
     time.sleep(1)
     config = dict()
 
-    if options is not None:
-        input_str = input(
-            "Enter ticker symbols (e.g. 'aapl MSFT') and tags (see --options): ")
-    else:
-        input_str = input("Enter ticker symbols (e.g. 'aapl MSFT'): ")
+    input_str = input(
+        "Enter ticker symbols (e.g. 'aapl MSFT') and tags (see --options): ")
 
     config['version'] = version
     config['date_release'] = update_release
@@ -169,12 +180,12 @@ def header_options_print(options_read_lines):
         if len(nline) > 0:
             if nline[0].isupper():
                 # Pattern 1 - Title lines of options
-                nline = f"{opt_title_color}{nline}{normal_color}"
+                nline = f"{OPT_TITLE_COLOR}{nline}{NORMAL}"
             else:
                 # Pattern 2 - Individual names colorized
                 if '{' in nline:
-                    nline = nline.replace("{", f"{opt_name_color}")
-                    nline = nline.replace("}", f"{normal_color}")
+                    nline = nline.replace("{", f"{OPT_NAME_COLOR}")
+                    nline = nline.replace("}", f"{NORMAL}")
         print(nline)
     # print(options_read)
     print(" ")
@@ -191,10 +202,10 @@ def logo_renderer():
         for i, line in enumerate(logo_lines):
             if i < MAIN_LOGO_LINES:
                 line = line.replace("\n", "")
-                line = line.replace("{", f"{logo_other_color}")
-                line = f"{logo_main_color}{line}{normal_color}"
+                line = line.replace("{", f"{OTHER}")
+                line = f"{MAIN}{line}{NORMAL}"
             else:
-                line = f"{logo_copyrt_color}{line}{normal_color}"
+                line = f"{COPYWRITE}{line}{NORMAL}"
             print(line)
         print("\r\n\r\n")
         time.sleep(1)
@@ -222,7 +233,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['state'] = 'halt'
         return config, ticker_keys
 
-    if '--quit' in i_keys:
+    if ('--quit' in i_keys) or ('--q' in i_keys):
         config['state'] = 'halt'
         return config, ticker_keys
 
@@ -247,11 +258,14 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['core'] = True
             config['exports'] = core[4]
 
-    if '--noindex' in i_keys:
+    if ('--noindex' in i_keys) or ('--ni' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'no_index')
 
+    if '--suppress' in i_keys:
+        config = add_str_to_dict_key(config, 'state', 'suppress_pptx')
+
     # Exporting of data from metadata.json to dataframe-like file
-    if '--export-dataset' in i_keys:
+    if ('--export-dataset' in i_keys) or ('--export' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'function run')
         config = add_str_to_dict_key(
             config, 'run_functions', 'export', type_='list')
@@ -320,6 +334,16 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'relative_strength', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
+    if '--awesome' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'awesome', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if '--momentum' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'momentum', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
     if ('--obv' in i_keys) or ('--on_balance_volume' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'obv', type_='list')
@@ -344,26 +368,22 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'nf', type_='list')
 
+    if '--nf_now' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'nfnow', type_='list')
+
     # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in i_keys:
         config['state'] = 'dev'
         return config, ticker_keys
 
-    if '--function' in i_keys:
+    if ('--function' in i_keys) or ('--f' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'function run')
         return config, ticker_keys
 
     if '--prod' in i_keys:
         # default behavior
         config = add_str_to_dict_key(config, 'state', 'run')
-        return config, ticker_keys
-
-    if '--r1' in i_keys:
-        config = add_str_to_dict_key(config, 'state', 'r1')
-        return config, ticker_keys
-
-    if '--r2' in i_keys:
-        config = add_str_to_dict_key(config, 'state', 'r2')
         return config, ticker_keys
 
     config = add_str_to_dict_key(config, 'state', 'run')

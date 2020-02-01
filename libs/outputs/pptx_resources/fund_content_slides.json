@@ -1,0 +1,92 @@
+[
+    {
+        "key": "volume",
+        "index": 0,
+        "location": 0
+    },
+    {
+        "key": "RSI_standard",
+        "index": 0,
+        "location": 1
+    },
+    {
+        "key": "macd_bar",
+        "index": 0,
+        "location": 2
+    },
+    {
+        "key": "clustering",
+        "index": 0,
+        "location": 3
+    },
+    {
+        "key": "relative_strength",
+        "index": 1,
+        "location": 0
+    },
+    {
+        "key": "exp_moving_averages",
+        "index": 1,
+        "location": 1
+    },
+    {
+        "key": "swing_trades",
+        "index": 1,
+        "location": 2
+    },
+    {
+        "key": "simple_moving_averages",
+        "index": 1,
+        "location": 3
+    },
+    {
+        "key": "obv_standard",
+        "index": 2,
+        "location": 0
+    },
+    {
+        "key": "obv_diff",
+        "index": 2,
+        "location": 1
+    },
+    {
+        "key": "head_and_shoulders",
+        "index": 2,
+        "location": 2
+    },
+    {
+        "key": "price_gaps",
+        "index": 2,
+        "location": 3
+    },
+    {
+        "key": "awesome_bar",
+        "index": 3,
+        "location": 0
+    },
+    {
+        "key": "awesome_metrics",
+        "index": 3,
+        "location": 1
+    },
+    {
+        "key": "momentum_oscillator",
+        "index": 3,
+        "location": 2
+    },
+    {
+        "key": "momentum_metrics",
+        "index": 3,
+        "location": 3
+    },
+    {
+        "key": "resist_support",
+        "index": 4,
+        "location": 4
+    },
+    {
+        "key": "trendline",
+        "index": 5,
+        "location": 4
+    }
+]

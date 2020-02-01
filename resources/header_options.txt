@@ -1,11 +1,11 @@
 OPTIONS:
 
---quit              :       exits program without running any functionality
+--q                 :       exits program without running any functionality; "--quit" also supported
 --core              :       normal operation run with parameters found in core.json
 --test              :       similar to '--core' but with test.json (for testing only)
---noindex           :       does not include S&P500 index, omits comparison operations
---function          :       triggers only designated functions (below)
---export-dataset    :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
+--ni                :       does not include S&P500 index, omits comparison operations; "--noindex" also supported
+--f                 :       triggers only designated functions (below); "--function" also supported
+--export            :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
 
 VERSIONS:           :       (flags for versioning)
 
@@ -24,14 +24,17 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --rsi               :       run {Relative Strength Index} (RSI) function for funds
 --macd              :       run {Moving Average Convergence Divergence} (MACD) function for funds
 --relative_strength :       run {'True' Strength} (vs. S&P500) function for funds 
+--awesome           :       run {'Awesome Oscillator'} function for funds
+--momentum          :       run {Chande Momentum Oscillator} function for funds
 --obv               :       run {On Balance Volume} (OBV) function for funds; "--on_balance_volume" also supported 
 --moving_average    :       run {Moving Average} (MA) function for funds; "--ma" also supported
 --gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
 --vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
 --nf                :       run {Nasit Funds} for funds; "--nasit_funds" also supported
+--nf_now            :       run {Nasit Funds} but with current stats (price, % change, etc.)
 
 AVAILABLE EXPORTS:  :       (current fields for specific tabular metrics exports)
 
-how to run          :       "--export-dataset vpu VNQ VtI rsi macD ReLaTiVe_strength"
+how to run          :       "--export vpu VNQ VtI rsi macD ReLaTiVe_strength"
 tabular fields      :       'statistics', 'macd', 'rsi', 'relative_strength', 'mci', 'correlation', 'futures'
-default             :       "--export-dataset " -> ALL available tickers and ALL available tabular metrics
+default             :       "--export " -> ALL available tickers and ALL available tabular metrics

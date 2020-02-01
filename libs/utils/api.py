@@ -2,6 +2,7 @@ import json
 import os
 import pprint
 import requests
+
 import yfinance as yf
 import pandas as pd
 import numpy as np
@@ -12,7 +13,7 @@ from dateutil.relativedelta import relativedelta
 import libs.utils.stable_yf as styf
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
-from .constants import TEXT_COLOR_MAP
+from .constants import STANDARD_COLORS
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -26,8 +27,8 @@ VQ_DEEP_ANALYSIS_PARAM = "get-tmc-data/"
 
 TRADESTOPS_URL = "https://tradestops.com/investment-calculator/"
 
-WARN_COLOR = TEXT_COLOR_MAP["yellow"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
 
 
 def get_dividends(ticker):
@@ -337,7 +338,7 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
     sector_match_file = "resources/sectors.json"
     if not os.path.exists(sector_match_file):
         print(
-            f"{WARN_COLOR}Warning: sector file '{sector_match_file}' not found.{NORMAL_COLOR}")
+            f"{WARNING}Warning: sector file '{sector_match_file}' not found.{NORMAL}")
         return [], {}
 
     if sector_fund is None:
@@ -379,11 +380,16 @@ def get_volatility(ticker_str: str, **kwargs):
 
             url = f"{VQ_API_BASE_URL}{VQ_VALUES_PARAM}{key}/{ticker_str}"
 
-            response = requests.get(url)
+            try:
+                response = requests.get(url, timeout=3)
+            except:
+                print(
+                    f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                return vq
             r = response.json()
             if response.status_code != 200:
                 print("")
-                print(f"{WARN_COLOR}Volatility Quotient failed on {ticker_str} request: '{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL_COLOR}")
+                print(f"{WARNING}Volatility Quotient failed on {ticker_str} request: '{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}")
                 print("")
                 return vq
 
@@ -399,7 +405,12 @@ def get_volatility(ticker_str: str, **kwargs):
                 vq['stop_loss'] = np.round(ratio * vq['last_max']['Price'], 2)
 
             url = f"{VQ_API_BASE_URL}{VQ_LOOKUP_PARAM}{key}/{ticker_str}/20"
-            response = requests.get(url)
+            try:
+                response = requests.get(url, timeout=3)
+            except:
+                print(
+                    f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                return vq
             r = response.json()
             if response.status_code == 200:
                 val = None
@@ -414,7 +425,12 @@ def get_volatility(ticker_str: str, **kwargs):
                     now_str = now.strftime('%Y-%m-%d')
 
                     url = f"{VQ_API_BASE_URL}{VQ_DEEP_ANALYSIS_PARAM}{key}/{val}/{start_str}/{now_str}"
-                    response = requests.get(url)
+                    try:
+                        response = requests.get(url, timeout=3)
+                    except:
+                        print(
+                            f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                        return vq
                     r = response.json()
                     if response.status_code == 200:
                         vq['analysis'] = r

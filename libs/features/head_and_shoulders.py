@@ -1,16 +1,17 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 
 from libs.utils import shape_plotting, generic_plotting, ProgressBar
-from libs.tools import exponential_ma, windowed_ma_list
+from libs.tools import exponential_moving_avg, windowed_moving_avg
 
 from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
-from .feature_utils import local_extrema, feature_plotter, cleanse_to_json
+from .feature_utils import find_filtered_local_extrema, feature_plotter, cleanse_to_json
+
 
 def find_head_shoulders(extrema: dict, fund: pd.DataFrame) -> dict:
     """
     Head and shoulders detection algorithm 
-    
+
     For bearish, find 3 maxima alternated by 2 minima. The 2nd maximum must be higher 
     than the other 2 maxima. For bullish, the exact opposite.
     """
@@ -23,35 +24,38 @@ def find_head_shoulders(extrema: dict, fund: pd.DataFrame) -> dict:
     # indexes for potential features
     feature = []
 
-    while (i < lmax) or (j < lmin):        
+    while (i < lmax) or (j < lmin):
 
-        if (i < lmax) and (j < lmin): 
+        if (i < lmax) and (j < lmin):
             if extrema['max'][i][0] < extrema['min'][j][0]:
-                feature.append([extrema['max'][i][0], extrema['max'][i][1], fund['Volume'][extrema['max'][i][0]]])
+                feature.append([extrema['max'][i][0], extrema['max']
+                                [i][1], fund['Volume'][extrema['max'][i][0]]])
                 i += 1
             else:
-                feature.append([extrema['min'][j][0], extrema['min'][j][1], fund['Volume'][extrema['min'][j][0]]])
+                feature.append([extrema['min'][j][0], extrema['min']
+                                [j][1], fund['Volume'][extrema['min'][j][0]]])
                 j += 1
-           
+
         elif (j < lmin):
-            feature.append([extrema['min'][j][0], extrema['min'][j][1], fund['Volume'][extrema['min'][j][0]]])
+            feature.append([extrema['min'][j][0], extrema['min']
+                            [j][1], fund['Volume'][extrema['min'][j][0]]])
             j += 1
 
         elif (i < lmax):
-            feature.append([extrema['max'][i][0], extrema['max'][i][1], fund['Volume'][extrema['max'][i][0]]])
+            feature.append([extrema['max'][i][0], extrema['max']
+                            [i][1], fund['Volume'][extrema['max'][i][0]]])
             i += 1
-            
+
         else:
-            break 
+            break
 
         if len(feature) > 6:
-            feature.pop(0) 
+            feature.pop(0)
 
         if len(feature) == 6:
             extrema['features'].append(feature_detection(feature))
 
     return extrema
-
 
 
 def feature_detection(features: list) -> dict:
@@ -60,7 +64,7 @@ def feature_detection(features: list) -> dict:
     add various feature details as well.
     """
     detected = {}
-    #print(features)
+    # print(features)
     if features[0][1] > features[1][1]:
         # potential TOP ('W') case (bearish)
         m1 = features[0][1]
@@ -79,20 +83,24 @@ def feature_detection(features: list) -> dict:
                 neckline['slope'] = float(slope)
                 intercept = n1 - slope * float(features[1][0])
                 neckline['intercept'] = float(intercept)
-                line = neckline['intercept'] + neckline['slope'] * float(features[5][0])
+                line = neckline['intercept'] + \
+                    neckline['slope'] * float(features[5][0])
                 if features[5][1] < line:
                     # Head and shoulders -> bearish
                     detected['type'] = 'bearish'
-                    detected['neckline'] = neckline #{'slope': 0.0, 'intercept': 0.0}
+                    # {'slope': 0.0, 'intercept': 0.0}
+                    detected['neckline'] = neckline
                     detected['indexes'] = features.copy()
-                    detected['stats'] = {'width': 0, 'avg': 0.0, 'stdev': 0.0, 'percent': 0.0}
-                    detected['stats']['width'] = features[4][0] - features[0][0]
+                    detected['stats'] = {
+                        'width': 0, 'avg': 0.0, 'stdev': 0.0, 'percent': 0.0}
+                    detected['stats']['width'] = features[4][0] - \
+                        features[0][0]
                     f = features.copy()
                     f = [f[i][1] for i in range(len(f))]
                     detected['stats']['avg'] = float(np.round(np.mean(f), 3))
                     detected['stats']['stdev'] = float(np.round(np.std(f), 3))
-                    detected['stats']['percent'] = float(np.round(100.0 * np.std(f) / np.mean(f), 3))
-
+                    detected['stats']['percent'] = float(
+                        np.round(100.0 * np.std(f) / np.mean(f), 3))
 
     else:
         # potential BOTTOM ('M') case (bullish)
@@ -112,7 +120,8 @@ def feature_detection(features: list) -> dict:
                 neckline['slope'] = float(slope)
                 intercept = n1 - slope * float(features[1][0])
                 neckline['intercept'] = float(intercept)
-                line = neckline['intercept'] + neckline['slope'] * float(features[5][0])
+                line = neckline['intercept'] + \
+                    neckline['slope'] * float(features[5][0])
 
                 if (features[5][1] > line) and (features[5][2] > vol_T):
                     # Head and shoulders -> bullish
@@ -123,16 +132,18 @@ def feature_detection(features: list) -> dict:
                     intercept = n1 - slope * float(features[1][0])
                     detected['neckline']['intercept'] = intercept
                     detected['indexes'] = features.copy()
-                    detected['stats'] = {'width': 0, 'avg': 0.0, 'stdev': 0.0, 'percent': 0.0}
-                    detected['stats']['width'] = features[4][0] - features[0][0]
+                    detected['stats'] = {
+                        'width': 0, 'avg': 0.0, 'stdev': 0.0, 'percent': 0.0}
+                    detected['stats']['width'] = features[4][0] - \
+                        features[0][0]
                     f = features.copy()
                     f = [f[i][1] for i in range(len(f))]
                     detected['stats']['avg'] = np.round(np.mean(f), 3)
                     detected['stats']['stdev'] = np.round(np.std(f), 3)
-                    detected['stats']['percent'] = np.round(100.0 * np.std(f) / np.mean(f), 3)
+                    detected['stats']['percent'] = np.round(
+                        100.0 * np.std(f) / np.mean(f), 3)
 
     return detected
-
 
 
 def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10, sanitize_dict=True, name=''):
@@ -149,23 +160,24 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
 
     # Filter and find extrema. Reconstruct where those extremes exist on the actual signal.
     # ma = exponential_ma(fund, FILTER_SIZE)
-    ma = windowed_ma_list(fund['Close'], interval=FILTER_SIZE)
+    ma = windowed_moving_avg(
+        fund['Close'], interval=FILTER_SIZE, data_type='list')
     if FILTER_SIZE == 0:
-        ex = local_extrema(ma, raw=True)
+        ex = find_filtered_local_extrema(ma, raw=True)
     else:
-        ex = local_extrema(ma)
+        ex = find_filtered_local_extrema(ma)
     r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE, ma_type='windowed')
 
     # Cleanse data sample for duplicates and errors
     r = remove_duplicates(r)
 
     # Run detection algorithm (head and shoulders in this case)
-    hs = find_head_shoulders(r, fund) 
+    hs = find_head_shoulders(r, fund)
 
     # Cleanse data dictionary [again] and add dates for plotting features.
     hs = add_daterange(fund, hs, 5)
-    hs = remove_empty_keys(hs) 
-    
+    hs = remove_empty_keys(hs)
+
     if sanitize_dict:
         hs.pop('max')
         hs.pop('min')
@@ -176,9 +188,8 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
             fe['type'] = feat['type']
             fe['indexes'] = feat['indexes']
             shapes.append(fe)
-    
-    return hs, ma, shapes
 
+    return hs, ma, shapes
 
 
 def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
@@ -203,18 +214,23 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
     head_shoulders = []
     shapes = []
 
-    FILTER = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 19, 26, 35, 51]
+    FILTER = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+              11, 13, 14, 16, 17, 19, 26, 35, 51]
     increment = 1.0 / float(len(FILTER)+1)
 
     for filt in FILTER:
         d_temp = {'filter_size': filt, "content": {}}
-        hs2, _, shapes = feature_head_and_shoulders(fund, FILTER_SIZE=filt, name=name, shapes=shapes)
+        hs2, _, shapes = feature_head_and_shoulders(
+            fund, FILTER_SIZE=filt, name=name, shapes=shapes)
         d_temp['content'] = hs2
         d_temp = cleanse_to_json(d_temp)
         head_shoulders.append(d_temp)
-        if progress_bar is not None: progress_bar.uptick(increment=increment)
+        if progress_bar is not None:
+            progress_bar.uptick(increment=increment)
 
-    feature_plotter(fund, shapes, name=name, feature='head_and_shoulders', plot_output=plot_output)
-    if progress_bar is not None: progress_bar.uptick(increment=increment)
+    feature_plotter(fund, shapes, name=name,
+                    feature='head_and_shoulders', plot_output=plot_output)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=increment)
 
     return head_shoulders

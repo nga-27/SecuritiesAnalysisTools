@@ -7,7 +7,7 @@ from .ultimate_oscillator import ultimate_oscillator
 from .rsi import RSI
 from .full_stochastic import full_stochastic
 
-from .moving_average import windowed_ma_list
+from .moving_average import windowed_moving_avg
 from .trends import autotrend
 
 BASE_WEIGHTS = {
@@ -248,7 +248,7 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     clusters = generate_cluster(position, function, p_bar=prog_bar)
 
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
-    clusters_wma = windowed_ma_list(clusters, interval=3)
+    clusters_wma = windowed_moving_avg(clusters, interval=3, data_type='list')
     if prog_bar is not None:
         prog_bar.uptick(increment=0.1)
 

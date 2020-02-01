@@ -5,10 +5,14 @@ from datetime import datetime
 from scipy.stats import linregress
 
 from .math_functions import linear_regression
-from .moving_average import simple_ma_list, windowed_ma_list, windowed_ema_list
+from .moving_average import simple_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
+from libs.utils import STANDARD_COLORS
 
-from libs.features import local_extrema, reconstruct_extrema, remove_duplicates
+from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
+
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
 
 TREND_PTS = [2, 3, 6]
 
@@ -41,7 +45,7 @@ def get_trend(position: pd.DataFrame, **kwargs) -> dict:
     trend = {}
 
     if style == 'sma':
-        trend['tabular'] = simple_ma_list(position, ma_size)
+        trend['tabular'] = simple_moving_avg(position, ma_size, data_type='list')
         trend['difference'] = difference_from_trend(position, trend['tabular'])
         trend['magnitude'] = trend_of_dates(position, trend_difference=trend['difference'], dates=date_range)
         trend['method'] = f'SMA-{ma_size}'
@@ -162,8 +166,9 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
 
         # ma = windowed_ma_list(fund['Close'], interval=ma_size)
         weight_strength = 2.0 + (0.1 * float(i))
-        ma = windowed_ema_list(fund['Close'], interval=ma_size, weight_strength=weight_strength)
-        ex = local_extrema(ma)
+        ma = windowed_moving_avg(fund['Close'], interval=ma_size, weight_strength=weight_strength,
+                                 data_type='list', filter_type='exponential')
+        ex = find_filtered_local_extrema(ma)
         r = reconstruct_extrema(fund['Close'], extrema=ex, ma_size=ma_size, ma_type='windowed')
 
         # Cleanse data sample for duplicates and errors
@@ -245,14 +250,18 @@ def get_trendlines( fund: pd.DataFrame, **kwargs ):
     C.append('black')
     
     name2 = SP500.get(name, name)
-    if plot_output:
-        generic_plotting(Y, x=X, colors=C, 
-                            title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
-    else:
-        filename = f"{name}/{sub_name}.png"
-        generic_plotting(Y, x=X, colors=C, 
-                            title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
-                            saveFig=True, filename=filename)
+    try:
+        if plot_output:
+            generic_plotting(Y, x=X, colors=C, 
+                                title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+        else:
+            filename = f"{name}/{sub_name}.png"
+            generic_plotting(Y, x=X, colors=C, 
+                                title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                                saveFig=True, filename=filename)
+    
+    except:
+        print(f"{WARNING}Warning: plot failed to generate in trends.get_trendlines.{NORMAL}")
 
     if progress_bar is not None: progress_bar.uptick(increment=0.2)
 

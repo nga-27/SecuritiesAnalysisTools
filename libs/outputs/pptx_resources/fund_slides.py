@@ -82,10 +82,10 @@ def add_fund_content(prs, fund: str, analysis: dict):
             vq = analysis[fund].get('metadata', {}).get(
                 'volatility', {}).get('VQ')
             has_vq = False
-            rows = 3
+            rows = 4
             if vq is not None:
                 has_vq = True
-                rows = 6
+                rows = 7
                 stop_loss = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('stop_loss')
                 high_close = analysis[fund].get('metadata', {}).get(
@@ -101,19 +101,22 @@ def add_fund_content(prs, fund: str, analysis: dict):
 
             table.cell(0, 0).text = 'Attribute'
             table.cell(0, 1).text = ''
-            table.cell(1, 0).text = 'Beta'
-            table.cell(1, 1).text = str(np.round(analysis[fund]['beta'], 5))
-            table.cell(2, 0).text = 'R-Squared'
-            table.cell(2, 1).text = str(
+            table.cell(1, 0).text = 'Current Price'
+            table.cell(1, 1).text = '$' + \
+                str(np.round(analysis[fund]['statistics']['current_price'], 2))
+            table.cell(2, 0).text = 'Beta'
+            table.cell(2, 1).text = str(np.round(analysis[fund]['beta'], 5))
+            table.cell(3, 0).text = 'R-Squared'
+            table.cell(3, 1).text = str(
                 np.round(analysis[fund]['r_squared'], 5))
 
             if has_vq:
-                table.cell(3, 0).text = 'Volatility Quotient'
-                table.cell(3, 1).text = str(vq)
-                table.cell(4, 0).text = 'Stop Loss'
-                table.cell(4, 1).text = str(stop_loss)
-                table.cell(5, 0).text = 'Last High Close'
-                table.cell(5, 1).text = str(high_close)
+                table.cell(4, 0).text = 'Volatility Quotient'
+                table.cell(4, 1).text = str(vq)
+                table.cell(5, 0).text = 'Stop Loss'
+                table.cell(5, 1).text = str(stop_loss)
+                table.cell(6, 0).text = 'Last High Close'
+                table.cell(6, 1).text = str(high_close)
 
             table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
             table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
@@ -169,6 +172,11 @@ def add_fund_content(prs, fund: str, analysis: dict):
         slide = slide_title_header(slide, fund, price_details=price_str)
         indexes.append(len(prs.slides)-1)
 
+        # Slide #6 of content
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = slide_title_header(slide, fund, price_details=price_str)
+        indexes.append(len(prs.slides)-1)
+
         content = content_dir + '*.png'
         pics = glob.glob(content)
         fund_analysis = analysis[fund]
@@ -187,12 +195,14 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
         globbed = windows_compatible_file_parse(globber)
         part = globbed[3]
 
+        # Slide 1
+        slide_num = 0
         if 'volume' in part:
             left = Inches(0)
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[0]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'RSI_standard' in part:
@@ -200,7 +210,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[0]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'macd_bar' in part:
@@ -208,7 +218,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[0]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'clustering' in part:
@@ -216,17 +226,17 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[0]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         # Slide #2
-
+        slide_num = 1
         if 'relative_strength' in part:
             left = Inches(0)
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[1]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'exp_moving_averages' in part:
@@ -234,7 +244,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[1]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'swing_trades' in part:
@@ -242,7 +252,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[1]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'simple_moving_averages' in part:
@@ -250,17 +260,17 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[1]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         # Slide #3
-
+        slide_num = 2
         if 'obv_standard' in part:
             left = Inches(0)
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[2]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'obv_diff' in part:
@@ -268,7 +278,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[2]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'head_and_shoulders' in part:
@@ -276,7 +286,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[2]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         if 'price_gaps' in part:
@@ -284,24 +294,58 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)
-            prs.slides[slide_indices[2]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
         # Slide #4
+        slide_num = 3
+        if 'awesome_bar' in part:
+            left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
 
+        if 'awesome_metrics' in part:
+            left = Inches(6.5)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
+
+        if 'momentum_oscillator' in part:
+            left = Inches(0.0)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
+
+        if 'momentum_metrics' in part:
+            left = Inches(6.5)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
+
+        # Slide #5
+        slide_num = 4
         if 'resist_support' in part:
             left = Inches(0)
             top = Inches(1.55)
             height = Inches(4.7)
             width = Inches(7)
-            prs.slides[slide_indices[3]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
             left = Inches(7)
             top = Inches(0.25)
             height = Inches(4.7)
             width = Inches(4)
-            txbox = prs.slides[slide_indices[3]].shapes.add_textbox(
+            txbox = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
                 left, top, width, height)
 
             tf = txbox.text_frame
@@ -320,7 +364,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             if num_srs * 0.33 > 6.0:
                 table_height = Inches(6.0)
 
-            table_placeholder = prs.slides[slide_indices[3]].shapes.add_table(
+            table_placeholder = prs.slides[slide_indices[slide_num]].shapes.add_table(
                 num_srs,
                 2,
                 left_loc,
@@ -341,21 +385,21 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
                 table.cell(
                     i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
 
-        # Slide 5
-
+        # Slide 6
+        slide_num = 5
         if 'trendline' in part:
             left = Inches(0)
             top = Inches(1.55)
             height = Inches(4.7)
             width = Inches(7)
-            prs.slides[slide_indices[4]].shapes.add_picture(
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
             left = Inches(6.5)
             top = Inches(0.25)
             height = Inches(4.7)
             width = Inches(4)
-            txbox = prs.slides[slide_indices[4]].shapes.add_textbox(
+            txbox = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
                 left, top, width, height)
 
             tf = txbox.text_frame
@@ -391,7 +435,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             left_loc = Inches(left_start + adj_left)
             top_loc = Inches(0.75)
 
-            table_placeholder = prs.slides[slide_indices[4]].shapes.add_table(
+            table_placeholder = prs.slides[slide_indices[slide_num]].shapes.add_table(
                 num_rows,
                 num_cols,
                 left_loc,

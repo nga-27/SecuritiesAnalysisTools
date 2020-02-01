@@ -15,7 +15,17 @@ CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
 
-def title_presentation(prs, year: str, VERSION: str, wide_ratio=True):
+def title_presentation(prs, year: str, VERSION: str, **kwargs):
+    """Title Slide
+
+    Arguments:
+        prs {pptx obj} -- powerpoint python object
+        year {str} -- '2001', for exampe
+        VERSION {str} -- '0.1.20', for example
+
+    Returns:
+        pptx obj -- powerpoint object
+    """
 
     height = prs.slide_height
     width = int(16 * height / 9)

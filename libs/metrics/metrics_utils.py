@@ -17,7 +17,9 @@ ACCEPTED_ATTS = ['statistics',
                  'correlation',
                  'futures',
                  'moving_average',
-                 'swing_trade'
+                 'swing_trade',
+                 'obv',
+                 'awesome'
                  ]
 
 """ Utilities for creating data metrics for plotting later """
@@ -173,6 +175,46 @@ def collate_data(job: dict, metadata: dict):
                         all_data[ticker][new_name] = attr[key]
             else:
                 all_data[ticker][att] = attr
+
+        for att in job['attributes']:
+            attr = metadata[ticker].get(att, {}).get('metrics')
+            if attr is None:
+                attr = metadata['_METRICS_'].get(att, {}).get('metrics')
+                if attr is None:
+                    continue
+
+            # Flatten tree, if necessary
+            if type(attr) == dict:
+                keys = attr.keys()
+                for key in keys:
+                    if type(attr[key]) == dict:
+                        sub_keys = attr[key].keys()
+                        for sub in sub_keys:
+                            if type(attr[key][sub]) == dict:
+                                sub_sub_keys = attr[key].keys()
+                                for sub_sub in sub_sub_keys:
+                                    if type(attr[key][sub][sub_sub]) == dict:
+                                        print(
+                                            f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                    else:
+                                        new_name = [att, str(key), str(
+                                            sub), str(sub_sub)]
+                                        new_name = '-'.join(new_name)
+                                        new_name += '-METRICS'
+                                        all_data[ticker][new_name] = attr[key][sub][sub_sub]
+                            else:
+                                new_name = [att, str(key), str(sub)]
+                                new_name = '-'.join(new_name)
+                                new_name += '-METRICS'
+                                all_data[ticker][new_name] = attr[key][sub]
+                    else:
+                        new_name = [att, str(key)]
+                        new_name = '-'.join(new_name)
+                        new_name += '-METRICS'
+                        all_data[ticker][new_name] = attr[key]
+            else:
+                new_name = f'{att}-METRICS'
+                all_data[ticker][new_name] = attr
 
     return all_data
 

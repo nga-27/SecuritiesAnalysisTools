@@ -17,8 +17,8 @@ from releases.dev import technical_analysis as dev
 from libs.utils import start_header, TEXT_COLOR_MAP, logo_renderer
 
 ################################
-_VERSION_ = '0.1.23'
-_DATE_REVISION_ = '2020-01-18'
+_VERSION_ = '0.1.24'
+_DATE_REVISION_ = '2020-02-01'
 ################################
 
 
@@ -46,10 +46,6 @@ class App:
         if 'dev' in self.config['state']:
             self.config['release'] = True
             dev(self.config)
-
-        if 'r2' in self.config['state']:
-            self.config['release'] = True
-            print("ERROR: release 2 has not been created yet!")
 
         print('Done.')
 
