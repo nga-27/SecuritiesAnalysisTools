@@ -346,6 +346,22 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
+        if 'total_power' in part:
+            left = Inches(6.5)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
+
+        if 'total_power_metrics' in part:
+            left = Inches(6.5)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
+
         # Slide #6
         slide_num = 5
         if 'resist_support' in part:

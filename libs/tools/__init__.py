@@ -20,6 +20,7 @@ from .clusters import cluster_oscs
 
 from .macd import mov_avg_convergence_divergence
 from .bear_bull_power import bear_bull_power
+from .total_power import total_power
 
 from .on_balance_volume import on_balance_volume
 

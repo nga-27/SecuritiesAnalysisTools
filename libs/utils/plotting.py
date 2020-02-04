@@ -111,7 +111,10 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
             ax2.plot(x, y)
             ax2.tick_params(axis='y')
             ax2.grid()
-        plt.legend([y2_label])
+        if type(y2_label) == list:
+            plt.legend(y2_label)
+        else:
+            plt.legend([y2_label])
     else:
         ax2.set_ylabel(y2_label, color=color)
         ax2.plot(x, y2, color=color)

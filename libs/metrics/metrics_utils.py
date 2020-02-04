@@ -21,7 +21,8 @@ ACCEPTED_ATTS = ['statistics',
                  'obv',
                  'awesome',
                  'momentum_oscillator',
-                 'bear_bull_power'
+                 'bear_bull_power',
+                 'total_power'
                  ]
 
 """ Utilities for creating data metrics for plotting later """
