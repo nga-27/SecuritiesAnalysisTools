@@ -14,6 +14,7 @@ from libs.tools import get_trendlines, find_resistance_support_lines, cluster_os
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
+from libs.tools import bear_bull_power
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 TICKER = STANDARD_COLORS["ticker"]
@@ -71,6 +72,8 @@ def only_functions_handler(config: dict):
         obv_function(config)
     if 'ma' in config['run_functions']:
         ma_function(config)
+    if 'bear_bull' in config['run_functions']:
+        bear_bull_function(config)
     if 'gaps' in config['run_functions']:
         price_gap_function(config)
     if 'vq' in config['run_functions']:
@@ -221,6 +224,14 @@ def ma_function(config: dict):
             print(
                 f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
             triple_moving_average(data[fund], name=fund, plot_output=True)
+
+
+def bear_bull_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Bear Bull Power Indicator of {TICKER}{fund}{NORMAL}...")
+            bear_bull_power(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):

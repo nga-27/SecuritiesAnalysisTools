@@ -177,6 +177,11 @@ def add_fund_content(prs, fund: str, analysis: dict):
         slide = slide_title_header(slide, fund, price_details=price_str)
         indexes.append(len(prs.slides)-1)
 
+        # Slide #7 of content
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = slide_title_header(slide, fund, price_details=price_str)
+        indexes.append(len(prs.slides)-1)
+
         content = content_dir + '*.png'
         pics = glob.glob(content)
         fund_analysis = analysis[fund]
@@ -333,6 +338,16 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
         # Slide #5
         slide_num = 4
+        if 'bear_bull_power' in part:
+            left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
+
+        # Slide #6
+        slide_num = 5
         if 'resist_support' in part:
             left = Inches(0)
             top = Inches(1.55)
@@ -385,8 +400,8 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
                 table.cell(
                     i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
 
-        # Slide 6
-        slide_num = 5
+        # Slide 7
+        slide_num = 6
         if 'trendline' in part:
             left = Inches(0)
             top = Inches(1.55)

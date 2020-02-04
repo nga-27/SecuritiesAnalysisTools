@@ -19,7 +19,9 @@ ACCEPTED_ATTS = ['statistics',
                  'moving_average',
                  'swing_trade',
                  'obv',
-                 'awesome'
+                 'awesome',
+                 'momentum_oscillator',
+                 'bear_bull_power'
                  ]
 
 """ Utilities for creating data metrics for plotting later """
