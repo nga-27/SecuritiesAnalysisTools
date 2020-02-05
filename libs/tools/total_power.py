@@ -3,6 +3,7 @@ import numpy as np
 
 from libs.tools import exponential_moving_avg, windowed_moving_avg
 from libs.utils import dual_plotting, generic_plotting
+from libs.utils import SP500
 from libs.features import normalize_signals
 
 
@@ -124,7 +125,8 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    title = name + ' - Total Power'
+    name2 = SP500.get(name, name)
+    title = name2 + ' - Total Power'
     if plot_output:
         dual_plotting(position['Close'], [
                       signals['bears'], signals['bulls'], signals['total']], 'Price', ['Bear', 'Bull', 'Total'],
@@ -234,7 +236,8 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
     norm = normalize_signals([metrics])
     metrics = norm[0]
 
-    title = name + ' - Total Power Metrics'
+    name2 = SP500.get(name, name)
+    title = name2 + ' - Total Power Metrics'
     if plot_output:
         dual_plotting(position['Close'], metrics, 'Price', 'Metrics')
     else:

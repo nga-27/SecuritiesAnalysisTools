@@ -6,6 +6,7 @@ from libs.utils import ProgressBar, dual_plotting, generic_plotting, bar_chart
 from libs.utils import dates_extractor_list
 from libs.features import normalize_signals
 from .moving_average import simple_moving_avg, exponential_moving_avg, windowed_moving_avg
+from libs.utils import SP500
 
 
 def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
@@ -120,8 +121,10 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
         p_bar.uptick(increment=0.1)
 
     triggers = ao_signal_trigger(signal, med_term, long_term)
+
     x = dates_extractor_list(position)
-    name2 = name + ' - Awesome Oscillator'
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Awesome Oscillator'
 
     if plot_output:
         dual_plotting([signal, med_term, long_term], position['Close'], [
