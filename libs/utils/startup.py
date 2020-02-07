@@ -324,6 +324,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'rsi', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
+    if ('--stochastic' in i_keys) or ('--stoch' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'stoch', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
     if '--macd' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'macd', type_='list')

@@ -12,6 +12,7 @@ SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
 ACCEPTED_ATTS = ['statistics',
                  'macd',
                  'rsi',
+                 'full_stochastic',
                  'relative_strength',
                  'mci',
                  'correlation',

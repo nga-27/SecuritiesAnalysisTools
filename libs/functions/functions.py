@@ -10,7 +10,8 @@ from libs.utils import get_volatility, generic_plotting
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
-from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs, RSI
+from libs.tools import get_trendlines, find_resistance_support_lines
+from libs.tools import cluster_oscs, RSI, full_stochastic
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
@@ -60,6 +61,8 @@ def only_functions_handler(config: dict):
         correlation_index_function(config)
     if 'rsi' in config['run_functions']:
         rsi_function(config)
+    if 'stoch' in config['run_functions']:
+        stochastic_function(config)
     if 'awesome' in config['run_functions']:
         awesome_osc_function(config)
     if 'momentum' in config['run_functions']:
@@ -172,6 +175,15 @@ def rsi_function(config: dict):
         if fund != '^GSPC':
             print(f"RSI of {TICKER}{fund}{NORMAL}...")
             RSI(data[fund], name=fund, plot_output=True, out_suppress=False)
+
+
+def stochastic_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Full Stochastic Oscillator of {TICKER}{fund}{NORMAL}...")
+            full_stochastic(data[fund], name=fund,
+                            plot_output=True, out_suppress=False)
 
 
 def awesome_osc_function(config: dict):

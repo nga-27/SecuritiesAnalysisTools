@@ -57,9 +57,9 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.25'
-_DATE_REVISION_ = '2020-02-04'
+_DATE_REVISION_ = '2020-02-06'
 ################################
-PROCESS_STEPS_DEV = 17
+PROCESS_STEPS_DEV = 18
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -129,6 +129,9 @@ def technical_analysis(config: dict):
         _, dat = cluster_oscs(fund, function='all', filter_thresh=3,
                               name=fund_name, plot_output=False, progress_bar=p)
         analysis[fund_name]['clustered_osc'] = dat
+
+        analysis[fund_name]['full_stochastic'] = full_stochastic(
+            fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
         analysis[fund_name]['rsi'] = RSI(
             fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
