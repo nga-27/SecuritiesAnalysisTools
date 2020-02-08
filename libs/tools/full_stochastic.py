@@ -3,6 +3,8 @@ import numpy as np
 
 from libs.utils import dual_plotting, date_extractor
 from libs.utils import ProgressBar, SP500
+from libs.features import normalize_signals
+from .moving_average import windowed_moving_avg
 
 
 def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwargs) -> dict:
@@ -39,6 +41,9 @@ def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwa
         k_smooth.append(50.0)
         d_sma.append(50.0)
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
     for i in range(FAST_K-1, len(position['Close'])):
 
         # Find first lookback of oscillator
@@ -61,6 +66,9 @@ def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwa
         # Find 'Simple Moving Average' (SMA) of k2
         d_sma.append(np.average(k_smooth[i-(SLOW_D-1):i+1]))
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     if not out_suppress:
         if plot_output:
             dual_plotting(position['Close'], [k_instant, k_smooth, d_sma], 'Price', [
@@ -69,61 +77,6 @@ def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwa
     signals = {"fast_k": k_instant, "smooth_k": k_smooth, "slow_d": d_sma}
 
     return signals
-
-
-def get_full_stoch_features(position: pd.DataFrame, full_stoch: dict) -> list:
-    """ Converts signal features to conditions (divergence/convergence)
-
-    Args:
-        features -> [k_smooth, d_sma]
-
-    Returns:
-        [k_smooth, full_stoch (dict)] -> [signal_list, feature dict]
-    """
-    SELL_TH = 80.0
-    BUY_TH = 20.0
-
-    k_smooth = full_stoch['tabular']['smooth_k']
-    d_sma = full_stoch['tabular']['slow_d']
-
-    full_stoch['bullish'] = []
-    full_stoch['bearish'] = []
-
-    stochastic = []
-
-    indicator = 0  # 0 is neutral, 1,2 is oversold, 3,4: is overbought
-    for i in range(len(position['Close'])):
-
-        if k_smooth[i] > SELL_TH:
-            indicator = 3
-            stochastic.append(0)
-        elif (indicator == 3) and (k_smooth[i] < d_sma[i]):
-            indicator = 4
-            stochastic.append(0)
-        elif (indicator == 4) and (k_smooth[i] < SELL_TH):
-            indicator = 0
-            full_stoch['bearish'].append(
-                [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
-            stochastic.append(1)
-
-        elif k_smooth[i] < BUY_TH:
-            indicator = 1
-            stochastic.append(0)
-        elif (indicator == 1) and (k_smooth[i] > d_sma[i]):
-            indicator = 2
-            stochastic.append(0)
-        elif (indicator == 2) and (k_smooth[i] > BUY_TH):
-            indicator = 0
-            full_stoch['bullish'].append(
-                [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
-            stochastic.append(-1)
-
-        else:
-            stochastic.append(0)
-
-    full_stoch['indicator'] = stochastic
-
-    return full_stoch
 
 
 def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dict:
@@ -201,6 +154,9 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
                 stochastic[i] += 1.0
                 state = 'n'
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
     # Look at crossovers and over-X positions of smooth_k & slow_d
     state = 'n'
     for i, slow in enumerate(smooth_k):
@@ -246,6 +202,9 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
                     [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
                 stochastic[i] += 1.0
                 state = 'n'
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
 
     full_stoch['indicator'] = stochastic
     full_stoch['bullish'] = bullish
@@ -372,6 +331,9 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
                     s_vals[0] = fast
                     state = 's1'
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     if not out_suppress:
         name3 = SP500.get(name, name)
         name2 = name3 + ' - Stochastic'
@@ -382,6 +344,69 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
             filename = name + '/stochastic_{}.png'.format(name)
             dual_plotting(position['Close'], full_stoch['indicator'], 'Position Price', 'Stochastic Oscillator',
                           x_label='Trading Days', title=name2, saveFig=True, filename=filename)
+
+    return full_stoch
+
+
+def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dict:
+    """Get Stochastic Metrics
+
+    Arguments:
+        position {pd.DataFrame} -- dataset
+        full_stoch {dict} -- stochastic data object
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        p_bar {ProgressBar} -- {default: {None}}
+
+    Returns:
+        dict -- stochastic data object
+    """
+    plot_output = kwargs.get('plot_output', True)
+    p_bar = kwargs.get('p_bar')
+
+    stochs = full_stoch['indicator']
+
+    # Take indicator set: weight, filter, normalize
+    weights = [1.0, 0.85, 0.55, 0.1]
+    state2 = [0.0] * len(stochs)
+
+    for ind, s in enumerate(stochs):
+        if s != 0.0:
+            state2[ind] += s
+
+            # Smooth the curves
+            if ind - 1 >= 0:
+                state2[ind-1] += s * weights[1]
+            if ind + 1 < len(stochs):
+                state2[ind+1] += s * weights[1]
+            if ind - 2 >= 0:
+                state2[ind-2] += s * weights[2]
+            if ind + 2 < len(stochs):
+                state2[ind+2] += s * weights[2]
+            if ind - 3 >= 0:
+                state2[ind-3] += s * weights[3]
+            if ind + 3 < len(stochs):
+                state2[ind+3] += s * weights[3]
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    norm = normalize_signals([metrics])
+    metrics = norm[0]
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    full_stoch['metrics'] = metrics
+
+    if plot_output:
+        dual_plotting(position['Close'], metrics, 'Price',
+                      'Metrics', title='Stochastic Metrics')
 
     return full_stoch
 
@@ -414,16 +439,18 @@ def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs)
     full_stoch = dict()
 
     signals = generate_full_stoch_signal(
-        position, periods=config, plot_output=plot_output, out_suppress=out_suppress)
+        position, periods=config, plot_output=plot_output,
+        out_suppress=out_suppress, p_bar=progress_bar)
     full_stoch['tabular'] = signals
 
-    # full_stoch = get_full_stoch_features(position, full_stoch)
-    full_stoch = get_crossover_features(position, full_stoch)
+    full_stoch = get_crossover_features(
+        position, full_stoch, p_bar=progress_bar)
 
     full_stoch = get_stoch_divergences(
-        position, full_stoch, plot_output=plot_output, out_suppress=out_suppress, name=name)
+        position, full_stoch, plot_output=plot_output,
+        out_suppress=out_suppress, name=name, p_bar=progress_bar)
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=1.0)
+    full_stoch = get_stoch_metrics(
+        position, full_stoch, plot_output=plot_output, name=name, p_bar=progress_bar)
 
     return full_stoch
