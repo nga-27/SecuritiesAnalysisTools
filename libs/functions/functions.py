@@ -11,7 +11,7 @@ from libs.metrics import market_composite_index, bond_composite_index, correlati
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
 from libs.tools import get_trendlines, find_resistance_support_lines
-from libs.tools import cluster_oscs, RSI, full_stochastic
+from libs.tools import cluster_oscs, RSI, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
@@ -63,6 +63,8 @@ def only_functions_handler(config: dict):
         rsi_function(config)
     if 'stoch' in config['run_functions']:
         stochastic_function(config)
+    if 'ultimate' in config['run_functions']:
+        ultimate_osc_function(config)
     if 'awesome' in config['run_functions']:
         awesome_osc_function(config)
     if 'momentum' in config['run_functions']:
@@ -184,6 +186,15 @@ def stochastic_function(config: dict):
             print(f"Full Stochastic Oscillator of {TICKER}{fund}{NORMAL}...")
             full_stochastic(data[fund], name=fund,
                             plot_output=True, out_suppress=False)
+
+
+def ultimate_osc_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Ultimate Oscillator of {TICKER}{fund}{NORMAL}...")
+            ultimate_oscillator(data[fund], name=fund,
+                                plot_output=True, out_suppress=False)
 
 
 def awesome_osc_function(config: dict):

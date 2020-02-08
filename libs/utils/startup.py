@@ -301,7 +301,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'support_resistance', type_='list')
 
-    if ('--clustered' in i_keys) or ('--clustered_osc' in i_keys):
+    if ('--clustered' in i_keys) or ('--clustered_osc' in i_keys) or ('--clusters' in i_keys):
         config['tickers'] = ticker_list_to_str(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'clustered_oscs', type_='list')
@@ -327,6 +327,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--stochastic' in i_keys) or ('--stoch' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'stoch', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--ultimate' in i_keys) or ('--ult' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'ultimate', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if '--macd' in i_keys:

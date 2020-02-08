@@ -57,9 +57,9 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.25'
-_DATE_REVISION_ = '2020-02-06'
+_DATE_REVISION_ = '2020-02-08'
 ################################
-PROCESS_STEPS_DEV = 18
+PROCESS_STEPS_DEV = 19
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -134,6 +134,9 @@ def technical_analysis(config: dict):
             fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
         analysis[fund_name]['rsi'] = RSI(
+            fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+
+        analysis[fund_name]['ultimate'] = ultimate_oscillator(
             fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
         analysis[fund_name]['awesome'] = awesome_oscillator(

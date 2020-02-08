@@ -11,9 +11,9 @@ from .moving_average import windowed_moving_avg
 from .trends import autotrend
 
 BASE_WEIGHTS = {
-    'stoch': 3,
-    'rsi': 5,
-    'ultimate': 2
+    'stoch': 2,
+    'rsi': 3,
+    'ultimate': 5
 }
 
 
