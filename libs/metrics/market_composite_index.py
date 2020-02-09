@@ -75,8 +75,9 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
     """
     composite = []
     for tick in sectors:
-        graph, _ = cluster_oscs(
+        cluster = cluster_oscs(
             data[tick], plot_output=False, function='market', wma=False)
+        graph = cluster['tabular']
         progress_bar.uptick()
         composite.append(graph)
 
@@ -282,8 +283,9 @@ def type_composite_index(**kwargs):
 
                     composite = {}
                     for sect in sectors:
-                        graph, _ = cluster_oscs(
+                        cluster = cluster_oscs(
                             data[sect], plot_output=False, function='market', wma=False, progress_bar=p)
+                        graph = cluster['tabular']
                         composite[sect] = graph
 
                     for i in range(len(composite['VGT'])):

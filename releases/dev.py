@@ -126,9 +126,8 @@ def technical_analysis(config: dict):
         analysis[fund_name]['metadata'] = get_api_metadata(
             fund_name, progress_bar=p, max_close=analysis[fund_name]['statistics']['max_close'])
 
-        _, dat = cluster_oscs(fund, function='all', filter_thresh=3,
-                              name=fund_name, plot_output=False, progress_bar=p)
-        analysis[fund_name]['clustered_osc'] = dat
+        analysis[fund_name]['clustered_osc'] = cluster_oscs(fund, function='all', filter_thresh=3,
+                                                            name=fund_name, plot_output=False, progress_bar=p)
 
         analysis[fund_name]['full_stochastic'] = full_stochastic(
             fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
