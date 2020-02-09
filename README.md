@@ -9,6 +9,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.1.16, 2019-08-23 - Data download / formatting overhaul (a `dict()` of `pd.DataFrames`); fixes `NaN` fields
 * 0.1.19, 2019-11-10 - Dataset exportation to csv, expanded `functions` capability
 * 0.1.21, 2019-12-01 - API expansion, metadata from yfinance
+* 0.1.25, 2020-02-08 - Start of a normalized metric across all items (oscillators covered here)
 * 0.1.x - Working toward Release 2 (`app.py` with no `--rX` tags [X = available release] is most current on master)
 
 ## To Use
