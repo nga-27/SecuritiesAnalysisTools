@@ -13,7 +13,7 @@ from .trends import autotrend
 BASE_WEIGHTS = {
     'stoch': 2,
     'rsi': 3,
-    'ultimate': 5
+    'ultimate': 7
 }
 
 
@@ -36,25 +36,6 @@ def clustering(updatable: list, evaluator: dict, **kwargs) -> list:
             weight.append(1)
     for bull in evaluator['bullish']:
         index = bull[2]
-        updatable[index] += (-8*weight[index]) if updatable[index] != 0 else -1
-        if index < len(updatable)-1:
-            updatable[index-1] += (-5*weight[index]
-                                   ) if updatable[index-1] != 0 else 0
-            updatable[index+1] += (-5*weight[index]
-                                   ) if updatable[index+1] != 0 else 0
-        if index < len(updatable)-2:
-            updatable[index-2] += (-3*weight[index]
-                                   ) if updatable[index-2] != 0 else 0
-            updatable[index+2] += (-3*weight[index]
-                                   ) if updatable[index+2] != 0 else 0
-        if index < len(updatable)-3:
-            updatable[index-3] += (-2*weight[index]
-                                   ) if updatable[index-3] != 0 else 0
-            updatable[index+3] += (-2*weight[index]
-                                   ) if updatable[index+3] != 0 else 0
-
-    for bear in evaluator['bearish']:
-        index = bear[2]
         updatable[index] += (8*weight[index]) if updatable[index] != 0 else 1
         if index < len(updatable)-1:
             updatable[index-1] += (5*weight[index]
@@ -70,6 +51,25 @@ def clustering(updatable: list, evaluator: dict, **kwargs) -> list:
             updatable[index-3] += (2*weight[index]
                                    ) if updatable[index-3] != 0 else 0
             updatable[index+3] += (2*weight[index]
+                                   ) if updatable[index+3] != 0 else 0
+
+    for bear in evaluator['bearish']:
+        index = bear[2]
+        updatable[index] += (-8*weight[index]) if updatable[index] != 0 else -1
+        if index < len(updatable)-1:
+            updatable[index-1] += (-5*weight[index]
+                                   ) if updatable[index-1] != 0 else 0
+            updatable[index+1] += (-5*weight[index]
+                                   ) if updatable[index+1] != 0 else 0
+        if index < len(updatable)-2:
+            updatable[index-2] += (-3*weight[index]
+                                   ) if updatable[index-2] != 0 else 0
+            updatable[index+2] += (-3*weight[index]
+                                   ) if updatable[index+2] != 0 else 0
+        if index < len(updatable)-3:
+            updatable[index-3] += (-2*weight[index]
+                                   ) if updatable[index-3] != 0 else 0
+            updatable[index+3] += (-2*weight[index]
                                    ) if updatable[index+3] != 0 else 0
 
     return updatable
@@ -129,11 +129,11 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
         slow_stoch = full_stochastic(
             position, config=[20, 5, 5], plot_output=False, name=name)
         fast_ult = ultimate_oscillator(
-            position, config=[4, 8, 16], plot_output=False, name=name)
-        med_ult = ultimate_oscillator(
             position, config=[5, 10, 20], plot_output=False, name=name)
-        slow_ult = ultimate_oscillator(
+        med_ult = ultimate_oscillator(
             position, config=[7, 14, 28], plot_output=False, name=name)
+        slow_ult = ultimate_oscillator(
+            position, config=[10, 20, 40], plot_output=False, name=name)
         fast_rsi = RSI(position, plot_output=False, period=8, name=name)
         med_rsi = RSI(position, plot_output=False, period=14, name=name)
         slow_rsi = RSI(position, plot_output=False, period=20, name=name)

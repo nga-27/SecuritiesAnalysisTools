@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
 
-from .math_functions import lower_low, higher_high, bull_bear_th
 from libs.utils import dual_plotting, date_extractor
 from libs.utils import ProgressBar, SP500
+from libs.features import normalize_signals
+from .math_functions import lower_low, higher_high, bull_bear_th
+from .moving_average import windowed_moving_avg
 
 
 def generate_ultimate_osc_signal(position: pd.DataFrame, config: list = [7, 14, 28], **kwargs) -> list:
@@ -23,8 +25,6 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list = [7, 14, 
     Returns:
         list -- signal
     """
-    plot_output = kwargs.get('plot_output', True)
-    name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
 
     tot_len = len(position['Close'])
@@ -69,6 +69,9 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list = [7, 14, 
                 np.round(
                     100.0 * ((4.0 * ushort[i]) + (2.0 * umed[i]) + ulong[i]) / 7.0, 6)
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     return ult_osc
 
 
@@ -82,10 +85,12 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     Optional Args:
         thresh_low {int} -- oversold signal threshold (default: {30})
         thresh_high {int} -- overbought signal threshold (default: {70})
+        p_bar {ProgressBar} -- (default: {None})
 
     Returns:
         dict -- ultimate osc data object
     """
+    p_bar = kwargs.get('p_bar')
     LOW_TH = kwargs.get('thresh_low', 30)
     HIGH_TH = kwargs.get('thresh_high', 70)
 
@@ -132,6 +137,9 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                     if start_ind is not None:
                         trigger.append(["BEARISH", date_extractor(
                             position.index[start_ind], _format='str'), position['Close'][start_ind], start_ind])
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.3)
 
     state = 'n'
     prices = [0.0, 0.0]
@@ -243,12 +251,15 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
             state = 'u1'
             ults[0] = ult
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     ultimate['indicator'] = trigger
 
     return ultimate
 
 
-def ult_osc_output(ultimate: dict, len_of_position: int) -> list:
+def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
     """ Simplifies signals to easy to view plot and dictionary
     Returns:
         list:
@@ -256,6 +267,8 @@ def ult_osc_output(ultimate: dict, len_of_position: int) -> list:
             ultimate (dict): dictionary of specific information represented by 'plot' signal
 
     """
+    p_bar = kwargs.get('p_bar')
+
     ultimate['bullish'] = []
     ultimate['bearish'] = []
 
@@ -282,8 +295,78 @@ def ult_osc_output(ultimate: dict, len_of_position: int) -> list:
                     [trigger[i][1], trigger[i][2], trigger[i][3]])
         present = False
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
     ultimate['plots'] = plots
 
+    return ultimate
+
+
+def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> dict:
+    """Ultimate Oscillator Metrics
+
+    Arguments:
+        position {pd.DataFrame} -- dataset
+        ultimate {dict} -- ultimate osc data object
+
+    Optional Args:
+        p_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- ultimate osc data object
+    """
+    p_bar = kwargs.get('p_bar')
+    plot_output = kwargs.get('plot_output', True)
+    out_suppress = kwargs.get('out_suppress', True)
+    name = kwargs.get('name', '')
+
+    ults = ultimate['plots']
+
+    # Take indicator set: weight, filter, normalize
+    weights = [1.0, 0.9, 0.75, 0.45]
+    state2 = [0.0] * len(ults)
+
+    for ind, s in enumerate(ults):
+        if s != 0.0:
+            state2[ind] += s
+
+            # Smooth the curves
+            if ind - 1 >= 0:
+                state2[ind-1] += s * weights[1]
+            if ind + 1 < len(ults):
+                state2[ind+1] += s * weights[1]
+            if ind - 2 >= 0:
+                state2[ind-2] += s * weights[2]
+            if ind + 2 < len(ults):
+                state2[ind+2] += s * weights[2]
+            if ind - 3 >= 0:
+                state2[ind-3] += s * weights[3]
+            if ind + 3 < len(ults):
+                state2[ind+3] += s * weights[3]
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    norm = normalize_signals([metrics])
+    metrics = norm[0]
+
+    if not out_suppress:
+        name3 = SP500.get(name, name)
+        name2 = name3 + ' - Ultimate Oscillator Metrics'
+        if plot_output:
+            dual_plotting(position['Close'], metrics, 'Price',
+                          'Metrics', title='Ultimate Oscillator Metrics')
+        else:
+            filename = name + f"/ultimate_osc_metrics_{name}.png"
+            dual_plotting(position['Close'], metrics, 'Price',
+                          'Metrics', title=name2, filename=filename, saveFig=True)
+
+    ultimate['metrics'] = metrics
     return ultimate
 
 
@@ -312,13 +395,18 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
 
     ultimate = dict()
 
-    ult_osc = generate_ultimate_osc_signal(position, config=config)
+    ult_osc = generate_ultimate_osc_signal(
+        position, config=config, p_bar=p_bar)
     ultimate['tabular'] = ult_osc
 
-    ultimate = find_ult_osc_features(position, ultimate)
+    ultimate = find_ult_osc_features(position, ultimate, p_bar=p_bar)
 
     ultimate = ult_osc_output(
-        ultimate, len(position['Close']))
+        ultimate, len(position['Close']), p_bar=p_bar)
+
+    ultimate = ultimate_osc_metrics(
+        position, ultimate, plot_output=plot_output, out_suppress=out_suppress,
+        name=name, p_bar=p_bar)
 
     if not out_suppress:
         name3 = SP500.get(name, name)

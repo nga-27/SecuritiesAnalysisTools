@@ -212,7 +212,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     for i, met in enumerate(metrics):
         metrics4.append(met + norm_signal[i])
 
-    min_ = min(metrics4) + 1.0
+    min_ = np.abs(min(metrics4)) + 1.0
     for _ in range(period_change):
         changes.append(0.0)
     for i in range(period_change, len(metrics4)):

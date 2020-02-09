@@ -30,7 +30,7 @@ def make_fund_slides(prs, analysis: dict):
 
     Arguments:
         prs {pptx obj} -- presentation
-        analysis {dict} -- full data 
+        analysis {dict} -- full data
 
     Returns:
         prs -- pptx presentation object
@@ -354,8 +354,16 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
-        if 'total_power_metrics' in part:
+        if 'total_pwr_metrics' in part:
             left = Inches(6.5)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                header+part, left, top, height=height, width=width)
+
+        if 'ultimate_osc_metrics' in part:
+            left = Inches(0.0)
             top = Inches(4.1)
             height = Inches(3.0)
             width = Inches(6.5)

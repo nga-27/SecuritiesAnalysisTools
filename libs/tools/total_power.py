@@ -241,7 +241,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
     if plot_output:
         dual_plotting(position['Close'], metrics, 'Price', 'Metrics')
     else:
-        filename = name + f'/total_power_metrics_{name}'
+        filename = name + f'/total_pwr_metrics_{name}'
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=title, saveFig=True, filename=filename)
 
