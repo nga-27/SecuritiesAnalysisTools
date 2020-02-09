@@ -10,10 +10,12 @@ from libs.utils import get_volatility, generic_plotting
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
-from libs.tools import get_trendlines, find_resistance_support_lines, cluster_oscs, RSI
+from libs.tools import get_trendlines, find_resistance_support_lines
+from libs.tools import cluster_oscs, RSI, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
 from libs.tools import triple_moving_average
+from libs.tools import bear_bull_power, total_power
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 TICKER = STANDARD_COLORS["ticker"]
@@ -59,6 +61,10 @@ def only_functions_handler(config: dict):
         correlation_index_function(config)
     if 'rsi' in config['run_functions']:
         rsi_function(config)
+    if 'stoch' in config['run_functions']:
+        stochastic_function(config)
+    if 'ultimate' in config['run_functions']:
+        ultimate_osc_function(config)
     if 'awesome' in config['run_functions']:
         awesome_osc_function(config)
     if 'momentum' in config['run_functions']:
@@ -71,6 +77,10 @@ def only_functions_handler(config: dict):
         obv_function(config)
     if 'ma' in config['run_functions']:
         ma_function(config)
+    if 'bear_bull' in config['run_functions']:
+        bear_bull_function(config)
+    if 'total_power' in config['run_functions']:
+        total_power_function(config)
     if 'gaps' in config['run_functions']:
         price_gap_function(config)
     if 'vq' in config['run_functions']:
@@ -169,6 +179,24 @@ def rsi_function(config: dict):
             RSI(data[fund], name=fund, plot_output=True, out_suppress=False)
 
 
+def stochastic_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Full Stochastic Oscillator of {TICKER}{fund}{NORMAL}...")
+            full_stochastic(data[fund], name=fund,
+                            plot_output=True, out_suppress=False)
+
+
+def ultimate_osc_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Ultimate Oscillator of {TICKER}{fund}{NORMAL}...")
+            ultimate_oscillator(data[fund], name=fund,
+                                plot_output=True, out_suppress=False)
+
+
 def awesome_osc_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
@@ -221,6 +249,22 @@ def ma_function(config: dict):
             print(
                 f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
             triple_moving_average(data[fund], name=fund, plot_output=True)
+
+
+def bear_bull_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Bear Bull Power Indicator of {TICKER}{fund}{NORMAL}...")
+            bear_bull_power(data[fund], name=fund, plot_output=True)
+
+
+def total_power_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Total Power Indicator of {TICKER}{fund}{NORMAL}...")
+            total_power(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):

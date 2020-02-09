@@ -126,8 +126,9 @@ def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Trea
     composite = []
     for tick in sectors:
         if tick != index_type:
-            graph, _ = cluster_oscs(
+            cluster = cluster_oscs(
                 data[tick], plot_output=False, function='market', wma=False)
+            graph = cluster['tabular']
             p.uptick()
             composite.append(graph)
 

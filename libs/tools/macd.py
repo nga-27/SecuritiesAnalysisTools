@@ -35,8 +35,10 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> list:
         macd.append(emaTw[i] - emaTs[i])
 
     macd_ema = exponential_moving_avg(macd, interval=9, data_type='list')
+
     x = dates_extractor_list(fund)
-    name2 = name + ' - MACD'
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - MACD'
     if plotting:
         bar_chart(macd, position=fund, x=x, title=name2)
     else:

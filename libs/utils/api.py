@@ -358,6 +358,7 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
 
 
 def get_volatility(ticker_str: str, **kwargs):
+    TIMEOUT = 5
     max_close = kwargs.get('max_close', None)
     is_SP500 = False
     vq = {}
@@ -381,7 +382,7 @@ def get_volatility(ticker_str: str, **kwargs):
             url = f"{VQ_API_BASE_URL}{VQ_VALUES_PARAM}{key}/{ticker_str}"
 
             try:
-                response = requests.get(url, timeout=3)
+                response = requests.get(url, timeout=TIMEOUT)
             except:
                 print(
                     f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
@@ -406,7 +407,7 @@ def get_volatility(ticker_str: str, **kwargs):
 
             url = f"{VQ_API_BASE_URL}{VQ_LOOKUP_PARAM}{key}/{ticker_str}/20"
             try:
-                response = requests.get(url, timeout=3)
+                response = requests.get(url, timeout=TIMEOUT)
             except:
                 print(
                     f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
@@ -426,7 +427,7 @@ def get_volatility(ticker_str: str, **kwargs):
 
                     url = f"{VQ_API_BASE_URL}{VQ_DEEP_ANALYSIS_PARAM}{key}/{val}/{start_str}/{now_str}"
                     try:
-                        response = requests.get(url, timeout=3)
+                        response = requests.get(url, timeout=TIMEOUT)
                     except:
                         print(
                             f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")

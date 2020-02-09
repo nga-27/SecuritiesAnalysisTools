@@ -17,8 +17,8 @@ from releases.dev import technical_analysis as dev
 from libs.utils import start_header, TEXT_COLOR_MAP, logo_renderer
 
 ################################
-_VERSION_ = '0.1.24'
-_DATE_REVISION_ = '2020-02-01'
+_VERSION_ = '0.1.25'
+_DATE_REVISION_ = '2020-02-08'
 ################################
 
 

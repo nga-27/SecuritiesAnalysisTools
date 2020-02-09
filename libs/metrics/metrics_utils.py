@@ -12,6 +12,8 @@ SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
 ACCEPTED_ATTS = ['statistics',
                  'macd',
                  'rsi',
+                 'full_stochastic',
+                 'ultimate',
                  'relative_strength',
                  'mci',
                  'correlation',
@@ -19,7 +21,10 @@ ACCEPTED_ATTS = ['statistics',
                  'moving_average',
                  'swing_trade',
                  'obv',
-                 'awesome'
+                 'awesome',
+                 'momentum_oscillator',
+                 'bear_bull_power',
+                 'total_power'
                  ]
 
 """ Utilities for creating data metrics for plotting later """

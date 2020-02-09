@@ -18,16 +18,19 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --bci               :       run {Bond Composite Index} (BCI)
 --trend             :       run {Trendline} analysis for a fund
 --sr                :       run {Support/Resistance Line} analysis; "--support_resistance" and "--rs" also supported
---clustered         :       run {Clustered Oscillators} for 'all'; "--clustered_osc" also supported
+--clustered         :       run {Clustered Oscillators} for 'all'; "--clustered_osc" and "--clusters" also supported
 --head_shoulders    :       run feature detection of {Head and Shoulders} function
 --corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history); "--cci" also supported
+--stochastic        :       run {Stochastic Oscillator}; "--stoch" also supported
 --rsi               :       run {Relative Strength Index} (RSI) function for funds
+--ultimate          :       run {Ultimate Oscillator} function for funds; "--ult" also supported
 --macd              :       run {Moving Average Convergence Divergence} (MACD) function for funds
 --relative_strength :       run {'True' Strength} (vs. S&P500) function for funds 
 --awesome           :       run {'Awesome Oscillator'} function for funds
 --momentum          :       run {Chande Momentum Oscillator} function for funds
 --obv               :       run {On Balance Volume} (OBV) function for funds; "--on_balance_volume" also supported 
 --moving_average    :       run {Moving Average} (MA) function for funds; "--ma" also supported
+--bear_bull         :       run {Bear / Bull Power Indicator} function for funds; "--bull_bear" also supported
 --gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
 --vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
 --nf                :       run {Nasit Funds} for funds; "--nasit_funds" also supported

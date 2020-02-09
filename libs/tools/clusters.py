@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, date_extractor, ProgressBar, SP500
+from libs.utils import dual_plotting, date_extractor
+from libs.utils import ProgressBar, SP500
+from libs.features import normalize_signals
 
 from .ultimate_oscillator import ultimate_oscillator
 from .rsi import RSI
@@ -11,9 +13,9 @@ from .moving_average import windowed_moving_avg
 from .trends import autotrend
 
 BASE_WEIGHTS = {
-    'stoch': 3,
-    'rsi': 5,
-    'ultimate': 2
+    'stoch': 2,
+    'rsi': 3,
+    'ultimate': 7
 }
 
 
@@ -36,25 +38,6 @@ def clustering(updatable: list, evaluator: dict, **kwargs) -> list:
             weight.append(1)
     for bull in evaluator['bullish']:
         index = bull[2]
-        updatable[index] += (-8*weight[index]) if updatable[index] != 0 else -1
-        if index < len(updatable)-1:
-            updatable[index-1] += (-5*weight[index]
-                                   ) if updatable[index-1] != 0 else 0
-            updatable[index+1] += (-5*weight[index]
-                                   ) if updatable[index+1] != 0 else 0
-        if index < len(updatable)-2:
-            updatable[index-2] += (-3*weight[index]
-                                   ) if updatable[index-2] != 0 else 0
-            updatable[index+2] += (-3*weight[index]
-                                   ) if updatable[index+2] != 0 else 0
-        if index < len(updatable)-3:
-            updatable[index-3] += (-2*weight[index]
-                                   ) if updatable[index-3] != 0 else 0
-            updatable[index+3] += (-2*weight[index]
-                                   ) if updatable[index+3] != 0 else 0
-
-    for bear in evaluator['bearish']:
-        index = bear[2]
         updatable[index] += (8*weight[index]) if updatable[index] != 0 else 1
         if index < len(updatable)-1:
             updatable[index-1] += (5*weight[index]
@@ -70,6 +53,25 @@ def clustering(updatable: list, evaluator: dict, **kwargs) -> list:
             updatable[index-3] += (2*weight[index]
                                    ) if updatable[index-3] != 0 else 0
             updatable[index+3] += (2*weight[index]
+                                   ) if updatable[index+3] != 0 else 0
+
+    for bear in evaluator['bearish']:
+        index = bear[2]
+        updatable[index] += (-8*weight[index]) if updatable[index] != 0 else -1
+        if index < len(updatable)-1:
+            updatable[index-1] += (-5*weight[index]
+                                   ) if updatable[index-1] != 0 else 0
+            updatable[index+1] += (-5*weight[index]
+                                   ) if updatable[index+1] != 0 else 0
+        if index < len(updatable)-2:
+            updatable[index-2] += (-3*weight[index]
+                                   ) if updatable[index-2] != 0 else 0
+            updatable[index+2] += (-3*weight[index]
+                                   ) if updatable[index+2] != 0 else 0
+        if index < len(updatable)-3:
+            updatable[index-3] += (-2*weight[index]
+                                   ) if updatable[index-3] != 0 else 0
+            updatable[index+3] += (-2*weight[index]
                                    ) if updatable[index+3] != 0 else 0
 
     return updatable
@@ -112,9 +114,9 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
         fast = ultimate_oscillator(
             position, config=[4, 8, 16], plot_output=False, name=name)
         med = ultimate_oscillator(
-            position, config=[5, 10, 20], plot_output=False, name=name)
-        slow = ultimate_oscillator(
             position, config=[7, 14, 28], plot_output=False, name=name)
+        slow = ultimate_oscillator(
+            position, config=[10, 20, 40], plot_output=False, name=name)
 
     elif function == 'rsi':
         fast = RSI(position, plot_output=False, period=8, name=name)
@@ -129,11 +131,11 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
         slow_stoch = full_stochastic(
             position, config=[20, 5, 5], plot_output=False, name=name)
         fast_ult = ultimate_oscillator(
-            position, config=[4, 8, 16], plot_output=False, name=name)
-        med_ult = ultimate_oscillator(
             position, config=[5, 10, 20], plot_output=False, name=name)
-        slow_ult = ultimate_oscillator(
+        med_ult = ultimate_oscillator(
             position, config=[7, 14, 28], plot_output=False, name=name)
+        slow_ult = ultimate_oscillator(
+            position, config=[10, 20, 40], plot_output=False, name=name)
         fast_rsi = RSI(position, plot_output=False, period=8, name=name)
         med_rsi = RSI(position, plot_output=False, period=14, name=name)
         slow_rsi = RSI(position, plot_output=False, period=20, name=name)
@@ -218,6 +220,66 @@ def generate_weights(position, **kwargs) -> dict:
     return weights
 
 
+def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> dict:
+    """Clustered Metrics
+
+    Arguments:
+        position {pd.DataFrame} -- dataset
+        cluster_oscs {dict} -- clustered osc data object
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+
+    Returns:
+        dict -- clustered osc data object
+    """
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+
+    ults = cluster_oscs['tabular']
+
+    # Take indicator set: weight, filter, normalize
+    weights = [1.0, 0.85, 0.55, 0.1]
+    state2 = [0.0] * len(ults)
+
+    for ind, s in enumerate(ults):
+        if s != 0.0:
+            state2[ind] += s
+
+            # Smooth the curves
+            if ind - 1 >= 0:
+                state2[ind-1] += s * weights[1]
+            if ind + 1 < len(ults):
+                state2[ind+1] += s * weights[1]
+            if ind - 2 >= 0:
+                state2[ind-2] += s * weights[2]
+            if ind + 2 < len(ults):
+                state2[ind+2] += s * weights[2]
+            if ind - 3 >= 0:
+                state2[ind-3] += s * weights[3]
+            if ind + 3 < len(ults):
+                state2[ind+3] += s * weights[3]
+
+    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    norm = normalize_signals([metrics])
+    metrics = norm[0]
+
+    cluster_oscs['metrics'] = metrics
+
+    name3 = SP500.get(name, name)
+    name2 = name3 + " - Clustered Oscillator Metrics"
+    if plot_output:
+        dual_plotting(position['Close'], metrics,
+                      'Price', 'Metrics', title=name2)
+    else:
+        filename = name + f"/clustered_osc_metrics_{name}.png"
+        dual_plotting(position['Close'], metrics, 'Price',
+                      'Metrics', title=name2, filename=filename, saveFig=True)
+
+    return cluster_oscs
+
+
 def cluster_oscs(position: pd.DataFrame, **kwargs):
     """
     2-3-5-8 multiplier comparing several different osc lengths
@@ -246,6 +308,7 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     cluster_oscs = {}
 
     clusters = generate_cluster(position, function, p_bar=prog_bar)
+    cluster_oscs['tabular'] = clusters
 
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = windowed_moving_avg(clusters, interval=3, data_type='list')
@@ -258,6 +321,9 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
 
     cluster_oscs['clustered type'] = function
     cluster_oscs[function] = dates
+
+    cluster_oscs = clustered_metrics(
+        position, cluster_oscs, plot_output=plot_output, name=name)
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Clustering: ' + function
@@ -274,6 +340,6 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
         prog_bar.uptick(increment=0.2)
 
     if wma:
-        return clusters_wma, cluster_oscs
-    else:
-        return clusters, cluster_oscs
+        cluster_oscs['tabular'] = clusters_wma
+
+    return cluster_oscs

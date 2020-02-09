@@ -22,6 +22,8 @@ from libs.tools import beta_comparison
 from libs.tools import find_resistance_support_lines
 from libs.tools import get_trendlines, get_trend_analysis
 from libs.tools import get_high_level_stats
+from libs.tools import bear_bull_power
+from libs.tools import total_power
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders, feature_plotter, analyze_price_gaps
@@ -54,10 +56,10 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.24'
-_DATE_REVISION_ = '2020-02-01'
+_VERSION_ = '0.1.25'
+_DATE_REVISION_ = '2020-02-08'
 ################################
-PROCESS_STEPS_DEV = 15
+PROCESS_STEPS_DEV = 19
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -124,11 +126,16 @@ def technical_analysis(config: dict):
         analysis[fund_name]['metadata'] = get_api_metadata(
             fund_name, progress_bar=p, max_close=analysis[fund_name]['statistics']['max_close'])
 
-        _, dat = cluster_oscs(fund, function='all', filter_thresh=3,
-                              name=fund_name, plot_output=False, progress_bar=p)
-        analysis[fund_name]['clustered_osc'] = dat
+        analysis[fund_name]['clustered_osc'] = cluster_oscs(fund, function='all', filter_thresh=3,
+                                                            name=fund_name, plot_output=False, progress_bar=p)
+
+        analysis[fund_name]['full_stochastic'] = full_stochastic(
+            fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
         analysis[fund_name]['rsi'] = RSI(
+            fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+
+        analysis[fund_name]['ultimate'] = ultimate_oscillator(
             fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
         analysis[fund_name]['awesome'] = awesome_oscillator(
@@ -147,6 +154,12 @@ def technical_analysis(config: dict):
             fund, plot_output=False, name=fund_name, progress_bar=p)
 
         analysis[fund_name]['macd'] = mov_avg_convergence_divergence(
+            fund, plot_output=False, name=fund_name, progress_bar=p)
+
+        analysis[fund_name]['bear_bull_power'] = bear_bull_power(
+            fund, plot_output=False, name=fund_name, progress_bar=p)
+
+        analysis[fund_name]['total_power'] = total_power(
             fund, plot_output=False, name=fund_name, progress_bar=p)
 
         if 'no_index' not in config['state']:

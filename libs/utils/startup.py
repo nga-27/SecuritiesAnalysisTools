@@ -301,7 +301,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'support_resistance', type_='list')
 
-    if ('--clustered' in i_keys) or ('--clustered_osc' in i_keys):
+    if ('--clustered' in i_keys) or ('--clustered_osc' in i_keys) or ('--clusters' in i_keys):
         config['tickers'] = ticker_list_to_str(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'clustered_oscs', type_='list')
@@ -322,6 +322,16 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--rsi' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'rsi', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--stochastic' in i_keys) or ('--stoch' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'stoch', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--ultimate' in i_keys) or ('--ult' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'ultimate', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if '--macd' in i_keys:
@@ -352,6 +362,16 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--ma' in i_keys) or ('--moving_average' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'ma', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--bull_bear' in i_keys) or ('--bear_bull' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'bear_bull', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--total_power' in i_keys) or ('--total' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'total_power', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
