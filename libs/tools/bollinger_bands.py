@@ -8,20 +8,38 @@ from .moving_average import simple_moving_avg, exponential_moving_avg
 
 
 def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **kwargs) -> dict:
+    """Get Bollinger Band Signals
 
-    filter_type = kwargs.get('filter_type', 'exponential')
+    Arguments:
+        position {pd.DataFrame} -- dataset
+        period {int} -- time frame for moving average
+        stdev {float} -- multiplier for band range
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        filter_type {str} -- type of moving average (default: {'simple'})
+
+    Returns:
+        dict -- bollinger band data object
+    """
+    filter_type = kwargs.get('filter_type', 'simple')
     plot_output = kwargs.get('plot_output', True)
 
+    typical_price = []
+    for i, close in enumerate(position['Close']):
+        typical_price.append(
+            (close + position['Low'][i] + position['High'][i]) / 3.0)
+
     if filter_type == 'exponential':
-        ma = exponential_moving_avg(position, period)
+        ma = exponential_moving_avg(typical_price, period, data_type='list')
     else:
-        ma = simple_moving_avg(position, period)
+        ma = simple_moving_avg(typical_price, period, data_type='list')
 
     upper = ma.copy()
     lower = ma.copy()
     std_list = [0.0] * len(ma)
     for i in range(period, len(ma)):
-        std = np.std(ma[i-(period): i])
+        std = np.std(typical_price[i-(period): i])
         std_list[i] = std
         upper[i] = ma[i] + (stdev * std)
         lower[i] = ma[i] - (stdev * std)
@@ -30,7 +48,8 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
 
     if plot_output:
         generic_plotting([position['Close'], ma, upper, lower],
-                         title='Bollinger Bands', x=position.index)
+                         title='Bollinger Bands', x=position.index,
+                         legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'])
         dual_plotting(position['Close'], std_list, 'Price',
                       'Volatility', title='Bollinger Volatility')
 
