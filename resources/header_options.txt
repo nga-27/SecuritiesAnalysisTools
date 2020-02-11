@@ -7,6 +7,17 @@ OPTIONS:
 --f                 :       triggers only designated functions (below); "--function" also supported
 --export            :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
 
+TIME WINDOWS:
+
+--1y                :       1 year period
+--2y                :       2 year period (default)
+--5y                :       5 year period
+--10y               :       10 year period
+
+--1d                :       1 day interval (default)
+--1w                :       1 week interval
+--1m                :       1 month interval       
+
 VERSIONS:           :       (flags for versioning)
 
 --dev               :       most recent updates, pushed frequently, possibly unstable

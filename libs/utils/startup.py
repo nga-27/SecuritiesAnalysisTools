@@ -273,6 +273,28 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['exports'] = {"run": True,
                              "fields": ticker_list_to_str(ticker_keys)}
 
+    # Settings for 'intervals' and 'periods'
+    if '--10y' in i_keys:
+        config['period'] = '10y'
+
+    if '--5y' in i_keys:
+        config['period'] = '5y'
+
+    if '--2y' in i_keys:
+        config['period'] = '2y'
+
+    if '--1y' in i_keys:
+        config['period'] = '1y'
+
+    if '--1d' in i_keys:
+        config['interval'] = '1d'
+
+    if '--1w' in i_keys:
+        config['interval'] = '1wk'
+
+    if '--1m' in i_keys:
+        config['interval'] = '1mo'
+
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in i_keys:
         config = add_str_to_dict_key(

@@ -11,6 +11,13 @@ NORMAL = STANDARD_COLORS["normal"]
 ERROR = STANDARD_COLORS["error"]
 NOTE = STANDARD_COLORS["warning"]
 
+"""
+period : str
+    Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+interval : str
+    Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+"""
+
 
 def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
     """Download Data Indexes
@@ -19,7 +26,7 @@ def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
         indexes {list} -- list of funds
         tickers {str} -- ticker string (e.g. "MMM VTI")
 
-    Keyword Arguments:
+    Optional Args:
         period {str} -- (default: {'2y'})
         interval {str} -- (default: {'1d'})
         start {str} -- date (default: {None})
@@ -51,6 +58,10 @@ def download_data(config: dict, **kwargs) -> list:
 
     Arguments:
         config {dict} -- full information dictionary of entire run
+
+    Optional Args:
+        start {str} -- date (default: {None})
+        end {str} -- date (default: {None})
 
     Returns:
         list -- downloaded data, list of funds
