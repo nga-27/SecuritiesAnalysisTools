@@ -286,7 +286,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 header+part, left, top, height=height, width=width)
 
-        if 'head_and_shoulders' in part:
+        if 'bollinger_bands' in part:
             left = Inches(0.0)
             top = Inches(4.1)
             height = Inches(3.0)

@@ -350,8 +350,10 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
             return [], {}
 
         tickers = ' '.join(matched)
+        period = config.get('period', '2y')
+        interval = config.get('interval', '1d')
         fund_data, _ = download_data_indexes(
-            indexes=matched, tickers=tickers, fund_len=fund_len)
+            indexes=matched, tickers=tickers, fund_len=fund_len, period=period, interval=interval)
         return matched, fund_data
 
 #####################################################

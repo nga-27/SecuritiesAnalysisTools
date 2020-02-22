@@ -174,7 +174,8 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
             fund_len = {
                 'length': len(full_data_dict[primary_name]['Close']),
                 'start': full_data_dict[primary_name].index[0],
-                'end': full_data_dict[primary_name].index[len(full_data_dict[primary_name]['Close'])-1]
+                'end': full_data_dict[primary_name].index[len(full_data_dict[primary_name]['Close'])-1],
+                'dates': full_data_dict[primary_name].index
             }
             match_fund, match_data = api_sector_match(
                 match, config, fund_len=fund_len)
