@@ -3,14 +3,98 @@ import numpy as np
 
 from libs.utils import ProgressBar
 from libs.utils import generic_plotting, dual_plotting, SP500
+from libs.features import normalize_signals
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
+from .moving_average import simple_moving_avg, exponential_moving_avg, windowed_moving_avg
 
 
-def volatility_calculation(position: pd.DataFrame, **kwargs):
+def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict:
+
+    period = kwargs.get('period', 20)
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+
+    weights = [1.0, 0.6, 0.25, 0.0]
+    tot_len = len(position['Close'])
+
+    metrics = [0.0] * tot_len
+    for feat in bol_bands['indicators']:
+        ind = feat['index']
+        if feat['type'] == 'bullish':
+            val = 1.0
+        else:
+            val = -1.0
+
+        metrics[ind] += val * weights[0]
+
+        # Smooth the curves
+        if ind - 1 >= 0:
+            metrics[ind-1] += val * weights[1]
+        if ind + 1 < tot_len:
+            metrics[ind+1] += val * weights[1]
+        if ind - 2 >= 0:
+            metrics[ind-2] += val * weights[2]
+        if ind + 2 < tot_len:
+            metrics[ind+2] += val * weights[2]
+        if ind - 3 >= 0:
+            metrics[ind-3] += val * weights[3]
+        if ind + 3 < tot_len:
+            metrics[ind+3] += val * weights[3]
+
+    close = position['Close']
+    bb = bol_bands['tabular']
+    for i in range(period, len(close)):
+        s_range = bb['middle_band'][i] - bb['lower_band'][i]
+        if metrics[i] <= 0.6 and metrics[i] >= -0.6:
+            c = close[i] - bb['middle_band'][i]
+            c = np.round(c / s_range, 4)
+            metrics[i] = c
+
+    metrics = windowed_moving_avg(metrics, 7, data_type='list')
+    norm_signal = normalize_signals([metrics])[0]
+
+    bol_bands['metrics'] = norm_signal
+
+    name3 = SP500.get(name, name)
+    name2 = name3 + f" - Bollinger Band Metrics"
+    if plot_output:
+        dual_plotting(position['Close'], norm_signal, 'Price',
+                      'Indicators', title=name2)
+    else:
+        filename = name + f"/bollinger_band_metrics_{name}.png"
+        dual_plotting(position['Close'], norm_signal, 'Price',
+                      'Metrics', title=name2, saveFig=True, filename=filename)
+
+    return bol_bands
+
+
+def bollinger_indicators(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict:
+    """Bollinger Indicators 
+
+    (https://school.stockcharts.com/doku.php?id=technical_indicators:bollinger_bands)
+
+    Arguments:
+        position {pd.DataFrame} -- dataset
+        bol_bands {dict} -- bol bands data object
+
+    Returns:
+        dict -- bol bands data object
+    """
+    period = kwargs.get('period', 20)
+
+    w_bottom = find_W_bottom(position, bol_bands, period)
+    bol_bands['indicators'] = w_bottom
+    bol_bands = get_extremes_ratios(position, bol_bands, period=period)
+
+    # TODO: "M" bearish signals
+
+    return bol_bands
+
+
+def volatility_calculation(position: pd.DataFrame, **kwargs) -> list:
 
     plot_output = kwargs.get('plot_output', True)
-    periods = [20, 50, 100, 250]
+    periods = [50, 100, 250, 500]
     stdevs = []
     for _ in range(len(periods)):
         std = [0.0] * len(position['Close'])
@@ -28,13 +112,23 @@ def volatility_calculation(position: pd.DataFrame, **kwargs):
 
     std_correction = []
     for j in range(len(typical_price)):
-        s = 0.35 * stdevs[3][j] + 0.3 * stdevs[2][j] + \
-            0.2 * stdevs[1][j] + 0.15 * stdevs[0][j]
+        if j < periods[1]:
+            s = stdevs[0][j]
+        elif j < periods[2]:
+            s = 0.7 * stdevs[1][j] + 0.3 * stdevs[0][j]
+        elif j < periods[3]:
+            s = 0.55 * stdevs[2][j] + \
+                0.3 * stdevs[1][j] + 0.15 * stdevs[0][j]
+        else:
+            s = 0.4 * stdevs[3][j] + 0.3 * stdevs[2][j] + \
+                0.2 * stdevs[1][j] + 0.1 * stdevs[0][j]
         std_correction.append(s)
 
     if plot_output:
         dual_plotting(position['Close'], std_correction, 'Price',
                       'Volatility', title='Bollinger Volatility')
+
+    return std_correction
 
 
 def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **kwargs) -> dict:
@@ -76,7 +170,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
         upper[i] = ma[i] + (stdev * std)
         lower[i] = ma[i] - (stdev * std)
 
-    signals = {'upper_band': upper, 'lower_band': lower}
+    signals = {'upper_band': upper, 'lower_band': lower, 'middle_band': ma}
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Bollinger Bands'
@@ -118,12 +212,147 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
 
+    if period == 10:
+        stdev = 1.5
+    if period == 50:
+        stdev = 2.5
+
     bb = dict()
 
     bb['tabular'] = get_bollinger_signals(
         position, period, stdev, plot_output=plot_output, name=name)
 
-    volatility_calculation(position, plot_output=plot_output)
-    p_bar.uptick(increment=1.0)
+    bb['volatility'] = volatility_calculation(
+        position, plot_output=plot_output)
+
+    bb = bollinger_indicators(position, bb, period=period)
+    bb = bollinger_metrics(position, bb, period=period,
+                           plot_output=plot_output, name=name)
+
+    if p_bar is not None:
+        p_bar.uptick(increment=1.0)
 
     return bb
+
+
+### Metrics Indicator Determinations ###
+
+def find_W_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
+    w_list = []
+    bb = bol_bands['tabular']
+
+    state = 'n'
+    prices = [0.0, 0.0, 0.0]
+    close = position['Close']
+    for i in range(period, len(close)):
+
+        if (state == 'n') and (close[i] <= bb['lower_band'][i]):
+            state = 'w1'
+            prices[0] = close[i]
+
+        elif (state == 'w1'):
+            if close[i] < prices[0]:
+                prices[0] = close[i]
+            else:
+                state = 'w2'
+
+        elif (state == 'w2'):
+            if close[i] >= bb['middle_band'][i]:
+                prices[1] = close[i]
+                state = 'w3'
+            elif close[i] < prices[0]:
+                prices[0] = close[i]
+                state = 'w1'
+
+        elif (state == 'w3'):
+            if close[i] > prices[1]:
+                prices[1] = close[i]
+            else:
+                state = 'w4'
+
+        elif state == 'w4':
+            if close[i] < prices[0]:
+                prices[2] = close[i]
+                state = 'w5'
+            elif close[i] <= bb['lower_band'][i]:
+                state = 'w1'
+            elif close[i] > prices[1]:
+                prices[1] = close[i]
+                state = 'w3'
+
+        elif state == 'w5':
+            if close[i] < prices[2]:
+                prices[2] = close[i]
+                if close[i] <= bb['lower_band'][i]:
+                    state = 'w1'
+            else:
+                state = 'w6'
+
+        elif state == 'w6':
+            if close[i] > prices[1]:
+                # Breakout signalling W completion!
+                w_list.append({'index': i, 'type': 'bullish', 'style': 'W'})
+                state = 'n'
+            elif close[i] < prices[2]:
+                prices[2] = close[i]
+                state = 'w5'
+                if close[i] <= bb['lower_band'][i]:
+                    state = 'w1'
+
+    return w_list
+
+
+def get_extremes_ratios(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict:
+
+    period = kwargs.get('period', 20)
+    bb = bol_bands['tabular']
+
+    state = 'n'
+    close = position['Close']
+    for i in range(period, len(close)):
+
+        if state == 'n':
+            if close[i] < bb['middle_band'][i]:
+                state = 'e1'
+            elif close[i] > bb['middle_band'][i]:
+                state = 'u1'
+
+        elif state == 'e1':
+            if close[i] <= bb['lower_band'][i]:
+                state = 'e2'
+                bol_bands['indicators'].append(
+                    {'index': i, 'type': 'bearish', 'style': 'extremes'})
+            if close[i] > bb['middle_band'][i]:
+                state = 'u1'
+
+        elif state == 'e2':
+            if close[i] <= bb['lower_band'][i]:
+                bol_bands['indicators'].append(
+                    {'index': i, 'type': 'bearish', 'style': 'extremes'})
+            else:
+                state = 'e3'
+
+        elif state == 'e3':
+            if close[i] >= bb['middle_band'][i]:
+                state = 'u1'
+
+        elif state == 'u1':
+            if close[i] >= bb['upper_band'][i]:
+                state = 'u2'
+                bol_bands['indicators'].append(
+                    {'index': i, 'type': 'bullish', 'style': 'extremes'})
+            if close[i] < bb['middle_band'][i]:
+                state = 'e1'
+
+        elif state == 'u2':
+            if close[i] >= bb['upper_band'][i]:
+                bol_bands['indicators'].append(
+                    {'index': i, 'type': 'bullish', 'style': 'extremes'})
+            else:
+                state = 'u3'
+
+        elif state == 'u3':
+            if close[i] <= bb['middle_band'][i]:
+                state = 'e1'
+
+    return bol_bands
