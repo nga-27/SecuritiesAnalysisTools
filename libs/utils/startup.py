@@ -386,6 +386,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'ma', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
+    if ('--swings' in i_keys) or ('--swing_trade' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'swings', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
     if ('--bull_bear' in i_keys) or ('--bear_bull' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'bear_bull', type_='list')

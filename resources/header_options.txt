@@ -41,6 +41,7 @@ FUNCTIONS:          :       (e.g. '--function --bci --mci vti AAPL amzn' ) REQUI
 --momentum          :       run {Chande Momentum Oscillator} function for funds
 --obv               :       run {On Balance Volume} (OBV) function for funds; "--on_balance_volume" also supported 
 --moving_average    :       run {Moving Average} (MA) function for funds; "--ma" also supported
+--swings            :       run {Swing Trading} (moving averages) for funds; "--swing_trade" also supported
 --bear_bull         :       run {Bear / Bull Power Indicator} function for funds; "--bull_bear" also supported
 --gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
 --bands             :       run {Bollinger Bands} for funds; "--bollinger_bands" and "--bollinger" also supported

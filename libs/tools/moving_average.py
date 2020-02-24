@@ -149,6 +149,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     config = kwargs.get('config', [12, 50, 200])
     plot_output = kwargs.get('plot_output', True)
+    out_suppress = kwargs.get('output_suppress', False)
     progress_bar = kwargs.get('progress_bar', None)
 
     tshort = []
@@ -191,13 +192,15 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
             config[0], config[1], config[2])
     legend = ['Price', f'{config[0]}-SMA',
               f'{config[1]}-SMA', f'{config[2]}-SMA']
-    if plot_output:
-        generic_plotting([fund['Close'], tshort, tmed, tlong],
-                         legend=legend, title=name2)
-    else:
-        filename = name + '/simple_moving_averages_{}.png'.format(name)
-        generic_plotting([fund['Close'], tshort, tmed, tlong],
-                         legend=legend, title=name2, saveFig=True, filename=filename)
+
+    if not out_suppress:
+        if plot_output:
+            generic_plotting([fund['Close'], tshort, tmed, tlong],
+                             legend=legend, title=name2)
+        else:
+            filename = name + '/simple_moving_averages_{}.png'.format(name)
+            generic_plotting([fund['Close'], tshort, tmed, tlong],
+                             legend=legend, title=name2, saveFig=True, filename=filename)
 
     tma = dict()
     tma['short'] = {'period': config[0]}
@@ -251,121 +254,194 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     returns:
         mast:           (dict) contains all ma information in "short", "medium", "long", and "swing" keys
     """
-    function = kwargs.get('function', 'ema')
+    function = kwargs.get('function', 'sma')
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
-    config = kwargs.get('config', [])
+    config = kwargs.get('config', [4, 9, 18])
     progress_bar = kwargs.get('progress_bar', None)
 
-    swings = []
+    if plot_output:
+        out_suppress = False
+    else:
+        out_suppress = True
+
     if function == 'sma':
         if config == []:
-            sh, me, ln = triple_moving_average(
-                fund, plot_output=False, name=name)
+            tma = triple_moving_average(
+                fund, plot_output=plot_output, name=name, out_suppress=out_suppress)
+            sh = tma['tabular']['short']
+            me = tma['tabular']['medium']
+            ln = tma['tabular']['long']
         else:
-            sh, me, ln = triple_moving_average(
-                fund, config=config, plot_output=False, name=name)
+            tma = triple_moving_average(
+                fund, config=config, plot_output=plot_output, name=name, out_suppress=out_suppress)
+            sh = tma['tabular']['short']
+            me = tma['tabular']['medium']
+            ln = tma['tabular']['long']
     else:
         if config == []:
             sh, me, ln = triple_exp_mov_average(
-                fund, plot_output=False, name=name)
+                fund, plot_output=plot_output, name=name)
         else:
             sh, me, ln = triple_exp_mov_average(
-                fund, config=config, plot_output=False, name=name)
+                fund, config=config, plot_output=plot_output, name=name)
 
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.5)
-
-    prev_state = 3
-    hold = 'none'
-    pb = int(len(sh) / 4)
-    pb = [pb * (i+1) - 2 for i in range(4)]
-    for i in range(len(sh)):
-        state, hold = state_management(
-            fund['Close'][i], sh[i], me[i], ln[i], prev_state, hold=hold)
-        if state == 1:
-            # Bullish Reversal
-            swings.append(-2.0)
-        elif state == 5:
-            # Bearish Reversal
-            swings.append(2.0)
-        elif state == 7:
-            swings.append(-1.0)
-        elif state == 8:
-            swings.append(1.0)
-        elif state == 2:
-            swings.append(0.5)
-        elif state == 4:
-            swings.append(-0.5)
-        else:
-            swings.append(0.0)
-        prev_state = state
-        if i in pb:
-            if progress_bar is not None:
-                progress_bar.uptick(increment=0.1)
-
-    name3 = SP500.get(name, name)
-    name2 = name3 + ' - Swing Trade EMAs'
-    legend = ['Price', 'Short-EMA', 'Medium-EMA', 'Long-EMA', 'Swing Signal']
-    if plot_output:
-        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[
-                           4], legend=legend, title=name2)
-    else:
-        filename = name + '/swing_trades_ema_{}.png'.format(name)
-        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
-                           'Swing Signal'], title=name2, saveFig=True, filename=filename)
+        progress_bar.uptick(increment=0.2)
 
     mast = dict()
     mast['tabular'] = {}
     mast['tabular']['short'] = sh
     mast['tabular']['medium'] = me
     mast['tabular']['long'] = ln
-    mast['tabular']['swing'] = swings
+
+    mast = generate_swing_signal(fund, mast, max_period=config[2])
+    mast = swing_trade_metrics(fund, mast)
+
+    swings = mast['metrics']
 
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+        progress_bar.uptick(increment=0.3)
+
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Swing Trade SMAs'
+    legend = ['Price', 'Short-SMA', 'Medium-SMA', 'Long-SMA', 'Swing Signal']
+    if plot_output:
+        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[
+                           4], legend=legend, title=name2)
+    else:
+        filename = name + '/swing_trades_sma_{}.png'.format(name)
+        specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
+                           'Swing Signal'], title=name2, saveFig=True, filename=filename)
+
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.5)
 
     return mast
 
 
-def state_management(price: float, sht: float, med: float, lng: float, prev_state: int, hold='bull'):
-    """ 
-    states: bullish -> bearish; 
-        0 - price > sht > med > lng (bullish)
-        1 - sht > med > lng & prev_state = 2 (bullish reversal)
-        2 - sht < med > lng (potential bearish start)
-        3 - "other"
-        4 - sht > med < lng (potential bullish start)
-        5 - sht < med < lng & prev_state = 4 (bearish reversal)
-        6 - price < sht < med < lng (bearish)
-        ======
-        7 - enter into bullish from non-full bullish
-        8 - enter into bearish from non-full bearish
-    """
-    if ((sht > med) and (med > lng) and (prev_state == 2)):
-        state = 1
-    elif ((sht < med) and (med < lng) and (prev_state == 4)):
-        state = 5
-    elif ((sht < med) and (med > lng)):
-        #hold = 'none'
-        state = 2
-    elif ((sht > med) and (med < lng)):
-        #hold = 'none'
-        state = 4
-    elif ((price < sht) and (sht < med) and (med < lng) and (prev_state != 8) and (hold != 'bear')):
-        hold = 'bear'
-        state = 8
-    elif ((price > sht) and (sht > med) and (med > lng) and (prev_state != 7) and (hold != 'bull')):
-        hold = 'bull'
-        state = 7
-    elif ((price > sht) and (sht > med) and (med > lng)):
-        hold = 'bull'
-        state = 0
-    elif ((price < sht) and (sht < med) and (med < lng)):
-        hold = 'bear'
-        state = 6
-    else:
-        hold = 'none'
-        state = 3
+def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
+    """Generate Swing Trade Signal
 
-    return state, hold
+    u3 = sh > md > ln
+    u2 = sh > (md && ln)
+    u1 = sh > (md || ln)
+    e3 = sh < md < ln
+    e2 = sh < (md && ln)
+    e1 = sh < (md || ln)
+    n = "else"
+
+    Transitions: 
+        n -> u2 = 0.5
+        u2 -> u3 = 1.0
+        n -> e2 = -0.5
+        e2 -> e3 = -1.0
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        swings {dict} -- swing trade data object
+
+    Optional Args:
+        max_period {int} -- longest term for triple moving average (default: {18})
+
+    Returns:
+        dict -- swing trade data object
+    """
+
+    max_period = kwargs.get('max_period', 18)
+    sh = swings['tabular']['short']
+    md = swings['tabular']['medium']
+    ln = swings['tabular']['long']
+
+    close = position['Close']
+    states = ['n'] * len(close)
+    for i in range(max_period, len(states)):
+
+        if (sh[i] > md[i]) and (md[i] > ln[i]):
+            states[i] = 'u3'
+        elif (sh[i] > md[i]) and (sh[i] > ln[i]):
+            states[i] = 'u2'
+        elif (sh[i] > md[i]) or (sh[i] > ln[i]):
+            states[i] = 'u1'
+        elif (sh[i] < md[i]) and (md[i] < ln[i]):
+            states[i] = 'e3'
+        elif (sh[i] < md[i]) and (sh[i] < ln[i]):
+            states[i] = 'e2'
+        elif (sh[i] < md[i]) or (sh[i] < ln[i]):
+            states[i] = 'e1'
+
+    # Search for transitions
+    signal = [0.0] * len(states)
+    for i in range(1, len(signal)):
+        if (states[i] == 'u2'):
+            if (states[i-1] == 'e3') or (states[i-1] == 'e2') or (states[i-1] == 'e1'):
+                signal[i] = 0.5
+
+        elif (states[i] == 'u3') and (states[i] != states[i-1]):
+            signal[i] = 1.0
+
+        elif close[i] > ln[i]:
+            signal[i] = 0.1
+
+        elif (states[i] == 'e2'):
+            if (states[i-1] == 'u3') or (states[i-1] == 'u2') or (states[i-1] == 'u1'):
+                signal[i] = -0.5
+
+        elif (states[i] == 'e3') and (states[i] != states[i-1]):
+            signal[i] = -1.0
+
+        elif close[i] < ln[i]:
+            signal[i] = -0.1
+
+    swings['tabular']['swing'] = signal
+    return swings
+
+
+def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
+
+    weights = [1.0, 0.55, 0.25, 0.1]
+
+    # Convert features to a "tabular" array
+    tot_len = len(position['Close'])
+    metrics = [0.0] * tot_len
+
+    for i, val in enumerate(swings['tabular']['swing']):
+
+        metrics[i] += val * weights[0]
+
+        # Smooth the curves
+        if i - 1 >= 0:
+            metrics[i-1] += val * weights[1]
+        if i + 1 < tot_len:
+            metrics[i+1] += val * weights[1]
+        if i - 2 >= 0:
+            metrics[i-2] += val * weights[2]
+        if i + 2 < tot_len:
+            metrics[i+2] += val * weights[2]
+        if i - 3 >= 0:
+            metrics[i-3] += val * weights[3]
+        if i + 3 < tot_len:
+            metrics[i+3] += val * weights[3]
+
+    norm_signal = normalize_signals_local([metrics])[0]
+    swings['metrics'] = simple_moving_avg(norm_signal, 7, data_type='list')
+
+    return swings
+
+
+def normalize_signals_local(signals: list) -> list:
+    max_ = 0.0
+    for sig in signals:
+        m = np.max(np.abs(sig))
+        if m > max_:
+            max_ = m
+
+    if max_ != 0.0:
+        for i in range(len(signals)):
+            new_sig = []
+            for pt in signals[i]:
+                pt2 = pt / max_
+                new_sig.append(pt2)
+            signals[i] = new_sig.copy()
+
+    return signals

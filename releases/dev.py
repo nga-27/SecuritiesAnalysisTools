@@ -17,7 +17,8 @@
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
-from libs.tools import mov_avg_convergence_divergence, on_balance_volume
+from libs.tools import mov_avg_convergence_divergence
+from libs.tools import on_balance_volume
 from libs.tools import beta_comparison
 from libs.tools import find_resistance_support_lines
 from libs.tools import get_trendlines, get_trend_analysis
@@ -58,7 +59,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.26'
-_DATE_REVISION_ = '2020-02-22'
+_DATE_REVISION_ = '2020-02-23'
 ################################
 PROCESS_STEPS_DEV = 21
 
