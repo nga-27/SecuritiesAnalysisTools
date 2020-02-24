@@ -6,9 +6,6 @@ from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extract
 from libs.utils import ProgressBar, SP500
 
 
-# TODO: speed of crossovers can be a signal of overbought / oversold
-
-
 def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> list:
     """Generate MACD Signal
     macd = ema(12) - ema(26)

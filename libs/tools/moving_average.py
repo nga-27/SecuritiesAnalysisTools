@@ -149,42 +149,31 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     config = kwargs.get('config', [12, 50, 200])
     plot_output = kwargs.get('plot_output', True)
-    out_suppress = kwargs.get('output_suppress', False)
+    out_suppress = kwargs.get('out_suppress', False)
     progress_bar = kwargs.get('progress_bar', None)
 
-    tshort = []
-    tmed = []
-    tlong = []
-
-    tot_len = len(fund['Close'])
-
-    for i in range(config[0]):
-        tshort.append(fund['Close'][i])
-        tmed.append(fund['Close'][i])
-        tlong.append(fund['Close'][i])
+    tshort = simple_moving_avg(fund, config[0])
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.05)
+        progress_bar.uptick(increment=0.2)
 
-    for i in range(config[0], config[1]):
-        tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
-        tmed.append(fund['Close'][i])
-        tlong.append(fund['Close'][i])
+    tmed = simple_moving_avg(fund, config[1])
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+        progress_bar.uptick(increment=0.2)
 
-    for i in range(config[1], config[2]):
-        tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
-        tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
-        tlong.append(fund['Close'][i])
+    tlong = simple_moving_avg(fund, config[2])
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.25)
+        progress_bar.uptick(increment=0.2)
 
-    for i in range(config[2], tot_len):
-        tshort.append(np.mean(fund['Close'][i-config[0]:i+1]))
-        tmed.append(np.mean(fund['Close'][i-config[1]:i+1]))
-        tlong.append(np.mean(fund['Close'][i-config[2]:i+1]))
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.5)
+    mshort = []
+    mmed = []
+    mlong = []
+    for i, close in enumerate(fund['Close']):
+        mshort.append(np.round((close - tshort[i]) / tshort[i] * 100.0, 3))
+        mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
+        mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
+
+    triple_exp_mov_average(
+        fund, config=[9, 21, 50], plot_output=plot_output, name=name)
 
     name3 = SP500.get(name, name)
     name2 = name3 + \
@@ -207,6 +196,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     tma['medium'] = {'period': config[1]}
     tma['long'] = {'period': config[2]}
     tma['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
+    tma['metrics'] = {'short': mshort, 'medium': mmed, 'long': mlong}
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
