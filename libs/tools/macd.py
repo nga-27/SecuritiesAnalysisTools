@@ -3,6 +3,7 @@ import numpy as np
 
 from .moving_average import exponential_moving_avg
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
+from libs.features import normalize_signals
 from libs.utils import ProgressBar, SP500
 from libs.utils import TREND_COLORS, TEXT_COLOR_MAP
 
@@ -38,6 +39,8 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.5)
 
     macd = get_macd_statistics(macd, progress_bar=progress_bar)
+
+    macd = macd_metrics(fund, macd)
 
     macd_sig = macd['tabular']['macd']
     sig_line = macd['tabular']['signal_line']
@@ -106,6 +109,23 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
         filename = name + '/macd_bar_{}.png'.format(name)
         bar_chart(m_bar, position=fund, x=x, title=name2,
                   saveFig=True, filename=filename)
+
+    return macd
+
+
+def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
+
+    m_bar = macd['tabular']['bar']
+    norm_bar = normalize_signals([m_bar])[0]
+
+    macd = macd_divergences(position, macd, omit=26)
+    for ind in macd['indicators']:
+        if ind['type'] == 'bearish':
+            norm_bar[ind['index']] += -1.0
+        elif ind['type'] == 'bullish':
+            norm_bar[ind['index']] += 1.0
+
+    macd['metrics'] = norm_bar
 
     return macd
 
@@ -378,3 +398,106 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
     else:
         print("WARNING - no valid 'trend_type' provided in 'get_macd_trend'")
         return None
+
+
+def macd_divergences(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
+
+    omit = kwargs.get('omit', 0)
+    macd['indicators'] = []
+    state = 'n'
+    prices = [0.0, 0.0]
+    ms = [0.0, 0.0]
+    closes = position['Close']
+    md = macd['tabular']['macd']
+
+    for i in range(omit, len(md)):
+
+        # Start with bullish divergences
+        if (state == 'n') and (md[i] < 0.0):
+            state = 'u1'
+            ms[0] = md[i]
+
+        elif state == 'u1':
+            if md[i] < ms[0]:
+                ms[0] = md[i]
+            else:
+                prices[0] = closes[i-1]
+                ms[1] = md[i]
+                state = 'u2'
+
+        elif state == 'u2':
+            if md[i] > ms[1]:
+                if md[i] > 0.0:
+                    state = 'e1'
+                    ms[0] = md[i]
+                else:
+                    ms[1] = md[i]
+            else:
+                state = 'u3'
+
+        elif state == 'u3':
+            if md[i] <= ms[1]:
+                ms[1] = md[i]
+                if md[i] <= ms[0]:
+                    state = 'u1'
+            else:
+                state = 'u4'
+                prices[1] = closes[i-1]
+
+        elif state == 'u4':
+            if md[i] >= ms[1]:
+                if (prices[1] < prices[0]) and (ms[0] < ms[1]):
+                    macd['indicators'].append(
+                        {'index': i, 'type': 'bullish', 'style': 'divergence'})
+                    state = 'n'
+                else:
+                    # Not truly divergence
+                    state = 'u1'
+            else:
+                state = 'u3'
+
+        # Start with bearish divergences
+        if (state == 'n') and (md[i] > 0.0):
+            state = 'e1'
+            ms[0] = md[i]
+
+        elif state == 'e1':
+            if md[i] > ms[0]:
+                ms[0] = md[i]
+            else:
+                prices[0] = closes[i-1]
+                ms[1] = md[i]
+                state = 'e2'
+
+        elif state == 'e2':
+            if md[i] < ms[1]:
+                if md[i] < 0.0:
+                    state = 'u1'
+                    ms[0] = md[i]
+                else:
+                    ms[1] = md[i]
+            else:
+                state = 'e3'
+
+        elif state == 'e3':
+            if md[i] >= ms[1]:
+                ms[1] = md[i]
+                if md[i] >= ms[0]:
+                    state = 'e1'
+            else:
+                state = 'e4'
+                prices[1] = closes[i-1]
+
+        elif state == 'e4':
+            if md[i] <= ms[1]:
+                if (prices[1] > prices[0]) and (ms[0] < ms[1]):
+                    macd['indicators'].append(
+                        {'index': i, 'type': 'bearish', 'style': 'divergence'})
+                    state = 'n'
+                else:
+                    # Not truly divergence
+                    state = 'e1'
+            else:
+                state = 'e3'
+
+    return macd
