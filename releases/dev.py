@@ -17,13 +17,15 @@
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
-from libs.tools import mov_avg_convergence_divergence, on_balance_volume
+from libs.tools import mov_avg_convergence_divergence
+from libs.tools import on_balance_volume
 from libs.tools import beta_comparison
 from libs.tools import find_resistance_support_lines
 from libs.tools import get_trendlines, get_trend_analysis
 from libs.tools import get_high_level_stats
 from libs.tools import bear_bull_power
 from libs.tools import total_power
+from libs.tools import bollinger_bands
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders, feature_plotter, analyze_price_gaps
@@ -56,10 +58,10 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.25'
-_DATE_REVISION_ = '2020-02-08'
+_VERSION_ = '0.1.26'
+_DATE_REVISION_ = '2020-02-29'
 ################################
-PROCESS_STEPS_DEV = 19
+PROCESS_STEPS_DEV = 21
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -160,6 +162,9 @@ def technical_analysis(config: dict):
             fund, plot_output=False, name=fund_name, progress_bar=p)
 
         analysis[fund_name]['total_power'] = total_power(
+            fund, plot_output=False, name=fund_name, progress_bar=p)
+
+        analysis[fund_name]['bollinger_bands'] = bollinger_bands(
             fund, plot_output=False, name=fund_name, progress_bar=p)
 
         if 'no_index' not in config['state']:

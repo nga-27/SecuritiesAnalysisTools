@@ -11,6 +11,13 @@ NORMAL = STANDARD_COLORS["normal"]
 ERROR = STANDARD_COLORS["error"]
 NOTE = STANDARD_COLORS["warning"]
 
+"""
+period : str
+    Valid periods: 1d,5d,1mo,3mo,6mo,1y,2y,5y,10y,ytd,max
+interval : str
+    Valid intervals: 1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+"""
+
 
 def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
     """Download Data Indexes
@@ -19,7 +26,7 @@ def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
         indexes {list} -- list of funds
         tickers {str} -- ticker string (e.g. "MMM VTI")
 
-    Keyword Arguments:
+    Optional Args:
         period {str} -- (default: {'2y'})
         interval {str} -- (default: {'1d'})
         start {str} -- date (default: {None})
@@ -43,6 +50,7 @@ def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
                             interval=interval, group_by='ticker')
     data = data_format(data1, config=None,
                        list_of_funds=indexes, fund_len=fund_len)
+
     return data, indexes
 
 
@@ -51,6 +59,10 @@ def download_data(config: dict, **kwargs) -> list:
 
     Arguments:
         config {dict} -- full information dictionary of entire run
+
+    Optional Args:
+        start {str} -- date (default: {None})
+        end {str} -- date (default: {None})
 
     Returns:
         list -- downloaded data, list of funds
@@ -187,7 +199,7 @@ def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
         df_dict = {}
         df_dict['Date'] = filter_date(dates.copy(), fund_len=fund_len)
         df_dict['Open'] = filter_nan(data['Open'].copy(
-        ), fund_name=fund_keys[0], column_key='Open', fund_len=fund_len)
+        ), column_key='Open', fund_len=fund_len)
         df_dict['Close'] = filter_nan(
             data['Close'].copy(), column_key='Close', fund_len=fund_len)
         df_dict['High'] = filter_nan(
@@ -197,7 +209,7 @@ def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
         df_dict['Adj Close'] = filter_nan(
             data['Adj Close'].copy(), column_key='Adj Close', fund_len=fund_len)
         df_dict['Volume'] = filter_nan(
-            data['Volume'].copy(), column_key='Volume', fund_len=fund_len)
+            data['Volume'].copy(), fund_name=fund_keys[0], column_key='Volume', fund_len=fund_len)
 
         df = pd.DataFrame.from_dict(df_dict)
         df = df.set_index('Date')
@@ -246,10 +258,27 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
                 newer_list = [float('NaN')]
                 newer_list.extend(new_list)
                 new_list = newer_list.copy()
-                nans = np.append(0, nans)
+                nans = insert_into_sorted_nans(nans, 0)
             elif frame_list.index[len(frame_list)-1] != fund_len['end']:
                 new_list.append(float('NaN'))
-                nans = np.append(nans, len(frame_list)-1)
+                nans = insert_into_sorted_nans(nans, len(frame_list)-1)
+            else:
+                newer_list = []
+                f_count = 0
+                d_count = 0
+                while (d_count < len(fund_len['dates'])) and (f_count < len(frame_list.index)):
+                    if fund_len['dates'][d_count] == frame_list.index[f_count]:
+                        newer_list.append(frame_list[f_count])
+                        f_count += 1
+                        d_count += 1
+                    elif fund_len['dates'][d_count] < frame_list.index[f_count]:
+                        newer_list.append(float('NaN'))
+                        nans = insert_into_sorted_nans(nans, d_count)
+                        d_count += 1
+                    else:
+                        newer_list.append(frame_list[f_count])
+                        f_count += 1
+                new_list = newer_list.copy()
 
     if len(nans) > 0:
         corrected = True
@@ -269,6 +298,10 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
                 status = add_status_message(
                     status, 'Generic progression nan', na, column_key)
                 new_list[na] = new_list[na-1]
+            elif (na < len(new_list)-2) and (not math.isnan(new_list[na+1])):
+                status = add_status_message(
+                    status, 'Generic progression nan', na, column_key)
+                new_list[na] = new_list[na+1]
             else:
                 status = add_status_message(
                     status, 'Unknown/unfixable nan', na, column_key)
@@ -297,6 +330,39 @@ def filter_date(dates, fund_len: dict = None):
                 newer_list = [fund_len['start']]
                 newer_list.extend(dates)
                 dates = newer_list.copy()
+
             elif dates[len(dates)-1] != fund_len['end']:
                 dates.append(fund_len['end'])
+
+            else:
+                newer_list = []
+                f_count = 0
+                d_count = 0
+                while (d_count < len(fund_len['dates'])) and (f_count < len(dates)):
+                    if fund_len['dates'][d_count] == dates[f_count]:
+                        newer_list.append(dates[f_count])
+                        f_count += 1
+                        d_count += 1
+                    elif fund_len['dates'][d_count] < dates[f_count]:
+                        newer_list.append(fund_len['dates'][d_count])
+                        d_count += 1
+                    else:
+                        newer_list.append(dates[f_count])
+                        f_count += 1
+                dates = newer_list.copy()
     return dates.copy()
+
+
+def insert_into_sorted_nans(nans: list, element: int) -> list:
+    counter = 0
+    new_nans = []
+    while (counter < len(nans)) and (nans[counter] < element):
+        new_nans.append(nans[counter])
+        counter += 1
+
+    new_nans.append(element)
+    if counter != len(nans):
+        for i in range(counter, len(nans)):
+            new_nans.append(nans[i])
+
+    return new_nans

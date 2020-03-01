@@ -14,8 +14,9 @@ from libs.tools import get_trendlines, find_resistance_support_lines
 from libs.tools import cluster_oscs, RSI, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
-from libs.tools import triple_moving_average
+from libs.tools import triple_moving_average, moving_average_swing_trade
 from libs.tools import bear_bull_power, total_power
+from libs.tools import bollinger_bands
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 TICKER = STANDARD_COLORS["ticker"]
@@ -77,10 +78,14 @@ def only_functions_handler(config: dict):
         obv_function(config)
     if 'ma' in config['run_functions']:
         ma_function(config)
+    if 'swings' in config['run_functions']:
+        swing_trade_function(config)
     if 'bear_bull' in config['run_functions']:
         bear_bull_function(config)
     if 'total_power' in config['run_functions']:
         total_power_function(config)
+    if 'bol_bands' in config['run_functions']:
+        bollinger_bands_function(config)
     if 'gaps' in config['run_functions']:
         price_gap_function(config)
     if 'vq' in config['run_functions']:
@@ -251,6 +256,15 @@ def ma_function(config: dict):
             triple_moving_average(data[fund], name=fund, plot_output=True)
 
 
+def swing_trade_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
+            moving_average_swing_trade(data[fund], name=fund, plot_output=True)
+
+
 def bear_bull_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
@@ -265,6 +279,14 @@ def total_power_function(config: dict):
         if fund != '^GSPC':
             print(f"Total Power Indicator of {TICKER}{fund}{NORMAL}...")
             total_power(data[fund], name=fund, plot_output=True)
+
+
+def bollinger_bands_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"Bollinger Bands of {TICKER}{fund}{NORMAL}...")
+            bollinger_bands(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):

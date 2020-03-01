@@ -181,6 +181,14 @@ def generic_plotting(list_of_plots: list, **kwargs):
                 f"{WARNING}Warning: lengths of plots ({len(list_of_plots)}) and colors ({len(colors)}) do not match in generic_plotting.{NORMAL}")
             return None
 
+    if len(x) > 0:
+        if type(x[0]) == list:
+            for i, plot in enumerate(list_of_plots):
+                if len(plot) != len(x[i]):
+                    print(
+                        f"{WARNING}Warning: lengths of plots ({len(plot)}) and x ({len(x[i])}) do not match in generic_plotting.{NORMAL}")
+                    return None
+
     fig, ax = plt.subplots()
 
     if len(x) < 1:

@@ -10,7 +10,7 @@ as market oscillators, but the metrics can still provide buy-sell signals.
 import pandas as pd
 import numpy as np
 
-from libs.tools import cluster_oscs
+from libs.tools import cluster_oscs, windowed_moving_avg
 from libs.utils import dual_plotting, ProgressBar, index_appender, dates_extractor_list
 from libs.utils import download_data_indexes
 
@@ -141,6 +141,7 @@ def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Trea
         composite2.append(s)
     p.uptick()
 
+    composite2 = windowed_moving_avg(composite2, 3, data_type='list')
     max_ = np.max(np.abs(composite2))
     composite2 = [x / max_ for x in composite2]
 

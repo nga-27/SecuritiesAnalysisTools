@@ -107,21 +107,11 @@ def make_MCI_slides(prs, analysis: dict):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = slide_title_header(slide, 'Market Composite Index')
 
-        left = Inches(0.1)
+        left = Inches(1.42)
         top = Inches(1.27)
-        height = Inches(5.69)
-        width = Inches(6.42)
-        slide.shapes.add_picture(
-            content, left, top, height=height, width=width)
+        height = Inches(6.1)
+        width = Inches(10.5)
 
-    content = f"output/temp/MCI_osc_correlation.png"
-    if os.path.exists(content):
-        slide = prs.slides[len(prs.slides)-1]
-
-        left = Inches(6.67)
-        top = Inches(1.27)
-        height = Inches(5.69)
-        width = Inches(6.42)
         slide.shapes.add_picture(
             content, left, top, height=height, width=width)
 

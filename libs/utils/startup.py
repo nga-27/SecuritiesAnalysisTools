@@ -273,6 +273,28 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['exports'] = {"run": True,
                              "fields": ticker_list_to_str(ticker_keys)}
 
+    # Settings for 'intervals' and 'periods'
+    if '--10y' in i_keys:
+        config['period'] = '10y'
+
+    if '--5y' in i_keys:
+        config['period'] = '5y'
+
+    if '--2y' in i_keys:
+        config['period'] = '2y'
+
+    if '--1y' in i_keys:
+        config['period'] = '1y'
+
+    if '--1d' in i_keys:
+        config['interval'] = '1d'
+
+    if '--1w' in i_keys:
+        config['interval'] = '1wk'
+
+    if '--1m' in i_keys:
+        config['interval'] = '1mo'
+
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in i_keys:
         config = add_str_to_dict_key(
@@ -364,6 +386,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'ma', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
+    if ('--swings' in i_keys) or ('--swing_trade' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'swings', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
     if ('--bull_bear' in i_keys) or ('--bear_bull' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'bear_bull', type_='list')
@@ -372,6 +399,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--total_power' in i_keys) or ('--total' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'total_power', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--bollinger' in i_keys) or ('--bollinger_bands' in i_keys) or ('--bands' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'bol_bands', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):

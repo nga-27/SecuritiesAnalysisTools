@@ -29,3 +29,9 @@ LOGO_COLORS = {
     "other": TEXT_COLOR_MAP["blue_bold"],
     "copywrite": TEXT_COLOR_MAP["green_bold"]
 }
+
+TREND_COLORS = {
+    "good": TEXT_COLOR_MAP["green"],
+    "hold": TEXT_COLOR_MAP["yellow"],
+    "bad": TEXT_COLOR_MAP["red"]
+}
