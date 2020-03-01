@@ -17,6 +17,7 @@
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
+from libs.tools import hull_moving_average
 from libs.tools import mov_avg_convergence_divergence
 from libs.tools import on_balance_volume
 from libs.tools import beta_comparison
@@ -58,10 +59,10 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.26'
-_DATE_REVISION_ = '2020-02-29'
+_VERSION_ = '0.1.27'
+_DATE_REVISION_ = '2020-03-01'
 ################################
-PROCESS_STEPS_DEV = 21
+PROCESS_STEPS_DEV = 22
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -153,6 +154,9 @@ def technical_analysis(config: dict):
             fund, plot_output=False, name=fund_name, progress_bar=p)
 
         analysis[fund_name]['swing_trade'] = moving_average_swing_trade(
+            fund, plot_output=False, name=fund_name, progress_bar=p)
+
+        analysis[fund_name]['hull_moving_average'] = hull_moving_average(
             fund, plot_output=False, name=fund_name, progress_bar=p)
 
         analysis[fund_name]['macd'] = mov_avg_convergence_divergence(

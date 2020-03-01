@@ -130,6 +130,34 @@ def simple_moving_avg(dataset, interval: int, **kwargs) -> list:
     return ma
 
 
+def weighted_moving_avg(dataset, interval: int, **kwargs) -> list:
+
+    data_type = kwargs.get('data_type', 'DataFrame')
+    key = kwargs.get('key', 'Close')
+
+    if data_type == 'DataFrame':
+        data = list(dataset[key])
+    else:
+        data = dataset
+
+    wma = []
+    for i in range(interval):
+        wma.append(data[i])
+
+    divisor = 0
+    for i in range(interval):
+        divisor += i+1
+
+    for i in range(interval, len(data)):
+        av = 0.0
+        for j in range(interval):
+            av += float(j+1) * data[i - (interval-1-j)]
+        av = av / float(divisor)
+        wma.append(av)
+
+    return wma
+
+
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     """
     Triple Moving Avg:  3 simple moving averages of "config" length

@@ -17,6 +17,7 @@ from libs.tools import mov_avg_convergence_divergence, relative_strength, on_bal
 from libs.tools import triple_moving_average, moving_average_swing_trade
 from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
+from libs.tools import hull_moving_average
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 TICKER = STANDARD_COLORS["ticker"]
@@ -80,6 +81,8 @@ def only_functions_handler(config: dict):
         ma_function(config)
     if 'swings' in config['run_functions']:
         swing_trade_function(config)
+    if 'hull' in config['run_functions']:
+        hull_ma_function(config)
     if 'bear_bull' in config['run_functions']:
         bear_bull_function(config)
     if 'total_power' in config['run_functions']:
@@ -263,6 +266,15 @@ def swing_trade_function(config: dict):
             print(
                 f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
             moving_average_swing_trade(data[fund], name=fund, plot_output=True)
+
+
+def hull_ma_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
+            hull_moving_average(data[fund], name=fund, plot_output=True)
 
 
 def bear_bull_function(config: dict):
