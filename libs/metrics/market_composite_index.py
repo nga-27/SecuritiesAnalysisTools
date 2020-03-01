@@ -15,6 +15,7 @@ import numpy as np
 import yfinance as yf
 
 from libs.tools import cluster_oscs, beta_comparison_list
+from libs.tools import windowed_moving_avg
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import ProgressBar, index_appender
 from libs.utils import download_data_indexes
@@ -24,7 +25,7 @@ ERROR_COLOR = TEXT_COLOR_MAP["red"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
-def metrics_initializer(period='2y', name='Market Composite Index'):
+def metrics_initializer(period='5y', name='Market Composite Index'):
     """Metrics Initializer
 
     Keyword Arguments:
@@ -90,6 +91,7 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
         composite2.append(s)
     progress_bar.uptick()
 
+    composite2 = windowed_moving_avg(composite2, 3, data_type='list')
     max_ = np.max(np.abs(composite2))
     composite2 = [x / max_ for x in composite2]
     progress_bar.uptick()
@@ -104,7 +106,7 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
     return composite2
 
 
-def composite_correlation(data: dict, sectors: list, composite_osc=None, progress_bar=None, plot_output=True) -> dict:
+def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_output=True) -> dict:
     """ betas and r-squared for 2 time periods for each sector (full, 1/2 time) """
     """ plot of r-squared vs. S&P500 for last 50 or 100 days for each sector """
     DIVISOR = 5
@@ -113,14 +115,17 @@ def composite_correlation(data: dict, sectors: list, composite_osc=None, progres
     if '^GSPC' in data.keys():
         tot_len = len(data['^GSPC']['Close'])
         start_pt = int(np.floor(tot_len / DIVISOR))
+
         if start_pt > 100:
             start_pt = 100
+
         corrs = {}
         dates = data['^GSPC'].index[start_pt:tot_len]
         net_correlation = [0.0] * (tot_len-start_pt)
         for sector in sectors:
             correlations[sector] = simple_beta_rsq(data[sector], data['^GSPC'], recent_period=[
                                                    int(np.round(tot_len/2, 0)), tot_len])
+
             corrs[sector] = []
             for i in range(start_pt, tot_len):
                 _, rsqd = beta_comparison_list(
@@ -147,36 +152,6 @@ def composite_correlation(data: dict, sectors: list, composite_osc=None, progres
                       title='MCI Net Correlation',
                       saveFig=(not plot_output),
                       filename='MCI_net_correlation.png')
-
-        progress_bar.uptick()
-
-        if composite_osc is not None:
-            osc_corr = []
-            o_max = np.max(composite_osc)
-            norm_osc = [x/o_max for x in composite_osc]
-            o_max = np.max(net_correlation)
-            norm_corr = [x/o_max for x in net_correlation]
-            norm_mean = np.mean(norm_corr)
-            for i in range(start_pt, tot_len):
-                val = 0.0
-                if norm_corr[i-start_pt] < norm_mean:
-                    if norm_osc[i] > 0:
-                        # Sell signal w/ weak net correlations:
-                        val = norm_corr[i-start_pt] * norm_osc[i]
-                else:
-                    if norm_osc[i] < 0:
-                        val = norm_corr[i-start_pt] * norm_osc[i]
-                osc_corr.append(val)
-
-            legend = ['Oscillator-Correlation', 'S&P500']
-            dual_plotting(osc_corr,
-                          data['^GSPC']['Close'][start_pt:tot_len],
-                          x=dates,
-                          y1_label=legend[0],
-                          y2_label=legend[1],
-                          title='MCI Oscillator-Correlation',
-                          saveFig=(not plot_output),
-                          filename='MCI_osc_correlation.png')
 
         progress_bar.uptick()
 
@@ -233,7 +208,7 @@ def market_composite_index(**kwargs) -> dict:
                         data, sectors, plot_output=plot_output, progress_bar=p)
                     mci['tabular'] = {'mci': composite}
                     correlations = composite_correlation(
-                        data, sectors, composite_osc=composite, plot_output=plot_output, progress_bar=p)
+                        data, sectors, plot_output=plot_output, progress_bar=p)
                     mci['correlations'] = correlations
                     p.end()
                     return mci
@@ -342,6 +317,10 @@ def type_composite_index(**kwargs):
                             s_val.append(s_val[-1] * (1.0 + d))
 
                     p.uptick()
+
+                    d_val = windowed_moving_avg(d_val, 3, data_type='list')
+                    c_val = windowed_moving_avg(c_val, 3, data_type='list')
+                    s_val = windowed_moving_avg(s_val, 3, data_type='list')
 
                     tci['defensive'] = {
                         "tabular": d_val, "clusters": defensive}

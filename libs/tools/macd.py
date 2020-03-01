@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from .moving_average import exponential_moving_avg
+from .moving_average import exponential_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 from libs.features import normalize_signals
 from libs.utils import ProgressBar, SP500
@@ -36,11 +36,12 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     macd = generate_macd_signal(
         fund, plot_output=plot_output, name=name)
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.5)
+        progress_bar.uptick(increment=0.3)
 
     macd = get_macd_statistics(macd, progress_bar=progress_bar)
 
-    macd = macd_metrics(fund, macd)
+    macd = macd_metrics(fund, macd, p_bar=progress_bar,
+                        name=name, plot_output=plot_output)
 
     macd_sig = macd['tabular']['macd']
     sig_line = macd['tabular']['signal_line']
@@ -89,7 +90,10 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     macd_val = []
 
     for i in range(len(emaTw)):
-        macd_val.append(emaTw[i] - emaTs[i])
+        if i < 26:
+            macd_val.append(0.0)
+        else:
+            macd_val.append(emaTw[i] - emaTs[i])
 
     macd_sig = exponential_moving_avg(macd_val, interval=9, data_type='list')
 
@@ -115,17 +119,66 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
 
 def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
 
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    p_bar = kwargs.get('p_bar')
+
     m_bar = macd['tabular']['bar']
-    norm_bar = normalize_signals([m_bar])[0]
+
+    max_m = max(m_bar)
+    min_m = min(m_bar)
+    div = max_m
+    if np.abs(min_m) > max_m:
+        div = min_m
 
     macd = macd_divergences(position, macd, omit=26)
-    for ind in macd['indicators']:
-        if ind['type'] == 'bearish':
-            norm_bar[ind['index']] += -1.0
-        elif ind['type'] == 'bullish':
-            norm_bar[ind['index']] += 1.0
 
-    macd['metrics'] = norm_bar
+    weights = [1.0, 0.85, 0.55, 0.2]
+    for mac in macd['indicators']:
+
+        if mac['type'] == 'bearish':
+            s = -1.0 * div / 2.0
+        else:
+            s = 1.0 * div / 2.0
+
+        ind = mac['index']
+        m_bar[ind] += s * weights[0]
+
+        # Smooth the curves
+        if ind - 1 >= 0:
+            m_bar[ind-1] += s * weights[1]
+        if ind + 1 < len(m_bar):
+            m_bar[ind+1] += s * weights[1]
+        if ind - 2 >= 0:
+            m_bar[ind-2] += s * weights[2]
+        if ind + 2 < len(m_bar):
+            m_bar[ind+2] += s * weights[2]
+        if ind - 3 >= 0:
+            m_bar[ind-3] += s * weights[3]
+        if ind + 3 < len(m_bar):
+            m_bar[ind+3] += s * weights[3]
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    metrics = windowed_moving_avg(m_bar, 7, data_type='list')
+    norm = normalize_signals([metrics])
+    metrics = norm[0]
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
+
+    macd['metrics'] = metrics
+
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - MACD Metrics'
+    if plot_output:
+        dual_plotting(position['Close'], metrics,
+                      'Price', 'Metrics', title=name2)
+    else:
+        filename = name + f"/macd_metrics_{name}.png"
+        dual_plotting(position['Close'], metrics, 'Price',
+                      'Metrics', title=name2, saveFig=True, filename=filename)
 
     return macd
 

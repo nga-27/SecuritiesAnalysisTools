@@ -144,7 +144,7 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
         fast = full_stochastic(
             position, config=[14, 3, 3], plot_output=False, name=name)
         med = ultimate_oscillator(
-            position, config=[5, 10, 20], plot_output=False, name=name)
+            position, config=[7, 14, 28], plot_output=False, name=name)
         slow = RSI(position, plot_output=False, period=14, name=name)
 
     else:
