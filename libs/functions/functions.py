@@ -273,7 +273,7 @@ def hull_ma_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(
-                f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
+                f"Hull Moving Average of {TICKER}{fund}{NORMAL}...")
             hull_moving_average(data[fund], name=fund, plot_output=True)
 
 
