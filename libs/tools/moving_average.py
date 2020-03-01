@@ -131,7 +131,19 @@ def simple_moving_avg(dataset, interval: int, **kwargs) -> list:
 
 
 def weighted_moving_avg(dataset, interval: int, **kwargs) -> list:
+    """Weighted Moving Average
 
+    Arguments:
+        dataset -- tabular data, either list or pd.DataFrame
+        interval {int} -- window to windowed moving average
+
+    Optional Args:
+        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
+        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
+
+    Returns:
+        list -- filtered data
+    """
     data_type = kwargs.get('data_type', 'DataFrame')
     key = kwargs.get('key', 'Close')
 
