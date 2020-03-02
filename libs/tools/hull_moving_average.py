@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, SP500
 from libs.utils import generic_plotting, dual_plotting
 from libs.features import normalize_signals
 from .moving_average import weighted_moving_avg, simple_moving_avg
@@ -9,6 +9,12 @@ from .moving_average import weighted_moving_avg, simple_moving_avg
 
 def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     """Hull Moving Average
+
+    A Hull Moving Average (HMA) is a specific blend of several weighted moving averages
+    (WMAs) within a WMA. This was created by Alan Hull.
+
+    Formula:
+    HMA = WMA(2 * WMA(closes, period=n/2) - WMA(closes, period=n), period=sqrt(n))
 
     Arguments:
         position {pd.DataFrame} -- fund dataset
@@ -28,8 +34,12 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     hull = generate_hull_signal(
         position, plot_output=plot_output, name=name, p_bar=p_bar)
 
+    hull = generate_swing_signal(position, hull, p_bar=p_bar)
+    hull = swing_trade_metrics(
+        position, hull, plot_output=plot_output, name=name, p_bar=p_bar)
+
     if p_bar is not None:
-        p_bar.uptick(increment=1.0)
+        p_bar.uptick(increment=0.1)
 
     return hull
 
@@ -53,6 +63,8 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     """
     period = kwargs.get('period', [9, 16, 36])
     plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    p_bar = kwargs.get('p_bar')
 
     hull = {'short': {}, 'medium': {},
             'long': {}, 'tabular': {}}
@@ -74,16 +86,25 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         hma = weighted_moving_avg(wma, sq_period, data_type='list')
         plots.append(hma.copy())
 
+        if p_bar is not None:
+            p_bar.uptick(increment=0.1)
+
     hull['tabular'] = {'short': plots[0], 'medium': plots[1], 'long': plots[2]}
-    hull = generate_swing_signal(position, hull)
-    hull = swing_trade_metrics(position, hull)
+
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Hull Moving Averages'
+    legend = ['Price', 'HMA-short', 'HMA-medium', 'HMA-long']
 
     if plot_output:
-        legend = ['Price', 'HMA-short', 'HMA-medium', 'HMA-long']
         generic_plotting([position['Close'], plots[0], plots[1],
-                          plots[2]], legend=legend, title='Hull Moving Average')
-        dual_plotting(position['Close'], hull['metrics'],
-                      'Price', 'Metrics', title='Hull MA Metrics')
+                          plots[2]], legend=legend, title=name2)
+    else:
+        filename = name + f"/hull_moving_average_{name}.png"
+        generic_plotting([position['Close'], plots[0], plots[1],
+                          plots[2]], legend=legend, title=name2, saveFig=True, filename=filename)
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
 
     return hull
 
@@ -111,10 +132,12 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
 
     Optional Args:
         max_period {int} -- longest term for triple moving average (default: {18})
+        p_bar {ProgressBar} -- (default: {None})
 
     Returns:
         dict -- swing trade data object
     """
+    p_bar = kwargs.get('p_bar')
 
     max_period = kwargs.get('max_period', 36)
     sh = swings['tabular']['short']
@@ -161,11 +184,31 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         elif close[i] < ln[i]:
             signal[i] = -0.1
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     swings['tabular']['swing'] = signal
     return swings
 
 
 def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
+    """Swing Trade Metrics
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        swings {dict} -- hull data object
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        p_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- hull data object
+    """
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    p_bar = kwargs.get('p_bar')
 
     weights = [1.0, 0.55, 0.25, 0.1]
 
@@ -193,5 +236,19 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
 
     norm_signal = normalize_signals([metrics])[0]
     swings['metrics'] = simple_moving_avg(norm_signal, 7, data_type='list')
+
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Hull Moving Average Metrics'
+
+    if plot_output:
+        dual_plotting(position['Close'], swings['metrics'],
+                      'Price', 'Metrics', title='Hull Moving Average Metrics')
+    else:
+        filename2 = name + f"/hull_metrics_{name}.png"
+        dual_plotting(position['Close'], swings['metrics'],
+                      'Price', 'Metrics', title=name2, saveFig=True, filename=filename2)
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
 
     return swings

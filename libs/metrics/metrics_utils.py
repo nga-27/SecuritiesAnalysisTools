@@ -26,7 +26,6 @@ ACCEPTED_ATTS = [
     'momentum_oscillator',
     'bear_bull_power',
     'total_power',
-    'swing_trade',
     'hull_moving_average'
 ]
 

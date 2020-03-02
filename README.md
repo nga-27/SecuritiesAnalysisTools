@@ -49,10 +49,9 @@ New with 0.1.16, an optional `test.json` file can be added with the same functio
 optional.
 
 ### "Core" Properties
-* **Period** - timeframe of historical stock data. Default is 1 year. (Provides 'Open', 'Close', 'High', 'Low', 'Volume', and 'Adj Close' for each fund.)
-* **Interval** - data point frequency of historical stock data. Default is 1 day.
-* **Indexes** - various 'Composite' metrics that give an overall health (in terms of oscillators) of a sector or asset type. The higher the index value, the more
-"signifcant" the **SELL** signal; the lower the index value, the more "signifcant" the **BUY** signal.
+* **Period** - timeframe of historical stock data. Default is 2 years. (Provides 'Open', 'Close', 'High', 'Low', 'Volume', and 'Adj Close' for each fund.) Options include: 1 year, 2 years, 5 years, and 10 years.
+* **Interval** - data point frequency of historical stock data. Default is 1 day. Options include: 1 day, 1 week, and 1 month.
+* **Indexes** - various 'Composite' metrics that give an overall health (in terms of oscillators) of a sector or asset type. The lower the index value, the more "signifcant" the **SELL** signal; the higher the index value, the more "signifcant" the **BUY** signal.
     * `Market Composite` - summation of 'Clustered Oscillator' metrics for 11 sectors of stock market based off Vanguard's sector ETFs:
         * VHT (Healthcare), VGT (InfoTech), VNQ (Realestate), VIS (Industrial), VDE (Energy/Oil), VCR (ConsumerDiscretionary), VDC (ConsumerStaples)
         * VPU (Utilities), VAW (RawMaterials), VOX (Telcomm), and VFH (Financials)
@@ -68,9 +67,9 @@ FUTURE - adding more customizable fields to core functionality for greater user 
 ### "Core" Exports
 * **Run** - as expected, `True` if exportation to be run and `False` if to be omitted. (Can be run separately on prompt of `--export-dataset`.)
 * **Fields** - optional specific fields to be exported to .csv. `fields` must be single string of keys: (e.g. `"fields": "rsi vpu macd vti"`)
-    * Fields inputs should be matched to ticker symbols and  `ACCEPTED_ATTS`, listed below (2019-11-10)
-        * `['statistics', 'macd', 'rsi', 'relative_strength', 'mci', 'correlation', 'futures']`
-        * fields are not case-sensitive (though `--export-dataset` input key _IS_ case-sensitive)
+    * Fields inputs should be matched to ticker symbols and  `ACCEPTED_ATTS`, listed below (2020-03-01)
+        * `['statistics', 'macd', 'rsi', 'relative_strength', 'mci', 'correlation', 'futures', 'moving_average', 'swing_trade', 'obv', 'awesome', 'momentum_oscillator', 'bear_bull_power', 'total_power', 'hull_moving_average']`
+        * fields are not case-sensitive (though `--export` input key _IS_ case-sensitive)
     * If ticker symbols and/or `ACCEPTED_ATTS` are left `" "` while `run = True`, then default behavior is to run all available tabular dataset of all available tickers.
 
 ### "Options" at Input
@@ -101,6 +100,6 @@ Other solutions, employed on all plotting functions, is the `register_matplotlib
 [Tip Ranks, Metadata](https://www.tipranks.com/)
 
 ## Custom Metrics 
-* _Clustered Oscillators_ - weighted-aggregate of RSI, Stochastic, and Ultimate Oscillators. **Higher: sell, lower: buy**
+* _Clustered Oscillators_ - weighted-aggregate of RSI, Stochastic, and Ultimate Oscillators. **Higher: buy, lower: sell**
 * _Market Composite Index_ - equal weight aggregate of all 11 market sectors of clustered oscillators
-* _Swing Trades_ - logic to find trends using exponential moving averages. **Higher: sell, lower: buy**
+* _Swing Trades_ - logic to find trends using exponential moving averages. **Higher: buy, lower: sell**
