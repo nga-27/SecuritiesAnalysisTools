@@ -18,7 +18,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 1. Save file `core_example.json` as `core.json`. Edit new file as desired. This is recommended but not required.
     * Optional (0.1.16+) a save the `test_example.json` as `test.json` as an optional supplement to `core.json
 1. Run `python app.py`
-1. After intro screen in terminal, an input prompt with 4+ options (all followed by "enter" / "return"):
+1. After intro screen in terminal, an input prompt with 5+ options (all followed by "enter" / "return"):
     * Default: 'VTI' and 'S&P500' by simply hitting "enter" / "return"
     * Input tickers: any string of tickers (space-delimited) can be entered. Example: `mmm AAPL 'AMZN'`
     * "Core": starting version 0.1.02, entering `--core` when prompted for tickers will run `core.json` user funds and settings.
@@ -26,6 +26,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
     * "Test": starting version 0.1.16, entering `--test` when prompted for tickers will run `test.json` user funds and settings.
         * Functionality is the same as "core", but provides another means of configurability, especially for development.
     * "Options": starting version 0.1.13, entering `--options` will halt operation and print available input tags. (see _"Options"_ below)
+    * "Functions": starting version 0.1.17, entering `--f` will allow a *function* to be run without the main service. (see *"Functions"* below)
 1. All default behavior (non-core) is `2 year period, 1 day interval`. (View `yfinance` api for other settings).
 
 
@@ -59,10 +60,12 @@ optional.
         * VCSH (Short-term), VCIT (Intermediate-term), and VCLT (Long-term)
     * `Treasury Bond` - summation of 'Clustered Oscillator' metrics for 4 investment-grade, treasury/gov't-based bonds and timeframes based off select Vanguard ETFs:
         * VGSH (Short-term), VGIT (Intermediate-Term), VGLT (Long-Term), and VTEB (tax-exempt municipal)
-    * `International Composite` - weighted summation of 'Clustered Oscilator' metrics for 2 select Vanguard international ETFs:
+    * `International Composite` - weighted summation of 'Clustered Oscillator' metrics for 2 select Vanguard international ETFs:
         * BNDX (International Index), VWO (Emerging Markets Index)
-
-FUTURE - adding more customizable fields to core functionality for greater user customization.
+    * `Type Composite` - grouped summation of 'Clustered Oscillator' metrics for 11 sectors grouped into the following categories:
+        * Sensitive (Beta ~ 1.0, sensitive to market changes) - VGT, VOX, VIS, 50% of VDE, and 50% of VHT
+        * Defensive (Beta < 1.0, slower growth but less volatile) - VDC, VPU, 50% of VHT, and 60% of VNQ
+        * Cyclical (Beta > 1.0, has normal economic cycles) - VCR, VFH, VAW, 50% of VDE, and 40% of VNQ
 
 ### "Core" Exports
 * **Run** - as expected, `True` if exportation to be run and `False` if to be omitted. (Can be run separately on prompt of `--export-dataset`.)
@@ -73,10 +76,16 @@ FUTURE - adding more customizable fields to core functionality for greater user 
     * If ticker symbols and/or `ACCEPTED_ATTS` are left `" "` while `run = True`, then default behavior is to run all available tabular dataset of all available tickers.
 
 ### "Options" at Input
-Starting with **0.1.13**, the input prompt handles varying inputs beyond simply `--core`. All of the available (and some future) options are available at the
-starting prompt by entering `--options`. This input will print out in the terminal available options from `resources/header_options.txt`. (Please, do not update this
-file as it is read only into the program.) The program will also complete after printing out the available option keys. Please run the program again with the desired
--- tags.
+Starting with **0.1.13**, the input prompt handles varying inputs beyond simply `--core`. All of the available (and some future) options are available at the starting prompt by entering `--options`. This input will print out in the terminal available options from `resources/header_options.txt`. (Please, do not update this file as it is read only into the program.) The program will also complete after printing out the available option keys. Please run the program again with the desired `--` tags.
+
+### "Functions" at Input
+Starting with **0.1.17**, the input prompt can provide a subset of technical analysis tools to the user without having to run the entire main program and generate outputs. This subset of tools are run through the *"functions"* flag, denoted by `--f`. An advantage of this is if a user wishes to see, perhaps, only RSI and Exponential Moving Average (EMA) for securities *MMM* and *VTI*, only those will be run. Any function can be added with no limit to the number of functions added (see list of functions by running `--options`). Similarly, any number of tickers can be added with the configurable *period* and *interval* flags as well.
+
+An example input to generate an output of an RSI, EMA, and Hull Moving Average for a 5 year window at 1 week intervals for AAPL, MMM, and VWINX would be:
+
+`--f --rsi --ema --hull --5y --1w aapl mmm vwinx`
+
+All plots created during the process are rendered in real time. Note: **nothing is saved in "functions" mode**. To have saved plots or data, one must run the full program and `--export`.  Any function added without the `--f` flag will not be registered as a function and could give undesired behavior.
 
 ## Python Libraries / Issues
 Software is designed and run on **Python 3.6+**.
