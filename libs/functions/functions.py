@@ -313,10 +313,10 @@ def price_gap_function(config: dict):
 def vq_function(config: dict):
     print(f"Volatility & Stop Losses for funds...")
     print(f"")
-    fund_list = config['tickers'].split(' ')
+    data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            vq = get_volatility(fund)
+            vq = get_volatility(fund, data=data[fund])
             vq_function_print(vq, fund)
 
 
@@ -397,12 +397,17 @@ def vq_function_print(vq: dict, fund: str):
     last_max = vq.get('last_max', {}).get('Price')
     stop_loss = vq.get('stop_loss')
     latest = vq.get('latest_price')
+    stop_status = vq.get('stopped_out')
+
     mid_pt = (last_max + stop_loss) / 2.0
     amt_latest = latest - stop_loss
     amt_max = last_max - stop_loss
     percent = np.round(amt_latest / amt_max * 100.0, 2)
 
-    if latest < stop_loss:
+    if stop_status == 'Stopped Out':
+        status_color = DOWN_COLOR
+        status_message = "AVOID - Stopped Out"
+    elif latest < stop_loss:
         status_color = DOWN_COLOR
         status_message = "AVOID - Stopped Out"
     elif latest < mid_pt:

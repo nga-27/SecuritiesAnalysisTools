@@ -195,6 +195,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     """
     pb = kwargs.get('progress_bar', None)
     max_close = kwargs.get('max_close', None)
+    dataset = kwargs.get('data')
 
     metadata = {}
     ticker = yf.Ticker(fund_ticker)
@@ -229,7 +230,8 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     if pb is not None:
         pb.uptick(increment=0.1)
 
-    metadata['volatility'] = get_volatility(fund_ticker, max_close=max_close)
+    metadata['volatility'] = get_volatility(
+        fund_ticker, max_close=max_close, data=dataset)
     if pb is not None:
         pb.uptick(increment=0.1)
 
@@ -362,6 +364,7 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
 def get_volatility(ticker_str: str, **kwargs):
     TIMEOUT = 5
     max_close = kwargs.get('max_close', None)
+    dataset = kwargs.get('data')
     is_SP500 = False
     vq = {}
 
@@ -414,6 +417,7 @@ def get_volatility(ticker_str: str, **kwargs):
                 print(
                     f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
                 return vq
+
             r = response.json()
             if response.status_code == 200:
                 val = None
@@ -421,6 +425,7 @@ def get_volatility(ticker_str: str, **kwargs):
                     if tick['Symbol'] == ticker_str:
                         val = tick["SymbolId"]
                         break
+
                 if val is not None:
                     now = datetime.now()
                     start = now - relativedelta(years=10)
@@ -434,10 +439,27 @@ def get_volatility(ticker_str: str, **kwargs):
                         print(
                             f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
                         return vq
+
                     r = response.json()
                     if response.status_code == 200:
                         vq['analysis'] = r
 
+                    vq['stopped_out'] = vq_stop_out_check(dataset, vq)
+
             return vq
 
     return vq
+
+
+def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
+    latest_max = vq_obj.get('last_max', {}).get('Price')
+    stop_loss = vq_obj.get('stop_loss', 'n/a')
+    if (latest_max == 'n/a') or (stop_loss == 'n/a'):
+        return 'n/a'
+
+    for i in range(len(dataset['Close'])-1, -1, -1):
+        if np.round(dataset['Close'][i], 2) >= latest_max:
+            return 'OK'
+        if dataset['Low'][i] < stop_loss:
+            return 'Stopped Out'
+    return 'OK'

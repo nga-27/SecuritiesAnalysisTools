@@ -127,7 +127,10 @@ def technical_analysis(config: dict):
         analysis[fund_name]['statistics'] = get_high_level_stats(fund)
 
         analysis[fund_name]['metadata'] = get_api_metadata(
-            fund_name, progress_bar=p, max_close=analysis[fund_name]['statistics']['max_close'])
+            fund_name,
+            progress_bar=p,
+            max_close=analysis[fund_name]['statistics']['max_close'],
+            data=fund)
 
         analysis[fund_name]['clustered_osc'] = cluster_oscs(fund, function='all', filter_thresh=3,
                                                             name=fund_name, plot_output=False, progress_bar=p)
