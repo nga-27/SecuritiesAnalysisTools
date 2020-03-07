@@ -85,11 +85,15 @@ def add_fund_content(prs, fund: str, analysis: dict):
             rows = 4
             if vq is not None:
                 has_vq = True
-                rows = 7
+                rows = 8
                 stop_loss = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('stop_loss')
                 high_close = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('last_max', {}).get('Price', 'n/a')
+                status = analysis[fund].get('metadata', {}).get(
+                    'volatility', {}).get('status', {}).get('status', 'n/a')
+                vq_color = analysis[fund].get('metadata', {}).get(
+                    'volatility', {}).get('status', {}).get('color', 'n/a')
 
             table_placeholder = slide.shapes.add_table(rows,
                                                        2,
@@ -117,6 +121,11 @@ def add_fund_content(prs, fund: str, analysis: dict):
                 table.cell(5, 1).text = str(stop_loss)
                 table.cell(6, 0).text = 'Last High Close'
                 table.cell(6, 1).text = str(high_close)
+                table.cell(7, 0).text = 'VQ Status'
+                table.cell(7, 1).text = str(status)
+
+                table.cell(7, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+                    vq_color)
 
             table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
             table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)

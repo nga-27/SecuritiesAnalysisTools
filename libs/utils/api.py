@@ -445,6 +445,8 @@ def get_volatility(ticker_str: str, **kwargs):
                         vq['analysis'] = r
 
                     vq['stopped_out'] = vq_stop_out_check(dataset, vq)
+                    status, color, _ = vq_status_print(vq, ticker_str)
+                    vq['status'] = {'status': status, 'color': color}
 
             return vq
 
@@ -462,6 +464,35 @@ def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
     for i in range(len(dataset['Close'])-1, -1, -1):
         if dataset.index[i] < max_date:
             return 'OK'
-        if dataset['Low'][i] < stop_loss:
+        if dataset['Close'][i] < stop_loss:
             return 'Stopped Out'
     return 'OK'
+
+
+def vq_status_print(vq: dict, fund: str):
+    if not vq:
+        return
+    last_max = vq.get('last_max', {}).get('Price')
+    stop_loss = vq.get('stop_loss')
+    latest = vq.get('latest_price')
+    stop_status = vq.get('stopped_out')
+
+    mid_pt = (last_max + stop_loss) / 2.0
+    amt_latest = latest - stop_loss
+    amt_max = last_max - stop_loss
+    percent = np.round(amt_latest / amt_max * 100.0, 2)
+
+    if stop_status == 'Stopped Out':
+        status_color = 'red'
+        status_message = "AVOID - Stopped Out"
+    elif latest < stop_loss:
+        status_color = 'red'
+        status_message = "AVOID - Stopped Out"
+    elif latest < mid_pt:
+        status_color = 'yellow'
+        status_message = "CAUTION - Hold"
+    else:
+        status_color = 'green'
+        status_message = "GOOD - Buy / Maintain"
+
+    return status_message, status_color, percent

@@ -6,7 +6,8 @@ import numpy as np
 
 from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
-from libs.utils import get_volatility, generic_plotting
+from libs.utils import generic_plotting
+from libs.utils import get_volatility, vq_status_print
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
