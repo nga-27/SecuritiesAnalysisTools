@@ -41,10 +41,13 @@ def metrics_initializer(period='1y', bond_type='Treasury'):
     else:
         tickers = 'BND'
 
+    if isinstance(period, (list)):
+        period = period[0]
+
     sectors = tickers.split(' ')
     # tickers = index_appender(tickers)
     print(" ")
-    print(f'Fetching {bond_type} Bond Composite Index funds...')
+    print(f'Fetching {bond_type} Bond Composite Index funds for {period}...')
     data, _ = download_data_indexes(
         indexes=sectors, tickers=tickers, period=period, interval='1d')
     print(" ")

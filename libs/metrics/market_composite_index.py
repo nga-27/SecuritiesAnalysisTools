@@ -38,8 +38,11 @@ def metrics_initializer(period='5y', name='Market Composite Index'):
     sectors = tickers.split(' ')
     tickers = index_appender(tickers)
     all_tickers = tickers.split(' ')
+    if isinstance(period, (list)):
+        period = period[0]
+
     print(" ")
-    print(f'Fetching {name} funds...')
+    print(f'Fetching {name} funds for {period}...')
     data, _ = download_data_indexes(
         indexes=all_tickers, tickers=tickers, period=period, interval='1d')
     print(" ")

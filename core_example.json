@@ -1,7 +1,11 @@
 {
     "Properties": {
-        "Period": "1y",
-        "Interval": "1d",
+        "Period": [
+            "1y"
+        ],
+        "Interval": [
+            "1d"
+        ],
         "Indexes": {
             "Market Sector": true,
             "Type Sector": true,

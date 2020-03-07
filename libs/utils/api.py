@@ -347,9 +347,8 @@ def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs):
         if matched in tickers:
             return matched, None
 
-        config['period'] = period
-        config['interval'] = interval
-        fund_data = download_single_fund(matched, config, fund_len=fund_len)
+        fund_data = download_single_fund(
+            matched, config, period=period, interval=interval, fund_len=fund_len)
         return matched, fund_data
 
 

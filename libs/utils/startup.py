@@ -148,6 +148,12 @@ def header_json_parse(key: str) -> list:
             if isinstance(interval, (str)):
                 interval = [interval]
 
+            for i, inter in enumerate(interval):
+                if inter == '1w':
+                    interval[i] = '1wk'
+                elif inter == '1m':
+                    interval[i] = '1mo'
+
     else:
         return None
 
@@ -297,14 +303,14 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--1y' in i_keys:
         config['period'].append('1y')
 
-    if '--1d' in i_keys:
-        config['interval'].append('1d')
+    if '--1m' in i_keys:
+        config['interval'].append('1mo')
 
     if '--1w' in i_keys:
         config['interval'].append('1wk')
 
-    if '--1m' in i_keys:
-        config['interval'].append('1mo')
+    if '--1d' in i_keys:
+        config['interval'].append('1d')
 
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in i_keys:

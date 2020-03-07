@@ -42,4 +42,4 @@ def output_to_json(data: dict, exclude_tabular=True):
     with open(filename, 'w') as f:
         json.dump(meta, f)
 
-    print('JSON output complete.')
+    print('\r\nJSON output complete.')

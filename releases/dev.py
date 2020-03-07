@@ -120,7 +120,7 @@ def technical_analysis(config: dict):
             max_close=max(dataset[periods[0]][fund_name]['Close']),
             data=dataset[periods[0]][fund_name])
 
-        for period in periods:
+        for i, period in enumerate(periods):
 
             fund_data = {}
 
@@ -188,7 +188,9 @@ def technical_analysis(config: dict):
                     config=config,
                     plot_output=False,
                     meta=analysis[fund_name]['metadata'],
-                    progress_bar=p
+                    progress_bar=p,
+                    period=period,
+                    interval=config['interval'][i]
                 )
 
                 beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])

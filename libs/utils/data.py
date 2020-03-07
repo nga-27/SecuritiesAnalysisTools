@@ -158,8 +158,8 @@ def download_single_fund(fund: str, config: dict, fund_len=None, **kwargs) -> di
     Returns:
         dict -- [description]
     """
-    period = config.get('period', '2y')
-    interval = config.get('interval', '1d')
+    period = kwargs.get('period', '2y')
+    interval = kwargs.get('interval', '1d')
     ticker = fund
     start = kwargs.get('start')
     end = kwargs.get('end')
