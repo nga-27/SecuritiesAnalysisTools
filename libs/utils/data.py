@@ -19,6 +19,55 @@ interval : str
 """
 
 
+def download_data_all(config: dict, **kwargs) -> list:
+    """Download data (for functions)
+
+    Arguments:
+        config {dict} -- full information dictionary of entire run
+
+    Optional Args:
+        start {str} -- date (default: {None})
+        end {str} -- date (default: {None})
+
+    Returns:
+        list -- downloaded data, list of funds
+    """
+    period = config.get('period', ['2y'])
+    interval = config.get('interval', ['1d'])
+    tickers = config['tickers']
+    ticker_print = config['ticker print']
+    start = kwargs.get('start')
+    end = kwargs.get('end')
+
+    if len(period) > len(interval):
+        diff = len(period) - len(interval)
+        for _ in range(diff):
+            interval.append('1d')
+        config['interval'] = interval
+
+    dataset = dict()
+    for i, per in enumerate(period):
+        inter = interval[i]
+        if (start is not None) and (end is not None):
+            print(
+                f'Fetching data for {TICKER}{ticker_print}{NORMAL} from dates {start} to {end}...')
+            data = yf.download(tickers=tickers, period=per, interval=inter,
+                               group_by='ticker', start=start, end=end)
+        else:
+            print(
+                f'Fetching data for {TICKER}{ticker_print}{NORMAL} for {per} at {inter} intervals...')
+            data = yf.download(tickers=tickers, period=per,
+                               interval=inter, group_by='ticker')
+        print(" ")
+
+        funds = fund_list_extractor(data, config=config)
+        data = data_format(data, config=config)
+
+        dataset[per] = data
+
+    return dataset, funds, period, config
+
+
 def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
     """Download Data Indexes
 

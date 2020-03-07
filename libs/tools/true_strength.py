@@ -166,6 +166,9 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     meta = kwargs.get('meta', None)
     sector_data = kwargs.get('sector_data', {})
 
+    period = kwargs.get('period', '2y')
+    interval = kwargs.get('interval', '1d')
+
     comp_funds = []
     comp_data = {}
     if meta is not None:
@@ -177,11 +180,12 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
                 'end': full_data_dict[primary_name].index[len(full_data_dict[primary_name]['Close'])-1],
                 'dates': full_data_dict[primary_name].index
             }
+
             match_fund, match_data = api_sector_match(
-                match, config, fund_len=fund_len)
+                match, config, fund_len=fund_len, period=period, interval=interval)
             if match_fund is not None:
                 comp_funds, comp_data = api_sector_funds(
-                    match_fund, config, fund_len=fund_len)
+                    match_fund, config, fund_len=fund_len, period=period, interval=interval)
                 if match_data is None:
                     match_data = full_data_dict
                 sector = match_fund

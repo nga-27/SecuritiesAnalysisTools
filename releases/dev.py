@@ -34,7 +34,7 @@ from libs.features import feature_detection_head_and_shoulders, feature_plotter,
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data, has_critical_error, get_api_metadata
+from libs.utils import download_data_all, has_critical_error, get_api_metadata
 from libs.utils import TEXT_COLOR_MAP, SP500
 
 # Imports that control function-only inputs
@@ -60,9 +60,9 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.27'
-_DATE_REVISION_ = '2020-03-06'
+_DATE_REVISION_ = '2020-03-07'
 ################################
-PROCESS_STEPS_DEV = 22
+PROCESS_STEPS_DEV = 21
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -96,120 +96,133 @@ def technical_analysis(config: dict):
     remove_temp_dir()
     configure_temp_dir()
 
-    data, funds = download_data(config=config)
+    dataset, funds, periods, config = download_data_all(config=config)
 
-    e_check = {'tickers': config['tickers']}
-    if has_critical_error(data, 'download_data', misc=e_check):
-        return None
+    for period in dataset:
+        e_check = {'tickers': config['tickers']}
+        if has_critical_error(dataset[period], 'download_data', misc=e_check):
+            return None
 
     # Start of automated process
     analysis = {}
 
     for fund_name in funds:
 
-        fund = data[fund_name]
         fund_print = SP500.get(fund_name, fund_name)
         print("")
         print(f"~~{fund_print}~~")
-        create_sub_temp_dir(fund_name)
+        create_sub_temp_dir(fund_name, sub_periods=config['period'])
 
         analysis[fund_name] = {}
 
-        start = date_extractor(fund.index[0], _format='str')
-        end = date_extractor(fund.index[len(fund['Close'])-1], _format='str')
-        analysis[fund_name]['dates_covered'] = {
-            'start': str(start), 'end': str(end)}
-        analysis[fund_name]['name'] = fund_name
-
-        p = ProgressBar(config['process_steps'], name=fund_print)
-        p.start()
-
-        analysis[fund_name]['statistics'] = get_high_level_stats(fund)
-
         analysis[fund_name]['metadata'] = get_api_metadata(
             fund_name,
-            progress_bar=p,
-            max_close=analysis[fund_name]['statistics']['max_close'],
-            data=fund)
+            max_close=max(dataset[periods[0]][fund_name]['Close']),
+            data=dataset[periods[0]][fund_name])
 
-        analysis[fund_name]['clustered_osc'] = cluster_oscs(fund, function='all', filter_thresh=3,
-                                                            name=fund_name, plot_output=False, progress_bar=p)
+        for period in periods:
 
-        analysis[fund_name]['full_stochastic'] = full_stochastic(
-            fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+            fund_data = {}
 
-        analysis[fund_name]['rsi'] = RSI(
-            fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+            fund = dataset[period][fund_name]
 
-        analysis[fund_name]['ultimate'] = ultimate_oscillator(
-            fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+            start = date_extractor(fund.index[0], _format='str')
+            end = date_extractor(
+                fund.index[len(fund['Close'])-1], _format='str')
+            fund_data['dates_covered'] = {
+                'start': str(start), 'end': str(end)}
+            fund_data['name'] = fund_name
 
-        analysis[fund_name]['awesome'] = awesome_oscillator(
-            fund, name=fund_name, plot_output=False, progress_bar=p)
+            fund_print2 = fund_print + f" ({period}) "
+            p = ProgressBar(config['process_steps'], name=fund_print2)
+            p.start()
 
-        analysis[fund_name]['momentum_oscillator'] = momentum_oscillator(
-            fund, name=fund_name, plot_output=False, progress_bar=p)
+            fund_data['statistics'] = get_high_level_stats(fund)
 
-        analysis[fund_name]['obv'] = on_balance_volume(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['clustered_osc'] = cluster_oscs(fund, function='all', filter_thresh=3,
+                                                      name=fund_name, plot_output=False, progress_bar=p)
 
-        analysis[fund_name]['moving_average'] = triple_moving_average(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['full_stochastic'] = full_stochastic(
+                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
-        analysis[fund_name]['swing_trade'] = moving_average_swing_trade(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['rsi'] = RSI(
+                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
-        analysis[fund_name]['hull_moving_average'] = hull_moving_average(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['ultimate'] = ultimate_oscillator(
+                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
 
-        analysis[fund_name]['macd'] = mov_avg_convergence_divergence(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['awesome'] = awesome_oscillator(
+                fund, name=fund_name, plot_output=False, progress_bar=p)
 
-        analysis[fund_name]['bear_bull_power'] = bear_bull_power(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['momentum_oscillator'] = momentum_oscillator(
+                fund, name=fund_name, plot_output=False, progress_bar=p)
 
-        analysis[fund_name]['total_power'] = total_power(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['obv'] = on_balance_volume(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        analysis[fund_name]['bollinger_bands'] = bollinger_bands(
-            fund, plot_output=False, name=fund_name, progress_bar=p)
+            fund_data['moving_average'] = triple_moving_average(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        if 'no_index' not in config['state']:
-            analysis[fund_name]['relative_strength'] = relative_strength(fund_name, full_data_dict=data, config=config,
-                                                                         plot_output=False, meta=analysis[fund_name]['metadata'],
-                                                                         progress_bar=p)
-            beta, rsqd = beta_comparison(fund, data['^GSPC'])
-            analysis[fund_name]['beta'] = beta
-            analysis[fund_name]['r_squared'] = rsqd
-            p.uptick()
+            fund_data['swing_trade'] = moving_average_swing_trade(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        # Support and Resistance Analysis
-        analysis[fund_name]['support_resistance'] = find_resistance_support_lines(
-            fund, name=fund_name, plot_output=False, progress_bar=p)
+            fund_data['hull_moving_average'] = hull_moving_average(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        # Feature Detection Block
-        analysis[fund_name]['features'] = {}
-        analysis[fund_name]['features']['head_shoulders'] = feature_detection_head_and_shoulders(
-            fund, name=fund_name, plot_output=False, progress_bar=p)
+            fund_data['macd'] = mov_avg_convergence_divergence(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        filename = f"{fund_name}/candlestick_{fund_name}"
-        candlestick(fund, title=fund_print, filename=filename,
-                    saveFig=True, progress_bar=p)
+            fund_data['bear_bull_power'] = bear_bull_power(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        analysis[fund_name]['price_gaps'] = analyze_price_gaps(
-            fund, name=fund_name, plot_output=False, progress_bar=p)
+            fund_data['total_power'] = total_power(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        # Get Trendlines
-        analysis[fund_name]['trendlines'] = get_trendlines(
-            fund, name=fund_name, plot_output=False, progress_bar=p)
+            fund_data['bollinger_bands'] = bollinger_bands(
+                fund, plot_output=False, name=fund_name, progress_bar=p)
 
-        # Various Fund-specific Metrics
-        analysis[fund_name]['futures'] = future_returns(
-            fund, to_json=True, progress_bar=p)
+            if 'no_index' not in config['state']:
+                fund_data['relative_strength'] = relative_strength(
+                    fund_name,
+                    full_data_dict=dataset[period],
+                    config=config,
+                    plot_output=False,
+                    meta=analysis[fund_name]['metadata'],
+                    progress_bar=p
+                )
 
-        p.end()
+                beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])
+                fund_data['beta'] = beta
+                fund_data['r_squared'] = rsqd
+                p.uptick()
 
-    # test_competitive(data, analysis)
+            # Support and Resistance Analysis
+            fund_data['support_resistance'] = find_resistance_support_lines(
+                fund, name=fund_name, plot_output=False, progress_bar=p)
+
+            # Feature Detection Block
+            fund_data['features'] = {}
+            fund_data['features']['head_shoulders'] = feature_detection_head_and_shoulders(
+                fund, name=fund_name, plot_output=False, progress_bar=p)
+
+            filename = f"{fund_name}/candlestick_{fund_name}"
+            candlestick(fund, title=fund_print, filename=filename,
+                        saveFig=True, progress_bar=p)
+
+            fund_data['price_gaps'] = analyze_price_gaps(
+                fund, name=fund_name, plot_output=False, progress_bar=p)
+
+            # Get Trendlines
+            fund_data['trendlines'] = get_trendlines(
+                fund, name=fund_name, plot_output=False, progress_bar=p)
+
+            # Various Fund-specific Metrics
+            fund_data['futures'] = future_returns(
+                fund, to_json=True, progress_bar=p)
+
+            p.end()
+
+            analysis[fund_name][period] = fund_data
 
     analysis['_METRICS_'] = {}
     analysis['_METRICS_']['mci'] = market_composite_index(
@@ -223,7 +236,7 @@ def technical_analysis(config: dict):
     analysis['_METRICS_']['tci'] = type_composite_index(
         config=config, plot_output=False)
 
-    slide_creator(analysis, config=config)
+    # slide_creator(analysis, config=config)
     output_to_json(analysis)
 
     metadata_to_dataset(config=config)

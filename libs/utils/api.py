@@ -13,7 +13,7 @@ from dateutil.relativedelta import relativedelta
 import libs.utils.stable_yf as styf
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
-from .constants import STANDARD_COLORS
+from .constants import STANDARD_COLORS, SP500
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -28,7 +28,10 @@ VQ_DEEP_ANALYSIS_PARAM = "get-tmc-data/"
 TRADESTOPS_URL = "https://tradestops.com/investment-calculator/"
 
 WARNING = STANDARD_COLORS["warning"]
+FUND = STANDARD_COLORS["ticker"]
 NORMAL = STANDARD_COLORS["normal"]
+
+REVERSE_LINE = "\033[F"
 
 
 def get_dividends(ticker):
@@ -197,6 +200,10 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     max_close = kwargs.get('max_close', None)
     dataset = kwargs.get('data')
 
+    fund_ticker_cleansed = SP500.get(fund_ticker, fund_ticker)
+    api_print = f"\r\nFetching API metadata for {FUND}{fund_ticker_cleansed}{NORMAL}..."
+    print(api_print)
+
     metadata = {}
     ticker = yf.Ticker(fund_ticker)
     if pb is not None:
@@ -234,6 +241,9 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         fund_ticker, max_close=max_close, data=dataset)
     if pb is not None:
         pb.uptick(increment=0.1)
+
+    api_print += "  Done."
+    print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
 
     return metadata
 
@@ -317,7 +327,11 @@ def calculate_eps(meta: dict) -> dict:
     return eps
 
 
-def api_sector_match(sector: str, config: dict, fund_len=None):
+def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs):
+
+    period = kwargs.get('period', config['period'])
+    interval = kwargs.get('interval', config['interval'])
+
     sector_match_file = "resources/sectors.json"
     if not os.path.exists(sector_match_file):
         print(f"Warning: sector file '{sector_match_file}' not found.")
@@ -332,11 +346,17 @@ def api_sector_match(sector: str, config: dict, fund_len=None):
         tickers = config.get('tickers', '').split(' ')
         if matched in tickers:
             return matched, None
+
+        config['period'] = period
+        config['interval'] = interval
         fund_data = download_single_fund(matched, config, fund_len=fund_len)
         return matched, fund_data
 
 
-def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
+def api_sector_funds(sector_fund: str, config: dict, fund_len=None, **kwargs):
+    period = kwargs.get('period', '2y')
+    interval = kwargs.get('interval', '1d')
+
     sector_match_file = "resources/sectors.json"
     if not os.path.exists(sector_match_file):
         print(
@@ -352,8 +372,6 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
             return [], {}
 
         tickers = ' '.join(matched)
-        period = config.get('period', '2y')
-        interval = config.get('interval', '1d')
         fund_data, _ = download_data_indexes(
             indexes=matched, tickers=tickers, fund_len=fund_len, period=period, interval=interval)
         return matched, fund_data

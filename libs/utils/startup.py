@@ -58,8 +58,8 @@ def start_header(**kwargs) -> dict:
     config['date_release'] = update_release
 
     config['state'] = 'run'
-    config['period'] = '2y'
-    config['interval'] = '1d'
+    config['period'] = ['2y']
+    config['interval'] = ['1d']
     config['properties'] = {}
     config['core'] = False
     config['tickers'] = ''
@@ -142,6 +142,11 @@ def header_json_parse(key: str) -> list:
             interval = props['Interval']
             period = props['Period']
             exports = core.get('Exports')
+
+            if isinstance(period, (str)):
+                period = [period]
+            if isinstance(interval, (str)):
+                interval = [interval]
 
     else:
         return None
@@ -274,26 +279,32 @@ def header_options_parse(input_str: str, config: dict) -> list:
                              "fields": ticker_list_to_str(ticker_keys)}
 
     # Settings for 'intervals' and 'periods'
+    if ('--10y' in i_keys) or ('--5y' in i_keys) or ('--2y' in i_keys) or ('--1y' in i_keys):
+        config['period'] = []
+
+    if ('--1d' in i_keys) or ('--1w' in i_keys) or ('--1m' in i_keys):
+        config['interval'] = []
+
     if '--10y' in i_keys:
-        config['period'] = '10y'
+        config['period'].append('10y')
 
     if '--5y' in i_keys:
-        config['period'] = '5y'
+        config['period'].append('5y')
 
     if '--2y' in i_keys:
-        config['period'] = '2y'
+        config['period'].append('2y')
 
     if '--1y' in i_keys:
-        config['period'] = '1y'
+        config['period'].append('1y')
 
     if '--1d' in i_keys:
-        config['interval'] = '1d'
+        config['interval'].append('1d')
 
     if '--1w' in i_keys:
-        config['interval'] = '1wk'
+        config['interval'].append('1wk')
 
     if '--1m' in i_keys:
-        config['interval'] = '1mo'
+        config['interval'].append('1mo')
 
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in i_keys:
