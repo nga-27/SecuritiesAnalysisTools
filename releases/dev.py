@@ -60,7 +60,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.27'
-_DATE_REVISION_ = '2020-03-01'
+_DATE_REVISION_ = '2020-03-06'
 ################################
 PROCESS_STEPS_DEV = 22
 

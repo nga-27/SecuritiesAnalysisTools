@@ -452,11 +452,10 @@ def get_volatility(ticker_str: str, **kwargs):
 
 
 def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
-    latest_max = vq_obj.get('last_max', {}).get('Price')
     stop_loss = vq_obj.get('stop_loss', 'n/a')
     max_date = vq_obj.get('last_max', {}).get('Date')
 
-    if (latest_max == 'n/a') or (stop_loss == 'n/a'):
+    if (max_date == 'n/a') or (stop_loss == 'n/a'):
         return 'n/a'
 
     max_date = datetime.strptime(max_date, '%m/%d/%Y')
