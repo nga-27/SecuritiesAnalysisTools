@@ -64,6 +64,7 @@ def start_header(**kwargs) -> dict:
     config['core'] = False
     config['tickers'] = ''
     config['exports'] = {"run": False, "fields": []}
+    config['views'] = {"pptx": '2y'}
 
     config, list_of_tickers = header_options_parse(input_str, config)
 
@@ -142,6 +143,7 @@ def header_json_parse(key: str) -> list:
             interval = props['Interval']
             period = props['Period']
             exports = core.get('Exports')
+            views = core.get('Views', {})
 
             if isinstance(period, (str)):
                 period = [period]
@@ -154,10 +156,13 @@ def header_json_parse(key: str) -> list:
                 elif inter == '1m':
                     interval[i] = '1mo'
 
+            if views.get('pptx', '') not in period:
+                views['pptx'] = period[0]
+
     else:
         return None
 
-    return [tickers, period, interval, props, exports]
+    return [tickers, period, interval, props, exports, views]
 
 
 def key_parser(input_str: str) -> list:
@@ -258,6 +263,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['properties'] = core[3]
             config['core'] = True
             config['exports'] = core[4]
+            config['views'] = core[5]
 
     if '--test' in i_keys:
         core = header_json_parse('--test')
@@ -268,6 +274,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['properties'] = core[3]
             config['core'] = True
             config['exports'] = core[4]
+            config['views'] = core[5]
 
     if ('--noindex' in i_keys) or ('--ni' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'no_index')

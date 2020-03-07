@@ -18,6 +18,9 @@
             }
         }
     },
+    "Views": {
+        "pptx": "2y"
+    },
     "Exports": {
         "run": true,
         "fields": ""

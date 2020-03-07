@@ -1,7 +1,7 @@
 {
     "Properties": {
         "Period": [
-            "1y"
+            "2y"
         ],
         "Interval": [
             "1d"
@@ -17,6 +17,9 @@
                 "type": "short"
             }
         }
+    },
+    "Views": {
+        "pptx": "2y"
     },
     "Exports": {
         "run": true,
