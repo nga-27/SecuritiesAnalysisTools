@@ -25,7 +25,7 @@ CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
 
-def make_fund_slides(prs, analysis: dict):
+def make_fund_slides(prs, analysis: dict, **kwargs):
     """Make Fund Slides
 
     Arguments:
@@ -35,15 +35,18 @@ def make_fund_slides(prs, analysis: dict):
     Returns:
         prs -- pptx presentation object
     """
+    views = kwargs.get('views')
     funds = analysis.keys()
     for fund in funds:
-        prs = add_fund_content(prs, fund, analysis)
+        prs = add_fund_content(prs, fund, analysis, views=views)
 
     return prs
 
 
-def add_fund_content(prs, fund: str, analysis: dict):
-    content_dir = f'output/temp/{fund}/'
+def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
+
+    views = kwargs.get('views')
+    content_dir = f'output/temp/{fund}/{views}/'
     if os.path.exists(content_dir):
         # Title slide for a fund
         fund_name = SP500.get(fund, fund)
@@ -65,34 +68,34 @@ def add_fund_content(prs, fund: str, analysis: dict):
 
         p2 = text_frame.add_paragraph()
         p2.alignment = PP_ALIGN.CENTER
-        p2.text = f"Dates Covered: {analysis[fund]['dates_covered']['start']}  :  {analysis[fund]['dates_covered']['end']}"
+        p2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  {analysis[fund][views]['dates_covered']['end']}"
         p2.font.bold = False
         p2.font.size = Pt(18)
         p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
         p2.font.name = 'Arial'
 
         has_beta = False
-        if 'beta' in analysis[fund].keys():
+        if 'beta' in analysis[fund][views].keys():
             # Insert a table of fund figures
             left_loc = Inches(0.1)
             top_loc = Inches(1.1)
             table_width = Inches(2.4)
             table_height = Inches(1.4)
 
-            vq = analysis[fund].get('metadata', {}).get(
+            vq = analysis[fund][views].get('metadata', {}).get(
                 'volatility', {}).get('VQ')
             has_vq = False
             rows = 4
             if vq is not None:
                 has_vq = True
                 rows = 8
-                stop_loss = analysis[fund].get('metadata', {}).get(
+                stop_loss = analysis[fund][views].get('metadata', {}).get(
                     'volatility', {}).get('stop_loss')
-                high_close = analysis[fund].get('metadata', {}).get(
+                high_close = analysis[fund][views].get('metadata', {}).get(
                     'volatility', {}).get('last_max', {}).get('Price', 'n/a')
-                status = analysis[fund].get('metadata', {}).get(
+                status = analysis[fund][views].get('metadata', {}).get(
                     'volatility', {}).get('status', {}).get('status', 'n/a')
-                vq_color = analysis[fund].get('metadata', {}).get(
+                vq_color = analysis[fund][views].get('metadata', {}).get(
                     'volatility', {}).get('status', {}).get('color', 'n/a')
 
             table_placeholder = slide.shapes.add_table(rows,
@@ -107,9 +110,11 @@ def add_fund_content(prs, fund: str, analysis: dict):
             table.cell(0, 1).text = ''
             table.cell(1, 0).text = 'Current Price'
             table.cell(1, 1).text = '$' + \
-                str(np.round(analysis[fund]['statistics']['current_price'], 2))
+                str(np.round(analysis[fund][views]
+                             ['statistics']['current_price'], 2))
             table.cell(2, 0).text = 'Beta'
-            table.cell(2, 1).text = str(np.round(analysis[fund]['beta'], 5))
+            table.cell(2, 1).text = str(
+                np.round(analysis[fund][views]['beta'], 5))
             table.cell(3, 0).text = 'R-Squared'
             table.cell(3, 1).text = str(
                 np.round(analysis[fund]['r_squared'], 5))
@@ -146,10 +151,12 @@ def add_fund_content(prs, fund: str, analysis: dict):
             slide.shapes.add_picture(
                 content, left, top, height=height, width=width)
 
-        price_pt = np.round(analysis[fund]['statistics']['current_price'], 2)
+        price_pt = np.round(analysis[fund][views]
+                            ['statistics']['current_price'], 2)
         price_chg_p = np.round(
-            analysis[fund]['statistics']['current_percent_change'], 3)
-        price_chg = np.round(analysis[fund]['statistics']['current_change'], 2)
+            analysis[fund][views]['statistics']['current_percent_change'], 3)
+        price_chg = np.round(analysis[fund][views]
+                             ['statistics']['current_change'], 2)
         if price_chg > 0.0:
             price_str = f"${price_pt} +{price_chg} (+{price_chg_p}%)"
         else:

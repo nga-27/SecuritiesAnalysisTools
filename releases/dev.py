@@ -238,7 +238,7 @@ def technical_analysis(config: dict):
     analysis['_METRICS_']['tci'] = type_composite_index(
         config=config, plot_output=False)
 
-    # slide_creator(analysis, config=config)
+    slide_creator(analysis, config=config)
     output_to_json(analysis)
 
     metadata_to_dataset(config=config)

@@ -23,10 +23,10 @@ def remove_temp_dir():
 def create_sub_temp_dir(name: str, sub_periods=[]):
     if not os.path.exists('output/temp/' + name + '/'):
         os.mkdir('output/temp/' + name + '/')
-        if len(sub_periods) > 0:
-            for period in sub_periods:
-                if not os.path.exists('output/temp/' + name + '/' + period + '/'):
-                    os.mkdir('output/temp/' + name + '/' + period + '/')
+    if len(sub_periods) > 0:
+        for period in sub_periods:
+            if not os.path.exists('output/temp/' + name + '/' + period + '/'):
+                os.mkdir('output/temp/' + name + '/' + period + '/')
 
 
 def windows_compatible_file_parse(extension: str, **kwargs) -> list:
