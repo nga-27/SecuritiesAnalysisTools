@@ -83,6 +83,12 @@ def future_returns(fund: pd.DataFrame, **kwargs):
 ###################################################################
 
 def metadata_to_dataset(config: dict):
+    """Metadata to Dataset
+
+    Arguments:
+        config {dict} -- configuration obj
+
+    """
     if config.get('exports', {}).get('run'):
         print(f"Exporting datasets...")
         metadata_file = "output/metadata.json"
@@ -96,6 +102,7 @@ def metadata_to_dataset(config: dict):
 
             job = metadata_key_filter(config['exports']['fields'], m_data)
             full_data = collate_data(job, m_data)
+            full_data = collate_data_periods(job, m_data, all_data=full_data)
             groomed_data = groom_data(full_data)
             export_data(groomed_data)
 
@@ -114,6 +121,7 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
 
     job_dict['attributes'] = []
     job_dict['tickers'] = []
+    job_dict['periods'] = []
 
     for key in key_list:
         if key in metadata.keys():
@@ -134,8 +142,11 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
     if len(job_dict['attributes']) == 0:
         # "All available/accepted attributes" case
         for key in metadata[temp_key].keys():
-            if key in ACCEPTED_ATTS:
-                job_dict['attributes'].append(key)
+            if 'y' in key:
+                job_dict['periods'].append(key)
+                for k2 in metadata[temp_key][key].keys():
+                    if k2 in ACCEPTED_ATTS:
+                        job_dict['attributes'].append(k2)
         for key in metadata.get('_METRICS_', {}).keys():
             if key in ACCEPTED_ATTS:
                 job_dict['attributes'].append(key)
@@ -226,19 +237,106 @@ def collate_data(job: dict, metadata: dict):
     return all_data
 
 
+def collate_data_periods(job: dict, metadata: dict, all_data=None):
+    if all_data is None:
+        all_data = dict()
+    for ticker in job['tickers']:
+        all_data[ticker] = dict()
+        for period in job['periods']:
+            for att in job['attributes']:
+                attr = metadata[ticker][period].get(att, {}).get('tabular')
+                if attr is None:
+                    continue
+
+                # Flatten tree, if necessary
+                if type(attr) == dict:
+                    keys = attr.keys()
+                    for key in keys:
+                        if type(attr[key]) == dict:
+                            sub_keys = attr[key].keys()
+                            for sub in sub_keys:
+                                if type(attr[key][sub]) == dict:
+                                    sub_sub_keys = attr[key].keys()
+                                    for sub_sub in sub_sub_keys:
+                                        if type(attr[key][sub][sub_sub]) == dict:
+                                            print(
+                                                f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                        else:
+                                            new_name = [period, att, str(key), str(
+                                                sub), str(sub_sub)]
+                                            new_name = '-'.join(new_name)
+                                            all_data[ticker][new_name] = attr[key][sub][sub_sub]
+                                else:
+                                    new_name = [period, att,
+                                                str(key), str(sub)]
+                                    new_name = '-'.join(new_name)
+                                    all_data[ticker][new_name] = attr[key][sub]
+                        else:
+                            new_name = [period, att, str(key)]
+                            new_name = '-'.join(new_name)
+                            all_data[ticker][new_name] = attr[key]
+                else:
+                    new_name = [period, att]
+                    new_name = '_'.join(new_name)
+                    all_data[ticker][new_name] = attr
+
+            for att in job['attributes']:
+                attr = metadata[ticker][period].get(att, {}).get('metrics')
+                if attr is None:
+                    continue
+
+                # Flatten tree, if necessary
+                if type(attr) == dict:
+                    keys = attr.keys()
+                    for key in keys:
+                        if type(attr[key]) == dict:
+                            sub_keys = attr[key].keys()
+                            for sub in sub_keys:
+                                if type(attr[key][sub]) == dict:
+                                    sub_sub_keys = attr[key].keys()
+                                    for sub_sub in sub_sub_keys:
+                                        if type(attr[key][sub][sub_sub]) == dict:
+                                            print(
+                                                f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                        else:
+                                            new_name = [period, att, str(key), str(
+                                                sub), str(sub_sub)]
+                                            new_name = '-'.join(new_name)
+                                            new_name += '-METRICS'
+                                            all_data[ticker][new_name] = attr[key][sub][sub_sub]
+                                else:
+                                    new_name = [period, att,
+                                                str(key), str(sub)]
+                                    new_name = '-'.join(new_name)
+                                    new_name += '-METRICS'
+                                    all_data[ticker][new_name] = attr[key][sub]
+                        else:
+                            new_name = [period, att, str(key)]
+                            new_name = '-'.join(new_name)
+                            new_name += '-METRICS'
+                            all_data[ticker][new_name] = attr[key]
+                else:
+                    new_name = f'{period}-{att}-METRICS'
+                    all_data[ticker][new_name] = attr
+
+    return all_data
+
+
 def groom_data(data: dict) -> dict:
-    min_length = 100000
+    max_len = 0
     new_data = dict()
     for fund in data.keys():
         for key in data[fund].keys():
-            if len(data[fund][key]) < min_length:
-                min_length = len(data[fund][key])
+            if len(data[fund][key]) > max_len:
+                max_len = len(data[fund][key])
 
     for fund in data.keys():
         new_data[fund] = dict()
         for key in data[fund].keys():
             len_old = len(data[fund][key])
-            new_data[fund][key] = data[fund][key][len_old - min_length: len_old]
+            temp = [0.0] * (max_len - len_old)
+            temp.extend(data[fund][key])
+            new_data[fund][key] = temp
 
     return new_data
 
