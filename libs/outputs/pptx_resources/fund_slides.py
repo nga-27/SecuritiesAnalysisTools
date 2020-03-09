@@ -82,20 +82,20 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
             table_width = Inches(2.4)
             table_height = Inches(1.4)
 
-            vq = analysis[fund][views].get('metadata', {}).get(
+            vq = analysis[fund].get('metadata', {}).get(
                 'volatility', {}).get('VQ')
             has_vq = False
             rows = 4
             if vq is not None:
                 has_vq = True
                 rows = 8
-                stop_loss = analysis[fund][views].get('metadata', {}).get(
+                stop_loss = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('stop_loss')
-                high_close = analysis[fund][views].get('metadata', {}).get(
+                high_close = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('last_max', {}).get('Price', 'n/a')
-                status = analysis[fund][views].get('metadata', {}).get(
+                status = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('status', {}).get('status', 'n/a')
-                vq_color = analysis[fund][views].get('metadata', {}).get(
+                vq_color = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('status', {}).get('color', 'n/a')
 
             table_placeholder = slide.shapes.add_table(rows,
@@ -117,7 +117,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
                 np.round(analysis[fund][views]['beta'], 5))
             table.cell(3, 0).text = 'R-Squared'
             table.cell(3, 1).text = str(
-                np.round(analysis[fund]['r_squared'], 5))
+                np.round(analysis[fund][views]['r_squared'], 5))
 
             if has_vq:
                 table.cell(4, 0).text = 'Volatility Quotient'
@@ -201,20 +201,22 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         content = content_dir + '*.png'
         pics = glob.glob(content)
         fund_analysis = analysis[fund]
-        prs = format_plots(prs, indexes, pics, fund_analysis=fund_analysis)
+        prs = format_plots(prs, indexes, pics,
+                           fund_analysis=fund_analysis, views=views)
 
     return prs
 
 
-def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}):
-    parts = windows_compatible_file_parse(globs[0])
+def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}, **kwargs):
 
-    header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/'
+    views = kwargs.get('views', '')
+    parts = windows_compatible_file_parse(globs[0])
+    header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/' + parts[3] + '/'
 
     for globber in globs:
 
         globbed = windows_compatible_file_parse(globber)
-        part = globbed[3]
+        part = globbed[4]
 
         # Slide 1
         slide_num = 0
@@ -414,7 +416,8 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top_loc = Inches(1)
             table_width = Inches(4)
 
-            num_srs = len(fund_analysis['support_resistance']['major S&R']) + 1
+            num_srs = len(fund_analysis[views]
+                          ['support_resistance']['major S&R']) + 1
             table_height = Inches(num_srs * 0.33)
             if num_srs * 0.33 > 6.0:
                 table_height = Inches(6.0)
@@ -431,7 +434,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             table.cell(0, 0).text = 'Price'
             table.cell(0, 1).text = '% Change'
 
-            for i, maj in enumerate(fund_analysis['support_resistance']['major S&R']):
+            for i, maj in enumerate(fund_analysis[views]['support_resistance']['major S&R']):
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
                 color = color_to_RGB(maj['Color'])
@@ -467,7 +470,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             trends = []
             futures = list(range(0, 91, 15))
             forecasts = []
-            for trend in fund_analysis['trendlines']:
+            for trend in fund_analysis[views]['trendlines']:
                 if trend['current']:
                     trends.append(trend)
                     forecast = trend_simple_forecast(

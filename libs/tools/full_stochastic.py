@@ -233,6 +233,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     OVER_BOUGHT = 80.0
     OVER_SOLD = 20.0
@@ -341,7 +342,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
             dual_plotting(position['Close'], full_stoch['indicator'],
                           'Position Price', 'Oscillator Signal', title=name2)
         else:
-            filename = name + '/stochastic_{}.png'.format(name)
+            filename = name + '/' + view + '/stochastic_{}.png'.format(name)
             dual_plotting(position['Close'], full_stoch['indicator'], 'Position Price', 'Stochastic Oscillator',
                           x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
@@ -435,12 +436,13 @@ def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs)
     name = kwargs.get('name', '')
     out_suppress = kwargs.get('out_suppress', True)
     progress_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view', '')
 
     full_stoch = dict()
 
     signals = generate_full_stoch_signal(
         position, periods=config, plot_output=plot_output,
-        out_suppress=out_suppress, p_bar=progress_bar)
+        out_suppress=out_suppress, p_bar=progress_bar, view=view)
     full_stoch['tabular'] = signals
 
     full_stoch = get_crossover_features(
@@ -448,7 +450,7 @@ def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs)
 
     full_stoch = get_stoch_divergences(
         position, full_stoch, plot_output=plot_output,
-        out_suppress=out_suppress, name=name, p_bar=progress_bar)
+        out_suppress=out_suppress, name=name, p_bar=progress_bar, view=view)
 
     full_stoch = get_stoch_metrics(
         position, full_stoch, plot_output=plot_output, name=name, p_bar=progress_bar)

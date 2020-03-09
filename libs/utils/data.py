@@ -123,6 +123,11 @@ def download_data(config: dict, **kwargs) -> list:
     start = kwargs.get('start')
     end = kwargs.get('end')
 
+    if isinstance(period, (list)):
+        period = period[0]
+    if isinstance(interval, (list)):
+        interval = interval[0]
+
     if (start is not None) and (end is not None):
         print(
             f'Fetching data for {TICKER}{ticker_print}{NORMAL} from dates {start} to {end}...')

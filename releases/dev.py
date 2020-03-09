@@ -60,7 +60,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.27'
-_DATE_REVISION_ = '2020-03-07'
+_DATE_REVISION_ = '2020-03-08'
 ################################
 PROCESS_STEPS_DEV = 21
 
@@ -120,8 +120,8 @@ def technical_analysis(config: dict):
             max_close=max(dataset[periods[0]][fund_name]['Close']),
             data=dataset[periods[0]][fund_name])
 
+        ###################### START OF PERIOD LOOPING #############################
         for i, period in enumerate(periods):
-
             fund_data = {}
 
             fund = dataset[period][fund_name]
@@ -139,47 +139,53 @@ def technical_analysis(config: dict):
 
             fund_data['statistics'] = get_high_level_stats(fund)
 
-            fund_data['clustered_osc'] = cluster_oscs(fund, function='all', filter_thresh=3,
-                                                      name=fund_name, plot_output=False, progress_bar=p)
+            fund_data['clustered_osc'] = cluster_oscs(
+                fund,
+                function='all',
+                filter_thresh=3,
+                name=fund_name,
+                plot_output=False,
+                progress_bar=p,
+                view=period)
 
             fund_data['full_stochastic'] = full_stochastic(
-                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p, view=period)
 
             fund_data['rsi'] = RSI(
-                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p, view=period)
 
             fund_data['ultimate'] = ultimate_oscillator(
-                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p, view=period)
 
             fund_data['awesome'] = awesome_oscillator(
-                fund, name=fund_name, plot_output=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
             fund_data['momentum_oscillator'] = momentum_oscillator(
-                fund, name=fund_name, plot_output=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
             fund_data['obv'] = on_balance_volume(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['moving_average'] = triple_moving_average(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['swing_trade'] = moving_average_swing_trade(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['hull_moving_average'] = hull_moving_average(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['macd'] = mov_avg_convergence_divergence(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['bear_bull_power'] = bear_bull_power(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['total_power'] = total_power(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['bollinger_bands'] = bollinger_bands(
-                fund, plot_output=False, name=fund_name, progress_bar=p)
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:
                 fund_data['relative_strength'] = relative_strength(
@@ -190,7 +196,8 @@ def technical_analysis(config: dict):
                     meta=analysis[fund_name]['metadata'],
                     progress_bar=p,
                     period=period,
-                    interval=config['interval'][i]
+                    interval=config['interval'][i],
+                    view=period
                 )
 
                 beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])
@@ -200,23 +207,23 @@ def technical_analysis(config: dict):
 
             # Support and Resistance Analysis
             fund_data['support_resistance'] = find_resistance_support_lines(
-                fund, name=fund_name, plot_output=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
             # Feature Detection Block
             fund_data['features'] = {}
             fund_data['features']['head_shoulders'] = feature_detection_head_and_shoulders(
-                fund, name=fund_name, plot_output=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
-            filename = f"{fund_name}/candlestick_{fund_name}"
+            filename = f"{fund_name}/{period}/candlestick_{fund_name}"
             candlestick(fund, title=fund_print, filename=filename,
                         saveFig=True, progress_bar=p)
 
             fund_data['price_gaps'] = analyze_price_gaps(
-                fund, name=fund_name, plot_output=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
             # Get Trendlines
             fund_data['trendlines'] = get_trendlines(
-                fund, name=fund_name, plot_output=False, progress_bar=p)
+                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
             # Various Fund-specific Metrics
             fund_data['futures'] = future_returns(

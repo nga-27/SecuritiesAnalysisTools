@@ -25,11 +25,12 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     progress_bar = kwargs.get('progress_bar')
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view', '')
 
     mo = dict()
 
     mo['tabular'] = generate_momentum_signal(
-        position, plot_output=plot_output, name=name)
+        position, plot_output=plot_output, name=name, view=view)
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
 
@@ -48,7 +49,8 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.3)
 
     # Metrics creation like in awesome oscillator
-    mo = momentum_metrics(position, mo, plot_output=plot_output, name=name)
+    mo = momentum_metrics(
+        position, mo, plot_output=plot_output, name=name, view=view)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
@@ -61,6 +63,7 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
     interval = kwargs.get('interval', 20)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view')
 
     signal = []
     for i in range(interval-1):
@@ -81,7 +84,7 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         dual_plotting(position['Close'], signal, 'Price',
                       'CMO', title='(Chande) Momentum Oscillator')
     else:
-        filename = name + f'/momentum_oscillator_{name}'
+        filename = name + f"/{view}" + f'/momentum_oscillator_{name}'
         dual_plotting(position['Close'], signal, 'Price',
                       'CMO', title='(Chande) Momentum Oscillator',
                       filename=filename, saveFig=True)
@@ -173,6 +176,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     period_change = kwargs.get('period_change', 5)
+    view = kwargs.get('view')
 
     weights = [1.3, 0.85, 0.55, 0.1]
 
@@ -228,7 +232,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics4,
                       'Price', 'Metrics', title=title)
     else:
-        filename = name + f'/momentum_metrics_{name}'
+        filename = name + f"/{view}" + f'/momentum_metrics_{name}'
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

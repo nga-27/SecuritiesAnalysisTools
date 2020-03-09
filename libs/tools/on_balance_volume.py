@@ -27,6 +27,7 @@ def generate_obv_signal(fund: pd.DataFrame, **kwargs) -> list:
     filter_factor = kwargs.get('filter_factor', 2.5)
     name = kwargs.get('name', '')
     progress_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view')
 
     obv = []
 
@@ -106,9 +107,9 @@ def generate_obv_signal(fund: pd.DataFrame, **kwargs) -> list:
                       y2_label='OBV-DIFF', x_label='Trading Days', title=name2)
         bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
     else:
-        filename = name + '/obv_diff_{}.png'.format(name)
-        filename2 = name + '/obv_standard_{}.png'.format(name)
-        filename3 = name + '/volume_{}.png'.format(name)
+        filename = name + f"/{view}" + '/obv_diff_{}.png'.format(name)
+        filename2 = name + f"/{view}" '/obv_standard_{}.png'.format(name)
+        filename3 = name + f"/{view}" '/volume_{}.png'.format(name)
         # dual_plotting(fund['Close'], ofilter_agg_ma, x=x, y1_label='Position Price', y2_label='OBV-DIFF', x_label='Trading Days', title=name2, saveFig=True, filename=filename2)
         bar_chart(volume, x=x, position=fund, title=name5,
                   saveFig=True, filename=filename3, all_positive=True)
@@ -143,9 +144,10 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     filter_factor = kwargs.get('filter_factor', 5.0)
     progress_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
 
     obv, ofilter = generate_obv_signal(
-        fund, plot_output=plot_output, filter_factor=filter_factor, name=name, progress_bar=progress_bar)
+        fund, plot_output=plot_output, filter_factor=filter_factor, name=name, progress_bar=progress_bar, view=view)
     dates = [index.strftime('%Y-%m-%d') for index in fund.index]
 
     # Apply trend analysis to find divergences
@@ -161,7 +163,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     sub_name = f"obv3_{name}"
     obv_dict['trends'] = get_trendlines(
-        data2, name=name, sub_name=sub_name, plot_output=plot_output)
+        data2, name=name, sub_name=sub_name, plot_output=plot_output, view=view)
 
     # obv_dict['trends'] = dict()
     # sub_name = f"obv_{name}"

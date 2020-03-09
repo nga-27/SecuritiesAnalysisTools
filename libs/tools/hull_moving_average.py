@@ -23,6 +23,7 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- directory of plots (default: {''})
 
     Returns:
         dict -- hull ma data object
@@ -30,13 +31,14 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view', '')
 
     hull = generate_hull_signal(
-        position, plot_output=plot_output, name=name, p_bar=p_bar)
+        position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
     hull = generate_swing_signal(position, hull, p_bar=p_bar)
     hull = swing_trade_metrics(
-        position, hull, plot_output=plot_output, name=name, p_bar=p_bar)
+        position, hull, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -57,6 +59,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         p_bar {ProgressBar} -- (default: {None})
+        view {str} -- directory of plots (default: {''})
 
     Returns:
         list -- hull data object
@@ -65,6 +68,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     hull = {'short': {}, 'medium': {},
             'long': {}, 'tabular': {}}
@@ -99,7 +103,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         generic_plotting([position['Close'], plots[0], plots[1],
                           plots[2]], legend=legend, title=name2)
     else:
-        filename = name + f"/hull_moving_average_{name}.png"
+        filename = name + f"/{view}" + f"/hull_moving_average_{name}.png"
         generic_plotting([position['Close'], plots[0], plots[1],
                           plots[2]], legend=legend, title=name2, saveFig=True, filename=filename)
 
@@ -202,6 +206,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         p_bar {ProgressBar} -- (default: {None})
+        view {str} -- directory of plots (default: {''})
 
     Returns:
         dict -- hull data object
@@ -209,6 +214,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     weights = [1.0, 0.55, 0.25, 0.1]
 
@@ -244,7 +250,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], swings['metrics'],
                       'Price', 'Metrics', title='Hull Moving Average Metrics')
     else:
-        filename2 = name + f"/hull_metrics_{name}.png"
+        filename2 = name + f"/{view}" + f"/hull_metrics_{name}.png"
         dual_plotting(position['Close'], swings['metrics'],
                       'Price', 'Metrics', title=name2, saveFig=True, filename=filename2)
 

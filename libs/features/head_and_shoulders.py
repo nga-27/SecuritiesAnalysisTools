@@ -203,6 +203,7 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
         name:           (list) name of fund, primarily for plotting; DEFAULT=''
         plot_output:    (bool) True to render plot in realtime; DEFAULT=True
         progress_bar:   (ProgressBar) DEFAULT=None
+        view:           (str) Directory of plots; DEFAULT=''
 
     returns:
         head_shoulders: (list) list of all head-shoulders features detected
@@ -210,6 +211,7 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     progress_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
 
     head_shoulders = []
     shapes = []
@@ -229,7 +231,7 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
             progress_bar.uptick(increment=increment)
 
     feature_plotter(fund, shapes, name=name,
-                    feature='head_and_shoulders', plot_output=plot_output)
+                    feature='head_and_shoulders', plot_output=plot_output, view=view)
     if progress_bar is not None:
         progress_bar.uptick(increment=increment)
 

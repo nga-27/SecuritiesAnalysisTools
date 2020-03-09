@@ -230,12 +230,14 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
     Optional Args:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
+        view {str} -- file directory of plots (default: {''})
 
     Returns:
         dict -- clustered osc data object
     """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view')
 
     ults = cluster_oscs['tabular']
 
@@ -273,7 +275,7 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
         dual_plotting(position['Close'], metrics,
                       'Price', 'Metrics', title=name2)
     else:
-        filename = name + f"/clustered_osc_metrics_{name}.png"
+        filename = name + f"/{view}" + f"/clustered_osc_metrics_{name}.png"
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=name2, filename=filename, saveFig=True)
 
@@ -294,6 +296,7 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
                                 (others: ultimate, rsi, all, market)
         wma:            (bool) output signal is filtered by windowed moving average; DEFAULT=True
         progress_bar:   (ProgressBar) DEFAULT=None
+        view {str} -- file directory of plots (default: {''})
 
     returns:
         cluster_oscs:   (dict) contains all clustered oscillator informatio
@@ -304,6 +307,7 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     function = kwargs.get('function', 'full_stochastic')
     wma = kwargs.get('wma', True)
     prog_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
 
     cluster_oscs = {}
 
@@ -323,7 +327,7 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     cluster_oscs[function] = dates
 
     cluster_oscs = clustered_metrics(
-        position, cluster_oscs, plot_output=plot_output, name=name)
+        position, cluster_oscs, plot_output=plot_output, name=name, view=view)
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Clustering: ' + function
@@ -332,7 +336,8 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
                       'Clustered Oscillator', x_label='Trading Days', title=name2)
         #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
     else:
-        filename = name + '/clustering_{}_{}.png'.format(name, function)
+        filename = name + f"/{view}" + \
+            '/clustering_{}_{}.png'.format(name, function)
         dual_plotting(y1=position['Close'], y2=clusters, y1_label='Price', y2_label='Clustered Oscillator',
                       x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 

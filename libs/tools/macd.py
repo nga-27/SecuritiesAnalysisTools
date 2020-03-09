@@ -25,6 +25,7 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
         name:           (list) name of fund, primarily for plotting; DEFAULT=''
         plot_output:    (bool) True to render plot in realtime; DEFAULT=True
         progress_bar:   (ProgressBar) DEFAULT=None
+        view {str} -- directory of plots (default: {''})
 
     returns:
         macd:           (dict) contains all ma information in regarding macd
@@ -32,16 +33,17 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     progress_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
 
     macd = generate_macd_signal(
-        fund, plot_output=plot_output, name=name)
+        fund, plot_output=plot_output, name=name, view=view)
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
 
     macd = get_macd_statistics(macd, progress_bar=progress_bar)
 
     macd = macd_metrics(fund, macd, p_bar=progress_bar,
-                        name=name, plot_output=plot_output)
+                        name=name, plot_output=plot_output, view=view)
 
     macd_sig = macd['tabular']['macd']
     sig_line = macd['tabular']['signal_line']
@@ -54,7 +56,7 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
         print_macd_statistics(macd)
 
     else:
-        filename = name + '/macd_{}.png'.format(name)
+        filename = name + f"/{view}" + '/macd_{}.png'.format(name)
         dual_plotting(fund['Close'], [macd_sig, sig_line], 'Position Price',
                       ['MACD', 'Signal Line'], title=name2, saveFig=True, filename=filename)
 
@@ -76,12 +78,14 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     Keyword Arguments:
         plotting {bool} -- (default: {True})
         name {str} -- (default: {''})
+        view {str} -- directory of plots (default: {''})
 
     Returns:
         dict -- macd data object
     """
     plotting = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view')
 
     macd = dict()
 
@@ -110,7 +114,7 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     if plotting:
         bar_chart(m_bar, position=fund, x=x, title=name2)
     else:
-        filename = name + '/macd_bar_{}.png'.format(name)
+        filename = name + f"/{view}" + '/macd_bar_{}.png'.format(name)
         bar_chart(m_bar, position=fund, x=x, title=name2,
                   saveFig=True, filename=filename)
 
@@ -118,10 +122,25 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
+    """MACD Metrics
 
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        macd {dict} -- macd data object
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        p_bar {ProgressBar} -- (default: {None})
+        view {str} -- directory of plots (default: {''})
+
+    Returns:
+        dict -- macd data object
+    """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     m_bar = macd['tabular']['bar']
 
@@ -176,7 +195,7 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics,
                       'Price', 'Metrics', title=name2)
     else:
-        filename = name + f"/macd_metrics_{name}.png"
+        filename = name + f"/{view}" + f"/macd_metrics_{name}.png"
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=name2, saveFig=True, filename=filename)
 

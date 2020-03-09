@@ -359,6 +359,7 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
         plot_output:    (bool) True to render plot in realtime; DEFAULT=True
         timeframes:     (list) time windows for feature discovery; DEFAULT=[13, 21, 34, 55]
         progress_bar:   (ProgressBar) DEFAULT=None
+        view:           (str) directory of plots; DEFAULT=''
 
     returns:
         analysis:       (dict) contains all trendline information
@@ -367,6 +368,7 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     timeframes = kwargs.get('timeframes', [13, 21, 34, 55])
     progress_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
 
     resist_support_lines = {}
     resist_support_lines['support'] = {}
@@ -424,7 +426,7 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
         generic_plotting(Yp, x=Xp2, colors=c,
                          title=f'{name2} Major Resistance & Support')
     else:
-        filename = f"{name}/resist_support_{name}.png"
+        filename = f"{name}/{view}/resist_support_{name}.png"
         generic_plotting(
             Yp, x=Xp2, colors=c, title=f'{name2} Major Resistance & Support', saveFig=True, filename=filename)
 
