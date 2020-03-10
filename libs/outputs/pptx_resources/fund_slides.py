@@ -470,12 +470,11 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             trends = []
             futures = list(range(0, 91, 15))
             forecasts = []
-            for trend in fund_analysis[views]['trendlines']:
-                if trend['current']:
-                    trends.append(trend)
-                    forecast = trend_simple_forecast(
-                        trend, future_periods=futures)
-                    forecasts.append(forecast)
+            for trend in fund_analysis[views]['trendlines']['current']:
+                trends.append(trend)
+                forecast = trend_simple_forecast(
+                    trend, future_periods=futures)
+                forecasts.append(forecast)
 
             num_rows = len(trends) + 2
             num_cols = len(futures)

@@ -11,6 +11,7 @@ from libs.utils import get_volatility, vq_status_print
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
+from libs.metrics import generate_synopsis
 from libs.tools import get_trendlines, find_resistance_support_lines
 from libs.tools import cluster_oscs, RSI, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
@@ -98,6 +99,8 @@ def only_functions_handler(config: dict):
         nasit_generation_function(config)
     if 'nfnow' in config['run_functions']:
         nasit_generation_function(config, print_only=True)
+    if 'synopsis' in config['run_functions']:
+        synopsis_function(config)
 
 ###############################################################################
 
@@ -380,6 +383,24 @@ def nasit_generation_function(config: dict, print_only=False):
         generic_plotting(plotable2, legend=names2,
                          title='NASIT Passives [Returns]')
 
+
+def synopsis_function(config: dict):
+    meta_file = "output/metadata.json"
+    if not os.path.exists(meta_file):
+        print(
+            f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
+        return
+    with open(meta_file) as m_file:
+        m_data = json.load(m_file)
+        m_file.close()
+        for fund in m_data:
+            if fund != '_METRICS_':
+                print("")
+                synopsis = generate_synopsis(m_data, name=fund, print_out=True)
+                print("")
+                if synopsis is None:
+                    print(f"{WARNING}Warning: key 'synopsis' not present.{NORMAL}")
+                    return
 
 ####################################################
 

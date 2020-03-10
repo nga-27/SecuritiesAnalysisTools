@@ -29,7 +29,8 @@ from libs.tools import total_power
 from libs.tools import bollinger_bands
 
 # Imports that support functions doing feature detection
-from libs.features import feature_detection_head_and_shoulders, feature_plotter, analyze_price_gaps
+from libs.features import feature_detection_head_and_shoulders, feature_plotter
+from libs.features import analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
@@ -47,6 +48,7 @@ from libs.utils import candlestick
 from libs.metrics import market_composite_index, bond_composite_index
 from libs.metrics import correlation_composite_index, type_composite_index
 from libs.metrics import future_returns, metadata_to_dataset
+from libs.metrics import generate_synopsis
 
 # Imports that create final products and show progress doing so
 from libs.utils import ProgressBar, start_header
@@ -59,7 +61,7 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.27'
+_VERSION_ = '0.1.28'
 _DATE_REVISION_ = '2020-03-09'
 ################################
 PROCESS_STEPS_DEV = 21
@@ -232,6 +234,9 @@ def technical_analysis(config: dict):
             p.end()
 
             analysis[fund_name][period] = fund_data
+
+        analysis[fund_name]['synopsis'] = generate_synopsis(
+            analysis, name=fund_name)
 
     analysis['_METRICS_'] = {}
     analysis['_METRICS_']['mci'] = market_composite_index(

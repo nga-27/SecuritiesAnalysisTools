@@ -131,7 +131,7 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list = [], config=[50
     return trend_analysis
 
 
-def get_trendlines(fund: pd.DataFrame, **kwargs):
+def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     """
     Get Trendlines
 
@@ -147,7 +147,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
         view:           (str) directory of plots; DEFAULT=''
 
     returns:
-        analysis_list:  (list) contains all trend lines determined by algorithm
+        trends:         (dict) contains all trend lines determined by algorithm
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -158,6 +158,8 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+    trends = dict()
 
     mins_y = []
     mins_x = []
@@ -283,7 +285,20 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    return analysis_list
+    trends['trendlines'] = analysis_list
+
+    current = []
+    metrics = []
+    for trend in analysis_list:
+        if trend['current']:
+            current.append(trend)
+            met = {f"{trend.get('term')} term": trend.get('type')}
+            metrics.append(met)
+
+    trends['current'] = current
+    trends['metrics'] = metrics
+
+    return trends
 
 
 def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> list:
