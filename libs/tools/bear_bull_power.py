@@ -18,6 +18,7 @@ def bear_bull_power(position: pd.DataFrame, **kwargs) -> dict:
         plot_output {bool} -- (default: {True})
         progress_bar {ProgressBar} -- (default: {None})
         name {str} -- (default: {''})
+        view {str} -- directory of plots (default: {''})
 
     Returns:
         dict -- [description]
@@ -25,13 +26,14 @@ def bear_bull_power(position: pd.DataFrame, **kwargs) -> dict:
     p_bar = kwargs.get('progress_bar')
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view', '')
 
     bbp = dict()
 
     bbp['tabular'] = generate_bear_bull_signal(
-        position, plot_output=plot_output, name=name, p_bar=p_bar)
+        position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
     bbp = bear_bull_feature_detection(
-        bbp, position, plot_output=plot_output, name=name, p_bar=p_bar)
+        bbp, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
     return bbp
 
@@ -95,6 +97,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         p_bar {ProgressBar} -- (default {None})
+        view {str} -- (default: {''})
 
     Returns:
         dict -- [description]
@@ -104,6 +107,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     # Determine the slope of the ema at given points
     ema = exponential_moving_avg(position, interval)
@@ -195,7 +199,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
         dual_plotting(position['Close'], state4, 'Price',
                       'Bear Bull Power', title=title)
     else:
-        filename = name + f'/bear_bull_power_{name}'
+        filename = name + f"/{view}" + f'/bear_bull_power_{name}'
         dual_plotting(position['Close'], state4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

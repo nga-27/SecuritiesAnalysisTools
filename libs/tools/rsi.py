@@ -282,6 +282,7 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     """
     plot_output = kwargs.get('plot_output', True)
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     signal = rsi_data['tabular']
     ovb_th = rsi_data['thresholds']['overbought']
@@ -493,6 +494,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
     overbought = kwargs.get('overbought', 70.0)
     oversold = kwargs.get('oversold', 30.0)
     auto_trend = kwargs.get('auto_trend', True)
+    view = kwargs.get('view', '')
 
     rsi_data = dict()
 
@@ -533,8 +535,9 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
             dual_plotting(position['Close'], rsi_data['metrics'],
                           'Position Price', 'RSI Indicators', title=name2)
         else:
-            filename1 = name + '/RSI_standard_{}.png'.format(name)
-            filename2 = name + '/RSI_indicator_{}.png'.format(name)
+            filename1 = name + f"/{view}" + '/RSI_standard_{}.png'.format(name)
+            filename2 = name + f"/{view}" + \
+                '/RSI_indicator_{}.png'.format(name)
             dual_plotting(position['Close'], main_plots, 'Position Price', 'RSI',
                           title=name2, saveFig=True, filename=filename1)
             dual_plotting(position['Close'], rsi_data['metrics'], 'Position Price', 'RSI Metrics',

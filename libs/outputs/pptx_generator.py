@@ -39,6 +39,7 @@ def slide_creator(analysis: dict, **kwargs):
         if config is not None:
             year = config.get('date_release', '').split('-')[0]
             version = config.get('version')
+            views = config.get('views', {}).get('pptx', '2y')
         elif year is None:
             print(
                 f"{ERROR}ERROR: 'year', 'config', [and 'version'] {year} provided in 'slide_creator'.{NORMAL}")
@@ -46,7 +47,9 @@ def slide_creator(analysis: dict, **kwargs):
         else:
             year = year
             version = version
+            views = '2y'
 
+        # try:
         prs = Presentation()
 
         prs = title_presentation(prs, year, VERSION=version)
@@ -55,7 +58,7 @@ def slide_creator(analysis: dict, **kwargs):
         prs = make_CCI_slides(prs)
         prs = make_BCI_slides(prs)
         prs = make_TCI_slides(prs)
-        prs = make_fund_slides(prs, analysis)
+        prs = make_fund_slides(prs, analysis, views=views)
 
         out_dir = "output/"
         if not os.path.exists(out_dir):
@@ -66,3 +69,6 @@ def slide_creator(analysis: dict, **kwargs):
 
         print(
             f"Presentation '{PPTX_NAME_COLOR}{title}{NORMAL_COLOR}' created.")
+
+        # except:
+        #     print(f"Presentation failed to be created.")

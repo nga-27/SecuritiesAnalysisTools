@@ -1,5 +1,5 @@
-import pandas as pd 
-import numpy as np 
+import pandas as pd
+import numpy as np
 from datetime import datetime
 import pprint
 
@@ -25,20 +25,30 @@ def analyze_price_gaps(fund: pd.DataFrame, **kwargs) -> dict:
         name:           (list) name of fund, primarily for plotting; DEFAULT=''
         plot_output:    (bool) True to render plot in realtime; DEFAULT=True
         progress_bar:   (ProgressBar) DEFAULT=None
+        view            (str) directory of plots; DEFAULT=''
+
+    returns:
+        gaps            (dict)
+
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     progress_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
 
     threshold = 0.0075
     gaps = get_gaps(fund, threshold=threshold)
-    if progress_bar is not None: progress_bar.uptick(increment=0.25)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.25)
 
     gaps = determine_gap_types(fund, gaps, name=name)
-    if progress_bar is not None: progress_bar.uptick(increment=0.25)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.25)
 
-    feature_plotter(fund, shapes=gaps['plot'], name=name, feature='price_gaps', plot_output=plot_output)
-    if progress_bar is not None: progress_bar.uptick(increment=0.5)
+    feature_plotter(fund, shapes=gaps['plot'], name=name,
+                    feature='price_gaps', plot_output=plot_output, view=view)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.5)
 
     return gaps
 
@@ -49,13 +59,13 @@ def get_gaps(fund: pd.DataFrame, threshold=0.0) -> list:
     gap_direction = []
     diff = []
     for i in range(1, len(fund['Close'])):
-        if (fund['High'][i-1] < fund['Low'][i] * (1.0 - threshold)): 
+        if (fund['High'][i-1] < fund['Low'][i] * (1.0 - threshold)):
             # Positive price gap
             gap_index.append(i)
             gap_date.append(fund.index[i].strftime("%Y-%m-%d"))
             gap_direction.append("up")
             diff.append(fund['High'][i] - fund['High'][i-1])
-        elif (fund['High'][i] < fund['Low'][i-1] * (1.0 - threshold)): 
+        elif (fund['High'][i] < fund['Low'][i-1] * (1.0 - threshold)):
             # Negative price gap
             gap_index.append(i)
             gap_date.append(fund.index[i].strftime("%Y-%m-%d"))
@@ -65,7 +75,7 @@ def get_gaps(fund: pd.DataFrame, threshold=0.0) -> list:
     return {"indexes": gap_index, "dates": gap_date, "direction": gap_direction, "difference": diff}
 
 
-def determine_gap_types(fund: pd.DataFrame, gaps: dict, name: str='') -> dict:
+def determine_gap_types(fund: pd.DataFrame, gaps: dict, name: str = '') -> dict:
     trend_short = trends.autotrend(fund['Close'], periods=[7], normalize=True)
     trend_med = trends.autotrend(fund['Close'], periods=[14], normalize=True)
     trend_long = trends.autotrend(fund['Close'], periods=[28], normalize=True)
@@ -88,6 +98,7 @@ def determine_gap_types(fund: pd.DataFrame, gaps: dict, name: str='') -> dict:
             y_diff = float(gaps['difference'][i]) / 2.0 + fund['High'][index-1]
         else:
             y_diff = float(gaps['difference'][i]) / 2.0 + fund['Low'][index-1]
-        gaps['plot'].append({"type": gaps['direction'][i], "x": index, "y": y_diff, "rad": gaps['difference'][i]})
+        gaps['plot'].append({"type": gaps['direction'][i],
+                             "x": index, "y": y_diff, "rad": gaps['difference'][i]})
 
     return gaps

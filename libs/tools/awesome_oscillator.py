@@ -26,11 +26,12 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     progress_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view', '')
 
     ao = dict()
 
     signal = get_ao_signal(position, plot_output=plot_output,
-                           name=name, progress_bar=progress_bar)
+                           name=name, progress_bar=progress_bar, view=view)
 
     ao['tabular'] = signal
     ao['features'] = ao_feature_detection(
@@ -45,7 +46,7 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     ao['pm'] = {'pm_data': plus_minus, 'indexes': x_index}
 
     ao = awesome_metrics(position, ao, plot_output=plot_output,
-                         name=name, progress_bar=progress_bar)
+                         name=name, progress_bar=progress_bar, view=view)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
@@ -75,6 +76,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     plot_output = kwargs.get('plot_output', True)
     p_bar = kwargs.get('progress_bar')
     name = kwargs.get('name', '')
+    view = kwargs.get('view')
 
     signal = []
     mid_points = []
@@ -133,7 +135,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
                       'Awesome', 'Triggers'], 'Price')
         bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
     else:
-        filename = name + f'/awesome_bar_{name}'
+        filename = name + f"/{view}" + f'/awesome_bar_{name}'
         bar_chart(signal, position=position, x=x,
                   saveFig=True, filename=filename, title=name2, bar_delta=True)
 
@@ -405,6 +407,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
     period_change = kwargs.get('period_change', 5)
+    view = kwargs.get('view')
 
     weights = [1.0, 0.85, 0.5, 0.05]
 
@@ -461,7 +464,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics4,
                       'Price', 'Metrics', title=title)
     else:
-        filename = name + f'/awesome_metrics_{name}'
+        filename = name + f"/{view}" + f'/awesome_metrics_{name}'
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

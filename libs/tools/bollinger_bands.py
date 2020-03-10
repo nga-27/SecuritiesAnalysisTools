@@ -20,6 +20,7 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- directory of plots (default: {''})
 
     Returns:
         dict -- bollinger bands data object
@@ -29,6 +30,7 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view', '')
 
     if period == 10:
         stdev = 1.5
@@ -38,13 +40,13 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
     bb = dict()
 
     bb['tabular'] = get_bollinger_signals(
-        position, period, stdev, plot_output=plot_output, name=name)
+        position, period, stdev, plot_output=plot_output, name=name, view=view)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
     bb['volatility'] = volatility_calculation(
-        position, plot_output=plot_output)
+        position, plot_output=plot_output, view=view)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.3)
@@ -55,7 +57,7 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
         p_bar.uptick(increment=0.3)
 
     bb = bollinger_metrics(position, bb, period=period,
-                           plot_output=plot_output, name=name)
+                           plot_output=plot_output, name=name, view=view)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
@@ -74,6 +76,7 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
         period {int} -- look back period for Stdev (default: {20})
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
+        view {str} -- (default: {''})
 
     Returns:
         dict -- bollinger band data object
@@ -81,6 +84,7 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
     period = kwargs.get('period', 20)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view')
 
     weights = [1.0, 0.6, 0.25, 0.0]
     tot_len = len(position['Close'])
@@ -129,7 +133,7 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
         dual_plotting(position['Close'], norm_signal, 'Price',
                       'Indicators', title=name2)
     else:
-        filename = name + f"/bollinger_band_metrics_{name}.png"
+        filename = name + f"/{view}" + f"/bollinger_band_metrics_{name}.png"
         dual_plotting(position['Close'], norm_signal, 'Price',
                       'Metrics', title=name2, saveFig=True, filename=filename)
 
@@ -226,6 +230,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
         plot_output {bool} -- (default: {True})
         filter_type {str} -- type of moving average (default: {'simple'})
         name {str} -- (default: {''})
+        view {str} -- (default: {None})
 
     Returns:
         dict -- bollinger band data object
@@ -233,6 +238,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
     filter_type = kwargs.get('filter_type', 'simple')
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view')
 
     typical_price = []
     for i, close in enumerate(position['Close']):
@@ -263,7 +269,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
                          legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'])
 
     else:
-        filename = name + f'/bollinger_bands_{name}.png'
+        filename = name + f"/{view}" + f'/bollinger_bands_{name}.png'
         generic_plotting([position['Close'], ma, upper, lower],
                          title=name2, x=position.index,
                          legend=['Price', 'Moving Avg',

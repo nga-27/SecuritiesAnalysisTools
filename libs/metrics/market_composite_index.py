@@ -38,8 +38,11 @@ def metrics_initializer(period='5y', name='Market Composite Index'):
     sectors = tickers.split(' ')
     tickers = index_appender(tickers)
     all_tickers = tickers.split(' ')
+    if isinstance(period, (list)):
+        period = period[0]
+
     print(" ")
-    print(f'Fetching {name} funds...')
+    print(f'Fetching {name} funds for {period}...')
     data, _ = download_data_indexes(
         indexes=all_tickers, tickers=tickers, period=period, interval='1d')
     print(" ")
@@ -264,7 +267,7 @@ def type_composite_index(**kwargs):
                         composite[sect] = graph
 
                     for i in range(len(composite['VGT'])):
-                        d = float(composite['VHT'][i])
+                        d = float(composite['VHT'][i]) * 0.5
                         d += float(composite['VPU'][i])
                         d += float(composite['VDC'][i])
                         d += float(composite['VNQ'][i]) * 0.6
@@ -274,24 +277,26 @@ def type_composite_index(**kwargs):
                         c += float(composite['VCR'][i])
                         c += float(composite['VFH'][i])
                         c += float(composite['VAW'][i])
+                        c += float(composite['VDE'][i]) * 0.5
                         cyclical.append(c)
 
                         s = float(composite['VIS'][i])
                         s += float(composite['VOX'][i])
-                        s += float(composite['VDE'][i])
+                        s += float(composite['VDE'][i]) * 0.5
                         s += float(composite['VGT'][i])
+                        s += float(composite['VHT'][i]) * 0.5
                         sensitive.append(s)
 
                         if i > 0:
                             d1 = (data['VHT']['Close'][i] - data['VHT']
-                                  ['Close'][i-1]) / data['VHT']['Close'][i-1]
+                                  ['Close'][i-1]) / data['VHT']['Close'][i-1] * 0.5
                             d2 = (data['VPU']['Close'][i] - data['VPU']
                                   ['Close'][i-1]) / data['VPU']['Close'][i-1]
                             d3 = (data['VDC']['Close'][i] - data['VDC']
                                   ['Close'][i-1]) / data['VDC']['Close'][i-1]
                             d4 = (data['VNQ']['Close'][i] - data['VNQ']
                                   ['Close'][i-1]) / data['VNQ']['Close'][i-1] * 0.6
-                            d = (d1 + d2 + d3 + d4) / 3.6
+                            d = (d1 + d2 + d3 + d4) / 3.1
                             d_val.append(d_val[-1] * (1.0 + d))
 
                             d1 = (data['VCR']['Close'][i] - data['VCR']
@@ -302,7 +307,9 @@ def type_composite_index(**kwargs):
                                   ['Close'][i-1]) / data['VAW']['Close'][i-1]
                             d4 = (data['VNQ']['Close'][i] - data['VNQ']
                                   ['Close'][i-1]) / data['VNQ']['Close'][i-1] * 0.4
-                            d = (d1 + d2 + d3 + d4) / 3.4
+                            d5 = (data['VDE']['Close'][i] - data['VDE']
+                                  ['Close'][i-1]) / data['VDE']['Close'][i-1] * 0.5
+                            d = (d1 + d2 + d3 + d4 + d5) / 3.9
                             c_val.append(c_val[-1] * (1.0 + d))
 
                             d1 = (data['VIS']['Close'][i] - data['VIS']
@@ -310,10 +317,12 @@ def type_composite_index(**kwargs):
                             d2 = (data['VOX']['Close'][i] - data['VOX']
                                   ['Close'][i-1]) / data['VOX']['Close'][i-1]
                             d3 = (data['VDE']['Close'][i] - data['VDE']
-                                  ['Close'][i-1]) / data['VDE']['Close'][i-1]
+                                  ['Close'][i-1]) / data['VDE']['Close'][i-1] * 0.5
                             d4 = (data['VGT']['Close'][i] - data['VGT']
                                   ['Close'][i-1]) / data['VGT']['Close'][i-1]
-                            d = (d1 + d2 + d3 + d4) / 4
+                            d5 = (data['VHT']['Close'][i] - data['VHT']
+                                  ['Close'][i-1]) / data['VHT']['Close'][i-1] * 0.5
+                            d = (d1 + d2 + d3 + d4 + d5) / 4.0
                             s_val.append(s_val[-1] * (1.0 + d))
 
                     p.uptick()

@@ -13,7 +13,7 @@ from dateutil.relativedelta import relativedelta
 import libs.utils.stable_yf as styf
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
-from .constants import STANDARD_COLORS
+from .constants import STANDARD_COLORS, SP500
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -28,7 +28,10 @@ VQ_DEEP_ANALYSIS_PARAM = "get-tmc-data/"
 TRADESTOPS_URL = "https://tradestops.com/investment-calculator/"
 
 WARNING = STANDARD_COLORS["warning"]
+FUND = STANDARD_COLORS["ticker"]
 NORMAL = STANDARD_COLORS["normal"]
+
+REVERSE_LINE = "\033[F"
 
 
 def get_dividends(ticker):
@@ -195,6 +198,11 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     """
     pb = kwargs.get('progress_bar', None)
     max_close = kwargs.get('max_close', None)
+    dataset = kwargs.get('data')
+
+    fund_ticker_cleansed = SP500.get(fund_ticker, fund_ticker)
+    api_print = f"\r\nFetching API metadata for {FUND}{fund_ticker_cleansed}{NORMAL}..."
+    print(api_print)
 
     metadata = {}
     ticker = yf.Ticker(fund_ticker)
@@ -229,9 +237,13 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     if pb is not None:
         pb.uptick(increment=0.1)
 
-    metadata['volatility'] = get_volatility(fund_ticker, max_close=max_close)
+    metadata['volatility'] = get_volatility(
+        fund_ticker, max_close=max_close, data=dataset)
     if pb is not None:
         pb.uptick(increment=0.1)
+
+    api_print += "  Done."
+    print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
 
     return metadata
 
@@ -315,7 +327,11 @@ def calculate_eps(meta: dict) -> dict:
     return eps
 
 
-def api_sector_match(sector: str, config: dict, fund_len=None):
+def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs):
+
+    period = kwargs.get('period', config['period'])
+    interval = kwargs.get('interval', config['interval'])
+
     sector_match_file = "resources/sectors.json"
     if not os.path.exists(sector_match_file):
         print(f"Warning: sector file '{sector_match_file}' not found.")
@@ -330,11 +346,16 @@ def api_sector_match(sector: str, config: dict, fund_len=None):
         tickers = config.get('tickers', '').split(' ')
         if matched in tickers:
             return matched, None
-        fund_data = download_single_fund(matched, config, fund_len=fund_len)
+
+        fund_data = download_single_fund(
+            matched, config, period=period, interval=interval, fund_len=fund_len)
         return matched, fund_data
 
 
-def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
+def api_sector_funds(sector_fund: str, config: dict, fund_len=None, **kwargs):
+    period = kwargs.get('period', '2y')
+    interval = kwargs.get('interval', '1d')
+
     sector_match_file = "resources/sectors.json"
     if not os.path.exists(sector_match_file):
         print(
@@ -350,8 +371,6 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
             return [], {}
 
         tickers = ' '.join(matched)
-        period = config.get('period', '2y')
-        interval = config.get('interval', '1d')
         fund_data, _ = download_data_indexes(
             indexes=matched, tickers=tickers, fund_len=fund_len, period=period, interval=interval)
         return matched, fund_data
@@ -362,6 +381,7 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None):
 def get_volatility(ticker_str: str, **kwargs):
     TIMEOUT = 5
     max_close = kwargs.get('max_close', None)
+    dataset = kwargs.get('data')
     is_SP500 = False
     vq = {}
 
@@ -403,6 +423,7 @@ def get_volatility(ticker_str: str, **kwargs):
                 vq['last_max'] = {"Date": "n/a", "Price": "n/a"}
 
             if is_SP500 and max_close is not None:
+                max_close = np.round(max_close, 2)
                 vq['last_max'] = {"Date": "n/a", "Price": max_close}
                 ratio = (100.0 - vq['VQ']) / 100.0
                 vq['stop_loss'] = np.round(ratio * vq['last_max']['Price'], 2)
@@ -414,6 +435,7 @@ def get_volatility(ticker_str: str, **kwargs):
                 print(
                     f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
                 return vq
+
             r = response.json()
             if response.status_code == 200:
                 val = None
@@ -421,6 +443,7 @@ def get_volatility(ticker_str: str, **kwargs):
                     if tick['Symbol'] == ticker_str:
                         val = tick["SymbolId"]
                         break
+
                 if val is not None:
                     now = datetime.now()
                     start = now - relativedelta(years=10)
@@ -434,10 +457,60 @@ def get_volatility(ticker_str: str, **kwargs):
                         print(
                             f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
                         return vq
+
                     r = response.json()
                     if response.status_code == 200:
                         vq['analysis'] = r
 
+                    vq['stopped_out'] = vq_stop_out_check(dataset, vq)
+                    status, color, _ = vq_status_print(vq, ticker_str)
+                    vq['status'] = {'status': status, 'color': color}
+
             return vq
 
     return vq
+
+
+def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
+    stop_loss = vq_obj.get('stop_loss', 'n/a')
+    max_date = vq_obj.get('last_max', {}).get('Date')
+
+    if (max_date == 'n/a') or (stop_loss == 'n/a'):
+        return 'n/a'
+
+    max_date = datetime.strptime(max_date, '%m/%d/%Y')
+    for i in range(len(dataset['Close'])-1, -1, -1):
+        if dataset.index[i] < max_date:
+            return 'OK'
+        if dataset['Close'][i] < stop_loss:
+            return 'Stopped Out'
+    return 'OK'
+
+
+def vq_status_print(vq: dict, fund: str):
+    if not vq:
+        return
+    last_max = vq.get('last_max', {}).get('Price')
+    stop_loss = vq.get('stop_loss')
+    latest = vq.get('latest_price')
+    stop_status = vq.get('stopped_out')
+
+    mid_pt = (last_max + stop_loss) / 2.0
+    amt_latest = latest - stop_loss
+    amt_max = last_max - stop_loss
+    percent = np.round(amt_latest / amt_max * 100.0, 2)
+
+    if stop_status == 'Stopped Out':
+        status_color = 'red'
+        status_message = "AVOID - Stopped Out"
+    elif latest < stop_loss:
+        status_color = 'red'
+        status_message = "AVOID - Stopped Out"
+    elif latest < mid_pt:
+        status_color = 'yellow'
+        status_message = "CAUTION - Hold"
+    else:
+        status_color = 'green'
+        status_message = "GOOD - Buy / Maintain"
+
+    return status_message, status_color, percent

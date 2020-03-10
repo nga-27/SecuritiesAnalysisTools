@@ -25,7 +25,7 @@ CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
 
-def make_fund_slides(prs, analysis: dict):
+def make_fund_slides(prs, analysis: dict, **kwargs):
     """Make Fund Slides
 
     Arguments:
@@ -35,15 +35,18 @@ def make_fund_slides(prs, analysis: dict):
     Returns:
         prs -- pptx presentation object
     """
+    views = kwargs.get('views')
     funds = analysis.keys()
     for fund in funds:
-        prs = add_fund_content(prs, fund, analysis)
+        prs = add_fund_content(prs, fund, analysis, views=views)
 
     return prs
 
 
-def add_fund_content(prs, fund: str, analysis: dict):
-    content_dir = f'output/temp/{fund}/'
+def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
+
+    views = kwargs.get('views')
+    content_dir = f'output/temp/{fund}/{views}/'
     if os.path.exists(content_dir):
         # Title slide for a fund
         fund_name = SP500.get(fund, fund)
@@ -65,14 +68,14 @@ def add_fund_content(prs, fund: str, analysis: dict):
 
         p2 = text_frame.add_paragraph()
         p2.alignment = PP_ALIGN.CENTER
-        p2.text = f"Dates Covered: {analysis[fund]['dates_covered']['start']}  :  {analysis[fund]['dates_covered']['end']}"
+        p2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  {analysis[fund][views]['dates_covered']['end']}"
         p2.font.bold = False
         p2.font.size = Pt(18)
         p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
         p2.font.name = 'Arial'
 
         has_beta = False
-        if 'beta' in analysis[fund].keys():
+        if 'beta' in analysis[fund][views].keys():
             # Insert a table of fund figures
             left_loc = Inches(0.1)
             top_loc = Inches(1.1)
@@ -85,11 +88,15 @@ def add_fund_content(prs, fund: str, analysis: dict):
             rows = 4
             if vq is not None:
                 has_vq = True
-                rows = 7
+                rows = 8
                 stop_loss = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('stop_loss')
                 high_close = analysis[fund].get('metadata', {}).get(
                     'volatility', {}).get('last_max', {}).get('Price', 'n/a')
+                status = analysis[fund].get('metadata', {}).get(
+                    'volatility', {}).get('status', {}).get('status', 'n/a')
+                vq_color = analysis[fund].get('metadata', {}).get(
+                    'volatility', {}).get('status', {}).get('color', 'n/a')
 
             table_placeholder = slide.shapes.add_table(rows,
                                                        2,
@@ -103,12 +110,14 @@ def add_fund_content(prs, fund: str, analysis: dict):
             table.cell(0, 1).text = ''
             table.cell(1, 0).text = 'Current Price'
             table.cell(1, 1).text = '$' + \
-                str(np.round(analysis[fund]['statistics']['current_price'], 2))
+                str(np.round(analysis[fund][views]
+                             ['statistics']['current_price'], 2))
             table.cell(2, 0).text = 'Beta'
-            table.cell(2, 1).text = str(np.round(analysis[fund]['beta'], 5))
+            table.cell(2, 1).text = str(
+                np.round(analysis[fund][views]['beta'], 5))
             table.cell(3, 0).text = 'R-Squared'
             table.cell(3, 1).text = str(
-                np.round(analysis[fund]['r_squared'], 5))
+                np.round(analysis[fund][views]['r_squared'], 5))
 
             if has_vq:
                 table.cell(4, 0).text = 'Volatility Quotient'
@@ -117,6 +126,11 @@ def add_fund_content(prs, fund: str, analysis: dict):
                 table.cell(5, 1).text = str(stop_loss)
                 table.cell(6, 0).text = 'Last High Close'
                 table.cell(6, 1).text = str(high_close)
+                table.cell(7, 0).text = 'VQ Status'
+                table.cell(7, 1).text = str(status)
+
+                table.cell(7, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+                    vq_color)
 
             table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
             table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
@@ -137,10 +151,12 @@ def add_fund_content(prs, fund: str, analysis: dict):
             slide.shapes.add_picture(
                 content, left, top, height=height, width=width)
 
-        price_pt = np.round(analysis[fund]['statistics']['current_price'], 2)
+        price_pt = np.round(analysis[fund][views]
+                            ['statistics']['current_price'], 2)
         price_chg_p = np.round(
-            analysis[fund]['statistics']['current_percent_change'], 3)
-        price_chg = np.round(analysis[fund]['statistics']['current_change'], 2)
+            analysis[fund][views]['statistics']['current_percent_change'], 3)
+        price_chg = np.round(analysis[fund][views]
+                             ['statistics']['current_change'], 2)
         if price_chg > 0.0:
             price_str = f"${price_pt} +{price_chg} (+{price_chg_p}%)"
         else:
@@ -185,20 +201,22 @@ def add_fund_content(prs, fund: str, analysis: dict):
         content = content_dir + '*.png'
         pics = glob.glob(content)
         fund_analysis = analysis[fund]
-        prs = format_plots(prs, indexes, pics, fund_analysis=fund_analysis)
+        prs = format_plots(prs, indexes, pics,
+                           fund_analysis=fund_analysis, views=views)
 
     return prs
 
 
-def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}):
-    parts = windows_compatible_file_parse(globs[0])
+def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}, **kwargs):
 
-    header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/'
+    views = kwargs.get('views', '')
+    parts = windows_compatible_file_parse(globs[0])
+    header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/' + parts[3] + '/'
 
     for globber in globs:
 
         globbed = windows_compatible_file_parse(globber)
-        part = globbed[3]
+        part = globbed[4]
 
         # Slide 1
         slide_num = 0
@@ -398,7 +416,8 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             top_loc = Inches(1)
             table_width = Inches(4)
 
-            num_srs = len(fund_analysis['support_resistance']['major S&R']) + 1
+            num_srs = len(fund_analysis[views]
+                          ['support_resistance']['major S&R']) + 1
             table_height = Inches(num_srs * 0.33)
             if num_srs * 0.33 > 6.0:
                 table_height = Inches(6.0)
@@ -415,7 +434,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             table.cell(0, 0).text = 'Price'
             table.cell(0, 1).text = '% Change'
 
-            for i, maj in enumerate(fund_analysis['support_resistance']['major S&R']):
+            for i, maj in enumerate(fund_analysis[views]['support_resistance']['major S&R']):
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
                 color = color_to_RGB(maj['Color'])
@@ -451,7 +470,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             trends = []
             futures = list(range(0, 91, 15))
             forecasts = []
-            for trend in fund_analysis['trendlines']:
+            for trend in fund_analysis[views]['trendlines']:
                 if trend['current']:
                     trends.append(trend)
                     forecast = trend_simple_forecast(

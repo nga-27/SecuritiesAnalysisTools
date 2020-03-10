@@ -58,12 +58,13 @@ def start_header(**kwargs) -> dict:
     config['date_release'] = update_release
 
     config['state'] = 'run'
-    config['period'] = '2y'
-    config['interval'] = '1d'
+    config['period'] = ['2y']
+    config['interval'] = ['1d']
     config['properties'] = {}
     config['core'] = False
     config['tickers'] = ''
     config['exports'] = {"run": False, "fields": []}
+    config['views'] = {"pptx": '2y'}
 
     config, list_of_tickers = header_options_parse(input_str, config)
 
@@ -142,11 +143,26 @@ def header_json_parse(key: str) -> list:
             interval = props['Interval']
             period = props['Period']
             exports = core.get('Exports')
+            views = core.get('Views', {})
+
+            if isinstance(period, (str)):
+                period = [period]
+            if isinstance(interval, (str)):
+                interval = [interval]
+
+            for i, inter in enumerate(interval):
+                if inter == '1w':
+                    interval[i] = '1wk'
+                elif inter == '1m':
+                    interval[i] = '1mo'
+
+            if views.get('pptx', '') not in period:
+                views['pptx'] = period[0]
 
     else:
         return None
 
-    return [tickers, period, interval, props, exports]
+    return [tickers, period, interval, props, exports, views]
 
 
 def key_parser(input_str: str) -> list:
@@ -247,6 +263,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['properties'] = core[3]
             config['core'] = True
             config['exports'] = core[4]
+            config['views'] = core[5]
 
     if '--test' in i_keys:
         core = header_json_parse('--test')
@@ -257,6 +274,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['properties'] = core[3]
             config['core'] = True
             config['exports'] = core[4]
+            config['views'] = core[5]
 
     if ('--noindex' in i_keys) or ('--ni' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'no_index')
@@ -274,26 +292,32 @@ def header_options_parse(input_str: str, config: dict) -> list:
                              "fields": ticker_list_to_str(ticker_keys)}
 
     # Settings for 'intervals' and 'periods'
+    if ('--10y' in i_keys) or ('--5y' in i_keys) or ('--2y' in i_keys) or ('--1y' in i_keys):
+        config['period'] = []
+
+    if ('--1d' in i_keys) or ('--1w' in i_keys) or ('--1m' in i_keys):
+        config['interval'] = []
+
     if '--10y' in i_keys:
-        config['period'] = '10y'
+        config['period'].append('10y')
 
     if '--5y' in i_keys:
-        config['period'] = '5y'
+        config['period'].append('5y')
 
     if '--2y' in i_keys:
-        config['period'] = '2y'
+        config['period'].append('2y')
 
     if '--1y' in i_keys:
-        config['period'] = '1y'
-
-    if '--1d' in i_keys:
-        config['interval'] = '1d'
-
-    if '--1w' in i_keys:
-        config['interval'] = '1wk'
+        config['period'].append('1y')
 
     if '--1m' in i_keys:
-        config['interval'] = '1mo'
+        config['interval'].append('1mo')
+
+    if '--1w' in i_keys:
+        config['interval'].append('1wk')
+
+    if '--1d' in i_keys:
+        config['interval'].append('1d')
 
     # Configuration flags that append functions (requires '--function' flag)
     if '--mci' in i_keys:
@@ -389,6 +413,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--swings' in i_keys) or ('--swing_trade' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'swings', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
+
+    if ('--hull' in i_keys) or ('--hull_moving_average' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'hull', type_='list')
         config['tickers'] = ticker_list_to_str(ticker_keys)
 
     if ('--bull_bear' in i_keys) or ('--bear_bull' in i_keys):

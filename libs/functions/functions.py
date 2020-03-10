@@ -6,7 +6,8 @@ import numpy as np
 
 from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
-from libs.utils import get_volatility, generic_plotting
+from libs.utils import generic_plotting
+from libs.utils import get_volatility, vq_status_print
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
@@ -17,6 +18,7 @@ from libs.tools import mov_avg_convergence_divergence, relative_strength, on_bal
 from libs.tools import triple_moving_average, moving_average_swing_trade
 from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
+from libs.tools import hull_moving_average
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 TICKER = STANDARD_COLORS["ticker"]
@@ -80,6 +82,8 @@ def only_functions_handler(config: dict):
         ma_function(config)
     if 'swings' in config['run_functions']:
         swing_trade_function(config)
+    if 'hull' in config['run_functions']:
+        hull_ma_function(config)
     if 'bear_bull' in config['run_functions']:
         bear_bull_function(config)
     if 'total_power' in config['run_functions']:
@@ -265,6 +269,15 @@ def swing_trade_function(config: dict):
             moving_average_swing_trade(data[fund], name=fund, plot_output=True)
 
 
+def hull_ma_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Hull Moving Average of {TICKER}{fund}{NORMAL}...")
+            hull_moving_average(data[fund], name=fund, plot_output=True)
+
+
 def bear_bull_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
@@ -301,10 +314,10 @@ def price_gap_function(config: dict):
 def vq_function(config: dict):
     print(f"Volatility & Stop Losses for funds...")
     print(f"")
-    fund_list = config['tickers'].split(' ')
+    data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            vq = get_volatility(fund)
+            vq = get_volatility(fund, data=data[fund])
             vq_function_print(vq, fund)
 
 
@@ -385,12 +398,17 @@ def vq_function_print(vq: dict, fund: str):
     last_max = vq.get('last_max', {}).get('Price')
     stop_loss = vq.get('stop_loss')
     latest = vq.get('latest_price')
+    stop_status = vq.get('stopped_out')
+
     mid_pt = (last_max + stop_loss) / 2.0
     amt_latest = latest - stop_loss
     amt_max = last_max - stop_loss
     percent = np.round(amt_latest / amt_max * 100.0, 2)
 
-    if latest < stop_loss:
+    if stop_status == 'Stopped Out':
+        status_color = DOWN_COLOR
+        status_message = "AVOID - Stopped Out"
+    elif latest < stop_loss:
         status_color = DOWN_COLOR
         status_message = "AVOID - Stopped Out"
     elif latest < mid_pt:

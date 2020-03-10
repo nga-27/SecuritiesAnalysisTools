@@ -154,6 +154,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
         sector:                 (str) sector fund (if in full_data_dict) for comparison; DEFAULT=''
         plot_output:            (bool) True to render plot in realtime; DEFAULT=True
         progress_bar:           (ProgressBar) DEFAULT=None
+        view:                   (str) Directory of plots; DEFAULT=''
 
     returns:
         r_strength:             (dict) contains all relative strength information
@@ -165,6 +166,10 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     progress_bar = kwargs.get('progress_bar', None)
     meta = kwargs.get('meta', None)
     sector_data = kwargs.get('sector_data', {})
+    view = kwargs.get('view', '')
+
+    period = kwargs.get('period', '2y')
+    interval = kwargs.get('interval', '1d')
 
     comp_funds = []
     comp_data = {}
@@ -177,11 +182,12 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
                 'end': full_data_dict[primary_name].index[len(full_data_dict[primary_name]['Close'])-1],
                 'dates': full_data_dict[primary_name].index
             }
+
             match_fund, match_data = api_sector_match(
-                match, config, fund_len=fund_len)
+                match, config, fund_len=fund_len, period=period, interval=interval)
             if match_fund is not None:
                 comp_funds, comp_data = api_sector_funds(
-                    match_fund, config, fund_len=fund_len)
+                    match_fund, config, fund_len=fund_len, period=period, interval=interval)
                 if match_data is None:
                     match_data = full_data_dict
                 sector = match_fund
@@ -267,7 +273,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
         generic_plotting(output_data, x=dates, title=title,
                          legend=legend, ylabel='Difference Ratio')
     else:
-        filename = primary_name + \
+        filename = primary_name + f"/{view}" + \
             '/relative_strength_{}.png'.format(primary_name)
         generic_plotting(output_data, x=dates, title=title, saveFig=True,
                          filename=filename, legend=legend, ylabel='Difference Ratio')

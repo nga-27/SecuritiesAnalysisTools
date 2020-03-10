@@ -245,12 +245,17 @@ def remove_empty_keys(dictionary: dict) -> dict:
     return new_dict
 
 
-def feature_plotter(fund: pd.DataFrame, shapes: list, name='',  feature='head_and_shoulders', plot_output=True):
+def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
     """
     Plots a rectangle of where the feature was detected overlayed on the ticker signal.
     """
+    plot_output = kwargs.get('plot_output', True)
+    feature = kwargs.get('feature', 'head_and_shoulders')
+    name = kwargs.get('name', '')
+    view = kwargs.get('view', '')
+
     name2 = SP500.get(name, name)
-    filename = name + f'/{feature}_{name}.png'
+    filename = name + f"/{view}" + f'/{feature}_{name}.png'
     title = f'{name2} Feature Detection: '
 
     if feature == 'head_and_shoulders':

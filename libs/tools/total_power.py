@@ -19,6 +19,7 @@ def total_power(position: pd.DataFrame, **kwargs) -> dict:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- directory of plots (default: {''})
 
     Returns:
         dict -- total power data object
@@ -26,14 +27,15 @@ def total_power(position: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view', '')
 
     tp = dict()
 
     tp['tabular'] = generate_total_power_signal(
-        position, plot_output=plot_output, p_bar=p_bar, name=name)
+        position, plot_output=plot_output, p_bar=p_bar, name=name, view=view)
 
     tp = total_power_feature_detection(
-        tp, position, plot_output=plot_output, name=name, p_bar=p_bar)
+        tp, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
     return tp
 
@@ -50,6 +52,7 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         p_bar {ProgressBar} -- (default: {None})
+        view {str} -- (default: {''})
 
     Returns:
         dict -- cumulative signals bear, bull, total
@@ -59,6 +62,7 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     signals = {"bears_raw": [], "bulls_raw": [],
                "total": [], "bears": [], "bulls": []}
@@ -132,7 +136,7 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
                       signals['bears'], signals['bulls'], signals['total']], 'Price', ['Bear', 'Bull', 'Total'],
                       title=title)
     else:
-        filename = name + f'/total_power_{name}'
+        filename = name + f"/{view}" + f'/total_power_{name}'
         dual_plotting(position['Close'], [signals['bears'], signals['bulls'], signals['total']], 'Price', ['Bear', 'Bull', 'Total'],
                       title=title, saveFig=True, filename=filename)
 
@@ -154,6 +158,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         p_bar {ProgressBar} -- (default: {None})
+        view {str} -- (default: {''})
 
     Returns:
         dict -- tp
@@ -162,6 +167,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
+    view = kwargs.get('view')
 
     tab = tp['tabular']
     metrics = [0.0] * len(tab['total'])
@@ -241,7 +247,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
     if plot_output:
         dual_plotting(position['Close'], metrics, 'Price', 'Metrics')
     else:
-        filename = name + f'/total_pwr_metrics_{name}'
+        filename = name + f"/{view}" + f'/total_pwr_metrics_{name}'
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=title, saveFig=True, filename=filename)
 

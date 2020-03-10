@@ -320,6 +320,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     name = kwargs.get('name', '')
+    view = kwargs.get('view')
 
     ults = ultimate['plots']
 
@@ -362,7 +363,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
             dual_plotting(position['Close'], metrics, 'Price',
                           'Metrics', title='Ultimate Oscillator Metrics')
         else:
-            filename = name + f"/ultimate_osc_metrics_{name}.png"
+            filename = name + f"/{view}" + f"/ultimate_osc_metrics_{name}.png"
             dual_plotting(position['Close'], metrics, 'Price',
                           'Metrics', title=name2, filename=filename, saveFig=True)
 
@@ -392,6 +393,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
     out_suppress = kwargs.get('out_suppress', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view', '')
 
     ultimate = dict()
 
@@ -406,7 +408,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
 
     ultimate = ultimate_osc_metrics(
         position, ultimate, plot_output=plot_output, out_suppress=out_suppress,
-        name=name, p_bar=p_bar)
+        name=name, p_bar=p_bar, view=view)
 
     if not out_suppress:
         name3 = SP500.get(name, name)
@@ -417,7 +419,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
             dual_plotting(position['Close'], ultimate['plots'],
                           'Position Price', 'Buy-Sell Signal', title=name2)
         else:
-            filename = name + '/ultimate_osc_{}.png'.format(name)
+            filename = name + f"/{view}" + '/ultimate_osc_{}.png'.format(name)
             dual_plotting(position['Close'], ult_osc, 'Position Price',
                           'Ultimate Oscillator', title=name2, saveFig=True, filename=filename)
             dual_plotting(position['Close'], ultimate['plots'], 'Position Price',
