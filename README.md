@@ -10,6 +10,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.1.19, 2019-11-10 - Dataset exportation to csv, expanded `functions` capability
 * 0.1.21, 2019-12-01 - API expansion, metadata from yfinance
 * 0.1.25, 2020-02-08 - Start of a normalized metric across all items (oscillators covered here)
+* 0.1.27, 2020-03-09 - Multi-period data analysis ('10y', '5y', '2y', '1y'; '1d', '1w', '1m')
 * 0.1.x - Working toward Release 2 (`app.py` with no `--rX` tags [X = available release] is most current on master)
 
 ## To Use
@@ -107,6 +108,8 @@ Other solutions, employed on all plotting functions, is the `register_matplotlib
 [Top 4 Tech Tools](https://www.investopedia.com/articles/active-trading/041814/four-most-commonlyused-indicators-trend-trading.asp)
 
 [Tip Ranks, Metadata](https://www.tipranks.com/)
+
+[TradingView - Awesome Charts](https://www.tradingview.com/)
 
 ## Custom Metrics 
 * _Clustered Oscillators_ - weighted-aggregate of RSI, Stochastic, and Ultimate Oscillators. **Higher: buy, lower: sell**
