@@ -75,7 +75,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         p2.font.name = 'Arial'
 
         has_beta = False
-        if 'beta' in analysis[fund][views].keys():
+        if 'beta' in analysis[fund][views]['statistics'].keys():
             # Insert a table of fund figures
             left_loc = Inches(0.1)
             top_loc = Inches(1.1)
@@ -114,10 +114,10 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
                              ['statistics']['current_price'], 2))
             table.cell(2, 0).text = 'Beta'
             table.cell(2, 1).text = str(
-                np.round(analysis[fund][views]['beta'], 5))
+                np.round(analysis[fund][views]['statistics']['beta'], 5))
             table.cell(3, 0).text = 'R-Squared'
             table.cell(3, 1).text = str(
-                np.round(analysis[fund][views]['r_squared'], 5))
+                np.round(analysis[fund][views]['statistics']['r_squared'], 5))
 
             if has_vq:
                 table.cell(4, 0).text = 'Volatility Quotient'

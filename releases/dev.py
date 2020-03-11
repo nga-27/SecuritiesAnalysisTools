@@ -62,7 +62,7 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.28'
-_DATE_REVISION_ = '2020-03-09'
+_DATE_REVISION_ = '2020-03-11'
 ################################
 PROCESS_STEPS_DEV = 21
 
@@ -203,8 +203,8 @@ def technical_analysis(config: dict):
                 )
 
                 beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])
-                fund_data['beta'] = beta
-                fund_data['r_squared'] = rsqd
+                fund_data['statistics']['beta'] = beta
+                fund_data['statistics']['r_squared'] = rsqd
                 p.uptick()
 
             # Support and Resistance Analysis
