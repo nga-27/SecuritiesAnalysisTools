@@ -257,6 +257,7 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {str})
         view {str} -- file directory of plots (default: {''})
+        p_bar {ProgressBar} -- (default: {None})
 
     Keyword Arguments:
         config {list} -- look back period (default: {[9, 13, 50]})
@@ -267,10 +268,29 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
+    p_bar = kwargs.get('progress_bar')
+
+    tema = dict()
 
     tshort = exponential_moving_avg(fund, config[0])
     tmed = exponential_moving_avg(fund, config[1])
     tlong = exponential_moving_avg(fund, config[2])
+
+    tema['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
+    tema['short'] = config[0]
+    tema['medium'] = config[1]
+    tema['long'] = config[2]
+
+    mshort = []
+    mmed = []
+    mlong = []
+
+    for i, close in enumerate(fund['Close']):
+        mshort.append(np.round((close - tshort[i]) / tshort[i] * 100.0, 3))
+        mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
+        mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
+
+    tema['metrics'] = {'short': mshort, 'medium': mmed, 'long': mlong}
 
     name3 = SP500.get(name, name)
     name2 = name3 + \
@@ -287,7 +307,10 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
         generic_plotting([fund['Close'], tshort, tmed, tlong],
                          legend=legend, title=name2, saveFig=True, filename=filename)
 
-    return tshort, tmed, tlong
+    if p_bar is not None:
+        p_bar.uptick(increment=1.0)
+
+    return tema
 
 
 def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
