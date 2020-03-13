@@ -43,6 +43,8 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
+    hull['type'] = 'trend'
+
     return hull
 
 

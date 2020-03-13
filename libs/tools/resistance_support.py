@@ -437,6 +437,8 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
+    analysis['type'] = 'trend'
+
     return analysis
 
 

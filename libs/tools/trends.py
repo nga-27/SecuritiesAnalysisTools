@@ -297,6 +297,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
 
     trends['current'] = current
     trends['metrics'] = metrics
+    trends['type'] = 'trend'
 
     return trends
 

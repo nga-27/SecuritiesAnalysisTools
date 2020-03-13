@@ -244,6 +244,8 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
+    tma['type'] = 'trend'
+
     return tma
 
 
@@ -269,12 +271,21 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
     p_bar = kwargs.get('progress_bar')
+    out_suppress = kwargs.get('out_suppress', False)
 
     tema = dict()
 
     tshort = exponential_moving_avg(fund, config[0])
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     tmed = exponential_moving_avg(fund, config[1])
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     tlong = exponential_moving_avg(fund, config[2])
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
 
     tema['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
     tema['short'] = config[0]
@@ -290,25 +301,31 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
         mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
         mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.2)
+
     tema['metrics'] = {'short': mshort, 'medium': mmed, 'long': mlong}
 
-    name3 = SP500.get(name, name)
-    name2 = name3 + \
-        ' - Exp Moving Averages [{}, {}, {}]'.format(
-            config[0], config[1], config[2])
-    legend = ['Price', f'{config[0]}-EMA',
-              f'{config[1]}-EMA', f'{config[2]}-EMA']
-    if plot_output:
-        generic_plotting([fund['Close'], tshort, tmed, tlong],
-                         legend=legend, title=name2)
-    else:
-        filename = name + f"/{view}" + \
-            '/exp_moving_averages_{}.png'.format(name)
-        generic_plotting([fund['Close'], tshort, tmed, tlong],
-                         legend=legend, title=name2, saveFig=True, filename=filename)
+    if not out_suppress:
+        name3 = SP500.get(name, name)
+        name2 = name3 + \
+            ' - Exp Moving Averages [{}, {}, {}]'.format(
+                config[0], config[1], config[2])
+        legend = ['Price', f'{config[0]}-EMA',
+                  f'{config[1]}-EMA', f'{config[2]}-EMA']
+        if plot_output:
+            generic_plotting([fund['Close'], tshort, tmed, tlong],
+                             legend=legend, title=name2)
+        else:
+            filename = name + f"/{view}" + \
+                '/exp_moving_averages_{}.png'.format(name)
+            generic_plotting([fund['Close'], tshort, tmed, tlong],
+                             legend=legend, title=name2, saveFig=True, filename=filename)
 
     if p_bar is not None:
-        p_bar.uptick(increment=1.0)
+        p_bar.uptick(increment=0.2)
+
+    tema['type'] = 'trend'
 
     return tema
 
@@ -346,26 +363,34 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     if function == 'sma':
         if config == []:
             tma = triple_moving_average(
-                fund, plot_output=plot_output, name=name, out_suppress=out_suppress, view=view)
-            sh = tma['tabular']['short']
-            me = tma['tabular']['medium']
-            ln = tma['tabular']['long']
+                fund, plot_output=plot_output, name=name,
+                out_suppress=out_suppress, view=view)
         else:
             tma = triple_moving_average(
-                fund, config=config, plot_output=plot_output, name=name, out_suppress=out_suppress, view=view)
-            sh = tma['tabular']['short']
-            me = tma['tabular']['medium']
-            ln = tma['tabular']['long']
-    else:
+                fund, config=config, plot_output=plot_output,
+                name=name, out_suppress=out_suppress, view=view)
+        sh = tma['tabular']['short']
+        me = tma['tabular']['medium']
+        ln = tma['tabular']['long']
+
+    elif function == 'ema':
         if config == []:
-            sh, me, ln = triple_exp_mov_average(
-                fund, plot_output=plot_output, name=name, view=view)
+            tma = triple_exp_mov_average(
+                fund, plot_output=plot_output, name=name,
+                out_suppress=out_suppress, view=view)
         else:
-            sh, me, ln = triple_exp_mov_average(
-                fund, config=config, plot_output=plot_output, name=name, view=view)
+            tma = triple_exp_mov_average(
+                fund, config=config, plot_output=plot_output,
+                name=name, out_suppress=out_suppress, view=view)
+        sh = tma['tabular']['short']
+        me = tma['tabular']['medium']
+        ln = tma['tabular']['long']
+
+    else:
+        return {}
 
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+        progress_bar.uptick(increment=0.4)
 
     mast = dict()
     mast['tabular'] = {}
@@ -379,7 +404,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     swings = mast['metrics']
 
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.3)
+        progress_bar.uptick(increment=0.4)
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Swing Trade SMAs'
@@ -393,7 +418,9 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
                            'Swing Signal'], title=name2, saveFig=True, filename=filename)
 
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.5)
+        progress_bar.uptick(increment=0.2)
+
+    mast['type'] = 'oscillator'
 
     return mast
 

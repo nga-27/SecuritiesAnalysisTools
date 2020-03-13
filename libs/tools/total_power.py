@@ -37,6 +37,8 @@ def total_power(position: pd.DataFrame, **kwargs) -> dict:
     tp = total_power_feature_detection(
         tp, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
+    tp['type'] = 'trend'
+
     return tp
 
 

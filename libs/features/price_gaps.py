@@ -50,6 +50,8 @@ def analyze_price_gaps(fund: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.5)
 
+    gaps['type'] = 'feature'
+
     return gaps
 
 

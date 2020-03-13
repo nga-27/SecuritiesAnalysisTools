@@ -31,10 +31,9 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                                 met_str = f"{metric} ({met})"
                                 synopsis[period]['metrics'][met_str] = mets[met][-1]
                                 diff = mets[met][-2]
-                                # diff = ((mets[met][-1] + 1.1) - (mets[met][-2] + 1.1)) / \
-                                # (mets[met][-2] + 1.1) * 100.0
                                 synopsis[period]['metrics_delta'][met_str] = np.round(
                                     diff, 3)
+
                         else:
                             met_str = f"{metric}"
                             if met_str == 'trendlines':
@@ -42,11 +41,6 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                                 synopsis[period]['metrics_delta'][met_str] = ''
                             else:
                                 synopsis[period]['metrics'][met_str] = mets[-1]
-                                # if mets[-2] == 0.0:
-                                #     diff = (mets[-1] - 2.0) / 2.0 * 100.0
-                                # else:
-                                #     diff = (mets[-1] - mets[-2]) / \
-                                #         np.abs(mets[-2]) * 100.0
                                 diff = mets[-2]
                                 synopsis[period]['metrics_delta'][met_str] = np.round(
                                     diff, 3)
@@ -60,8 +54,6 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                                 if isinstance(mets[met][-1], (str, list)):
                                     synopsis[period]['tabular_delta'][met_str] = ''
                                 else:
-                                    # diff = ((mets[met][-1] + 1.1) - (mets[met][-2] + 1.1)) / \
-                                    #     (mets[met][-2] + 1.1) * 100.0
                                     diff = mets[met][-2]
                                     synopsis[period]['tabular_delta'][met_str] = np.round(
                                         diff, 3)
@@ -71,8 +63,6 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                             if isinstance(mets[-1], (str, list)):
                                 synopsis[period]['tabular_delta'][met_str] = ''
                             else:
-                                # diff = ((mets[-1] + 1.1) - (mets[-2] + 1.1)) / \
-                                #     (mets[-2] + 1.1) * 100.0
                                 diff = mets[-2]
                                 synopsis[period]['tabular_delta'][met_str] = np.round(
                                     diff, 3)

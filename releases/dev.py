@@ -63,9 +63,9 @@ from test import test_competitive
 
 ################################
 _VERSION_ = '0.1.28'
-_DATE_REVISION_ = '2020-03-11'
+_DATE_REVISION_ = '2020-03-13'
 ################################
-PROCESS_STEPS_DEV = 22
+PROCESS_STEPS_DEV = 23
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -175,8 +175,11 @@ def technical_analysis(config: dict):
             fund_data['exp_moving_average'] = triple_exp_mov_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
-            fund_data['swing_trade'] = moving_average_swing_trade(
+            fund_data['sma_swing_trade'] = moving_average_swing_trade(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['ema_swing_trade'] = moving_average_swing_trade(
+                fund, function='ema', plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['hull_moving_average'] = hull_moving_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
@@ -232,8 +235,7 @@ def technical_analysis(config: dict):
                 fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
             # Various Fund-specific Metrics
-            fund_data['futures'] = future_returns(
-                fund, to_json=True, progress_bar=p)
+            fund_data['futures'] = future_returns(fund, progress_bar=p)
 
             p.end()
 

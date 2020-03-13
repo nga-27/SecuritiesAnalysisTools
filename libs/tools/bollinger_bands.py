@@ -62,6 +62,8 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
+    bb['type'] = 'oscillator'
+
     return bb
 
 

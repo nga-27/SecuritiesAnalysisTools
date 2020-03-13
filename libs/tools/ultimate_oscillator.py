@@ -425,4 +425,6 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
             dual_plotting(position['Close'], ultimate['plots'], 'Position Price',
                           'Buy-Sell Signal', title=name2, saveFig=True, filename=filename)
 
+    ultimate['type'] = 'oscillator'
+
     return ultimate

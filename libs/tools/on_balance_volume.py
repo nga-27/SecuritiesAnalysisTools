@@ -173,4 +173,6 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     # sub_name = f"obv_{name}_long"
     # obv_dict['trends']['long'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[30,48,68,90])
 
+    obv_dict['type'] = 'trend'
+
     return obv_dict

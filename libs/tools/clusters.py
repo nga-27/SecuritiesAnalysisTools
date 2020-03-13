@@ -347,4 +347,6 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     if wma:
         cluster_oscs['tabular'] = clusters_wma
 
+    cluster_oscs['type'] = 'oscillator'
+
     return cluster_oscs

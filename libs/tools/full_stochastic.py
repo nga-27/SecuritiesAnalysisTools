@@ -455,4 +455,6 @@ def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs)
     full_stoch = get_stoch_metrics(
         position, full_stoch, plot_output=plot_output, name=name, p_bar=progress_bar)
 
+    full_stoch['type'] = 'oscillator'
+
     return full_stoch

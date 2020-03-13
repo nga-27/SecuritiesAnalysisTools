@@ -48,7 +48,7 @@ def future_returns(fund: pd.DataFrame, **kwargs):
         future:         (dict) future data
     """
     futures = kwargs.get('futures', [5, 15, 45, 90])
-    to_json = kwargs.get('to_json', False)
+    to_json = kwargs.get('to_json', True)
     progress_bar = kwargs.get('progress_bar', None)
 
     fr_data = {}
@@ -61,22 +61,29 @@ def future_returns(fund: pd.DataFrame, **kwargs):
             fut = fund['Close'][i+future]
             val = np.round((fut - cur) / cur * 100.0, 3)
             f_data.append(val)
+
         for i in range(future):
             f_data.append(0.0)
         fr_data[str(future)] = f_data.copy()
+
         if progress_bar is not None:
             progress_bar.uptick(increment=increment)
+
     f_data = []
     for i in range(len(fund.index)):
         f_data.append(fund.index[i].strftime("%Y-%m-%d"))
+
     fr_data['index'] = f_data
     if not to_json:
         df = pd.DataFrame.from_dict(fr_data)
         df.set_index('index', inplace=True)
         return df
+
     future = {'tabular': fr_data}
     if progress_bar is not None:
         progress_bar.uptick(increment=increment)
+
+    future['type'] = 'future'
     return future
 
 
