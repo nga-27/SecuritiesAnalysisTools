@@ -291,6 +291,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['exports'] = {"run": True,
                              "fields": ticker_list_to_str(ticker_keys)}
 
+    # Only creating a pptx from existing metadata file
+    if ('--pptx' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'pptx', type_='list')
+
     # Settings for 'intervals' and 'periods'
     if ('--10y' in i_keys) or ('--5y' in i_keys) or ('--2y' in i_keys) or ('--1y' in i_keys):
         config['period'] = []

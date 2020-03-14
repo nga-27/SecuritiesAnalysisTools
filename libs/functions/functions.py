@@ -21,6 +21,7 @@ from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
+from libs.ui_generation import slide_creator
 
 TICKER = STANDARD_COLORS["ticker"]
 NORMAL = STANDARD_COLORS["normal"]
@@ -101,6 +102,8 @@ def only_functions_handler(config: dict):
         nasit_generation_function(config, print_only=True)
     if 'synopsis' in config['run_functions']:
         synopsis_function(config)
+    if 'pptx' in config['run_functions']:
+        pptx_output_function(config)
 
 ###############################################################################
 
@@ -401,6 +404,19 @@ def synopsis_function(config: dict):
                 if synopsis is None:
                     print(f"{WARNING}Warning: key 'synopsis' not present.{NORMAL}")
                     return
+
+
+def pptx_output_function(config: dict):
+    meta_file = "output/metadata.json"
+    if not os.path.exists(meta_file):
+        print(
+            f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
+        return
+    with open(meta_file) as m_file:
+        m_data = json.load(m_file)
+        m_file.close()
+        slide_creator(m_data, config=config)
+        return
 
 ####################################################
 
