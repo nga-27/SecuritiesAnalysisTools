@@ -50,6 +50,7 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
     if type_ == 'metrics':
 
         if category == 'trend':
+
             # Trend Metrics Table
             top = Inches(1.5)
             left = Inches(0.25)
@@ -77,15 +78,21 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
                                                        table_height)
             table = table_placeholder.table
 
-            table.cell(0, 0).text = "Metric"
-            table.cell(0, 1).text = "Current vs. Metric"
+            table.cell(0, 0).text = "Current vs. Metric"
+            table.cell(0, 1).text = "Current (Previous)"
 
             for i, item in enumerate(listed):
                 item_str = pretty_up_key(item)
-                value = content.get('metrics', {}).get(item, '')
-                value_str = f"{value}%"
+                value = content.get('metrics', {}).get(item, 0.0)
+                delta = content.get('metrics_delta', {}).get(item, 0.0)
+
+                value_str = f"{value}%\t"
+                delta_str = f"({delta}%)"
                 if value > 0.0:
-                    value_str = f"+{value}%"
+                    value_str = f"+{value}%\t"
+                if delta > 0.0:
+                    delta_str = f"(+{delta}%)"
+                value_str = value_str + delta_str
 
                 table.cell(i+1, 0).text = item_str
                 table.cell(i+1, 1).text = value_str
@@ -98,6 +105,27 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
                 elif value < 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
                         color_to_RGB("red")
+
+            # A note about moving averages
+            note = "'Current vs. Metric' refers to difference between moving average metric " + \
+                "and current close. A negative % refers to a close X% less than the metric. " + \
+                "(Previous) is the previous period's close percent difference. This is " + \
+                "supplied to see change to current day."
+
+            top = Inches(6.9)
+            left = Inches(0.25)
+            width = Inches(4.65)
+            height = Inches(0.56)
+            txtbox2 = slide.shapes.add_textbox(left, top, width, height)
+            text_frame = txtbox2.text_frame
+            text_frame.word_wrap = True
+
+            p = text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.LEFT
+            p.text = note
+            p.font.bold = False
+            p.font.size = Pt(8)
+            p.font.name = 'Arial'
 
         elif category == 'oscillator':
             # Oscillator Metrics Table
@@ -128,12 +156,20 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
             table = table_placeholder.table
 
             table.cell(0, 0).text = "Metric"
-            table.cell(0, 1).text = "Metric Score"
+            table.cell(0, 1).text = "Current (Previous)"
 
             for i, item in enumerate(listed):
                 item_str = pretty_up_key(item)
-                value = content.get('metrics', {}).get(item, '')
+                value = content.get('metrics', {}).get(item, 0.0)
+                delta = content.get('metrics_delta', {}).get(item, 0.0)
+
                 value_str = f"{np.round(value, 5)}"
+                if len(value_str) < 5:
+                    value_str = f"{np.round(value, 5)}\t\t"
+                else:
+                    value_str = f"{np.round(value, 5)}\t"
+                delta_str = f"({np.round(delta, 5)})"
+                value_str = value_str + delta_str
 
                 table.cell(i+1, 0).text = item_str
                 table.cell(i+1, 1).text = value_str

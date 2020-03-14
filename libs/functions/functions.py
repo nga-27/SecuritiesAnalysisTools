@@ -415,6 +415,22 @@ def pptx_output_function(config: dict):
     with open(meta_file) as m_file:
         m_data = json.load(m_file)
         m_file.close()
+
+        t_fund = None
+        for fund in m_data:
+            if fund != '_METRICS_':
+                t_fund = fund
+
+        if t_fund is None:
+            print(
+                f"{WARNING}No valid fund found for 'pptx_output_function'. Exiting...{NORMAL}")
+            return
+
+        if '2y' not in m_data[t_fund]:
+            for period in m_data[t_fund]:
+                if (period != 'metadata') and (period != 'synopsis'):
+                    config['views']['pptx'] = period
+
         slide_creator(m_data, config=config)
         return
 
