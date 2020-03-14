@@ -8,7 +8,14 @@ NORMAL = TEXT_COLOR_MAP.get('white')
 
 
 def generate_synopsis(analysis: dict, **kwargs) -> dict:
+    """Generate Synopsis
 
+    Arguments:
+        analysis {dict} -- fund & time period data object
+
+    Returns:
+        dict -- summarized keys for a "dashboard"
+    """
     name = kwargs.get('name')
     print_out = kwargs.get('print_out', False)
 
@@ -17,40 +24,79 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
         return synopsis
 
     for period in analysis[name]:
-        synopsis[period] = {'tabular': {}, 'metrics': {},
-                            'tabular_delta': {}, 'metrics_delta': {}}
 
         if (period != 'metadata') and (period != 'synopsis'):
+            synopsis[period] = {'tabular': {}, 'metrics': {},
+                                'tabular_delta': {}, 'metrics_delta': {},
+                                'tabular_categories': {},
+                                'metrics_categories': {}}
 
             for metric in analysis[name][period]:
                 if (metric != 'name'):
+
                     mets = analysis[name][period][metric].get('metrics')
+                    cat = analysis[name][period][metric].get('type')
                     if mets is not None:
                         if isinstance(mets, (dict)):
                             for met in mets:
                                 met_str = f"{metric} ({met})"
                                 synopsis[period]['metrics'][met_str] = mets[met][-1]
+                                cat = analysis[name][period][metric].get(
+                                    'type')
+
+                                if cat is not None:
+                                    if (cat == 'trend') and (('metrics' in met_str) or ('swing' in met_str)):
+                                        cat = 'oscillator'
+                                    if cat not in synopsis[period]['metrics_categories']:
+                                        synopsis[period]['metrics_categories'][cat] = [
+                                        ]
+                                    synopsis[period]['metrics_categories'][cat].append(
+                                        met_str)
+
                                 diff = mets[met][-2]
                                 synopsis[period]['metrics_delta'][met_str] = np.round(
                                     diff, 3)
 
                         else:
                             met_str = f"{metric}"
+                            cat = analysis[name][period][metric].get('type')
                             if met_str == 'trendlines':
                                 synopsis[period]['metrics'][met_str] = mets
                                 synopsis[period]['metrics_delta'][met_str] = ''
                             else:
+                                if cat is not None:
+                                    if (cat == 'trend') and (('metrics' in met_str) or ('swing' in met_str)):
+                                        cat = 'oscillator'
+                                    if cat not in synopsis[period]['metrics_categories']:
+                                        synopsis[period]['metrics_categories'][cat] = [
+                                        ]
+                                    synopsis[period]['metrics_categories'][cat].append(
+                                        met_str)
+
                                 synopsis[period]['metrics'][met_str] = mets[-1]
                                 diff = mets[-2]
                                 synopsis[period]['metrics_delta'][met_str] = np.round(
                                     diff, 3)
 
                     mets = analysis[name][period][metric].get('tabular')
+                    cat = analysis[name][period][metric].get('type')
                     if mets is not None:
                         if isinstance(mets, (dict)):
                             for met in mets:
                                 met_str = f"{metric} ({met})"
                                 synopsis[period]['tabular'][met_str] = mets[met][-1]
+                                cat = analysis[name][period][metric].get(
+                                    'type')
+
+                                if cat is not None:
+                                    if (cat == 'trend') and (('metrics' in met_str) or ('swing' in met_str)):
+                                        cat = 'oscillator'
+                                    if cat not in synopsis[period]['tabular_categories']:
+                                        synopsis[period]['tabular_categories'][cat] = [
+                                        ]
+                                    synopsis[period]['tabular_categories'][cat].append(
+                                        met_str)
+
                                 if isinstance(mets[met][-1], (str, list)):
                                     synopsis[period]['tabular_delta'][met_str] = ''
                                 else:
@@ -60,6 +106,15 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                         else:
                             met_str = f"{metric}"
                             synopsis[period]['tabular'][met_str] = mets[-1]
+
+                            if cat is not None:
+                                if (cat == 'trend') and (('metrics' in met_str) or ('swing' in met_str)):
+                                    cat = 'oscillator'
+                                if cat not in synopsis[period]['tabular_categories']:
+                                    synopsis[period]['tabular_categories'][cat] = []
+                                synopsis[period]['tabular_categories'][cat].append(
+                                    met_str)
+
                             if isinstance(mets[-1], (str, list)):
                                 synopsis[period]['tabular_delta'][met_str] = ''
                             else:
@@ -73,6 +128,9 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
 
 
 def strings_to_tabs(string: str, style='default') -> str:
+    """
+    Applies a number of tabs to best create a fake column in terminal
+    """
     if style == 'default':
         if len(string) < 7:
             tabs = '\t\t\t\t\t'
@@ -108,6 +166,9 @@ def strings_to_tabs(string: str, style='default') -> str:
 
 
 def output_to_terminal(synopsis: dict, print_out=False, **kwargs):
+    """
+    Mapping function to show fund information in terminal
+    """
     name = kwargs.get('name', '')
     name2 = SP500.get(name, name)
     if print_out:
@@ -136,6 +197,9 @@ def output_to_terminal(synopsis: dict, print_out=False, **kwargs):
 
 
 def custom_print(key: str, value, prev=None, thr=0.0):
+    """
+    Specific printer for terminals
+    """
     tabs = strings_to_tabs(key)
     if isinstance(value, (str, list)):
         print(
