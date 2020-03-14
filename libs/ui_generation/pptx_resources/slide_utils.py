@@ -145,7 +145,7 @@ def color_to_RGB(color: str):
 
 def pptx_ui_errors(slide, message: str):
     top = Inches(2.75)
-    left = Inches(4.17)
+    left = Inches(4)
     width = Inches(6)
     height = Inches(2)
     txtbox = slide.shapes.add_textbox(left, top, width, height)

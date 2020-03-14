@@ -155,6 +155,8 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         width = Inches(10.5)
         slide.shapes.add_picture(
             content, left, top, height=height, width=width)
+    else:
+        slide = pptx_ui_errors(slide, "No Candlestick Chart available.")
 
     price_pt = np.round(analysis[fund][views]
                         ['statistics']['current_price'], 2)
@@ -221,7 +223,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
     if len(globs) == 0:
         for ind in slide_indices:
-            pptx_ui_errors(prs.slides[ind], "No plot files present.")
+            pptx_ui_errors(prs.slides[ind], "No plot files available.")
         return prs
 
     views = kwargs.get('views', '')
