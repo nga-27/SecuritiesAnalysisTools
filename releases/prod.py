@@ -50,7 +50,7 @@ from libs.metrics import future_returns, metadata_to_dataset
 
 # Imports that create final products and show progress doing so
 from libs.utils import ProgressBar, start_header
-from libs.outputs import slide_creator, output_to_json
+from libs.ui_generation import slide_creator, output_to_json
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
