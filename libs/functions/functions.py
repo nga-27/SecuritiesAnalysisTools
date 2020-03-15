@@ -21,7 +21,7 @@ from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
-from libs.ui_generation import slide_creator
+from libs.ui_generation import slide_creator, PDF_creator
 
 TICKER = STANDARD_COLORS["ticker"]
 NORMAL = STANDARD_COLORS["normal"]
@@ -104,6 +104,8 @@ def only_functions_handler(config: dict):
         synopsis_function(config)
     if 'pptx' in config['run_functions']:
         pptx_output_function(config)
+    if 'pdf' in config['run_functions']:
+        pdf_output_function(config)
 
 ###############################################################################
 
@@ -433,6 +435,36 @@ def pptx_output_function(config: dict):
 
         slide_creator(m_data, config=config)
         return
+
+
+def pdf_output_function(config: dict):
+    meta_file = "output/metadata.json"
+    if not os.path.exists(meta_file):
+        print(
+            f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
+        return
+    with open(meta_file) as m_file:
+        m_data = json.load(m_file)
+        m_file.close()
+
+        t_fund = None
+        for fund in m_data:
+            if fund != '_METRICS_':
+                t_fund = fund
+
+        if t_fund is None:
+            print(
+                f"{WARNING}No valid fund found for 'pptx_output_function'. Exiting...{NORMAL}")
+            return
+
+        if '2y' not in m_data[t_fund]:
+            for period in m_data[t_fund]:
+                if (period != 'metadata') and (period != 'synopsis'):
+                    config['views']['pptx'] = period
+
+        PDF_creator(m_data, config=config)
+        return
+
 
 ####################################################
 

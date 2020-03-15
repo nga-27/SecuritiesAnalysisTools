@@ -1,4 +1,6 @@
 import os
+import datetime
+
 from pptx import Presentation
 
 from libs.ui_generation.pptx_resources import title_presentation
@@ -31,8 +33,11 @@ def slide_creator(analysis: dict, **kwargs):
     """
 
     year = kwargs.get('year')
-    version = kwargs.get('version')
+    version = kwargs.get('version', "0.1.28")
     config = kwargs.get('config')
+
+    if year is None:
+        year = datetime.datetime.now().strftime("%Y")
 
     if 'suppress_pptx' not in config['state']:
         print("")
@@ -41,35 +46,31 @@ def slide_creator(analysis: dict, **kwargs):
             year = config.get('date_release', '').split('-')[0]
             version = config.get('version')
             views = config.get('views', {}).get('pptx', '2y')
-        elif year is None:
-            print(
-                f"{ERROR}ERROR: 'year', 'config', [and 'version'] {year} provided in 'slide_creator'.{NORMAL}")
-            return
         else:
             year = year
             version = version
             views = '2y'
 
-        # try:
-        prs = Presentation()
+        try:
+            prs = Presentation()
 
-        prs = title_presentation(prs, year, VERSION=version)
-        prs = intro_slide(prs)
-        prs = make_MCI_slides(prs, analysis.get('_METRICS_', {}))
-        prs = make_CCI_slides(prs)
-        prs = make_BCI_slides(prs)
-        prs = make_TCI_slides(prs)
-        prs = make_fund_slides(prs, analysis, views=views)
+            prs = title_presentation(prs, year, VERSION=version)
+            prs = intro_slide(prs)
+            prs = make_MCI_slides(prs, analysis.get('_METRICS_', {}))
+            prs = make_CCI_slides(prs)
+            prs = make_BCI_slides(prs)
+            prs = make_TCI_slides(prs)
+            prs = make_fund_slides(prs, analysis, views=views)
 
-        out_dir = "output/"
-        if not os.path.exists(out_dir):
-            os.mkdir(out_dir)
+            out_dir = "output/"
+            if not os.path.exists(out_dir):
+                os.mkdir(out_dir)
 
-        title = f"Financial Analysis {year}.pptx"
-        prs.save(f"{out_dir}{title}")
+            title = f"Financial Analysis {year}.pptx"
+            prs.save(f"{out_dir}{title}")
 
-        print(
-            f"Presentation '{PPTX_NAME_COLOR}{title}{NORMAL_COLOR}' created.")
+            print(
+                f"Presentation '{PPTX_NAME_COLOR}{title}{NORMAL_COLOR}' created.")
 
-        # except:
-        #     print(f"{WARNING}Presentation failed to be created.{NORMAL}")
+        except:
+            print(f"{WARNING}Presentation failed to be created.{NORMAL}")

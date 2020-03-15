@@ -6,7 +6,7 @@ import numpy as np
 
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
 from libs.utils import fund_list_extractor, windows_compatible_file_parse, SP500
 from libs.tools import trend_simple_forecast

@@ -1,7 +1,7 @@
 from datetime import datetime
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0

@@ -296,6 +296,10 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'pptx', type_='list')
 
+    if ('--pdf' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'pdf', type_='list')
+
     # Settings for 'intervals' and 'periods'
     if ('--10y' in i_keys) or ('--5y' in i_keys) or ('--2y' in i_keys) or ('--1y' in i_keys):
         config['period'] = []

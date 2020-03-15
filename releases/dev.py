@@ -34,9 +34,13 @@ from libs.features import feature_detection_head_and_shoulders, feature_plotter
 from libs.features import analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
-from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
+from libs.utils import name_parser
+from libs.utils import fund_list_extractor, date_extractor
+from libs.utils import index_extractor, index_appender
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data_all, has_critical_error, get_api_metadata
+from libs.utils import download_data_all
+from libs.utils import has_critical_error
+from libs.utils import get_api_metadata
 from libs.utils import TEXT_COLOR_MAP, SP500
 
 # Imports that control function-only inputs
@@ -48,12 +52,16 @@ from libs.utils import candlestick
 # Imports that drive custom metrics for market analysis
 from libs.metrics import market_composite_index, bond_composite_index
 from libs.metrics import correlation_composite_index, type_composite_index
-from libs.metrics import future_returns, metadata_to_dataset
+from libs.metrics import future_returns
 from libs.metrics import generate_synopsis
 
-# Imports that create final products and show progress doing so
+# Imports that start process and show progress doing so
 from libs.utils import ProgressBar, start_header
+
+# Imports that create the final products and outputs
 from libs.ui_generation import slide_creator, output_to_json
+from libs.ui_generation import PDF_creator
+from libs.metrics import metadata_to_dataset
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
@@ -130,8 +138,7 @@ def technical_analysis(config: dict):
             fund = dataset[period][fund_name]
 
             start = date_extractor(fund.index[0], _format='str')
-            end = date_extractor(
-                fund.index[len(fund['Close'])-1], _format='str')
+            end = date_extractor(fund.index[-1], _format='str')
             fund_data['dates_covered'] = {
                 'start': str(start), 'end': str(end)}
             fund_data['name'] = fund_name
@@ -263,6 +270,7 @@ def technical_analysis(config: dict):
 
     slide_creator(analysis, config=config)
     output_to_json(analysis)
+    PDF_creator(analysis, config=config)
 
     metadata_to_dataset(config=config)
 

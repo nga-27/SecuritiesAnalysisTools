@@ -33,7 +33,7 @@ def get_trend(position: pd.DataFrame, **kwargs) -> dict:
     Arguments:
         position {pd.DataFrame}
 
-    Keyword Arguments:
+    Optional Arg:
         style {str} -- (default: {'sma'})
         ma_size {int} -- (default: {50})
         date_range {list} -- (default: {[]})
@@ -59,6 +59,7 @@ def get_trend(position: pd.DataFrame, **kwargs) -> dict:
 
 
 def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
+    """ Simple difference of close from trend values """
     diff_from_trend = []
     for i in range(len(trend)):
         diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
@@ -67,6 +68,18 @@ def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
 
 
 def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) -> float:
+    """Trend of Dates
+
+    Find the average of a fund over or under an existing trend for a period of dates.
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        trend_difference {list} -- trend difference list (close[i] - trend[i])
+        dates {list} -- list of dates to examine for overall trend
+
+    Returns:
+        float -- mean (close-trend) value over period of time
+    """
     overall_trend = 0.0
 
     if len(dates) == 0:
@@ -145,6 +158,8 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
         progress_bar:   (ProgressBar) DEFAULT=None
         sub_name:       (str) file extension within 'name' directory; DEFAULT=name
         view:           (str) directory of plots; DEFAULT=''
+        meta:           (dict) 'metadata' object for fund; DEFAULT=None
+        out_suppress:   (bool) if True, skips plotting; DEFAULT=False
 
     returns:
         trends:         (dict) contains all trend lines determined by algorithm
@@ -156,6 +171,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     sub_name = kwargs.get('sub_name', f"trendline_{name}")
     view = kwargs.get('view', '')
     meta = kwargs.get('meta')
+    out_suppress = kwargs.get('out_suppress', False)
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -276,19 +292,21 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     C.append('black')
 
     name2 = SP500.get(name, name)
-    try:
-        if plot_output:
-            generic_plotting(Y, x=X, colors=C,
-                             title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
-        else:
-            filename = f"{name}/{view}/{sub_name}.png"
-            generic_plotting(Y, x=X, colors=C,
-                             title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
-                             saveFig=True, filename=filename)
 
-    except:
-        print(
-            f"{WARNING}Warning: plot failed to generate in trends.get_trendlines.{NORMAL}")
+    if not out_suppress:
+        try:
+            if plot_output:
+                generic_plotting(Y, x=X, colors=C,
+                                 title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+            else:
+                filename = f"{name}/{view}/{sub_name}.png"
+                generic_plotting(Y, x=X, colors=C,
+                                 title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                                 saveFig=True, filename=filename)
+
+        except:
+            print(
+                f"{WARNING}Warning: plot failed to generate in trends.get_trendlines.{NORMAL}")
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)

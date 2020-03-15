@@ -2,7 +2,7 @@ import os
 import numpy as np
 
 from pptx.util import Inches, Pt
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
 from .slide_utils import pptx_ui_errors, color_to_RGB
 
