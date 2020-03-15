@@ -13,6 +13,7 @@ NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 NORMAL = STANDARD_COLORS["normal"]
 ERROR = STANDARD_COLORS["error"]
+WARNING = STANDARD_COLORS["warning"]
 
 
 def slide_creator(analysis: dict, **kwargs):
@@ -71,4 +72,4 @@ def slide_creator(analysis: dict, **kwargs):
             f"Presentation '{PPTX_NAME_COLOR}{title}{NORMAL_COLOR}' created.")
 
         # except:
-        #     print(f"Presentation failed to be created.")
+        #     print(f"{WARNING}Presentation failed to be created.{NORMAL}")

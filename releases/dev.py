@@ -232,7 +232,12 @@ def technical_analysis(config: dict):
 
             # Get Trendlines
             fund_data['trendlines'] = get_trendlines(
-                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
+                fund,
+                name=fund_name,
+                plot_output=False,
+                progress_bar=p,
+                view=period,
+                meta=analysis[fund_name]['metadata'])
 
             # Various Fund-specific Metrics
             fund_data['futures'] = future_returns(fund, progress_bar=p)

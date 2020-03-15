@@ -305,15 +305,19 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     if '--10y' in i_keys:
         config['period'].append('10y')
+        config['views'] = {'pptx': '10y'}
 
     if '--5y' in i_keys:
         config['period'].append('5y')
+        config['views'] = {'pptx': '5y'}
 
     if '--2y' in i_keys:
         config['period'].append('2y')
+        config['views'] = {'pptx': '2y'}
 
     if '--1y' in i_keys:
         config['period'].append('1y')
+        config['views'] = {'pptx': '1y'}
 
     if '--1m' in i_keys:
         config['interval'].append('1mo')
