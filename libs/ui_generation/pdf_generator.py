@@ -28,6 +28,6 @@ def PDF_creator(analysis: dict, **kwargs):
         views = '2y'
 
     pdf = FPDF(unit='in', format='letter')
-    pdf = pdf_top_level_title_page(pdf)
+    pdf = pdf_top_level_title_page(pdf, version=version)
 
     pdf.output(OUTFILE_NAME)
