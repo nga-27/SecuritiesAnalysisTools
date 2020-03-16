@@ -3,6 +3,7 @@ import datetime
 from fpdf import FPDF  # pylint: disable=F0401
 
 from libs.ui_generation.pdf_resources import pdf_top_level_title_page
+from libs.ui_generation.pdf_resources import fund_pdf_pages
 
 
 def PDF_creator(analysis: dict, **kwargs):
@@ -29,5 +30,6 @@ def PDF_creator(analysis: dict, **kwargs):
 
     pdf = FPDF(unit='in', format='letter')
     pdf = pdf_top_level_title_page(pdf, version=version)
+    pdf = fund_pdf_pages(pdf, analysis, views=views)
 
     pdf.output(OUTFILE_NAME)

@@ -45,3 +45,8 @@ def pdf_top_level_title_page(pdf, **kwargs):
     pdf.cell(SPAN, 0.3, txt=VERSION, ln=1, align='C')
 
     return pdf
+
+
+def pdf_page_title(pdf, title: str):
+
+    return pdf
