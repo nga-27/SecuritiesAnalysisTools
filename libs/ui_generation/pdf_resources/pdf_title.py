@@ -7,13 +7,11 @@ from .pdf_utils import pdf_set_color_text, horizontal_spacer
 from .pdf_utils import PDF_CONSTS
 
 
-SPAN = PDF_CONSTS["span"]
-
-
 def pdf_top_level_title_page(pdf, **kwargs):
 
     version = kwargs.get('version', "0.1.28")
 
+    SPAN = pdf.w - 2 * pdf.l_margin
     TITLE = "Securities Analysis"
     SUB_TITLE = "A Technical Analysis of Financial Markets by 'nga-27'"
     GENERATED = f"Generated: {datetime.datetime.now()}"

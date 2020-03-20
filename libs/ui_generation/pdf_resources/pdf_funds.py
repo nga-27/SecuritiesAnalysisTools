@@ -201,7 +201,7 @@ def beta_rsq(pdf, fund_data):
     for row in data:
         for i, col in enumerate(row):
             pdf.cell(key_width, height, str(col), align='L', border=0)
-        pdf.ln(height * 2.0)
+        pdf.ln(height * 1.3)
     return pdf
 
 
@@ -221,9 +221,9 @@ def fund_volatility(pdf, fund_data: dict):
     vol = vq.get("VQ", "")
     vq_str = f"Current Volatility:"
     vq_str2 = f"{vol}%"
-    stop_loss = vq.get("stop_loss", "")
-    sl_str = f"Current Stop Loss:"
-    sl_str2 = f"${stop_loss}"
+    max_price = vq.get("last_max", {}).get("Price", "")
+    mp_str = f"Last relative max price:"
+    mp_str2 = f"${max_price}"
 
     pdf = horizontal_spacer(pdf, 0.2)
 
@@ -231,22 +231,22 @@ def fund_volatility(pdf, fund_data: dict):
     quad_name = quad + 0.5
     quad_val = quad - 0.5
 
-    pdf = pdf_set_color_text(pdf, "black")
+    pdf = pdf_set_color_text(pdf, "blue")
     pdf.set_font('Arial', style='B', size=12.0)
     pdf.cell(quad_name, 0.2, txt=vq_str, align='L')
     pdf.cell(quad_val, 0.2, txt=vq_str2, align='L')
-    pdf.cell(quad_name, 0.2, txt=sl_str, align='L')
-    pdf.cell(quad_val, 0.2, txt=sl_str2, align='L', ln=1)
+    pdf.cell(quad_name, 0.2, txt=mp_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=mp_str2, align='L', ln=1)
 
-    max_price = vq.get("last_max", {}).get("Price", "")
-    mp_str = f"Last relative max price:"
-    mp_str2 = f"${max_price}"
+    stop_loss = vq.get("stop_loss", "")
+    sl_str = f"Current Stop Loss:"
+    sl_str2 = f"${stop_loss}"
     max_date = vq.get("last_max", {}).get("Date", "")
     md_str = f"Date of last relative max:"
     md_str2 = f"{max_date}"
 
-    pdf.cell(quad_name, 0.2, txt=mp_str, align='L')
-    pdf.cell(quad_val, 0.2, txt=mp_str2, align='L')
+    pdf.cell(quad_name, 0.2, txt=sl_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=sl_str2, align='L')
     pdf.cell(quad_name, 0.2, txt=md_str, align='L')
     pdf.cell(quad_val, 0.2, txt=md_str2, align='L', ln=1)
 
