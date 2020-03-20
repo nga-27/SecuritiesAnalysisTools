@@ -1,5 +1,5 @@
 PDF_CONSTS = {
-    "span": 7.5
+    "span": 8.5
 }
 
 
@@ -24,5 +24,5 @@ def color_to_RGB_array(color: str):
 
 
 def horizontal_spacer(pdf, height: float):
-    pdf.cell(PDF_CONSTS["span"], height, txt='', ln=1)
+    pdf.cell(PDF_CONSTS["span"], height, txt='', ln=1, align='C')
     return pdf

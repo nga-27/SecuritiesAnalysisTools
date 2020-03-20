@@ -10,9 +10,6 @@ from .pdf_utils import color_to_RGB_array, horizontal_spacer
 from .pdf_utils import PDF_CONSTS
 
 
-SPAN = PDF_CONSTS["span"]
-
-
 def fund_pdf_pages(pdf, analysis: dict, **kwargs):
 
     views = kwargs.get('views')
@@ -34,15 +31,18 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
 
             pdf.add_page()
             pdf = fund_title(pdf, name)
-            pdf = metrics_tables(pdf, fund_data, views)
+
+            for period in analysis[fund]['synopsis']:
+                pdf = metrics_tables(pdf, fund_data, period)
 
     return pdf
 
 
 def fund_title(pdf, name: str):
 
+    SPAN = pdf.w - 2 * pdf.l_margin
     pdf.set_font("Arial", size=36, style='B')
-    pdf.cell(SPAN, 0.8, txt='', ln=1)
+    pdf.cell(SPAN, 0.5, txt='', ln=1)
     color = color_to_RGB_array('black')
     pdf.set_text_color(color[0], color[1], color[2])
     pdf.cell(SPAN, 1, txt=name, ln=1, align='C')
@@ -53,8 +53,8 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
 
     num_metrics = kwargs.get('num_metrics', 2)
 
-    eff_page_width = pdf.w - 2 * pdf.l_margin
-    col_width = eff_page_width / (2 * num_metrics)
+    SPAN = pdf.w - 2 * pdf.l_margin
+    col_width = SPAN / (2 * num_metrics)
     key_width = col_width + 0.5
     val_width = col_width - 0.5
 
@@ -62,15 +62,20 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
 
     osc_keys = [osc for osc in synopsis['metrics_categories']['oscillator']]
     osc_values = [np.round(synopsis['metrics'][osc], 5) for osc in osc_keys]
+    osc_deltas = [np.round(synopsis['metrics_delta'][osc], 5)
+                  for osc in osc_keys]
     trend_keys = [
         f"{trend} %" for trend in synopsis['metrics_categories']['trend']]
     trend_values = [np.round(synopsis['metrics'][trend], 5)
+                    for trend in synopsis['metrics_categories']['trend']]
+    trend_deltas = [np.round(synopsis['metrics_delta'][trend], 5)
                     for trend in synopsis['metrics_categories']['trend']]
 
     # Assumption that metrics oscillators will be longer than trends
     for _ in range(len(osc_keys)-len(trend_keys)):
         trend_keys.append("")
         trend_values.append("")
+        trend_deltas.append("")
 
     data = []
     colors = []
@@ -91,8 +96,11 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
         data.append(val)
         colors.append(colo)
 
+    pdf = horizontal_spacer(pdf, 0.3)
+    color = color_to_RGB_array("black")
+    pdf.set_text_color(color[0], color[1], color[2])
     pdf.set_font('Arial', style='B', size=14.0)
-    pdf.cell(eff_page_width, 0.0, 'Metrics Data', align='C')
+    pdf.cell(SPAN, 0.0, f'Metrics Data ({views})', align='C')
 
     FONT_SIZE = 8.0
 
@@ -111,10 +119,15 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
 
             else:
                 ind = int(i / 2)
+                col_str = f"{col}"
+                if (ind == 0) and (trend_deltas[j] != ''):
+                    col_str = f"{col}  ({trend_deltas[j]})"
+                if (ind == 1):
+                    col_str = f"{col}  ({osc_deltas[j]})"
                 color = color_to_RGB_array(colors[j][ind])
                 pdf.set_text_color(color[0], color[1], color[2])
                 pdf.set_font('Arial', style='', size=FONT_SIZE)
-                pdf.cell(val_width, height, str(col),
+                pdf.cell(val_width, height, col_str,
                          align='L', border=0)
 
         pdf.ln(height * 2.0)
