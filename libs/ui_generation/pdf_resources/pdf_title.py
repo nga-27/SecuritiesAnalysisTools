@@ -3,7 +3,7 @@ import datetime
 import fpdf  # pylint: disable=F0401
 from fpdf import FPDF  # pylint: disable=F0401
 
-from .pdf_utils import color_to_RGB_array, horizontal_spacer
+from .pdf_utils import pdf_set_color_text, horizontal_spacer
 from .pdf_utils import PDF_CONSTS
 
 
@@ -28,25 +28,17 @@ def pdf_top_level_title_page(pdf, **kwargs):
     pdf.cell(SPAN, 0.5, txt=TITLE, ln=1, align='C')
 
     pdf.set_font("Arial", size=12, style='I')
-    color = color_to_RGB_array('purple')
-    pdf.set_text_color(color[0], color[1], color[2])
+    pdf = pdf_set_color_text(pdf, "purple")
     pdf.cell(SPAN, 0.4, txt=SUB_TITLE, ln=1, align='C')
 
     pdf = horizontal_spacer(pdf, 0.4)
 
     pdf.set_font("Arial", size=16)
-    color = color_to_RGB_array('green')
-    pdf.set_text_color(color[0], color[1], color[2])
+    pdf = pdf_set_color_text(pdf, "green")
     pdf.cell(SPAN, 0.3, txt=GENERATED, ln=1, align='C')
 
     pdf.set_font("Arial", size=14)
-    color = color_to_RGB_array('green')
-    pdf.set_text_color(color[0], color[1], color[2])
+    pdf = pdf_set_color_text(pdf, "green")
     pdf.cell(SPAN, 0.3, txt=VERSION, ln=1, align='C')
-
-    return pdf
-
-
-def pdf_page_title(pdf, title: str):
 
     return pdf

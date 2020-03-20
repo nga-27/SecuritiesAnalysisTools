@@ -3,6 +3,12 @@ PDF_CONSTS = {
 }
 
 
+def pdf_set_color_text(pdf, color: str):
+    color = color_to_RGB_array(color)
+    pdf.set_text_color(color[0], color[1], color[2])
+    return pdf
+
+
 def color_to_RGB_array(color: str):
     if color == 'black':
         return [0x00, 0x00, 0x00]
@@ -24,5 +30,5 @@ def color_to_RGB_array(color: str):
 
 
 def horizontal_spacer(pdf, height: float):
-    pdf.cell(PDF_CONSTS["span"], height, txt='', ln=1, align='C')
+    pdf.ln(height)
     return pdf

@@ -6,7 +6,7 @@ from fpdf import FPDF  # pylint: disable=F0401
 
 from libs.utils import SP500
 
-from .pdf_utils import color_to_RGB_array, horizontal_spacer
+from .pdf_utils import pdf_set_color_text, horizontal_spacer
 from .pdf_utils import PDF_CONSTS
 
 
@@ -31,8 +31,11 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
 
             pdf.add_page()
             pdf = fund_title(pdf, name)
+            pdf = fund_statistics(pdf, fund_data, sample_view=views)
+            pdf = fund_volatility(pdf, fund_data)
+            pdf = beta_rsq(pdf, fund_data)
 
-            for period in analysis[fund]['synopsis']:
+            for period in fund_data['synopsis']:
                 pdf = metrics_tables(pdf, fund_data, period)
 
     return pdf
@@ -43,8 +46,7 @@ def fund_title(pdf, name: str):
     SPAN = pdf.w - 2 * pdf.l_margin
     pdf.set_font("Arial", size=36, style='B')
     pdf.cell(SPAN, 0.5, txt='', ln=1)
-    color = color_to_RGB_array('black')
-    pdf.set_text_color(color[0], color[1], color[2])
+    pdf = pdf_set_color_text(pdf, "black")
     pdf.cell(SPAN, 1, txt=name, ln=1, align='C')
     return pdf
 
@@ -52,6 +54,8 @@ def fund_title(pdf, name: str):
 def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
 
     num_metrics = kwargs.get('num_metrics', 2)
+
+    pdf.ln(0.2)
 
     SPAN = pdf.w - 2 * pdf.l_margin
     col_width = SPAN / (2 * num_metrics)
@@ -97,8 +101,7 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
         colors.append(colo)
 
     pdf = horizontal_spacer(pdf, 0.3)
-    color = color_to_RGB_array("black")
-    pdf.set_text_color(color[0], color[1], color[2])
+    pdf = pdf_set_color_text(pdf, "black")
     pdf.set_font('Arial', style='B', size=14.0)
     pdf.cell(SPAN, 0.0, f'Metrics Data ({views})', align='C')
 
@@ -111,8 +114,7 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
     for j, row in enumerate(data):
         for i, col in enumerate(row):
             if i % 2 == 0:
-                color = color_to_RGB_array("black")
-                pdf.set_text_color(color[0], color[1], color[2])
+                pdf = pdf_set_color_text(pdf, "black")
                 pdf.set_font('Arial', style='B', size=FONT_SIZE)
                 pdf.cell(key_width, height, str(col),
                          align='L', border=0)
@@ -124,12 +126,128 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
                     col_str = f"{col}  ({trend_deltas[j]})"
                 if (ind == 1):
                     col_str = f"{col}  ({osc_deltas[j]})"
-                color = color_to_RGB_array(colors[j][ind])
-                pdf.set_text_color(color[0], color[1], color[2])
+
+                pdf = pdf_set_color_text(pdf, colors[j][ind])
                 pdf.set_font('Arial', style='', size=FONT_SIZE)
                 pdf.cell(val_width, height, col_str,
                          align='L', border=0)
 
         pdf.ln(height * 2.0)
+
+    return pdf
+
+
+def fund_statistics(pdf, fund_data: dict, **kwargs):
+
+    sample_view = kwargs.get('sample_view')
+    if sample_view is None:
+        for period in fund_data:
+            if period != 'synopsis' and period != 'metadata':
+                sample_view = period
+                break
+
+    SPAN = pdf.w - 2 * pdf.l_margin
+
+    price = np.round(fund_data[sample_view]['statistics']['current_price'], 2)
+    change = np.round(fund_data[sample_view]
+                      ['statistics']['current_change'], 2)
+    percent = np.round(fund_data[sample_view]
+                       ['statistics']['current_percent_change'], 2)
+    price_str = f"${price}   ({change}, {percent}%)"
+
+    colo = "black"
+    if change > 0.0:
+        colo = "green"
+    elif change < 0.0:
+        colo = "red"
+
+    pdf = pdf_set_color_text(pdf, colo)
+    pdf.set_font('Arial', style='B', size=18.0)
+    pdf.cell(SPAN, 0.3, txt=price_str, align='C', ln=1)
+
+    pdf.ln(0.2)
+
+    return pdf
+
+
+def beta_rsq(pdf, fund_data):
+
+    SPAN = pdf.w - 2 * pdf.l_margin
+    key_width = SPAN / 4.0
+
+    left_keys = []
+    right_keys = []
+    left_vals = []
+    right_vals = []
+    for period in fund_data:
+        if period != 'synopsis' and period != 'metadata':
+            left_keys.append(f"Beta ({period})")
+            right_keys.append(f"R-squared ({period})")
+            left_vals.append(
+                str(np.round(fund_data[period]['statistics'].get('beta', ''), 5)))
+            right_vals.append(
+                str(np.round(fund_data[period]['statistics'].get('r_squared', ''), 5)))
+
+    data = []
+    for i in range(len(left_keys)):
+        printable = [left_keys[i], left_vals[i], right_keys[i], right_vals[i]]
+        data.append(printable)
+
+    pdf = pdf_set_color_text(pdf, "black")
+    pdf.set_font('Arial', style='B', size=10.0)
+    pdf = horizontal_spacer(pdf, 0.3)
+    height = pdf.font_size
+
+    for row in data:
+        for i, col in enumerate(row):
+            pdf.cell(key_width, height, str(col), align='L', border=0)
+        pdf.ln(height * 2.0)
+    return pdf
+
+
+def fund_volatility(pdf, fund_data: dict):
+
+    SPAN = pdf.w - 2 * pdf.l_margin
+
+    vq = fund_data['metadata'].get('volatility', {})
+    status = vq.get('status', {}).get('status', '')
+    color = vq.get('status', {}).get('color', "black")
+    vol_str = f"Stop Loss Status: {status}"
+
+    pdf = pdf_set_color_text(pdf, color)
+    pdf.set_font('Arial', style='B', size=16.0)
+    pdf.cell(SPAN, 0.4, txt=vol_str, align='C', ln=1)
+
+    vol = vq.get("VQ", "")
+    vq_str = f"Current Volatility:"
+    vq_str2 = f"{vol}%"
+    stop_loss = vq.get("stop_loss", "")
+    sl_str = f"Current Stop Loss:"
+    sl_str2 = f"${stop_loss}"
+
+    pdf = horizontal_spacer(pdf, 0.2)
+
+    quad = SPAN / 4.0
+    quad_name = quad + 0.5
+    quad_val = quad - 0.5
+
+    pdf = pdf_set_color_text(pdf, "black")
+    pdf.set_font('Arial', style='B', size=12.0)
+    pdf.cell(quad_name, 0.2, txt=vq_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=vq_str2, align='L')
+    pdf.cell(quad_name, 0.2, txt=sl_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=sl_str2, align='L', ln=1)
+
+    max_price = vq.get("last_max", {}).get("Price", "")
+    mp_str = f"Last relative max price:"
+    mp_str2 = f"${max_price}"
+    max_date = vq.get("last_max", {}).get("Date", "")
+    md_str = f"Date of last relative max:"
+    md_str2 = f"{max_date}"
+
+    pdf.cell(quad_name, 0.2, txt=mp_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=mp_str2, align='L')
+    pdf.cell(quad_name, 0.2, txt=md_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=md_str2, align='L', ln=1)
 
     return pdf
