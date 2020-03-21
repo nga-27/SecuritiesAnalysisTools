@@ -11,7 +11,18 @@ from .pdf_utils import PDF_CONSTS
 
 
 def fund_pdf_pages(pdf, analysis: dict, **kwargs):
+    """Fund PDF Pages
 
+    Arguments:
+        pdf {FPDF} -- pdf object
+        analysis {dict} -- data run data set
+
+    Optional Args:
+        views {str} -- (default: {None})
+
+    Returns:
+        FPDF -- pdf object
+    """
     views = kwargs.get('views')
 
     has_view = False
@@ -42,7 +53,15 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
 
 
 def fund_title(pdf, name: str):
+    """Fund Title
 
+    Arguments:
+        pdf {FPDF} -- pdf object
+        name {str} -- name of fund to add
+
+    Returns:
+        FPDF -- pdf object
+    """
     SPAN = pdf.w - 2 * pdf.l_margin
     pdf.set_font("Arial", size=36, style='B')
     pdf.cell(SPAN, 0.5, txt='', ln=1)
@@ -52,7 +71,19 @@ def fund_title(pdf, name: str):
 
 
 def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
+    """Metrics Tables
 
+    Arguments:
+        pdf {FPDF} -- pdf object
+        fund_data {dict} -- dataset of fund
+        views {str} -- view/period of data
+
+    Optional Args:
+        num_metrics {int} -- number of metrics pair columns (default: {2})
+
+    Returns:
+        FPDF -- pdf object
+    """
     num_metrics = kwargs.get('num_metrics', 2)
 
     pdf.ln(0.2)
@@ -138,7 +169,18 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
 
 
 def fund_statistics(pdf, fund_data: dict, **kwargs):
+    """Fund Statistics (from statistics)
 
+    Arguments:
+        pdf {FPDF} -- pdf object
+        fund_data {dict} -- fund dataset
+
+    Optional Args:
+        sample_view {str} -- period of a fund (default: {None})
+
+    Returns:
+        FPDF -- pdf object
+    """
     sample_view = kwargs.get('sample_view')
     if sample_view is None:
         for period in fund_data:
@@ -170,8 +212,16 @@ def fund_statistics(pdf, fund_data: dict, **kwargs):
     return pdf
 
 
-def beta_rsq(pdf, fund_data):
+def beta_rsq(pdf, fund_data: dict):
+    """Beta R-Squared
 
+    Arguments:
+        pdf {FPDF} -- pdf object
+        fund_data {dict} -- fund dataset
+
+    Returns:
+        FPDF -- pdf object
+    """
     SPAN = pdf.w - 2 * pdf.l_margin
     key_width = SPAN / 4.0
 
@@ -206,7 +256,17 @@ def beta_rsq(pdf, fund_data):
 
 
 def fund_volatility(pdf, fund_data: dict):
+    """Fund Volatility
 
+    If Volatility Quotient is present
+
+    Arguments:
+        pdf {FPDF} -- pdf object
+        fund_data {dict} -- fund dataset
+
+    Returns:
+        FPDF -- pdf object
+    """
     SPAN = pdf.w - 2 * pdf.l_margin
 
     vq = fund_data['metadata'].get('volatility', {})

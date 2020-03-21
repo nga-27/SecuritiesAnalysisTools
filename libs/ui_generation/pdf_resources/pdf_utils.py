@@ -4,6 +4,15 @@ PDF_CONSTS = {
 
 
 def pdf_set_color_text(pdf, color: str):
+    """PDF Set Text Color
+
+    Arguments:
+        pdf {FPDF} -- pdf object
+        color {str} -- one of the RGB_arry colors
+
+    Returns:
+        FPDF -- pdf object
+    """
     color = color_to_RGB_array(color)
     pdf.set_text_color(color[0], color[1], color[2])
     return pdf

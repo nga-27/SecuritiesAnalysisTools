@@ -8,7 +8,17 @@ from .pdf_utils import PDF_CONSTS
 
 
 def pdf_top_level_title_page(pdf, **kwargs):
+    """PDF Top Level Title Page
 
+    Arguments:
+        pdf {FPDF} -- pdf object
+
+    Optional Args:
+        version {str} -- (default: {"0.1.28"})
+
+    Returns:
+        FPDF -- pdf object
+    """
     version = kwargs.get('version', "0.1.28")
 
     SPAN = pdf.w - 2 * pdf.l_margin

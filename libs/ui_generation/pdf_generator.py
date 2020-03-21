@@ -7,7 +7,18 @@ from libs.ui_generation.pdf_resources import fund_pdf_pages
 
 
 def PDF_creator(analysis: dict, **kwargs):
+    """PDF Creator
 
+    Creates a subset of metrics, items into a pdf report.
+
+    Arguments:
+        analysis {dict} -- data run object
+
+    Optional Args:
+        year {str} -- (default: {None})
+        version {str} -- (default: {"0.1.28"})
+        config {dict} -- (default: {None})
+    """
     year = kwargs.get('year')
     version = kwargs.get('version', "0.1.28")
     config = kwargs.get('config')
