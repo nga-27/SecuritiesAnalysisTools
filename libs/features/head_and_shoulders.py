@@ -192,7 +192,7 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
     return hs, ma, shapes
 
 
-def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
+def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> dict:
     """
     PUBLIC FUNCTION: Complete detection of n sizes and features.
 
@@ -206,7 +206,7 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
         view:           (str) Directory of plots; DEFAULT=''
 
     returns:
-        head_shoulders: (list) list of all head-shoulders features detected
+        head_shoulders: (dict) head-shoulders data object
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -234,5 +234,8 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> list:
                     feature='head_and_shoulders', plot_output=plot_output, view=view)
     if progress_bar is not None:
         progress_bar.uptick(increment=increment)
+
+    head_shoulders = {'data': head_shoulders}
+    head_shoulders['type'] = 'feature'
 
     return head_shoulders

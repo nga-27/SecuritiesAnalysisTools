@@ -55,6 +55,8 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
+    mo['type'] = 'oscillator'
+
     return mo
 
 

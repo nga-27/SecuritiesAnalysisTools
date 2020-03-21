@@ -35,6 +35,8 @@ def bear_bull_power(position: pd.DataFrame, **kwargs) -> dict:
     bbp = bear_bull_feature_detection(
         bbp, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
+    bbp['type'] = 'oscillator'
+
     return bbp
 
 

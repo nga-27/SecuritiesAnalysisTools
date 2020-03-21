@@ -409,12 +409,17 @@ def get_volatility(ticker_str: str, **kwargs):
                 print(
                     f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
                 return vq
-            r = response.json()
+            try:
+                r = response.json()
+            except:
+                r = {}
             if response.status_code != 200:
                 print("")
                 print(f"{WARNING}Volatility Quotient failed on {ticker_str} request: '{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}")
                 print("")
                 return vq
+
+            r = response.json()
 
             vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get(
                 "StopPriceLong", ""), "latest_price": r.get("LatestClose")}

@@ -16,7 +16,8 @@
 # Imports that are custom tools that are the crux of this program
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
 from libs.tools import awesome_oscillator, momentum_oscillator
-from libs.tools import relative_strength, triple_moving_average, moving_average_swing_trade
+from libs.tools import relative_strength, moving_average_swing_trade
+from libs.tools import triple_moving_average, triple_exp_mov_average
 from libs.tools import hull_moving_average
 from libs.tools import mov_avg_convergence_divergence
 from libs.tools import on_balance_volume
@@ -29,12 +30,17 @@ from libs.tools import total_power
 from libs.tools import bollinger_bands
 
 # Imports that support functions doing feature detection
-from libs.features import feature_detection_head_and_shoulders, feature_plotter, analyze_price_gaps
+from libs.features import feature_detection_head_and_shoulders, feature_plotter
+from libs.features import analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
-from libs.utils import name_parser, fund_list_extractor, index_extractor, index_appender, date_extractor
+from libs.utils import name_parser
+from libs.utils import fund_list_extractor, date_extractor
+from libs.utils import index_extractor, index_appender
 from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data_all, has_critical_error, get_api_metadata
+from libs.utils import download_data_all
+from libs.utils import has_critical_error
+from libs.utils import get_api_metadata
 from libs.utils import TEXT_COLOR_MAP, SP500
 
 # Imports that control function-only inputs
@@ -46,11 +52,16 @@ from libs.utils import candlestick
 # Imports that drive custom metrics for market analysis
 from libs.metrics import market_composite_index, bond_composite_index
 from libs.metrics import correlation_composite_index, type_composite_index
-from libs.metrics import future_returns, metadata_to_dataset
+from libs.metrics import future_returns
+from libs.metrics import generate_synopsis
 
-# Imports that create final products and show progress doing so
+# Imports that start process and show progress doing so
 from libs.utils import ProgressBar, start_header
-from libs.outputs import slide_creator, output_to_json
+
+# Imports that create the final products and outputs
+from libs.ui_generation import slide_creator, output_to_json
+from libs.ui_generation import PDF_creator
+from libs.metrics import metadata_to_dataset
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
@@ -59,10 +70,10 @@ from test import test_competitive
 ####################################################################
 
 ################################
-_VERSION_ = '0.1.27'
-_DATE_REVISION_ = '2020-03-09'
+_VERSION_ = '0.1.28'
+_DATE_REVISION_ = '2020-03-20'
 ################################
-PROCESS_STEPS_DEV = 21
+PROCESS_STEPS_DEV = 23
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
@@ -127,8 +138,7 @@ def technical_analysis(config: dict):
             fund = dataset[period][fund_name]
 
             start = date_extractor(fund.index[0], _format='str')
-            end = date_extractor(
-                fund.index[len(fund['Close'])-1], _format='str')
+            end = date_extractor(fund.index[-1], _format='str')
             fund_data['dates_covered'] = {
                 'start': str(start), 'end': str(end)}
             fund_data['name'] = fund_name
@@ -169,8 +179,14 @@ def technical_analysis(config: dict):
             fund_data['moving_average'] = triple_moving_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
-            fund_data['swing_trade'] = moving_average_swing_trade(
+            fund_data['exp_moving_average'] = triple_exp_mov_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['sma_swing_trade'] = moving_average_swing_trade(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['ema_swing_trade'] = moving_average_swing_trade(
+                fund, function='ema', plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['hull_moving_average'] = hull_moving_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
@@ -201,8 +217,8 @@ def technical_analysis(config: dict):
                 )
 
                 beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])
-                fund_data['beta'] = beta
-                fund_data['r_squared'] = rsqd
+                fund_data['statistics']['beta'] = beta
+                fund_data['statistics']['r_squared'] = rsqd
                 p.uptick()
 
             # Support and Resistance Analysis
@@ -223,15 +239,22 @@ def technical_analysis(config: dict):
 
             # Get Trendlines
             fund_data['trendlines'] = get_trendlines(
-                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
+                fund,
+                name=fund_name,
+                plot_output=False,
+                progress_bar=p,
+                view=period,
+                meta=analysis[fund_name]['metadata'])
 
             # Various Fund-specific Metrics
-            fund_data['futures'] = future_returns(
-                fund, to_json=True, progress_bar=p)
+            fund_data['futures'] = future_returns(fund, progress_bar=p)
 
             p.end()
 
             analysis[fund_name][period] = fund_data
+
+        analysis[fund_name]['synopsis'] = generate_synopsis(
+            analysis, name=fund_name)
 
     analysis['_METRICS_'] = {}
     analysis['_METRICS_']['mci'] = market_composite_index(
@@ -247,6 +270,7 @@ def technical_analysis(config: dict):
 
     slide_creator(analysis, config=config)
     output_to_json(analysis)
+    PDF_creator(analysis, config=config)
 
     metadata_to_dataset(config=config)
 

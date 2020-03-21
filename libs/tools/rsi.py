@@ -546,4 +546,6 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
+    rsi_data['type'] = 'oscillator'
+
     return rsi_data

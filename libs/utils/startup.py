@@ -291,6 +291,15 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config['exports'] = {"run": True,
                              "fields": ticker_list_to_str(ticker_keys)}
 
+    # Only creating a pptx from existing metadata file
+    if ('--pptx' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'pptx', type_='list')
+
+    if ('--pdf' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'pdf', type_='list')
+
     # Settings for 'intervals' and 'periods'
     if ('--10y' in i_keys) or ('--5y' in i_keys) or ('--2y' in i_keys) or ('--1y' in i_keys):
         config['period'] = []
@@ -300,15 +309,19 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     if '--10y' in i_keys:
         config['period'].append('10y')
+        config['views'] = {'pptx': '10y'}
 
     if '--5y' in i_keys:
         config['period'].append('5y')
+        config['views'] = {'pptx': '5y'}
 
     if '--2y' in i_keys:
         config['period'].append('2y')
+        config['views'] = {'pptx': '2y'}
 
     if '--1y' in i_keys:
         config['period'].append('1y')
+        config['views'] = {'pptx': '1y'}
 
     if '--1m' in i_keys:
         config['interval'].append('1mo')
@@ -452,6 +465,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--nf_now' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'nfnow', type_='list')
+
+    if ('--synopsis' in i_keys) or ('--syn' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'synopsis', type_='list')
+        config['tickers'] = ticker_list_to_str(ticker_keys)
 
     # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in i_keys:

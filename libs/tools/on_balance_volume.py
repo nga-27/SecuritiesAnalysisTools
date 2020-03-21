@@ -147,7 +147,13 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view', '')
 
     obv, ofilter = generate_obv_signal(
-        fund, plot_output=plot_output, filter_factor=filter_factor, name=name, progress_bar=progress_bar, view=view)
+        fund,
+        plot_output=plot_output,
+        filter_factor=filter_factor,
+        name=name,
+        progress_bar=progress_bar,
+        view=view)
+
     dates = [index.strftime('%Y-%m-%d') for index in fund.index]
 
     # Apply trend analysis to find divergences
@@ -163,7 +169,11 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     sub_name = f"obv3_{name}"
     obv_dict['trends'] = get_trendlines(
-        data2, name=name, sub_name=sub_name, plot_output=plot_output, view=view)
+        data2, name=name,
+        sub_name=sub_name,
+        plot_output=plot_output,
+        view=view,
+        out_suppress=True)
 
     # obv_dict['trends'] = dict()
     # sub_name = f"obv_{name}"
@@ -172,5 +182,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     # obv_dict['trends']['long'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[8,14,22,32])
     # sub_name = f"obv_{name}_long"
     # obv_dict['trends']['long'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[30,48,68,90])
+
+    obv_dict['type'] = 'trend'
 
     return obv_dict

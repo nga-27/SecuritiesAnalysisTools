@@ -63,6 +63,8 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
 
+    macd['type'] = 'oscillator'
+
     return macd
 
 

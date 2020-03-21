@@ -6,12 +6,13 @@ import numpy as np
 
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
+from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
 from libs.utils import fund_list_extractor, windows_compatible_file_parse, SP500
 from libs.tools import trend_simple_forecast
 
-from .slide_utils import slide_title_header, color_to_RGB
+from .slide_utils import slide_title_header, color_to_RGB, pptx_ui_errors
+from .synopsis_slide import generate_synopsis_slide
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -38,7 +39,8 @@ def make_fund_slides(prs, analysis: dict, **kwargs):
     views = kwargs.get('views')
     funds = analysis.keys()
     for fund in funds:
-        prs = add_fund_content(prs, fund, analysis, views=views)
+        if fund != '_METRICS_':
+            prs = add_fund_content(prs, fund, analysis, views=views)
 
     return prs
 
@@ -46,168 +48,183 @@ def make_fund_slides(prs, analysis: dict, **kwargs):
 def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
 
     views = kwargs.get('views')
+    if views is None:
+        return prs
+
     content_dir = f'output/temp/{fund}/{views}/'
-    if os.path.exists(content_dir):
-        # Title slide for a fund
-        fund_name = SP500.get(fund, fund)
 
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        top = Inches(0.1)
-        left = Inches(4)
-        width = Inches(5)
-        height = Inches(2)
-        txtbox = slide.shapes.add_textbox(left, top, width, height)
-        text_frame = txtbox.text_frame
+    # Title slide for a fund
+    fund_name = SP500.get(fund, fund)
 
-        p = text_frame.paragraphs[0]
-        p.alignment = PP_ALIGN.CENTER
-        p.text = f'{fund_name}'
-        p.font.bold = True
-        p.font.size = Pt(60)
-        p.font.name = 'Arial'
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    top = Inches(0.1)
+    left = Inches(4)
+    width = Inches(5)
+    height = Inches(2)
+    txtbox = slide.shapes.add_textbox(left, top, width, height)
+    text_frame = txtbox.text_frame
 
-        p2 = text_frame.add_paragraph()
-        p2.alignment = PP_ALIGN.CENTER
-        p2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  {analysis[fund][views]['dates_covered']['end']}"
-        p2.font.bold = False
-        p2.font.size = Pt(18)
-        p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
-        p2.font.name = 'Arial'
+    p = text_frame.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    p.text = f'{fund_name}'
+    p.font.bold = True
+    p.font.size = Pt(60)
+    p.font.name = 'Arial'
 
-        has_beta = False
-        if 'beta' in analysis[fund][views].keys():
-            # Insert a table of fund figures
-            left_loc = Inches(0.1)
-            top_loc = Inches(1.1)
-            table_width = Inches(2.4)
-            table_height = Inches(1.4)
+    p2 = text_frame.add_paragraph()
+    p2.alignment = PP_ALIGN.CENTER
+    p2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  {analysis[fund][views]['dates_covered']['end']}"
+    p2.font.bold = False
+    p2.font.size = Pt(18)
+    p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
+    p2.font.name = 'Arial'
 
-            vq = analysis[fund].get('metadata', {}).get(
-                'volatility', {}).get('VQ')
-            has_vq = False
-            rows = 4
-            if vq is not None:
-                has_vq = True
-                rows = 8
-                stop_loss = analysis[fund].get('metadata', {}).get(
-                    'volatility', {}).get('stop_loss')
-                high_close = analysis[fund].get('metadata', {}).get(
-                    'volatility', {}).get('last_max', {}).get('Price', 'n/a')
-                status = analysis[fund].get('metadata', {}).get(
-                    'volatility', {}).get('status', {}).get('status', 'n/a')
-                vq_color = analysis[fund].get('metadata', {}).get(
-                    'volatility', {}).get('status', {}).get('color', 'n/a')
+    has_beta = False
+    if 'beta' in analysis[fund][views]['statistics'].keys():
+        # Insert a table of fund figures
+        left_loc = Inches(0.1)
+        top_loc = Inches(1.1)
+        table_width = Inches(2.4)
+        table_height = Inches(1.4)
 
-            table_placeholder = slide.shapes.add_table(rows,
-                                                       2,
-                                                       left_loc,
-                                                       top_loc,
-                                                       table_width,
-                                                       table_height)
-            table = table_placeholder.table
+        vq = analysis[fund].get('metadata', {}).get(
+            'volatility', {}).get('VQ')
+        has_vq = False
+        rows = 4
+        if vq is not None:
+            has_vq = True
+            rows = 8
+            stop_loss = analysis[fund].get('metadata', {}).get(
+                'volatility', {}).get('stop_loss')
+            high_close = analysis[fund].get('metadata', {}).get(
+                'volatility', {}).get('last_max', {}).get('Price', 'n/a')
+            status = analysis[fund].get('metadata', {}).get(
+                'volatility', {}).get('status', {}).get('status', 'n/a')
+            vq_color = analysis[fund].get('metadata', {}).get(
+                'volatility', {}).get('status', {}).get('color', 'n/a')
 
-            table.cell(0, 0).text = 'Attribute'
-            table.cell(0, 1).text = ''
-            table.cell(1, 0).text = 'Current Price'
-            table.cell(1, 1).text = '$' + \
-                str(np.round(analysis[fund][views]
-                             ['statistics']['current_price'], 2))
-            table.cell(2, 0).text = 'Beta'
-            table.cell(2, 1).text = str(
-                np.round(analysis[fund][views]['beta'], 5))
-            table.cell(3, 0).text = 'R-Squared'
-            table.cell(3, 1).text = str(
-                np.round(analysis[fund][views]['r_squared'], 5))
+        table_placeholder = slide.shapes.add_table(rows,
+                                                   2,
+                                                   left_loc,
+                                                   top_loc,
+                                                   table_width,
+                                                   table_height)
+        table = table_placeholder.table
 
-            if has_vq:
-                table.cell(4, 0).text = 'Volatility Quotient'
-                table.cell(4, 1).text = str(vq)
-                table.cell(5, 0).text = 'Stop Loss'
-                table.cell(5, 1).text = str(stop_loss)
-                table.cell(6, 0).text = 'Last High Close'
-                table.cell(6, 1).text = str(high_close)
-                table.cell(7, 0).text = 'VQ Status'
-                table.cell(7, 1).text = str(status)
+        table.cell(0, 0).text = 'Attribute'
+        table.cell(0, 1).text = ''
+        table.cell(1, 0).text = 'Current Price'
+        table.cell(1, 1).text = '$' + \
+            str(np.round(analysis[fund][views]
+                         ['statistics']['current_price'], 2))
+        table.cell(2, 0).text = 'Beta'
+        table.cell(2, 1).text = str(
+            np.round(analysis[fund][views]['statistics']['beta'], 5))
+        table.cell(3, 0).text = 'R-Squared'
+        table.cell(3, 1).text = str(
+            np.round(analysis[fund][views]['statistics']['r_squared'], 5))
 
-                table.cell(7, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
-                    vq_color)
+        if has_vq:
+            table.cell(4, 0).text = 'Volatility Quotient'
+            table.cell(4, 1).text = str(vq)
+            table.cell(5, 0).text = 'Stop Loss'
+            table.cell(5, 1).text = str(stop_loss)
+            table.cell(6, 0).text = 'Last High Close'
+            table.cell(6, 1).text = str(high_close)
+            table.cell(7, 0).text = 'VQ Status'
+            table.cell(7, 1).text = str(status)
 
-            table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
-            table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
-            for i in range(1, rows):
-                table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(14)
-                table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(14)
-            has_beta = True
+            table.cell(7, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+                vq_color)
 
-        content = content_dir + f"candlestick_{fund}.png"
-        if os.path.exists(content):
-            if has_beta:
-                left = Inches(2.6)  # Inches(1.42)
-            else:
-                left = Inches(1.42)
-            top = Inches(1.4)
-            height = Inches(6)
-            width = Inches(10.5)
-            slide.shapes.add_picture(
-                content, left, top, height=height, width=width)
+        table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
+        table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
+        for i in range(1, rows):
+            table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(14)
+            table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(14)
+        has_beta = True
 
-        price_pt = np.round(analysis[fund][views]
-                            ['statistics']['current_price'], 2)
-        price_chg_p = np.round(
-            analysis[fund][views]['statistics']['current_percent_change'], 3)
-        price_chg = np.round(analysis[fund][views]
-                             ['statistics']['current_change'], 2)
-        if price_chg > 0.0:
-            price_str = f"${price_pt} +{price_chg} (+{price_chg_p}%)"
+    content = content_dir + f"candlestick_{fund}.png"
+    if os.path.exists(content):
+        if has_beta:
+            left = Inches(2.6)  # Inches(1.42)
         else:
-            price_str = f"${price_pt} {price_chg} ({price_chg_p}%)"
+            left = Inches(1.42)
+        top = Inches(1.4)
+        height = Inches(6)
+        width = Inches(10.5)
+        slide.shapes.add_picture(
+            content, left, top, height=height, width=width)
+    else:
+        slide = pptx_ui_errors(slide, "No Candlestick Chart available.")
 
-        # Slide #1 of content
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        indexes = []
-        indexes.append(len(prs.slides) - 1)
-        slide = slide_title_header(slide, fund, price_details=price_str)
+    price_pt = np.round(analysis[fund][views]
+                        ['statistics']['current_price'], 2)
+    price_chg_p = np.round(
+        analysis[fund][views]['statistics']['current_percent_change'], 3)
+    price_chg = np.round(analysis[fund][views]
+                         ['statistics']['current_change'], 2)
+    if price_chg > 0.0:
+        price_str = f"${price_pt} +{price_chg} (+{price_chg_p}%)"
+    else:
+        price_str = f"${price_pt} {price_chg} ({price_chg_p}%)"
 
-        # Slide #2 of content
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund, price_details=price_str)
-        indexes.append(len(prs.slides)-1)
+    # Slide #0: synopsis
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    slide = generate_synopsis_slide(slide, analysis, fund, views=views)
 
-        # Slide #3 of content
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund, price_details=price_str)
-        indexes.append(len(prs.slides)-1)
+    # Slide #1 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    indexes = []
+    indexes.append(len(prs.slides) - 1)
+    slide = slide_title_header(slide, fund, price_details=price_str)
 
-        # Slide #4 of content
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund, price_details=price_str)
-        indexes.append(len(prs.slides)-1)
+    # Slide #2 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
 
-        # Slide #5 of content
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund, price_details=price_str)
-        indexes.append(len(prs.slides)-1)
+    # Slide #3 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
 
-        # Slide #6 of content
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund, price_details=price_str)
-        indexes.append(len(prs.slides)-1)
+    # Slide #4 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
 
-        # Slide #7 of content
-        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-        slide = slide_title_header(slide, fund, price_details=price_str)
-        indexes.append(len(prs.slides)-1)
+    # Slide #5 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
 
-        content = content_dir + '*.png'
-        pics = glob.glob(content)
-        fund_analysis = analysis[fund]
-        prs = format_plots(prs, indexes, pics,
-                           fund_analysis=fund_analysis, views=views)
+    # Slide #6 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
+
+    # Slide #7 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
+
+    content = content_dir + '*.png'
+    pics = glob.glob(content)
+    fund_analysis = analysis[fund]
+    prs = format_plots(prs, indexes, pics,
+                       fund_analysis=fund_analysis, views=views)
 
     return prs
 
 
 def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}, **kwargs):
+
+    if len(globs) == 0:
+        for ind in slide_indices:
+            pptx_ui_errors(prs.slides[ind], "No plot files available.")
+        return prs
 
     views = kwargs.get('views', '')
     parts = windows_compatible_file_parse(globs[0])
@@ -470,12 +487,11 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             trends = []
             futures = list(range(0, 91, 15))
             forecasts = []
-            for trend in fund_analysis[views]['trendlines']:
-                if trend['current']:
-                    trends.append(trend)
-                    forecast = trend_simple_forecast(
-                        trend, future_periods=futures)
-                    forecasts.append(forecast)
+            for trend in fund_analysis[views]['trendlines']['current']:
+                trends.append(trend)
+                forecast = trend_simple_forecast(
+                    trend, future_periods=futures)
+                forecasts.append(forecast)
 
             num_rows = len(trends) + 2
             num_cols = len(futures)

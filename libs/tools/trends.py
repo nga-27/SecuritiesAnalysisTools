@@ -33,7 +33,7 @@ def get_trend(position: pd.DataFrame, **kwargs) -> dict:
     Arguments:
         position {pd.DataFrame}
 
-    Keyword Arguments:
+    Optional Arg:
         style {str} -- (default: {'sma'})
         ma_size {int} -- (default: {50})
         date_range {list} -- (default: {[]})
@@ -59,6 +59,7 @@ def get_trend(position: pd.DataFrame, **kwargs) -> dict:
 
 
 def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
+    """ Simple difference of close from trend values """
     diff_from_trend = []
     for i in range(len(trend)):
         diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
@@ -67,6 +68,18 @@ def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
 
 
 def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) -> float:
+    """Trend of Dates
+
+    Find the average of a fund over or under an existing trend for a period of dates.
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        trend_difference {list} -- trend difference list (close[i] - trend[i])
+        dates {list} -- list of dates to examine for overall trend
+
+    Returns:
+        float -- mean (close-trend) value over period of time
+    """
     overall_trend = 0.0
 
     if len(dates) == 0:
@@ -131,7 +144,7 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list = [], config=[50
     return trend_analysis
 
 
-def get_trendlines(fund: pd.DataFrame, **kwargs):
+def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     """
     Get Trendlines
 
@@ -145,9 +158,11 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
         progress_bar:   (ProgressBar) DEFAULT=None
         sub_name:       (str) file extension within 'name' directory; DEFAULT=name
         view:           (str) directory of plots; DEFAULT=''
+        meta:           (dict) 'metadata' object for fund; DEFAULT=None
+        out_suppress:   (bool) if True, skips plotting; DEFAULT=False
 
     returns:
-        analysis_list:  (list) contains all trend lines determined by algorithm
+        trends:         (dict) contains all trend lines determined by algorithm
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -155,15 +170,25 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
     progress_bar = kwargs.get('progress_bar', None)
     sub_name = kwargs.get('sub_name', f"trendline_{name}")
     view = kwargs.get('view', '')
+    meta = kwargs.get('meta')
+    out_suppress = kwargs.get('out_suppress', False)
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+    trends = dict()
 
     mins_y = []
     mins_x = []
     maxes_y = []
     maxes_x = []
     all_x = []
+
+    vq = 0.06
+    if meta is not None:
+        vol = meta.get('volatility', {}).get('VQ')
+        if vol is not None:
+            vq = vol / 100.0
 
     increment = 0.7 / (float(len(interval)) * 3)
 
@@ -215,13 +240,13 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
     short_term = 56
     near_term = 27
     X0, Y0 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term, vq=vq)
     X1, Y1 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term, vq=vq)
     X2, Y2 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term, vq=vq)
     X3, Y3 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term, vq=vq)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=increment*4.0)
@@ -250,6 +275,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
         Y.append(Y3[i])
         C.append('red')
         L.append('near')
+
     if progress_bar is not None:
         progress_bar.uptick(increment=increment*4.0)
 
@@ -266,28 +292,48 @@ def get_trendlines(fund: pd.DataFrame, **kwargs):
     C.append('black')
 
     name2 = SP500.get(name, name)
-    try:
-        if plot_output:
-            generic_plotting(Y, x=X, colors=C,
-                             title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
-        else:
-            filename = f"{name}/{view}/{sub_name}.png"
-            generic_plotting(Y, x=X, colors=C,
-                             title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
-                             saveFig=True, filename=filename)
 
-    except:
-        print(
-            f"{WARNING}Warning: plot failed to generate in trends.get_trendlines.{NORMAL}")
+    if not out_suppress:
+        try:
+            if plot_output:
+                generic_plotting(Y, x=X, colors=C,
+                                 title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+            else:
+                filename = f"{name}/{view}/{sub_name}.png"
+                generic_plotting(Y, x=X, colors=C,
+                                 title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                                 saveFig=True, filename=filename)
+
+        except:
+            print(
+                f"{WARNING}Warning: plot failed to generate in trends.get_trendlines.{NORMAL}")
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    return analysis_list
+    trends['trendlines'] = analysis_list
+
+    current = []
+    metrics = []
+
+    for trend in analysis_list:
+        if trend['current']:
+            current.append(trend)
+            met = {f"{trend.get('term')} term": trend.get('type')}
+            met['periods'] = trend.get('length')
+            metrics.append(met)
+
+    trends['current'] = current
+    trends['metrics'] = metrics
+    trends['type'] = 'trend'
+
+    return trends
 
 
-def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> list:
+def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwargs) -> list:
     # print(f"Get Trendlines for period: {interval}")
+
+    vq = kwargs.get('vq', 0.06)
 
     EXTENSION = interval
     BREAK_LOOP = 50
@@ -303,6 +349,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
         start = cycle * interval
         end = start + interval
         data = fund['Close'][start:end].copy()
+
         x = list(range(start, end))
         reg = linregress(x=x, y=data)
         if reg[0] >= 0:
@@ -316,10 +363,12 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             while (count < len(mins_x)) and (mins_x[count] < start):
                 count += 1
                 st_count = count
+
             end_count = st_count
             while (count < len(mins_x)) and (mins_x[count] < end):
                 count += 1
                 end_count = count
+
             datay = mins_y[st_count:end_count].copy()
             datax = mins_x[st_count:end_count].copy()
             dataz = {}
@@ -328,6 +377,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             dataw = pd.DataFrame.from_dict(dataz)
             dataw.set_index('x')
             datav = dataw.copy()
+
             stop_loop = 0
             while ((len(dataw['x']) > 0) and (reg[0] > 0.0)) and (stop_loop < BREAK_LOOP):
                 reg = linregress(x=dataw['x'], y=dataw['y'])
@@ -344,9 +394,11 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             while (count < len(maxes_x)) and (maxes_x[count] < start):
                 count += 1
                 st_count = count
+
             while (count < len(maxes_x)) and (maxes_x[count] < end):
                 count += 1
                 end_count = count
+
             datay = maxes_y[st_count:end_count].copy()
             datax = maxes_x[st_count:end_count].copy()
             dataz = {}
@@ -355,6 +407,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
             dataw = pd.DataFrame.from_dict(dataz)
             dataw.set_index('x')
             datav = dataw.copy()
+
             stop_loop = 0
             while ((len(dataw['x']) > 0) and (reg[0] < 0.0)) and (stop_loop < BREAK_LOOP):
                 reg = linregress(x=dataw['x'], y=dataw['y'])
@@ -370,6 +423,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
         end = line_extender(fund, list(range(start, end)), reg)
         if end != 0:
             max_range = [start, end]
+
             if max_range[1] > len(fund['Close']):
                 max_range[1] = len(fund['Close'])
             if interval > 100:
@@ -378,10 +432,11 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int) -> lis
                 max_range[1] = len(fund['Close'])
 
             max_range[1] = line_reducer(
-                fund, max_range[1], reg, threshold=0.06)
+                fund, max_range[1], reg, threshold=vq)
 
             datax = list(range(max_range[0], max_range[1]))
             datay = [reg[0] * float(x) + reg[1] for x in datax]
+
             if (len(datay) > 0) and (not math.isnan(datay[0])):
                 X.append(datax)
                 Y.append(datay)
@@ -432,6 +487,7 @@ def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) 
     x_pt = last_x_pt
     if x_pt > len(fund['Close']):
         x_pt = len(fund['Close'])
+
     last_pt = intercept + slope * x_pt
     if (last_pt <= (top_thresh * fund['Close'][x_pt-1])) and (last_pt >= (bot_thresh * fund['Close'][x_pt-1])):
         return x_pt
@@ -439,10 +495,15 @@ def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) 
         while (x_pt-1 > 0) and (((last_pt > (top_thresh * fund['Close'][x_pt-1]))) or (last_pt < (bot_thresh * fund['Close'][x_pt-1]))):
             x_pt -= 1
             last_pt = intercept + slope * x_pt
+
     return x_pt
 
 
-def generate_analysis(fund: pd.DataFrame, x_list: list, y_list: list, len_list: list, color_list: list) -> list:
+def generate_analysis(fund: pd.DataFrame,
+                      x_list: list,
+                      y_list: list,
+                      len_list: list,
+                      color_list: list) -> list:
     analysis = []
 
     for i, x in enumerate(x_list):

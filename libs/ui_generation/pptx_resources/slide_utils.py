@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
+from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
 from libs.utils import SP500
 
@@ -140,3 +141,21 @@ def color_to_RGB(color: str):
     else:
         print(f"WARNING: Color '{color}' not found in 'color_to_RGB'")
         return RGBColor(0x00, 0x00, 0x00)
+
+
+def pptx_ui_errors(slide, message: str):
+    top = Inches(2.75)
+    left = Inches(4)
+    width = Inches(6)
+    height = Inches(2)
+    txtbox = slide.shapes.add_textbox(left, top, width, height)
+    text_frame = txtbox.text_frame
+
+    p = text_frame.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    p.text = f'{message}'
+    p.font.bold = True
+    p.font.size = Pt(40)
+    p.font.name = 'Arial'
+
+    return slide

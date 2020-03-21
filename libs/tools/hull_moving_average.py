@@ -43,6 +43,8 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
+    hull['type'] = 'trend'
+
     return hull
 
 
@@ -241,17 +243,35 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
             metrics[i+3] += val * weights[3]
 
     norm_signal = normalize_signals([metrics])[0]
-    swings['metrics'] = simple_moving_avg(norm_signal, 7, data_type='list')
+    metrics = simple_moving_avg(norm_signal, 7, data_type='list')
+    swings['metrics'] = {'metrics': metrics}
+
+    tshort = swings['tabular']['short']
+    tmed = swings['tabular']['medium']
+    tlong = swings['tabular']['long']
+
+    mshort = []
+    mmed = []
+    mlong = []
+
+    for i, close in enumerate(position['Close']):
+        mshort.append(np.round((close - tshort[i]) / tshort[i] * 100.0, 3))
+        mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
+        mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
+
+    swings['metrics']['short'] = mshort
+    swings['metrics']['medium'] = mmed
+    swings['metrics']['long'] = mlong
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Hull Moving Average Metrics'
 
     if plot_output:
-        dual_plotting(position['Close'], swings['metrics'],
+        dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title='Hull Moving Average Metrics')
     else:
         filename2 = name + f"/{view}" + f"/hull_metrics_{name}.png"
-        dual_plotting(position['Close'], swings['metrics'],
+        dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title=name2, saveFig=True, filename=filename2)
 
     if p_bar is not None:
