@@ -30,38 +30,24 @@ from libs.tools import total_power
 from libs.tools import bollinger_bands
 
 # Imports that support functions doing feature detection
-from libs.features import feature_detection_head_and_shoulders, feature_plotter
+from libs.features import feature_detection_head_and_shoulders
 from libs.features import analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
-from libs.utils import name_parser
-from libs.utils import fund_list_extractor, date_extractor
-from libs.utils import index_extractor, index_appender
-from libs.utils import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from libs.utils import download_data_all
-from libs.utils import has_critical_error
+from libs.utils import date_extractor
+from libs.utils import create_sub_temp_dir
 from libs.utils import get_api_metadata
-from libs.utils import TEXT_COLOR_MAP, SP500
-
-# Imports that control function-only inputs
-from libs.functions import only_functions_handler
+from libs.utils import SP500
 
 # Imports that plot (many are imported in functions)
 from libs.utils import candlestick
 
 # Imports that drive custom metrics for market analysis
-from libs.metrics import market_composite_index, bond_composite_index
-from libs.metrics import correlation_composite_index, type_composite_index
 from libs.metrics import future_returns
 from libs.metrics import generate_synopsis
 
 # Imports that start process and show progress doing so
-from libs.utils import ProgressBar, start_header
-
-# Imports that create the final products and outputs
-from libs.ui_generation import slide_creator, output_to_json
-from libs.ui_generation import PDF_creator
-from libs.metrics import metadata_to_dataset
+from libs.utils import ProgressBar
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
@@ -69,50 +55,22 @@ from test import test_competitive
 ####################################################################
 ####################################################################
 
-################################
-_VERSION_ = '0.1.28'
-_DATE_REVISION_ = '2020-03-20'
-################################
-PROCESS_STEPS_DEV = 23
 
-HEADER_COLOR = TEXT_COLOR_MAP["blue"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+def run_dev(script: list):
+    """Run Development Script
 
+    Script that is for implementing new content
 
-def technical_analysis(config: dict):
+    Arguments:
+        script {list} -- dataset, funds, periods, config
 
-    config['process_steps'] = PROCESS_STEPS_DEV
-    if config['release'] == True:
-        # Use only after release!
-        print(" ")
-        print(
-            f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{NORMAL_COLOR}")
-        config = start_header(update_release=_DATE_REVISION_,
-                              version=_VERSION_, options=True)
-        config['process_steps'] = PROCESS_STEPS_DEV
-
-    if config['state'] == 'halt':
-        return
-
-    if 'function' in config['state']:
-        # If only simple functions are desired, they go into this handler
-        only_functions_handler(config)
-        return
-
-    if 'no_index' not in config['state']:
-        config['tickers'] = index_appender(config['tickers'])
-        config['process_steps'] = config['process_steps'] + 2
-
-    # Temporary directories to save graphs as images, etc.
-    remove_temp_dir()
-    configure_temp_dir()
-
-    dataset, funds, periods, config = download_data_all(config=config)
-
-    for period in dataset:
-        e_check = {'tickers': config['tickers']}
-        if has_critical_error(dataset[period], 'download_data', misc=e_check):
-            return None
+    Returns:
+        [dict] -- analysis object of fund data
+    """
+    dataset = script[0]
+    funds = script[1]
+    periods = script[2]
+    config = script[3]
 
     # Start of automated process
     analysis = {}
@@ -256,22 +214,4 @@ def technical_analysis(config: dict):
         analysis[fund_name]['synopsis'] = generate_synopsis(
             analysis, name=fund_name)
 
-    analysis['_METRICS_'] = {}
-    analysis['_METRICS_']['mci'] = market_composite_index(
-        config=config, plot_output=False)
-
-    bond_composite_index(config=config, plot_output=False)
-
-    analysis['_METRICS_']['correlation'] = correlation_composite_index(
-        config=config, plot_output=False)
-
-    analysis['_METRICS_']['tci'] = type_composite_index(
-        config=config, plot_output=False)
-
-    slide_creator(analysis, config=config)
-    output_to_json(analysis)
-    PDF_creator(analysis, config=config)
-
-    metadata_to_dataset(config=config)
-
-    remove_temp_dir()
+    return analysis

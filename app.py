@@ -12,24 +12,19 @@
 #   detection (Head and Shoulders, Pennants).
 #   
 """
-from releases.prod import technical_analysis as prod
-from releases.dev import technical_analysis as dev
-from libs.utils import start_header, TEXT_COLOR_MAP, logo_renderer
+from libs.utils import start_header, logo_renderer
+from releases.technical_analysis import technical_analysis
 
 ################################
-_VERSION_ = '0.1.28'
-_DATE_REVISION_ = '2020-03-20'
+_VERSION_ = '0.2.0'
+_DATE_REVISION_ = '2020-03-22'
 ################################
 
 
 class App:
 
-    NORMAL_COLOR = TEXT_COLOR_MAP["white"]
-    PROD_COLOR = TEXT_COLOR_MAP["green"]
-
     def __init__(self):
         self.config = dict()
-        self.isEnabled = True
 
     def run(self):
         logo_renderer()
@@ -38,14 +33,11 @@ class App:
 
         if 'run' in self.config['state']:
             self.config['release'] = False
-            print(
-                f"{self.PROD_COLOR}~~~~ PRODUCTION ENVIRONMENT ~~~~{self.NORMAL_COLOR}")
-            print(" ")
-            prod(self.config)
+            technical_analysis(self.config)
 
         if 'dev' in self.config['state']:
             self.config['release'] = True
-            dev(self.config)
+            technical_analysis(self.config, release='dev')
 
         print('Done.')
 
