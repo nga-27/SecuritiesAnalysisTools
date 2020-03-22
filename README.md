@@ -2,7 +2,7 @@
 Technical analysis tools for securities (funds, stocks, bonds, equities).
 
 ## Notable Versioning / Releases
-* 0.1.0, 2019-06-04 - Release 1: outputing to pptx and json files; basic analysis; primarily plot based
+* **0.1.0, 2019-06-04** - Release 1: outputing to pptx and json files; basic analysis; primarily plot based
 * 0.1.06, 2019-07-13 - Wide 16:9 ratio for pptx output
 * 0.1.11, 2019-08-13 - Upgraded requirements, some better documentation, and mutual fund timeframe issue resolved
 * 0.1.13, 2019-08-18 - Architecture overhaul (now `app.py`), terminal input options, error handling, robust backward compatibility to release 1
@@ -12,7 +12,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.1.25, 2020-02-08 - Start of a normalized metric across all items (oscillators covered here)
 * 0.1.27, 2020-03-09 - Multi-period data analysis ('10y', '5y', '2y', '1y'; '1d', '1w', '1m')
 * 0.1.28, 2020-03-20 - PDF export of metrics, numerical details
-* 0.1.x - Working toward Release 2 (`app.py` with no `--rX` tags [X = available release] is most current on master)
+* **0.2.0, 2020-03-22** - Release 2: Reorganization of `dev` and `prod` as functions, stable base
 
 ## To Use
 1. Pull repository, start local, virtual, and/or global python environment.
@@ -103,8 +103,10 @@ If matplotlib.backend has issues with OSX, try running `conda install matplotlib
 If that does not solve issue, see [StackOverFlow Solution](https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python) for other ways of solving issue.
 Other solutions, employed on all plotting functions, is the `register_matplotlib_converters()` function call preceding all plotting code at the beginning of each function.
 
+Note: this issue may have been resolved with `matplotlib 3.0.2`. As of v0.2.0, this software requires `matplotlib>=3.2.0`.
+
 ### Notable links:
-[Yahoo Finance Python](https://pypi.org/project/fix-yahoo-finance/)
+[Yahoo Finance Python](https://pypi.org/project/yfinance/)
 
 [Top 4 Tech Tools](https://www.investopedia.com/articles/active-trading/041814/four-most-commonlyused-indicators-trend-trading.asp)
 
@@ -114,5 +116,8 @@ Other solutions, employed on all plotting functions, is the `register_matplotlib
 
 ## Custom Metrics 
 * _Clustered Oscillators_ - weighted-aggregate of RSI, Stochastic, and Ultimate Oscillators. **Higher: buy, lower: sell**
-* _Market Composite Index_ - equal weight aggregate of all 11 market sectors of clustered oscillators
-* _Swing Trades_ - logic to find trends using exponential moving averages. **Higher: buy, lower: sell**
+* _Swing Trades_ - logic to create an oscillator signal using various moving averages. **Higher: buy, lower: sell**
+* _Market Composite Index (MCI)_ - equal weight aggregate of all 11 market sectors of clustered oscillators
+* _"X" Bond Composite Index (BCI)_ - similar to MCI except where *"X"* is *Treasury*, *Corporate*, or *International*. All three supported.
+* _Correlation Composite Index (CCI)_ - mapping of various lookback periods of correlations of 11 sectors with S&P500.
+* _Type Composite Index (TCI)_ - weighted indexes representing *Sensitive*, *Defensive*, and *Cyclical* stock sectors
