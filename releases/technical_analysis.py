@@ -25,7 +25,16 @@ from .exports import run_exports
 
 
 def technical_analysis(config: dict, release='prod'):
+    """Technical Analysis
 
+    Runs application program, funneling to either 'dev' or 'prod', metrics, etc.
+
+    Arguments:
+        config {dict} -- app control object
+
+    Keyword Arguments:
+        release {str} -- either 'dev' or 'prod' (default: {'prod'})
+    """
     script = init_script(config, release=release)
 
     if script is None:

@@ -7,6 +7,14 @@ from libs.utils import remove_temp_dir
 
 
 def run_exports(analysis: dict, script: list):
+    """Run Exports
+
+    Exporter for UI items (PPTX, PDF, metadata.json, etc.)
+
+    Arguments:
+        analysis {dict} -- funds data object
+        script {list} -- controlling list: dataset, funds, periods, config
+    """
     config = script[3]
 
     slide_creator(analysis, config=config)

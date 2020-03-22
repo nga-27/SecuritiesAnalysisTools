@@ -20,7 +20,17 @@ NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
 def init_script(config: dict, **kwargs) -> list:
+    """Init Script
 
+    Arguments:
+        config {dict} -- startup config object to control application
+
+    Optional Args:
+        release {str} -- 'dev' or 'prod' (default: {'prod'})
+
+    Returns:
+        list -- script: dataset, funds, periods, config
+    """
     release = kwargs.get('release', 'prod')
 
     if release == 'dev':
