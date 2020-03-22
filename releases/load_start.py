@@ -15,6 +15,7 @@ PROCESS_STEPS_DEV = 23
 PROCESS_STEPS_PROD = 23
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
+PROD_COLOR = TEXT_COLOR_MAP["green"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
@@ -38,6 +39,12 @@ def init_script(config: dict, **kwargs) -> list:
             config = start_header(update_release=_DATE_REVISION_DEV_,
                                   version=_DEV_VERSION_, options=True)
             config['process_steps'] = PROCESS_STEPS_DEV
+
+    else:
+        if release == 'prod':
+            print(
+                f"{PROD_COLOR}~~~~ PRODUCTION ENVIRONMENT ~~~~{NORMAL_COLOR}")
+            print(" ")
 
     if config['state'] == 'halt':
         return
