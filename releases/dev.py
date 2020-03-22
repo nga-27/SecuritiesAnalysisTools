@@ -66,6 +66,9 @@ from libs.metrics import metadata_to_dataset
 # Imports in development / non-final "public" calls
 from test import test_competitive
 
+# Imports from releases (init script)
+from .load_start import init_script
+
 ####################################################################
 ####################################################################
 
@@ -75,44 +78,43 @@ _DATE_REVISION_ = '2020-03-20'
 ################################
 PROCESS_STEPS_DEV = 23
 
-HEADER_COLOR = TEXT_COLOR_MAP["blue"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
-
 
 def technical_analysis(config: dict):
 
-    config['process_steps'] = PROCESS_STEPS_DEV
-    if config['release'] == True:
-        # Use only after release!
-        print(" ")
-        print(
-            f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{NORMAL_COLOR}")
-        config = start_header(update_release=_DATE_REVISION_,
-                              version=_VERSION_, options=True)
-        config['process_steps'] = PROCESS_STEPS_DEV
+    # config['process_steps'] = PROCESS_STEPS_DEV
+    # if config['release'] == True:
+    #     # Use only after release!
+    #     print(" ")
+    #     print(
+    #         f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{NORMAL_COLOR}")
+    #     config = start_header(update_release=_DATE_REVISION_,
+    #                           version=_VERSION_, options=True)
+    #     config['process_steps'] = PROCESS_STEPS_DEV
 
-    if config['state'] == 'halt':
-        return
+    # if config['state'] == 'halt':
+    #     return
 
-    if 'function' in config['state']:
-        # If only simple functions are desired, they go into this handler
-        only_functions_handler(config)
-        return
+    # if 'function' in config['state']:
+    #     # If only simple functions are desired, they go into this handler
+    #     only_functions_handler(config)
+    #     return
 
-    if 'no_index' not in config['state']:
-        config['tickers'] = index_appender(config['tickers'])
-        config['process_steps'] = config['process_steps'] + 2
+    # if 'no_index' not in config['state']:
+    #     config['tickers'] = index_appender(config['tickers'])
+    #     config['process_steps'] = config['process_steps'] + 2
 
-    # Temporary directories to save graphs as images, etc.
-    remove_temp_dir()
-    configure_temp_dir()
+    # # Temporary directories to save graphs as images, etc.
+    # remove_temp_dir()
+    # configure_temp_dir()
 
-    dataset, funds, periods, config = download_data_all(config=config)
+    # dataset, funds, periods, config = download_data_all(config=config)
 
-    for period in dataset:
-        e_check = {'tickers': config['tickers']}
-        if has_critical_error(dataset[period], 'download_data', misc=e_check):
-            return None
+    # for period in dataset:
+    #     e_check = {'tickers': config['tickers']}
+    #     if has_critical_error(dataset[period], 'download_data', misc=e_check):
+    #         return None
+
+    dataset, funds, periods, config = init_script(config, release='dev')
 
     # Start of automated process
     analysis = {}

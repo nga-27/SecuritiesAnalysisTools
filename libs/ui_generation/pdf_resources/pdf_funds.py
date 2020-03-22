@@ -233,10 +233,14 @@ def beta_rsq(pdf, fund_data: dict):
         if period != 'synopsis' and period != 'metadata':
             left_keys.append(f"Beta ({period})")
             right_keys.append(f"R-squared ({period})")
-            left_vals.append(
-                str(np.round(fund_data[period]['statistics'].get('beta', ''), 5)))
-            right_vals.append(
-                str(np.round(fund_data[period]['statistics'].get('r_squared', ''), 5)))
+            if fund_data[period]['statistics'].get('beta') is None:
+                left_vals.append('')
+                right_vals.append('')
+            else:
+                left_vals.append(
+                    str(np.round(fund_data[period]['statistics'].get('beta', ''), 5)))
+                right_vals.append(
+                    str(np.round(fund_data[period]['statistics'].get('r_squared', ''), 5)))
 
     data = []
     for i in range(len(left_keys)):
