@@ -16,8 +16,8 @@ from libs.utils import start_header, logo_renderer
 from releases.technical_analysis import technical_analysis
 
 ################################
-_VERSION_ = '0.1.28'
-_DATE_REVISION_ = '2020-03-20'
+_VERSION_ = '0.2.0'
+_DATE_REVISION_ = '2020-03-22'
 ################################
 
 
