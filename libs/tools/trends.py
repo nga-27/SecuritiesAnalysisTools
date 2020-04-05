@@ -788,6 +788,7 @@ DIVISORS = [4, 5, 7, 9, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
 def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
     iterations = kwargs.get('iterations', 15)
+    threshold = kwargs.get('threshold', 0.1)
 
     indexes = list(range(len(signal)))
 
@@ -811,7 +812,7 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
                 data = pd.DataFrame.from_dict(data)
 
-                while len(data['x']) > 2:
+                while len(data['x']) > 3:
                     reg = linregress(data['x'], data['value'])
                     if k == 0:
                         data = data.loc[data['value'] >
@@ -828,17 +829,31 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                 x_line = indexes.copy()
                 removals = []
                 for j, lin in enumerate(line):
-                    if lin > (1.05 * signal[j]) or lin < (0.95 * signal[j]):
-                        removals.append(j)
+                    if lin < 0.0:
+                        if lin < ((1.0 + threshold) * signal[j]) or lin > ((1.0 - threshold) * signal[j]):
+                            removals.append(j)
+                    else:
+                        if lin > ((1.0 + threshold) * signal[j]) or lin < ((1.0 - threshold) * signal[j]):
+                            removals.append(j)
+
                 line_corrected = []
                 x_corrected = []
-                for j, x in enumerate(x_line):
-                    if not j in removals:
-                        line_corrected.append(line[j])
+                for x in x_line:
+                    if x not in removals:
                         x_corrected.append(x)
 
-                lines.append(line_corrected)
-                x_s.append(x_corrected)
+                if len(x_corrected) > 0:
+                    start = min(x_corrected)
+                    end = max(x_corrected)
+                    # print(
+                    # f"start: {start}, end: {end}, last: {x_corrected[-1]}")
+                    line_corrected = line[start:end+1].copy()
+                    x_corrected = list(range(start, end+1))
+
+                lines.append(line_corrected.copy())
+                x_s.append(x_corrected.copy())
+                # lines.append(line)
+                # x_s.append(x_line)
 
     plots = []
     x_plots = []
