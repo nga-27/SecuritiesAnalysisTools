@@ -5,7 +5,7 @@ import numpy as np
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from libs.utils import generic_plotting, dual_plotting, bar_chart
 from libs.utils import dates_extractor_list, ProgressBar, SP500
-from .trends import get_trendlines
+from .trends import get_trendlines, get_trendlines_regression
 
 
 def generate_obv_signal(fund: pd.DataFrame, **kwargs) -> list:
@@ -168,12 +168,17 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     obv_dict['dates'] = dates
 
     sub_name = f"obv3_{name}"
+    max_window = int(len(fund['Close']) / 4)
     obv_dict['trends'] = get_trendlines(
         data2, name=name,
         sub_name=sub_name,
         plot_output=plot_output,
         view=view,
-        out_suppress=True)
+        out_suppress=(not plot_output),
+        interval=[0, 2, 4, 7],
+        trend_window=[3, 15, 31, max_window])
+
+    get_trendlines_regression(obv)
 
     # obv_dict['trends'] = dict()
     # sub_name = f"obv_{name}"
