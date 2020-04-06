@@ -845,8 +845,6 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                 if len(x_corrected) > 0:
                     start = min(x_corrected)
                     end = max(x_corrected)
-                    # print(
-                    # f"start: {start}, end: {end}, last: {x_corrected[-1]}")
                     line_corrected = line[start:end+1].copy()
                     x_corrected = list(range(start, end+1))
 
@@ -854,6 +852,8 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                 x_s.append(x_corrected.copy())
                 # lines.append(line)
                 # x_s.append(x_line)
+
+    # handle over load of lines (consolidate)
 
     plots = []
     x_plots = []
