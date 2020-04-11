@@ -20,6 +20,7 @@ from libs.tools import triple_moving_average, moving_average_swing_trade
 from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
+from libs.tools import candlesticks
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 from libs.ui_generation import slide_creator, PDF_creator
 
@@ -94,6 +95,8 @@ def only_functions_handler(config: dict):
         bollinger_bands_function(config)
     if 'gaps' in config['run_functions']:
         price_gap_function(config)
+    if 'candlestick' in config['run_functions']:
+        candlestick_function(config)
     if 'vq' in config['run_functions']:
         vq_function(config)
     if 'nf' in config['run_functions']:
@@ -317,6 +320,15 @@ def price_gap_function(config: dict):
             print(
                 f"Price Gap Analysis of {TICKER}{fund}{NORMAL}...")
             analyze_price_gaps(data[fund], name=fund, plot_output=True)
+
+
+def candlestick_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Candlestick Analysis of {TICKER}{fund}{NORMAL}...")
+            candlesticks(data[fund], name=fund, plot_output=True)
 
 
 def vq_function(config: dict):

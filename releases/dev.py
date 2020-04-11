@@ -40,9 +40,6 @@ from libs.utils import create_sub_temp_dir
 from libs.utils import get_api_metadata
 from libs.utils import SP500
 
-# Imports that plot (many are imported in functions)
-from libs.utils import candlestick
-
 # Imports that drive custom metrics for market analysis
 from libs.metrics import future_returns
 from libs.metrics import generate_synopsis
