@@ -506,14 +506,15 @@ def candlestick(data: pd.DataFrame, **kwargs):
     Plot candlestick chart
 
     args:
-        data:           (list) list of y-values to be plotted 
+        data:               (list) list of y-values to be plotted 
 
     optional args:
-        title:          (str) title of plot; DEFAULT=''
-        legend:         (list) list of plot labels in legend; DEFAULT=[] 
-        saveFig:        (bool) True will save as 'filename'; DEFAULT=False
-        filename:       (str) path to save plot; DEFAULT='temp_candlestick.png'
-        progress_bar:   (ProgressBar) increments progressbar as processes data
+        title:              (str) title of plot; DEFAULT=''
+        legend:             (list) list of plot labels in legend; DEFAULT=[] 
+        saveFig:            (bool) True will save as 'filename'; DEFAULT=False
+        filename:           (str) path to save plot; DEFAULT='temp_candlestick.png'
+        progress_bar:       (ProgressBar) increments progressbar as processes data
+        threshold_candles:  (dict) candlestick thresholds for days; DEFAULT=None
 
     returns:
         None
@@ -525,6 +526,7 @@ def candlestick(data: pd.DataFrame, **kwargs):
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_candlestick.png')
     p_bar = kwargs.get('progress_bar', None)
+    threshold_candles = kwargs.get('threshold_candles', None)
 
     _, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
@@ -535,29 +537,53 @@ def candlestick(data: pd.DataFrame, **kwargs):
 
     increment = 0.5 / float(len(data['Close']) + 1)
 
+    th_candles = False
+    if threshold_candles is not None:
+        _doji = threshold_candles.get('doji', 0.0)
+        _short = threshold_candles.get('short', 0.0)
+        _long = threshold_candles.get('long', 0.0)
+        _ratio = threshold_candles.get('doji_ratio', 5.0)
+        th_candles = True
+
     for i in range(len(data['Close'])):
         op = data['Open'][i]
         close = data['Close'][i]
         high = data['High'][i]
         low = data['Low'][i]
 
-        if data['Close'][i] > data['Open'][i]:
-            colors = 'green'
-        elif data['Close'][i] == data['Open'][i]:
+        shadow_color = 'black'
+        if th_candles:
+            diff = np.abs(data['Close'][i] - data['Open'][i])
             colors = 'black'
-            if i > 0:
-                op = data['Open'][i-1]
-                if op > close:
+            if diff >= _long:
+                colors = 'blue'
+            if diff <= _short:
+                colors = 'orange'
+            if diff <= _doji:
+                shadow = data['High'][i] - data['Low'][i]
+                if shadow >= (diff * _ratio):
                     colors = 'red'
-                else:
-                    colors = 'green'
+            shadow_color = colors
+
         else:
-            colors = 'red'
+            if data['Close'][i] > data['Open'][i]:
+                colors = 'green'
+            elif data['Close'][i] == data['Open'][i]:
+                colors = 'black'
+                if i > 0:
+                    op = data['Open'][i-1]
+                    if op > close:
+                        colors = 'red'
+                    else:
+                        colors = 'green'
+            else:
+                colors = 'red'
+
         oc = plt.Line2D((x[i], x[i]), (op, close), lw=3,
                         ls='-', alpha=1, color=colors)
         plt.gca().add_line(oc)
         hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75,
-                        ls='-', alpha=1, color='black')
+                        ls='-', alpha=1, color=shadow_color)
         plt.gca().add_line(hl)
 
         if p_bar is not None:
