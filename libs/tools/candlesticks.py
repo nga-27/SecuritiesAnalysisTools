@@ -18,7 +18,7 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     candle['thresholds'] = thresholding_determination(
         fund, plot_output=plot_output)
     candle['classification'] = day_classification(fund, candle['thresholds'])
-    candle['patterns'] = pattern_detection(fund)
+    candle['patterns'] = pattern_detection(fund, candle)
 
     if plot_output:
         candlestick(fund, title=name)
@@ -29,7 +29,7 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     return candle
 
 
-def pattern_detection(fund: pd.DataFrame, **kwargs) -> dict:
+def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
 
     patterns = dict()
 
@@ -84,7 +84,57 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
 def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
 
     days = []
-    # classification elements:
-    # current trend (sma-10); short-med-long; black-white; shadow/body ratio;
-    # open, close, high, low (raw)
+    sma = simple_moving_avg(fund, 10)
+
+    LONG = thresholds['long']
+    SHORT = thresholds['short']
+    DOJI = thresholds['doji']
+    RATIO = thresholds['doji_ratio']
+
+    # Classification elements:
+    for i, close in enumerate(fund['Close']):
+        stats = dict()
+
+        # Raw, basic values to start
+        stats['basic'] = dict()
+        stats['basic']['Close'] = close
+        stats['basic']['Open'] = fund['Open'][i]
+        stats['basic']['High'] = fund['High'][i]
+        stats['basic']['Low'] = fund['Low'][i]
+
+        # Where close appears vs. Trend (sma-10)
+        if close > sma[i]:
+            stats['trend'] = 'above'
+        elif close < sma[i]:
+            stats['trend'] = 'below'
+        else:
+            stats['trend'] = 'at'
+
+        # Candlestick-esc properties
+        stats['candlestick'] = dict()
+
+        diff = np.abs(close - fund['Open'][i])
+        shadow_length = fund['High'][i] - fund['Low'][i]
+
+        if diff >= LONG:
+            stats['candlestick']['body'] = 'long'
+        elif diff <= SHORT:
+            stats['candlestick']['body'] = 'short'
+        else:
+            stats['candlestick']['body'] = 'normal'
+
+        if close > fund['Open'][i]:
+            stats['candlestick']['color'] = 'white'
+        else:
+            stats['candlestick']['color'] = 'black'
+
+        stats['candlestick']['doji'] = False
+        stats['candlestick']['shadow_ratio'] = 0.0
+        if diff <= DOJI:
+            if diff > 0.0:
+                stats['candlestick']['shadow_ratio'] = shadow_length / diff
+            if stats['candlestick']['shadow_ratio'] >= RATIO:
+                stats['candlestick']['doji'] = True
+
+        days.append(stats)
     return days

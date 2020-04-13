@@ -563,6 +563,11 @@ def candlestick(data: pd.DataFrame, **kwargs):
                 shadow = data['High'][i] - data['Low'][i]
                 if shadow >= (diff * _ratio):
                     colors = 'red'
+
+            # Handle mutual fund case here:
+            if (diff == 0) and (data['High'][i] == data['Low'][i]) and (i > 0):
+                colors = 'black'
+                op = data['Open'][i-1]
             shadow_color = colors
 
         else:
