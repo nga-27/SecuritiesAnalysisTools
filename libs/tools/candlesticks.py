@@ -7,11 +7,6 @@ from libs.utils import candlestick
 from .moving_average import simple_moving_avg
 
 
-PATTERNS = {
-    "doji": {'days': 1, 'function': doji_pattern}
-}
-
-
 def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
 
     plot_output = kwargs.get('plot_output', True)
@@ -42,9 +37,10 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
         value = {'value': 0, 'patterns': []}
         for j, patt in enumerate(PATTERNS):
             val = pattern_library(patt, candle['classification'], i)
-            if val != 0:
-                value['value'] += val
-                value['patterns'].append(patt)
+            if val[0] != 0:
+                value['value'] += val[0]
+                modified_pattern = f"{patt}-{val[1]}"
+                value['patterns'].append(modified_pattern)
         patterns.append(value)
 
     candle['patterns'] = patterns
@@ -167,9 +163,9 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
 #   PATTERN DETECTION LIBRARY
 ###################################
 
-def pattern_library(pattern: str, days: list, index: int) -> int:
-    days_needed = pattern.get('days', 1)
-    function = pattern.get('function')
+def pattern_library(pattern: str, days: list, index: int) -> list:
+    days_needed = PATTERNS.get(pattern, {}).get('days', 1)
+    function = PATTERNS.get(pattern, {}).get('function')
 
     if function is None:
         return 0
@@ -177,21 +173,45 @@ def pattern_library(pattern: str, days: list, index: int) -> int:
         return 0
 
     if days_needed == 1:
-        sub_days = days[index].deepcopy()
+        sub_days = days[index].copy()
     else:
         start = (index + 1) - days_needed
-        sub_days = days[start:index+1].deepcopy()
+        sub_days = days[start:index+1].copy()
 
     if isinstance(sub_days, (dict)):
         sub_days = [sub_days]
 
     detection = function(sub_days)
-    return 0
+    if detection is not None:
+        if detection['type'] == 'bearish':
+            return -1, detection['style']
+        if detection['type'] == 'bullish':
+            return 1, detection['style']
+
+        print(f"PATTERN: {detection} on index {index}")
+
+    return 0, ''
 
 
 ###################################
 
 def doji_pattern(day: list) -> dict:
+    THRESH = 0.05
     day = day[0]
     if day.get('candlestick', {}).get('doji'):
-        print("hello")
+        close = day.get('basic', {}).get('Close')
+        high = day.get('basic', {}).get('High')
+        low = day.get('basic', {}).get('Low')
+
+        clo_low = close - low
+        hi_low = high - low
+        if clo_low >= ((1.0 - THRESH) * hi_low):
+            return {'type': 'bullish', 'style': 'dragonfly'}
+        if clo_low <= (THRESH * hi_low):
+            return {'type': 'bearish', 'style': 'gravestone'}
+    return None
+
+
+PATTERNS = {
+    "doji": {'days': 1, 'function': doji_pattern}
+}
