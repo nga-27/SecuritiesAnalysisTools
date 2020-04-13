@@ -75,7 +75,7 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- thresholding values
     """
-    LONG = kwargs.get('long_percentile', 80)
+    LONG = kwargs.get('long_percentile', 75)
     SHORT = kwargs.get('short_percentile', 25)
     DOJI = kwargs.get('doji_percentile', 1)
     DOJI_RATIO = kwargs.get('doji_ratio', 8)
@@ -309,8 +309,67 @@ def evening_morning_star(day: list) -> dict:
     return None
 
 
+def rising_falling_three_methods(day: list) -> dict:
+    # Rising three methods (continuation of bull trend)
+    if day[0].get('trend') == 'above':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'white':
+                basic_0 = day[0].get('basic')
+                high_0 = basic_0.get('High')
+                low_0 = basic_0.get('Low')
+                close_0 = basic_0.get('Close')
+                basic_1 = day[1].get('basic')
+                if high_0 >= max(basic_1.get('Open'), basic_1.get('Close')):
+                    if low_0 <= min(basic_1.get('Open'), basic_1.get('Close')):
+                        if day[1].get('candlestick').get('body') == 'short':
+                            basic_2 = day[1].get('basic')
+                            if high_0 >= max(basic_2.get('Open'), basic_2.get('Close')):
+                                if low_0 <= min(basic_2.get('Open'), basic_2.get('Close')):
+                                    basic_3 = day[1].get('basic')
+                                    if high_0 >= max(basic_3.get('Open'), basic_3.get('Close')):
+                                        if low_0 <= min(basic_3.get('Open'), basic_3.get('Close')):
+                                            candle_4 = day[4].get(
+                                                'candlestick')
+                                            if candle_4.get('body') == 'long':
+                                                if candle_4.get('color') == 'white':
+                                                    if day[4].get('basic', {}).get('Close') > close_0:
+                                                        return {"type": 'bullish',
+                                                                "style": 'risingthreemethods'}
+
+    # Falling three methods (continuation of bear trend)
+    if day[0].get('trend') == 'below':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'black':
+                basic_0 = day[0].get('basic')
+                high_0 = basic_0.get('High')
+                low_0 = basic_0.get('Low')
+                close_0 = basic_0.get('Close')
+                basic_1 = day[1].get('basic')
+                if low_0 <= min(basic_1.get('Open'), basic_1.get('Close')):
+                    if high_0 >= max(basic_1.get('Open'), basic_1.get('Close')):
+                        if day[1].get('candlestick').get('body') == 'short':
+                            basic_2 = day[1].get('basic')
+                            if low_0 <= min(basic_2.get('Open'), basic_2.get('Close')):
+                                if high_0 >= max(basic_2.get('Open'), basic_2.get('Close')):
+                                    basic_3 = day[1].get('basic')
+                                    if low_0 <= min(basic_3.get('Open'), basic_3.get('Close')):
+                                        if high_0 >= max(basic_3.get('Open'), basic_3.get('Close')):
+                                            candle_4 = day[4].get(
+                                                'candlestick')
+                                            if candle_4.get('body') == 'long':
+                                                if candle_4.get('color') == 'black':
+                                                    if day[4].get('basic', {}).get('Close') < close_0:
+                                                        return {"type": 'bearish',
+                                                                "style": 'fallingthreemethods'}
+
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
-    "evening_morning_star": {'days': 3, 'function': evening_morning_star}
+    "evening_morning_star": {'days': 3, 'function': evening_morning_star},
+    "three_methods": {'days': 5, 'function': rising_falling_three_methods}
 }
