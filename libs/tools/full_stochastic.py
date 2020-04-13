@@ -10,6 +10,9 @@ from .moving_average import windowed_moving_avg
 def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwargs) -> dict:
     """Generate Full Stochastic Signal
 
+    For fast/normal stochastic signals: %k, slow %k (which is %d for fast stochastics)
+    For slow stochastic signals: slow %k, %d
+
     Arguments:
         position {pd.DataFrame} -- dataset
 
@@ -22,7 +25,7 @@ def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwa
         p_bar {ProgressBar} -- (default: {None})
 
     Returns:
-        dict -- tabular object of signals
+        dict -- tabular object of signals {"fast_k", "smooth_k", "slow_d"}
     """
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)

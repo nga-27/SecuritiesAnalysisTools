@@ -3,12 +3,28 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 
-from libs.utils import candlestick
+from libs.utils import candlestick, ProgressBar
 from .moving_average import simple_moving_avg
+from .full_stochastic import generate_full_stoch_signal
 
 
 def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
+    """Candlesticks
 
+    Generate Candlestick plots and data formation
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        view {str} -- (default: {''})
+        progress_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- candlestick data object
+    """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -27,6 +43,9 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
         filename = f"{name}/{view}/candlestick_{name}"
         candlestick(fund, title=name, filename=filename,
                     saveFig=True)
+
+    if pbar is not None:
+        pbar.uptick(increment=1.0)
     return candle
 
 
@@ -52,6 +71,17 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
                 modified_pattern = f"{patt}-{val[1]}"
                 value['patterns'].append(modified_pattern)
         patterns.append(value)
+
+    patterns2 = filtered_reversal_patterns(fund, candle)
+
+    for i, patt in enumerate(patterns2):
+        if patt['value'] != 0:
+            patterns[i]['value'] += patt['value']
+            patterns[i]['patterns'].extend(patt['patterns'])
+
+    for i, patt in enumerate(patterns):
+        if patt['value'] != 0:
+            print(f"index {i}: {patt['value']} => {patt['patterns']}")
 
     candle['patterns'] = patterns
     return candle
@@ -169,11 +199,81 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
     return days
 
 
+def filtered_reversal_patterns(fund: pd.DataFrame,
+                               candle: dict,
+                               filter_function='stochastic') -> list:
+    """Filtered Reversal Patterns
+
+    citing Greg Morris: Pattern must be in oscillator extreme to be valid
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        candle {dict} -- candlestick data object
+
+    Keyword Arguments:
+        filter_function {str} -- oscillator of choice (default: {'stochastic'})
+
+    Returns:
+        list -- list of detected pattern objects
+    """
+    filter_signal = []
+    ZONES = [0.0, 0.0]
+    if filter_function == 'stochastic':
+        stoch_signals = generate_full_stoch_signal(fund, plot_output=False)
+        filter_signal = stoch_signals['smooth_k']
+        ZONES = [80.0, 20.0]
+    else:
+        return []
+
+    patterns = []
+    for i in range(len(candle['classification'])):
+        value = {'value': 0, 'patterns': []}
+
+        val = pattern_library("dark_cloud_piercing_line",
+                              candle['classification'], i)
+        if val[0] != 0:
+            value['value'] += val[0]
+            modified_pattern = f"dark_cloud_piercing_line-{val[1]}"
+            value['patterns'].append(modified_pattern)
+
+        val = pattern_library("evening_morning_star",
+                              candle['classification'], i)
+        if val[0] != 0:
+            value['value'] += val[0]
+            modified_pattern = f"evening_morning_star-{val[1]}"
+            value['patterns'].append(modified_pattern)
+
+        patterns.append(value)
+
+    for i in range(1, len(patterns)):
+        if patterns[i]['value'] != 0:
+            if (filter_signal[i] >= ZONES[0]) and (filter_signal[i] <= ZONES[1]):
+                patterns[i]['value'] *= 2
+            elif (filter_signal[i-1] >= ZONES[0]) and (filter_signal[i-1] <= ZONES[1]):
+                patterns[i]['value'] *= 2
+            else:
+                patterns[i] = {'value': 0, 'patterns': []}
+
+    return patterns
+
+
 ###################################
 #   PATTERN DETECTION LIBRARY
 ###################################
 
 def pattern_library(pattern: str, days: list, index: int) -> list:
+    """Pattern Library
+
+    Command function for properly configuring and running various pattern detections.
+
+    Arguments:
+        pattern {str} -- key from PATTERNS object
+        days {list} -- candle objects generated from day_classification
+        index {int} -- index of DataFrame or list
+
+    Returns:
+        list -- tuple (value of patterns, named pattern)
+    """
     days_needed = PATTERNS.get(pattern, {}).get('days', 1)
     function = PATTERNS.get(pattern, {}).get('function')
 
@@ -193,7 +293,6 @@ def pattern_library(pattern: str, days: list, index: int) -> list:
 
     detection = function(sub_days)
     if detection is not None:
-        print(f"PATTERN: {detection} on index {index}")
         if detection['type'] == 'bearish':
             return -1, detection['style']
         if detection['type'] == 'bullish':
