@@ -259,7 +259,58 @@ def dark_cloud_or_piercing_line(day: list) -> dict:
     return None
 
 
+def evening_morning_star(day: list) -> dict:
+    # Evening star
+    if day[0].get('trend') == 'above':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'white':
+                basic_0 = day[0].get('basic')
+                basic_1 = day[1].get('basic')
+                close_0 = basic_0.get('Close')
+                open_1 = basic_1.get('Open')
+                if open_1 > close_0:
+                    candle_1 = day[1].get('candlestick')
+                    if candle_1.get('body') == 'short':
+                        close_1 = basic_1.get('Close')
+                        if close_1 > close_0:
+                            basic_2 = day[2].get('basic')
+                            open_2 = basic_2.get('Open')
+                            if open_2 < min(close_1, open_1):
+                                open_0 = basic_0.get('Open')
+                                mid_pt = ((close_0 - open_0) / 2.0) + open_0
+                                close_2 = basic_2.get('Close')
+                                if close_2 <= mid_pt:
+                                    return {'type': 'bearish', 'style': 'eveningstar'}
+
+    # Morning star
+    if day[0].get('trend') == 'below':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'black':
+                basic_0 = day[0].get('basic')
+                basic_1 = day[1].get('basic')
+                close_0 = basic_0.get('Close')
+                open_1 = basic_1.get('Open')
+                if open_1 < close_0:
+                    candle_1 = day[1].get('candlestick')
+                    if candle_1.get('body') == 'short':
+                        close_1 = basic_1.get('Close')
+                        if close_1 < close_0:
+                            basic_2 = day[2].get('basic')
+                            open_2 = basic_2.get('Open')
+                            if open_2 > max(close_1, open_1):
+                                open_0 = basic_0.get('Open')
+                                mid_pt = ((close_0 - open_0) / 2.0) + open_0
+                                close_2 = basic_2.get('Close')
+                                if close_2 >= mid_pt:
+                                    return {'type': 'bullish', 'style': 'morningstar'}
+
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
-    "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line}
+    "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
+    "evening_morning_star": {'days': 3, 'function': evening_morning_star}
 }
