@@ -189,9 +189,9 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
 
         stats['candlestick']['doji'] = False
         stats['candlestick']['shadow_ratio'] = 0.0
+        if diff > 0.0:
+            stats['candlestick']['shadow_ratio'] = shadow_length / diff
         if diff <= DOJI:
-            if diff > 0.0:
-                stats['candlestick']['shadow_ratio'] = shadow_length / diff
             if stats['candlestick']['shadow_ratio'] >= RATIO:
                 stats['candlestick']['doji'] = True
 
@@ -466,9 +466,31 @@ def rising_falling_three_methods(day: list) -> dict:
     return None
 
 
+def hammer_positive(day: list) -> dict:
+    RATIO = 2.0
+    THRESH = 0.99
+    if day[0].get('trend') == 'below':
+        candle = day[0].get('candlestick')
+        if candle.get('body') == 'short':
+            if candle.get('shadow_ratio') >= RATIO:
+                basic = day[0].get('basic')
+                high = basic.get('High')
+                close = basic.get('Close')
+                _open = basic.get('Open')
+                low = basic.get('Low')
+                hl_thr = (high - low) * THRESH
+                cl_low = close - low
+                op_low = _open - low
+                if (cl_low >= hl_thr) or (op_low >= hl_thr):
+                    return {"type": 'bullish', "style": '+'}
+
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
     "evening_morning_star": {'days': 3, 'function': evening_morning_star},
-    "three_methods": {'days': 5, 'function': rising_falling_three_methods}
+    "three_methods": {'days': 5, 'function': rising_falling_three_methods},
+    "hammer": {'days': 1, 'function': hammer_positive}
 }
