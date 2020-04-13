@@ -1,9 +1,15 @@
 import pprint
+from copy import deepcopy
 import pandas as pd
 import numpy as np
 
 from libs.utils import candlestick
 from .moving_average import simple_moving_avg
+
+
+PATTERNS = {
+    "doji": {'days': 1, 'function': doji_pattern}
+}
 
 
 def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
@@ -18,7 +24,7 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     candle['thresholds'] = thresholding_determination(
         fund, plot_output=plot_output)
     candle['classification'] = day_classification(fund, candle['thresholds'])
-    candle['patterns'] = pattern_detection(fund, candle)
+    candle = pattern_detection(fund, candle)
 
     if plot_output:
         candlestick(fund, title=name)
@@ -31,9 +37,18 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
 
 def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
 
-    patterns = dict()
+    patterns = []
+    for i in range(len(candle['classification'])):
+        value = {'value': 0, 'patterns': []}
+        for j, patt in enumerate(PATTERNS):
+            val = pattern_library(patt, candle['classification'], i)
+            if val != 0:
+                value['value'] += val
+                value['patterns'].append(patt)
+        patterns.append(value)
 
-    return patterns
+    candle['patterns'] = patterns
+    return candle
 
 
 def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
@@ -82,7 +97,15 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
+    """Day Classification
 
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        thresholds {dict} -- candlestick body sizes
+
+    Returns:
+        list -- each trading period classified by candlesticks
+    """
     days = []
     sma = simple_moving_avg(fund, 10)
 
@@ -138,3 +161,37 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
 
         days.append(stats)
     return days
+
+
+###################################
+#   PATTERN DETECTION LIBRARY
+###################################
+
+def pattern_library(pattern: str, days: list, index: int) -> int:
+    days_needed = pattern.get('days', 1)
+    function = pattern.get('function')
+
+    if function is None:
+        return 0
+    if index < days_needed - 1:
+        return 0
+
+    if days_needed == 1:
+        sub_days = days[index].deepcopy()
+    else:
+        start = (index + 1) - days_needed
+        sub_days = days[start:index+1].deepcopy()
+
+    if isinstance(sub_days, (dict)):
+        sub_days = [sub_days]
+
+    detection = function(sub_days)
+    return 0
+
+
+###################################
+
+def doji_pattern(day: list) -> dict:
+    day = day[0]
+    if day.get('candlestick', {}).get('doji'):
+        print("hello")
