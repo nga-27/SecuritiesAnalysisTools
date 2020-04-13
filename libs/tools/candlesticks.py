@@ -37,7 +37,23 @@ def pattern_detection(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
+    """Thresholding Determination
 
+    Dynamically determine what a "long day", "short day", and a "doji" is.
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+
+    Optional Args:
+        long_percentile {int} -- lower limit to "long day" body size (default: {85})
+        short_percentile {int} -- upper limit to "short day" body size (default: {25})
+        doji_percentile {int} -- upper limit to "doji" body size (default: {1})
+        doji_ratio {int} -- shadow (high-low) / body (close-open) ratio (default: {8})
+        plot_output {bool} -- (default: {True})
+
+    Returns:
+        dict -- thresholding values
+    """
     LONG = kwargs.get('long_percentile', 85)
     SHORT = kwargs.get('short_percentile', 25)
     DOJI = kwargs.get('doji_percentile', 1)
@@ -57,7 +73,7 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
     thresholds['doji_ratio'] = DOJI_RATIO
 
     if plot_output:
-        print(f"Thresholding for candlesticks:")
+        print(f"\r\nThresholding for candlesticks:")
         pprint.pprint(thresholds)
         candlestick(fund, title="Doji & Long/Short Days",
                     threshold_candles=thresholds)
