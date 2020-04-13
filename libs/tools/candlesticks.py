@@ -31,11 +31,21 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
+    """Pattern Detection
 
+    Searches available candlestick patterns on each area of the dataset
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        candle {dict} -- candlestick data object
+
+    Returns:
+        dict -- candlestick data object
+    """
     patterns = []
     for i in range(len(candle['classification'])):
         value = {'value': 0, 'patterns': []}
-        for j, patt in enumerate(PATTERNS):
+        for patt in PATTERNS:
             val = pattern_library(patt, candle['classification'], i)
             if val[0] != 0:
                 value['value'] += val[0]
@@ -65,7 +75,7 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- thresholding values
     """
-    LONG = kwargs.get('long_percentile', 85)
+    LONG = kwargs.get('long_percentile', 80)
     SHORT = kwargs.get('short_percentile', 25)
     DOJI = kwargs.get('doji_percentile', 1)
     DOJI_RATIO = kwargs.get('doji_ratio', 8)
@@ -168,9 +178,9 @@ def pattern_library(pattern: str, days: list, index: int) -> list:
     function = PATTERNS.get(pattern, {}).get('function')
 
     if function is None:
-        return 0
+        return 0, ''
     if index < days_needed - 1:
-        return 0
+        return 0, ''
 
     if days_needed == 1:
         sub_days = days[index].copy()
@@ -183,12 +193,11 @@ def pattern_library(pattern: str, days: list, index: int) -> list:
 
     detection = function(sub_days)
     if detection is not None:
+        print(f"PATTERN: {detection} on index {index}")
         if detection['type'] == 'bearish':
             return -1, detection['style']
         if detection['type'] == 'bullish':
             return 1, detection['style']
-
-        print(f"PATTERN: {detection} on index {index}")
 
     return 0, ''
 
@@ -212,6 +221,45 @@ def doji_pattern(day: list) -> dict:
     return None
 
 
+def dark_cloud_or_piercing_line(day: list) -> dict:
+    # Dark Cloud
+    if day[0].get('trend') == 'above':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'white':
+                basic_0 = day[0].get('basic')
+                high_0 = basic_0.get('High')
+                basic_1 = day[1].get('basic')
+                open_1 = basic_1.get('Open')
+                if open_1 > high_0:
+                    close_1 = basic_1.get('Close')
+                    close_0 = basic_0.get('Close')
+                    open_0 = basic_0.get('Open')
+                    mid_pt = ((close_0 - open_0) / 2.0) + open_0
+                    if close_1 <= mid_pt:
+                        return {'type': 'bearish', 'style': 'darkcloud'}
+
+    # Piercing Line
+    elif day[0].get('trend') == 'below':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'black':
+                basic_0 = day[0].get('basic')
+                low_0 = basic_0.get('Low')
+                basic_1 = day[1].get('basic')
+                open_1 = basic_1.get('Open')
+                if open_1 < low_0:
+                    close_1 = basic_1.get('Close')
+                    close_0 = basic_0.get('Close')
+                    open_0 = basic_0.get('Open')
+                    mid_pt = ((close_0 - open_0) / 2.0) + open_0
+                    if close_1 >= mid_pt:
+                        return {'type': 'bullish', 'style': 'piercingline'}
+
+    return None
+
+
 PATTERNS = {
-    "doji": {'days': 1, 'function': doji_pattern}
+    "doji": {'days': 1, 'function': doji_pattern},
+    "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line}
 }
