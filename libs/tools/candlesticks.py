@@ -483,7 +483,49 @@ def hammer_positive(day: list) -> dict:
                 op_low = _open - low
                 if (cl_low >= hl_thr) or (op_low >= hl_thr):
                     return {"type": 'bullish', "style": '+'}
+    return None
 
+
+def hanging_man(day: list) -> dict:
+    RATIO = 2.0
+    THRESH = 0.99
+    if day[0].get('trend') == 'above':
+        candle = day[0].get('candlestick')
+        if candle.get('body') == 'short':
+            if candle.get('shadow_ratio') >= RATIO:
+                basic = day[0].get('basic')
+                high = basic.get('High')
+                close = basic.get('Close')
+                _open = basic.get('Open')
+                low = basic.get('Low')
+                hl_thr = (high - low) * THRESH
+                cl_low = close - low
+                op_low = _open - low
+                if (cl_low >= hl_thr) or (op_low >= hl_thr):
+                    return {"type": 'bearish', "style": '-'}
+    return None
+
+
+def inverted_hammer(day: list) -> dict:
+    RATIO = 2.0
+    THRESH = 0.01
+    if day[0].get('trend') == 'below':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'black':
+                candle_1 = day[1].get('candlestick')
+                if candle_1.get('body') == 'short':
+                    if candle_1.get('shadow_ratio') >= RATIO:
+                        basic = day[1].get('basic')
+                        high = basic.get('High')
+                        close = basic.get('Close')
+                        _open = basic.get('Open')
+                        low = basic.get('Low')
+                        hl_thr = (high - low) * THRESH
+                        cl_low = close - low
+                        op_low = _open - low
+                        if (cl_low <= hl_thr) or (op_low <= hl_thr):
+                            return {"type": 'bullish', "style": '+'}
     return None
 
 
@@ -492,5 +534,7 @@ PATTERNS = {
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
     "evening_morning_star": {'days': 3, 'function': evening_morning_star},
     "three_methods": {'days': 5, 'function': rising_falling_three_methods},
-    "hammer": {'days': 1, 'function': hammer_positive}
+    "hammer": {'days': 1, 'function': hammer_positive},
+    "hanging_man": {'days': 1, 'function': hanging_man},
+    "inverted_hammer": {'days': 2, 'function': inverted_hammer}
 }
