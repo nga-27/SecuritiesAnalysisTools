@@ -568,6 +568,45 @@ def belt_hold(day: list) -> dict:
             op_low = _open - low
             if (op_low <= hl_thr) and (high > basic.get('Close')):
                 return {"type": 'bullish', "style": '+'}
+
+    if day[0].get('trend') == 'above':
+        candle = day[0].get('candlestick')
+        if candle.get('color') == 'black':
+            basic = day[0].get('basic')
+            high = basic.get('High')
+            _open = basic.get('Open')
+            low = basic.get('Low')
+            hl_thr = (high - low) * (1.0 - THRESH)
+            op_low = _open - low
+            if (op_low >= hl_thr) and (low < basic.get('Close')):
+                return {"type": 'bearish', "style": '-'}
+    return None
+
+
+def engulfing(day: list) -> dict:
+    if day[0].get('trend') == 'below':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('color') == 'black':
+            candle_1 = day[1].get('candlestick')
+            if candle_1.get('body') == 'long':
+                if candle_1.get('color') == 'white':
+                    basic_0 = day[0].get('basic')
+                    basic_1 = day[1].get('basic')
+                    if basic_0.get('High') <= basic_1.get('Close'):
+                        if basic_0.get('Low') >= basic_1.get('Open'):
+                            return {"type": 'bullish', "style": '+'}
+
+    if day[0].get('trend') == 'above':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('color') == 'white':
+            candle_1 = day[1].get('candlestick')
+            if candle_1.get('body') == 'long':
+                if candle_1.get('color') == 'black':
+                    basic_0 = day[0].get('basic')
+                    basic_1 = day[1].get('basic')
+                    if basic_0.get('High') <= basic_1.get('Open'):
+                        if basic_0.get('Low') >= basic_1.get('Close'):
+                            return {"type": 'bearish', "style": '-'}
     return None
 
 
@@ -580,5 +619,6 @@ PATTERNS = {
     "hanging_man": {'days': 1, 'function': hanging_man},
     "inverted_hammer": {'days': 2, 'function': inverted_hammer},
     "shooting_star": {'days': 2, 'function': shooting_star},
-    "belt_hold": {'days': 1, 'function': belt_hold}
+    "belt_hold": {'days': 1, 'function': belt_hold},
+    "engulfing": {'days': 2, 'function': engulfing}
 }
