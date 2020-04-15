@@ -529,6 +529,48 @@ def inverted_hammer(day: list) -> dict:
     return None
 
 
+def shooting_star(day: list) -> dict:
+    RATIO = 2.0
+    THRESH = 0.01
+    if day[0].get('trend') == 'above':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('body') == 'long':
+            if candle_0.get('color') == 'white':
+                basic_0 = day[0].get('basic')
+                if basic_0.get('Close') < basic_0.get('High'):
+                    candle_1 = day[1].get('candlestick')
+                    if candle_1.get('body') == 'short':
+                        if candle_1.get('shadow_ratio') >= RATIO:
+                            basic_1 = day[1].get('basic')
+                            high = basic_1.get('High')
+                            low = basic_1.get('Low')
+                            close = basic_1.get('Close')
+                            _open = basic_1.get('Open')
+                            if (_open > basic_0.get('Close')) and (close > basic_0.get('Close')):
+                                hl_thr = (high - low) * THRESH
+                                cl_low = close - low
+                                op_low = _open - low
+                                if (cl_low <= hl_thr) or (op_low <= hl_thr):
+                                    return {"type": 'bearish', "style": '-'}
+    return None
+
+
+def belt_hold(day: list) -> dict:
+    THRESH = 0.005
+    if day[0].get('trend') == 'below':
+        candle = day[0].get('candlestick')
+        if candle.get('color') == 'white':
+            basic = day[0].get('basic')
+            high = basic.get('High')
+            _open = basic.get('Open')
+            low = basic.get('Low')
+            hl_thr = (high - low) * THRESH
+            op_low = _open - low
+            if (op_low <= hl_thr) and (high > basic.get('Close')):
+                return {"type": 'bullish', "style": '+'}
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -536,5 +578,7 @@ PATTERNS = {
     "three_methods": {'days': 5, 'function': rising_falling_three_methods},
     "hammer": {'days': 1, 'function': hammer_positive},
     "hanging_man": {'days': 1, 'function': hanging_man},
-    "inverted_hammer": {'days': 2, 'function': inverted_hammer}
+    "inverted_hammer": {'days': 2, 'function': inverted_hammer},
+    "shooting_star": {'days': 2, 'function': shooting_star},
+    "belt_hold": {'days': 1, 'function': belt_hold}
 }
