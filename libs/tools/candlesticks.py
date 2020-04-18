@@ -610,6 +610,44 @@ def engulfing(day: list) -> dict:
     return None
 
 
+def harami(day: list) -> dict:
+    THRESH = 0.01
+    if day[0].get('trend') == 'below':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('color') == 'black':
+            if candle_0.get('body') == 'long':
+                candle_1 = day[1].get('candlestick')
+                if candle_1.get('color') == 'white':
+                    basic_0 = day[0].get('basic')
+                    basic_1 = day[1].get('basic')
+                    if basic_1.get('High') <= basic_0.get('Open'):
+                        if basic_1.get('Low') >= basic_1.get('Close'):
+                            hi_low = basic_1.get('High') - basic_1.get('Low')
+                            op_clo = np.abs(basic_1.get(
+                                'Close') - basic_1.get('Open'))
+                            if op_clo <= (hi_low * THRESH):
+                                return {"type": 'bullish', "style": 'cross-+'}
+                            return {"type": 'bullish', "style": "+"}
+
+    if day[0].get('trend') == 'above':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('color') == 'white':
+            if candle_0.get('body') == 'long':
+                candle_1 = day[1].get('candlestick')
+                if candle_1.get('color') == 'black':
+                    basic_0 = day[0].get('basic')
+                    basic_1 = day[1].get('basic')
+                    if basic_1.get('High') <= basic_0.get('Close'):
+                        if basic_1.get('Low') >= basic_1.get('Open'):
+                            hi_low = basic_1.get('High') - basic_1.get('Low')
+                            op_clo = np.abs(basic_1.get(
+                                'Open') - basic_1.get('Close'))
+                            if op_clo <= (hi_low * THRESH):
+                                return {"type": 'bearish', "style": 'cross--'}
+                            return {"type": 'bearish', "style": "-"}
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -620,5 +658,6 @@ PATTERNS = {
     "inverted_hammer": {'days': 2, 'function': inverted_hammer},
     "shooting_star": {'days': 2, 'function': shooting_star},
     "belt_hold": {'days': 1, 'function': belt_hold},
-    "engulfing": {'days': 2, 'function': engulfing}
+    "engulfing": {'days': 2, 'function': engulfing},
+    "harami": {'days': 2, 'function': harami}
 }
