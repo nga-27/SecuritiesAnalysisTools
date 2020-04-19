@@ -89,7 +89,8 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
             print(f"index {i}: {patt['value']} => {patt['patterns']}")
 
     if plot_output:
-        plot_obj = {"plot": signal, "color": 'black'}
+        plot_obj = {"plot": signal, "color": 'black',
+                    "legend": 'candlestick signal'}
         candlestick(fund, additional_plts=[
                     plot_obj], title='Candlestick Signals')
 

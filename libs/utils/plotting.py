@@ -516,7 +516,7 @@ def candlestick(data: pd.DataFrame, **kwargs):
         filename:           (str) path to save plot; DEFAULT='temp_candlestick.png'
         progress_bar:       (ProgressBar) increments progressbar as processes data
         threshold_candles:  (dict) candlestick thresholds for days; DEFAULT=None
-        additional_plts:    (list) plot_objects "plot", "color"; DEFAULT=[]
+        additional_plts:    (list) plot_objects "plot", "color", "legend"; DEFAULT=[]
 
     returns:
         None
@@ -597,17 +597,21 @@ def candlestick(data: pd.DataFrame, **kwargs):
         if p_bar is not None:
             p_bar.uptick(increment=increment)
 
+    handles = []
     if len(additional_plts) > 0:
         for add_plt in additional_plts:
             color = add_plt.get('color')
+            label = add_plt.get('legend')
             if color is not None:
-                plt.plot(x, add_plt["plot"], add_plt["color"])
+                line, = plt.plot(x, add_plt["plot"],
+                                 add_plt["color"], label=label)
             else:
-                plt.plot(x, add_plt["plot"])
+                line, = plt.plot(x, add_plt["plot"], label=label)
+            handles.append(line)
 
     plt.title(title)
-    if len(legend) > 0:
-        plt.legend(legend)
+    if len(handles) > 0:
+        plt.legend(handles=handles)
 
     plot_xaxis_disperse(ax)
 
