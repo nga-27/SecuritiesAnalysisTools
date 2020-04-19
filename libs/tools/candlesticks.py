@@ -287,6 +287,7 @@ def pattern_library(pattern: str, days: list, index: int) -> list:
     """
     days_needed = PATTERNS.get(pattern, {}).get('days', 1)
     function = PATTERNS.get(pattern, {}).get('function')
+    weight = PATTERNS.get(pattern, {}).get('weight', 1)
 
     if function is None:
         return 0, ''
@@ -305,9 +306,9 @@ def pattern_library(pattern: str, days: list, index: int) -> list:
     detection = function(sub_days)
     if detection is not None:
         if detection['type'] == 'bearish':
-            return -1, detection['style']
+            return -1 * weight, detection['style']
         if detection['type'] == 'bullish':
-            return 1, detection['style']
+            return 1 * weight, detection['style']
 
     return 0, ''
 
@@ -772,6 +773,72 @@ def three_white_soldiers_black_crows(day: list) -> dict:
                                 (basic_2['Close'] < basic_1['Close']) and \
                                     (basic_2['Open'] > basic_1['Close']):
                                 return {"type": 'bearish', "style": 'black_crows'}
+    return None
+
+
+def tri_star(day: list) -> dict:
+    if day[0]['trend'] == 'below':
+        if day[0]['candlestick']['doji'] and \
+            day[1]['candlestick']['doji'] and \
+                day[2]['candlestick']['doji']:
+            if day[1]['basic']['Close'] < day[0]['basic']['Close']:
+                if day[1]['basic']['Close'] < day[2]['basic']['Close']:
+                    return {"type": 'bullish', "style": 'tristar-+'}
+
+    if day[0]['trend'] == 'above':
+        if day[0]['candlestick']['doji'] and \
+            day[1]['candlestick']['doji'] and \
+                day[2]['candlestick']['doji']:
+            if day[1]['basic']['Close'] > day[0]['basic']['Close']:
+                if day[1]['basic']['Close'] > day[2]['basic']['Close']:
+                    return {"type": 'bearish', "style": 'tristar--'}
+    return None
+
+
+def breakaway(day: list) -> dict:
+    if day[0]['trend'] == 'below':
+        if (day[0]['candlestick']['body'] == 'long') and \
+                (day[0]['candlestick']['color'] == 'black'):
+            if day[0]['basic']['Low'] > day[1]['basic']['High']:
+                candle_1 = day[1]['candlestick']
+                if (candle_1['body'] == 'short') and (candle_1['color'] == 'black'):
+                    basic_2 = day[2]['basic']
+                    basic_1 = day[1]['basic']
+                    if (basic_2['Close'] < basic_1['Open']) and (basic_2['Open'] < basic_1['Open']):
+                        if basic_2['Low'] < basic_1['Low']:
+                            candle_3 = day[3]['candlestick']
+                            if (candle_3['body'] == 'short') and (candle_3['color'] == 'black'):
+                                if day[3]['basic']['Low'] < basic_2['Low']:
+                                    candle_4 = day[4]['candlestick']
+                                    if (candle_4['body'] == 'long') and \
+                                            (candle_4['color'] == 'white'):
+                                        basic_4 = day[4]['basic']
+                                        if (basic_4['Close'] > basic_1['Open']) and \
+                                                (basic_4['Close'] <= day[0]['basic']['Close']):
+                                            return {"type": 'bullish', "style": 'breakaway-+'}
+
+    if day[0]['trend'] == 'above':
+        if (day[0]['candlestick']['body'] == 'long') and \
+                (day[0]['candlestick']['color'] == 'white'):
+            if day[0]['basic']['High'] < day[1]['basic']['Low']:
+                candle_1 = day[1]['candlestick']
+                if (candle_1['body'] == 'short') and (candle_1['color'] == 'white'):
+                    basic_2 = day[2]['basic']
+                    basic_1 = day[1]['basic']
+                    if (basic_2['Close'] > basic_1['Open']) and (basic_2['Open'] > basic_1['Open']):
+                        if basic_2['High'] > basic_1['High']:
+                            candle_3 = day[3]['candlestick']
+                            if (candle_3['body'] == 'short') and (candle_3['color'] == 'white'):
+                                if day[3]['basic']['High'] > basic_2['High']:
+                                    candle_4 = day[4]['candlestick']
+                                    if (candle_4['body'] == 'long') and \
+                                            (candle_4['color'] == 'black'):
+                                        basic_4 = day[4]['basic']
+                                        if (basic_4['Close'] < basic_1['Open']) and \
+                                                (basic_4['Close'] >= day[0]['basic']['Close']):
+                                            return {"type": 'bearish', "style": 'breakaway--'}
+    return None
+
 
 
 PATTERNS = {
@@ -788,5 +855,7 @@ PATTERNS = {
     "harami": {'days': 2, 'function': harami},
     "doji_star": {'days': 2, 'function': doji_star},
     "meeting_line": {'days': 2, 'function': meeting_line},
-    "three_soldier_crows": {'days': 3, 'function': three_white_soldiers_black_crows}
+    "three_soldier_crows": {'days': 3, 'function': three_white_soldiers_black_crows},
+    "tri_star": {'days': 3, 'function': tri_star, "weight": 3},
+    "breakaway": {'days': 5, 'function': breakaway}
 }
