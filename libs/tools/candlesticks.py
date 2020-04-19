@@ -391,6 +391,10 @@ def evening_morning_star(day: list) -> dict:
                                 mid_pt = ((close_0 - open_0) / 2.0) + open_0
                                 close_2 = basic_2.get('Close')
                                 if close_2 <= mid_pt:
+                                    if candle_1['doji']:
+                                        if basic_1['Low'] > max(basic_0['High'], basic_1['High']):
+                                            return {"type": 'bearish', "style": 'abandonedbaby--'}
+                                        return {"type": 'bearish', "style": 'eveningstar-doji'}
                                     return {'type': 'bearish', 'style': 'eveningstar'}
 
     # Morning star
@@ -414,6 +418,10 @@ def evening_morning_star(day: list) -> dict:
                                 mid_pt = ((close_0 - open_0) / 2.0) + open_0
                                 close_2 = basic_2.get('Close')
                                 if close_2 >= mid_pt:
+                                    if candle_1['doji']:
+                                        if basic_1['High'] < min(basic_0['Low'], basic_1['Low']):
+                                            return {"type": 'bullish', "style": 'abandonedbaby-+'}
+                                        return {"type": 'bullish', "style": 'morningstar-doji'}
                                     return {'type': 'bullish', 'style': 'morningstar'}
 
     return None
