@@ -732,13 +732,15 @@ def three_white_soldiers_black_crows(day: list) -> dict:
                     basic_1 = day[1].get('basic')
                     body_th = ((basic_0.get('Close') - basic_0.get('Open'))
                                * THRESH) + basic_0.get('Open')
-                    if (basic_1.get('Open') > body_th) and (basic_1['Close'] > basic_0['Close']):
+                    if (basic_1.get('Open') > body_th) and (basic_1['Close'] > basic_0['Close']) \
+                            and (basic_1['Open'] < basic_0['Close']):
                         candle_2 = day[2].get('candlestick')
                         if (candle_2['color'] == 'white') and (candle_2['body'] != 'short'):
                             basic_2 = day[2].get('basic')
                             body_th = (
                                 (basic_1['Close'] - basic_1['Open']) * THRESH) + basic_1['Open']
-                            if (basic_2['Open'] > body_th) and (basic_2['Close'] > basic_1['Close']):
+                            if (basic_2['Open'] > body_th) and (basic_2['Close'] > basic_1['Close']) \
+                                    and (basic_2['Open'] < basic_1['Close']):
                                 return {"type": 'bullish', "style": 'white_soldiers'}
 
     if day[0].get('trend') == 'above':
@@ -751,13 +753,16 @@ def three_white_soldiers_black_crows(day: list) -> dict:
                     basic_1 = day[1].get('basic')
                     body_th = ((basic_0.get('Close') - basic_0.get('Open'))
                                * (1.0 - THRESH)) + basic_0.get('Open')
-                    if (basic_1.get('Open') < body_th) and (basic_1['Close'] < basic_0['Close']):
+                    if (basic_1.get('Open') < body_th) and (basic_1['Close'] < basic_0['Close']) \
+                            and (basic_1['Open'] > basic_0['Close']):
                         candle_2 = day[2].get('candlestick')
                         if (candle_2['color'] == 'black') and (candle_2['body'] != 'short'):
                             basic_2 = day[2].get('basic')
                             body_th = (
                                 (basic_1['Close'] - basic_1['Open']) * (1.0 - THRESH)) + basic_1['Open']
-                            if (basic_2['Open'] < body_th) and (basic_2['Close'] < basic_1['Close']):
+                            if (basic_2['Open'] < body_th) and \
+                                (basic_2['Close'] < basic_1['Close']) and \
+                                    (basic_2['Open'] > basic_1['Close']):
                                 return {"type": 'bearish', "style": 'black_crows'}
 
 
