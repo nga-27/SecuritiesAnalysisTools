@@ -3,7 +3,8 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 
-from libs.utils import candlestick, ProgressBar
+from libs.utils import ProgressBar
+from libs.utils import candlestick
 from .moving_average import simple_moving_avg
 from .full_stochastic import generate_full_stoch_signal
 
@@ -61,6 +62,8 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
     Returns:
         dict -- candlestick data object
     """
+    plot_output = kwargs.get('plot_output', True)
+
     patterns = []
     for i in range(len(candle['classification'])):
         value = {'value': 0, 'patterns': []}
@@ -79,9 +82,16 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
             patterns[i]['value'] += patt['value']
             patterns[i]['patterns'].extend(patt['patterns'])
 
+    signal = simple_moving_avg(fund, 10)
     for i, patt in enumerate(patterns):
         if patt['value'] != 0:
+            signal[i] += (patt['value'] * 10.0)
             print(f"index {i}: {patt['value']} => {patt['patterns']}")
+
+    if plot_output:
+        plot_obj = {"plot": signal, "color": 'black'}
+        candlestick(fund, additional_plts=[
+                    plot_obj], title='Candlestick Signals')
 
     candle['patterns'] = patterns
     return candle
@@ -673,7 +683,7 @@ def doji_star(day: list) -> dict:
     return None
 
 
-def meeting_lane(day: list) -> dict:
+def meeting_line(day: list) -> dict:
     THRESH = 0.01
     if day[0].get('trend') == 'below':
         candle_0 = day[0].get('candlestick')
@@ -709,6 +719,47 @@ def meeting_lane(day: list) -> dict:
     return None
 
 
+def three_white_soldiers_black_crows(day: list) -> dict:
+    THRESH = 0.3
+    if day[0].get('trend') == 'below':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('color') == 'white':
+            if candle_0.get('body') != 'short':
+                candle_1 = day[1].get('candlestick')
+                if (candle_1.get('color') == 'white') and (candle_1.get('body') != 'short'):
+                    basic_0 = day[0].get('basic')
+                    basic_1 = day[1].get('basic')
+                    body_th = ((basic_0.get('Close') - basic_0.get('Open'))
+                               * THRESH) + basic_0.get('Open')
+                    if (basic_1.get('Open') > body_th) and (basic_1['Close'] > basic_0['Close']):
+                        candle_2 = day[2].get('candlestick')
+                        if (candle_2['color'] == 'white') and (candle_2['body'] != 'short'):
+                            basic_2 = day[2].get('basic')
+                            body_th = (
+                                (basic_1['Close'] - basic_1['Open']) * THRESH) + basic_1['Open']
+                            if (basic_2['Open'] > body_th) and (basic_2['Close'] > basic_1['Close']):
+                                return {"type": 'bullish', "style": 'white_soldiers'}
+
+    if day[0].get('trend') == 'above':
+        candle_0 = day[0].get('candlestick')
+        if candle_0.get('color') == 'black':
+            if candle_0.get('body') != 'short':
+                candle_1 = day[1].get('candlestick')
+                if (candle_1.get('color') == 'black') and (candle_1.get('body') != 'short'):
+                    basic_0 = day[0].get('basic')
+                    basic_1 = day[1].get('basic')
+                    body_th = ((basic_0.get('Close') - basic_0.get('Open'))
+                               * (1.0 - THRESH)) + basic_0.get('Open')
+                    if (basic_1.get('Open') < body_th) and (basic_1['Close'] < basic_0['Close']):
+                        candle_2 = day[2].get('candlestick')
+                        if (candle_2['color'] == 'black') and (candle_2['body'] != 'short'):
+                            basic_2 = day[2].get('basic')
+                            body_th = (
+                                (basic_1['Close'] - basic_1['Open']) * (1.0 - THRESH)) + basic_1['Open']
+                            if (basic_2['Open'] < body_th) and (basic_2['Close'] < basic_1['Close']):
+                                return {"type": 'bearish', "style": 'black_crows'}
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -722,5 +773,6 @@ PATTERNS = {
     "engulfing": {'days': 2, 'function': engulfing},
     "harami": {'days': 2, 'function': harami},
     "doji_star": {'days': 2, 'function': doji_star},
-    "meeting_lane": {'days': 2, 'function': meeting_lane}
+    "meeting_line": {'days': 2, 'function': meeting_line},
+    "three_soldier_crows": {'days': 3, 'function': three_white_soldiers_black_crows}
 }

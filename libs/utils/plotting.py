@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from mpl_finance import candlestick_ochl
 from pandas.plotting import register_matplotlib_converters
 
 from .formatting import dates_extractor_list
@@ -515,6 +516,7 @@ def candlestick(data: pd.DataFrame, **kwargs):
         filename:           (str) path to save plot; DEFAULT='temp_candlestick.png'
         progress_bar:       (ProgressBar) increments progressbar as processes data
         threshold_candles:  (dict) candlestick thresholds for days; DEFAULT=None
+        additional_plts:    (list) plot_objects "plot", "color"; DEFAULT=[]
 
     returns:
         None
@@ -526,6 +528,7 @@ def candlestick(data: pd.DataFrame, **kwargs):
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_candlestick.png')
     p_bar = kwargs.get('progress_bar', None)
+    additional_plts = kwargs.get('additional_plts', [])
     threshold_candles = kwargs.get('threshold_candles', None)
 
     _, ax = plt.subplots()
@@ -593,6 +596,14 @@ def candlestick(data: pd.DataFrame, **kwargs):
 
         if p_bar is not None:
             p_bar.uptick(increment=increment)
+
+    if len(additional_plts) > 0:
+        for add_plt in additional_plts:
+            color = add_plt.get('color')
+            if color is not None:
+                plt.plot(x, add_plt["plot"], add_plt["color"])
+            else:
+                plt.plot(x, add_plt["plot"])
 
     plt.title(title)
     if len(legend) > 0:
