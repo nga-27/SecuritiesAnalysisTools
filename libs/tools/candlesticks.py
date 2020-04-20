@@ -1125,6 +1125,57 @@ def identical_three_crows(day: list) -> dict:
     return None
 
 
+def deliberation(day: list) -> dict:
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'white'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] == 'long') and (candle_0['color'] == 'white'):
+                basic_0 = day[0]['basic']
+                mid_pt = (basic_0['Close'] - basic_0['Open']) * 0.5
+                basic_1 = day[1]['basic']
+                if (basic_1['Open'] > mid_pt) and (basic_1['Open'] < basic_0['Close']) and \
+                        (basic_1['Close'] > basic_0['Close']):
+                    candle_2 = day[2]['candlestick']
+                    if (candle_2['body'] == 'short') or (candle_2['color'] == 'white'):
+                        basic_2 = day[2]['basic']
+                        if (basic_2['Open'] > basic_1['Close']):
+                            return {"type": 'bearish', "style": '-'}
+    return None
+
+
+def matching_high_low(day: list) -> dict:
+    THRESH = 0.03
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'black'):
+            if day[1]['candlestick']['color'] == 'black':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                point1 = ((basic_0['Open'] - basic_0['Close'])
+                          * THRESH) + basic_0['Close']
+                point2 = basic_0['Close'] - \
+                    ((basic_0['Open'] - basic_0['Close']) * THRESH)
+                if (basic_1['Open'] < basic_0['Open']) and (basic_1['Close'] <= point1) and \
+                        (basic_1['Close'] >= point2):
+                    return {"type": 'bullish', "style": 'low'}
+
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'white'):
+            if day[1]['candlestick']['color'] == 'white':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                point1 = ((basic_0['Close'] - basic_0['Open'])
+                          * THRESH) + basic_0['Close']
+                point2 = basic_0['Close'] - \
+                    ((basic_0['Close'] - basic_0['Open']) * THRESH)
+                if (basic_1['Open'] > basic_0['Open']) and (basic_1['Close'] <= point1) and \
+                        (basic_1['Close'] >= point2):
+                    return {"type": 'bearish', "style": 'high'}
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -1149,5 +1200,7 @@ PATTERNS = {
     "three_stars": {'days': 3, 'function': three_stars_in_the_south},
     "concealing_baby": {'days': 4, 'function': concealing_baby_swallow},
     "stick_sandwich": {'days': 3, 'function': stick_sandwich},
-    "identical_crows": {'days': 3, 'function': identical_three_crows}
+    "identical_crows": {'days': 3, 'function': identical_three_crows},
+    "deliberation": {'days': 3, 'function': deliberation},
+    "matching": {'days': 2, 'function': matching_high_low}
 }
