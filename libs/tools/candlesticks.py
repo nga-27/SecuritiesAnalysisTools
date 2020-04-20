@@ -998,6 +998,42 @@ def three_stars_in_the_south(day: list) -> dict:
     return None
 
 
+def concealing_baby_swallow(day: list) -> dict:
+    MF_SHADOW_RATIO = 1.03
+    SHADOW_RATIO = 1.6
+    THRESH = 0.02
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] != 'short') and (candle_0['color'] == 'black') and \
+                (candle_0['shadow_ratio'] <= MF_SHADOW_RATIO):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] != 'short') and (candle_1['color'] == 'black') and \
+                    (candle_1['shadow_ratio'] <= MF_SHADOW_RATIO):
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                mid_pt = ((basic_0['Open'] - basic_0['Close'])
+                          * 0.5) + basic_0['Close']
+                if (basic_1['Open'] < mid_pt) and (basic_1['Open'] >= basic_0['Close']):
+                    candle_2 = day[2]['candlestick']
+                    if (candle_2['body'] == 'short') and (candle_2['color'] == 'black') and \
+                            (candle_2['shadow_ratio'] >= SHADOW_RATIO):
+                        basic_2 = day[2]['basic']
+                        oc_thr = (basic_2['Open'] - basic_2['Close']) * THRESH
+                        cl_low = (basic_2['Close'] - basic_2['Low'])
+                        if (cl_low <= oc_thr) and (basic_2['Open'] < basic_1['Close']) and \
+                                (basic_2['High'] >= basic_1['Close']):
+                            candle_3 = day[3]['candlestick']
+                            if (candle_3['color'] == 'black') and \
+                                (candle_3['body'] != 'short') and \
+                                    (candle_3['shadow_ratio'] <= MF_SHADOW_RATIO):
+                                basic_3 = day[3]['basic']
+                                if (basic_3['Close'] <= basic_2['Close']) and \
+                                        (basic_3['Open'] > basic_2['Open']):
+                                    return {"type": 'bullish', "style": 'swallow-+'}
+    return None
+
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -1019,5 +1055,6 @@ PATTERNS = {
     "three_outside": {'days': 3, 'function': three_outside},
     "kicking": {'days': 2, 'function': kicking},
     "three_river": {'days': 3, 'function': unique_three_river},
-    "three_stars": {'days': 3, 'function': three_stars_in_the_south}
+    "three_stars": {'days': 3, 'function': three_stars_in_the_south},
+    "concealing_baby": {'days': 4, 'function': concealing_baby_swallow}
 }
