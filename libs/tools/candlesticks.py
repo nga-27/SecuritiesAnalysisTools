@@ -906,6 +906,42 @@ def three_outside(day: list) -> dict:
     return None
 
 
+def kicking(day: list) -> dict:
+    THRESH = 0.01
+    candle_0 = day[0]['candlestick']
+    candle_1 = day[1]['candlestick']
+    if (candle_0['body'] == 'long') and (candle_0['color'] == 'black') and \
+            (candle_1['body'] == 'long') and (candle_1['color'] == 'white'):
+        basic_0 = day[0]['basic']
+        oc_thr = np.abs(basic_0['Open'] - basic_0['Close']) * THRESH
+        hi_op = basic_0['High'] - basic_0['Open']
+        cl_lo = basic_0['Close'] - basic_0['Low']
+        if (hi_op <= oc_thr) and (cl_lo <= oc_thr):
+            basic_1 = day[1]['basic']
+            oc_thr = np.abs(basic_1['Open'] - basic_1['Close']) * THRESH
+            hi_cl = basic_1['High'] - basic_1['Close']
+            op_lo = basic_1['Open'] - basic_1['Low']
+            if (hi_cl <= oc_thr) and (op_lo <= oc_thr):
+                if (basic_0['High'] < basic_1['Low']):
+                    return {"type": 'bullish', "style": '+'}
+
+    if (candle_0['body'] == 'long') and (candle_0['color'] == 'white') and \
+            (candle_1['body'] == 'long') and (candle_1['color'] == 'black'):
+        basic_0 = day[0]['basic']
+        oc_thr = np.abs(basic_0['Close'] - basic_0['Open']) * THRESH
+        hi_op = basic_0['High'] - basic_0['Close']
+        cl_lo = basic_0['Open'] - basic_0['Low']
+        if (hi_op <= oc_thr) and (cl_lo <= oc_thr):
+            basic_1 = day[1]['basic']
+            oc_thr = np.abs(basic_1['Open'] - basic_1['Close']) * THRESH
+            hi_cl = basic_1['High'] - basic_1['Open']
+            op_lo = basic_1['Close'] - basic_1['Low']
+            if (hi_cl <= oc_thr) and (op_lo <= oc_thr):
+                if (basic_0['Low'] > basic_1['High']):
+                    return {"type": 'bearish', "style": '-'}
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -924,5 +960,6 @@ PATTERNS = {
     "tri_star": {'days': 3, 'function': tri_star, "weight": 3},
     "breakaway": {'days': 5, 'function': breakaway},
     "three_inside": {'days': 3, 'function': three_inside},
-    "three_outside": {'days': 3, 'function': three_outside}
+    "three_outside": {'days': 3, 'function': three_outside},
+    "kicking": {'days': 2, 'function': kicking}
 }
