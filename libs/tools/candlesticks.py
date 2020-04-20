@@ -840,6 +840,71 @@ def breakaway(day: list) -> dict:
     return None
 
 
+def three_inside(day: list) -> dict:
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'black'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] == 'short') and (candle_1['color'] == 'white'):
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if (basic_1['Open'] > basic_0['Close']) and (basic_1['Close'] < basic_0['Open']):
+                    if day[2]['candlestick']['color'] == 'white':
+                        basic_2 = day[2]['basic']
+                        if (basic_2['Open'] > basic_1['Open']) and \
+                                (basic_2['Open'] < basic_1['Close']):
+                            if (basic_2['Close'] > basic_0['Open']):
+                                return {"type": 'bullish', "style": 'up'}
+
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'white'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] == 'short') and (candle_1['color'] == 'black'):
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if (basic_1['Open'] < basic_0['Close']) and (basic_1['Close'] > basic_0['Open']):
+                    if day[2]['candlestick']['color'] == 'black':
+                        basic_2 = day[2]['basic']
+                        if (basic_2['Open'] > basic_1['Close']) and \
+                                (basic_2['Open'] < basic_1['Open']):
+                            if (basic_2['Close'] < basic_0['Open']):
+                                return {"type": 'bearish', "style": 'down'}
+    return None
+
+
+def three_outside(day: list) -> dict:
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['color'] == 'black') and (candle_0['body'] != 'long'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] == 'long') and (candle_1['color'] == 'white'):
+                basic_1 = day[1]['basic']
+                basic_0 = day[0]['basic']
+                if (basic_0['Low'] > basic_1['Open']) and (basic_0['High'] < basic_1['Close']):
+                    if day[2]['candlestick']['color'] == 'white':
+                        basic_2 = day[2]['basic']
+                        if (basic_2['Open'] > basic_1['Open']) and \
+                            (basic_2['Open'] < basic_1['Close']) and \
+                                (basic_2['Close'] > basic_2['Close']):
+                            return {"type": 'bullish', "style": 'up'}
+
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['color'] == 'white') and (candle_0['body'] != 'long'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] == 'long') and (candle_1['color'] == 'black'):
+                basic_1 = day[1]['basic']
+                basic_0 = day[0]['basic']
+                if (basic_0['Low'] > basic_1['Close']) and (basic_0['High'] < basic_1['Open']):
+                    if day[2]['candlestick']['color'] == 'black':
+                        basic_2 = day[2]['basic']
+                        if (basic_2['Open'] < basic_1['Open']) and \
+                            (basic_2['Open'] > basic_1['Close']) and \
+                                (basic_2['Close'] < basic_2['Close']):
+                            return {"type": 'bearish', "style": 'down'}
+    return None
+
 
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
@@ -857,5 +922,7 @@ PATTERNS = {
     "meeting_line": {'days': 2, 'function': meeting_line},
     "three_soldier_crows": {'days': 3, 'function': three_white_soldiers_black_crows},
     "tri_star": {'days': 3, 'function': tri_star, "weight": 3},
-    "breakaway": {'days': 5, 'function': breakaway}
+    "breakaway": {'days': 5, 'function': breakaway},
+    "three_inside": {'days': 3, 'function': three_inside},
+    "three_outside": {'days': 3, 'function': three_outside}
 }
