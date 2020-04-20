@@ -942,6 +942,62 @@ def kicking(day: list) -> dict:
     return None
 
 
+def unique_three_river(day: list) -> dict:
+    THRESH = 0.02
+    SHADOW_RATIO = 2.0
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'black'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] == 'short') and (candle_1['color'] == 'black') and \
+                    (candle_1['shadow_ratio'] >= SHADOW_RATIO):
+                basic_1 = day[1]['basic']
+                basic_0 = day[0]['basic']
+                hi_op = basic_1['High'] - basic_1['Open']
+                oc_thr = (basic_1['Open'] - basic_1['Close']) * THRESH
+                if (hi_op <= oc_thr) and (basic_1['Open'] < basic_0['Open']) and \
+                        (basic_1['Low'] < basic_0['Close']):
+                    if day[2]['candlestick']['color'] == 'white':
+                        basic_2 = day[2]['basic']
+                        if (basic_2['Open'] >= basic_0['Close']) and \
+                                (basic_2['Close'] <= basic_1['Close']):
+                            return {"type": 'bullish', "style": '+'}
+    return None
+
+
+def three_stars_in_the_south(day: list) -> dict:
+    SHADOW_RATIO = 1.6
+    OC_SHADOW_RATIO = 1.03
+    THRESH = 0.01
+    OP_THR = 0.2
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'black') and \
+                (candle_0['shadow_ratio'] >= SHADOW_RATIO):
+            basic_0 = day[0]['basic']
+            hi_op = basic_0['High'] - basic_0['Open']
+            oc_thr = np.abs(basic_0['Close'] - basic_0['Open']) * THRESH
+            if (hi_op <= oc_thr):
+                candle_1 = day[1]['candlestick']
+                if (candle_1['body'] == 'short') and (candle_1['color'] == 'black'):
+                    basic_1 = day[1]['basic']
+                    op_point = (
+                        (basic_0['Open'] - basic_0['Close']) * OP_THR) + basic_0['Close']
+                    if (basic_1['Open'] < op_point) and \
+                        (basic_1['Open'] > basic_0['Close']) and \
+                            (basic_1['Close'] < basic_0['Close']) and \
+                            (basic_1['Low'] > basic_0['Low']):
+                        candle_2 = day[2]['candlestick']
+                        if (candle_2['shadow_ratio'] <= OC_SHADOW_RATIO) and \
+                                (candle_2['color'] == 'black') and (candle_2['body'] == 'short'):
+                            basic_2 = day[2]['basic']
+                            mid_pt = (
+                                (basic_1['Open'] - basic_1['Close']) * 0.5) + basic_1['Close']
+                            if (basic_2['Open'] < mid_pt) and (basic_2['Close'] < basic_1['Close']):
+                                return {"type": 'bullish', "style": "in_the_south-+"}
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -961,5 +1017,7 @@ PATTERNS = {
     "breakaway": {'days': 5, 'function': breakaway},
     "three_inside": {'days': 3, 'function': three_inside},
     "three_outside": {'days': 3, 'function': three_outside},
-    "kicking": {'days': 2, 'function': kicking}
+    "kicking": {'days': 2, 'function': kicking},
+    "three_river": {'days': 3, 'function': unique_three_river},
+    "three_stars": {'days': 3, 'function': three_stars_in_the_south}
 }
