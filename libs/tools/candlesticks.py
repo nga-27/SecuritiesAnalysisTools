@@ -1288,6 +1288,37 @@ def advance_block(day: list) -> dict:
     return None
 
 
+def separating_lines(day: list) -> dict:
+    THRESH = 0.05
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if candle_0['body'] == 'long' and candle_0['color'] == 'black':
+            candle_1 = day[1]['candlestick']
+            if candle_1['body'] == 'long' and candle_1['color'] == 'white':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                oc_thr = np.abs(basic_0['Open'] - basic_0['Close']) * THRESH
+                point1 = basic_0['Open'] - oc_thr
+                point2 = basic_0['Open'] + oc_thr
+                if basic_1['Open'] <= point2 and basic_1['Open'] >= point1:
+                    return {"type": 'bullish', "style": '+'}
+
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if candle_0['body'] == 'long' and candle_0['color'] == 'white':
+            candle_1 = day[1]['candlestick']
+            if candle_1['body'] == 'long' and candle_1['color'] == 'black':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                oc_thr = np.abs(basic_0['Close'] - basic_0['Open']) * THRESH
+                point1 = basic_0['Open'] - oc_thr
+                point2 = basic_0['Open'] + oc_thr
+                if basic_1['Open'] <= point2 and basic_1['Open'] >= point1:
+                    return {"type": 'bearish', "style": '-'}
+
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -1318,5 +1349,6 @@ PATTERNS = {
     "two_crows": {'days': 3, 'function': upside_gap_two_crows},
     "homing_pigeon": {'days': 2, 'function': homing_pigeon},
     "ladder": {'days': 5, 'function': ladder},
-    "advance_block": {'days': 3, 'function': advance_block}
+    "advance_block": {'days': 3, 'function': advance_block},
+    "separating_lines": {'days': 2, 'function': separating_lines}
 }
