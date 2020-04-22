@@ -1176,6 +1176,75 @@ def matching_high_low(day: list) -> dict:
     return None
 
 
+def upside_gap_two_crows(day: list) -> dict:
+    # Both upside_gap_two_crows and two_crows
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'white'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] == 'short') and (candle_1['color'] == 'black'):
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if basic_1['Close'] > basic_0['Close']:
+                    if day[1]['candlestick']['color'] == 'black':
+                        basic_2 = day[2]['basic']
+                        if (basic_2['Open'] >= basic_1['Open']) and \
+                            (basic_2['Close'] <= basic_1['Close']) and \
+                                (basic_2['Close'] > basic_0['Close']):
+                            return {"type": 'bearish', "style": "upside_gap--"}
+                        if (basic_2['Open'] > basic_1['Close']) and \
+                            (basic_2['Open'] < basic_1['Open']) and \
+                                (basic_2['Close'] < basic_1['Close']) and \
+                                (basic_2['Close'] > basic_1['Open']):
+                            return {"type": 'bearish', "style": '-'}
+    return None
+
+
+def homing_pigeon(day: list) -> dict:
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if (candle_0['body'] == 'long') and (candle_0['color'] == 'black'):
+            candle_1 = day[1]['candlestick']
+            if (candle_1['body'] != 'long') and (candle_1['color'] == 'black'):
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if (basic_1['Open'] < basic_0['Open']) and (basic_1['Close'] > basic_0['Close']):
+                    return {"type": 'bullish', "style": '+'}
+    return None
+
+
+def ladder_bottom(day: list) -> dict:
+    SHADOW_RATIO = 2.0
+    THRESH = 0.1
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candle']
+        if (candle_0['body'] != 'short') and (candle_0['color'] == 'black'):
+            candle_1 = day[1]['candle']
+            basic_0 = day[0]['basic']
+            basic_1 = day[1]['basic']
+            if (candle_1['body'] != 'short') and (candle_1['color'] == 'black') and \
+                (basic_1['Open'] < basic_0['Open']) and (basic_1['Open'] > basic_0['Close']) and \
+                    (basic_1['Close'] < basic_0['Close']):
+                candle_2 = day[2]['candle']
+                basic_2 = day[2]['basic']
+                if (candle_2['body'] != 'short') and (candle_2['color'] == 'black') and \
+                    (basic_2['Open'] < basic_1['Open']) and \
+                        (basic_2['Open'] > basic_1['Close']) and \
+                        (basic_2['Close'] < basic_1['Close']):
+                    candle_3 = day[3]['candle']
+                    if (candle_3['body'] == 'short') and (candle_3['color'] == 'black') and \
+                            (candle_3['shadow_ratio'] >= SHADOW_RATIO):
+                        basic_3 = day[3]['basic']
+                        oc_thr = (basic_3['Open'] - basic_3['Close']) * THRESH
+                        cl_low = basic_3['Close'] - basic_3['Low']
+                        if (basic_3['Close'] < basic_2['Close']) and (cl_low <= oc_thr):
+                            candle_4 = day[4]['candlestick']
+                            if (candle_4['body'] == 'long') and (candle_4['color'] == 'white') and \
+                                    (day[4]['basic']['Open'] > basic_3['Open']):
+                                return {"type": 'bullish', "style": '+'}
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -1202,5 +1271,8 @@ PATTERNS = {
     "stick_sandwich": {'days': 3, 'function': stick_sandwich},
     "identical_crows": {'days': 3, 'function': identical_three_crows},
     "deliberation": {'days': 3, 'function': deliberation},
-    "matching": {'days': 2, 'function': matching_high_low}
+    "matching": {'days': 2, 'function': matching_high_low},
+    "two_crows": {'days': 3, 'function': upside_gap_two_crows},
+    "homing_pigeon": {'days': 2, 'function': homing_pigeon},
+    "ladder_bottom": {'days': 5, 'function': ladder_bottom}
 }
