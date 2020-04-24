@@ -1319,6 +1319,39 @@ def separating_lines(day: list) -> dict:
     return None
 
 
+def tasuki_gap_upside_downside(day: list) -> dict:
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if candle_0['body'] == 'long' and candle_0['color'] == 'white':
+            if day[1]['candlestick']['color'] == 'white':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if basic_1['Low'] > basic_0['High']:
+                    if day[2]['candlestick']['color'] == 'black':
+                        basic_2 = day[2]['basic']
+                        if basic_2['Open'] <= basic_1['Close'] and \
+                                basic_2['Open'] >= basic_1['Open']:
+                            if basic_2['Close'] < basic_1['Open'] and \
+                                    basic_2['Close'] > basic_0['Close']:
+                                return {"type": 'bullish', "style": 'upside-+'}
+
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if candle_0['body'] == 'long' and candle_0['color'] == 'black':
+            if day[1]['candlestick']['color'] == 'black':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if basic_0['Low'] > basic_1['High']:
+                    if day[2]['candlestick']['color'] == 'white':
+                        basic_2 = day[2]['basic']
+                        if basic_2['Open'] <= basic_1['Open'] and \
+                                basic_2['Open'] >= basic_1['Close']:
+                            if basic_2['Close'] > basic_1['Open'] and \
+                                    basic_2['Close'] < basic_0['Close']:
+                                return {"type": 'bearish', "style": 'downside--'}
+    return None
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -1350,5 +1383,6 @@ PATTERNS = {
     "homing_pigeon": {'days': 2, 'function': homing_pigeon},
     "ladder": {'days': 5, 'function': ladder},
     "advance_block": {'days': 3, 'function': advance_block},
-    "separating_lines": {'days': 2, 'function': separating_lines}
+    "separating_lines": {'days': 2, 'function': separating_lines},
+    "tasuki_gap": {'days': 3, 'function': tasuki_gap_upside_downside}
 }
