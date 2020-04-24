@@ -1420,6 +1420,28 @@ def three_line_strike(day: list) -> dict:
     return None
 
 
+def upside_downside_gap_three_methods(day: list) -> dict:
+    if day[0]['trend'] == 'below':
+        if day[0]['candlestick']['color'] == 'black' and day[1]['candlestick']['color'] == 'black':
+            basic_0 = day[0]['basic']
+            basic_1 = day[1]['basic']
+            if basic_1['High'] < basic_0['Low'] and day[2]['candlestick']['color'] == 'white':
+                basic_2 = day[2]['basic']
+                if basic_2['Open'] < basic_1['Open'] and basic_2['Open'] > basic_1['Close'] and \
+                        basic_2['Close'] > basic_0['Close'] and basic_2['Close'] < basic_2['Open']:
+                    return {"type": 'bearish', "style": 'downside--'}
+
+    if day[0]['trend'] == 'above':
+        if day[0]['candlestick']['color'] == 'white' and day[1]['candlestick']['color'] == 'white':
+            basic_0 = day[0]['basic']
+            basic_1 = day[1]['basic']
+            if basic_1['Low'] > basic_0['High'] and day[2]['candlestick']['color'] == 'black':
+                basic_2 = day[2]['basic']
+                if basic_2['Open'] < basic_1['Close'] and basic_2['Open'] > basic_1['Open'] and \
+                        basic_2['Close'] > basic_0['Open'] and basic_2['Close'] < basic_2['Close']:
+                    return {"type": 'bullish', "style": 'upside-+'}
+
+
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern},
     "dark_cloud_piercing_line": {'days': 2, 'function': dark_cloud_or_piercing_line},
@@ -1454,5 +1476,6 @@ PATTERNS = {
     "separating_lines": {'days': 2, 'function': separating_lines},
     "tasuki_gap": {'days': 3, 'function': tasuki_gap_upside_downside},
     "side_by_side": {'days': 3, 'function': side_by_side_white_lines},
-    "three_line_strike": {'days': 4, 'function': three_line_strike}
+    "three_line_strike": {'days': 4, 'function': three_line_strike},
+    "gap_three_methods": {'days': 3, 'function': upside_downside_gap_three_methods}
 }
