@@ -98,8 +98,6 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     api_print += "  Done."
     print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
 
-    print(f"ALTMAN_Z: {metadata['altman_z']}")
-
     return metadata
 
 
@@ -241,7 +239,28 @@ def get_recommendations(ticker, st) -> dict:
     return recom
 
 
-def get_altman_z_score(meta: dict):
+def get_altman_z_score(meta: dict) -> dict:
+    """get_altman_z_score
+
+    Created by Prof. Edward Altman (1968), info here: 
+    https://www.investopedia.com/terms/a/altman.asp
+
+    Each "letter" or term (A-E) represents a different aspect of a company's balance sheet:
+        A: Liquidity
+        B: Accumulated profits vs. assets
+        C: How much profits the assets are producing
+        D: Company's value vs. its liabilities
+        E: Efficiency ratio (how much sales are generated from assets)
+
+    Arguments:
+        meta {dict} -- metadata object
+
+    Returns:
+        dict -- altman_z_score object
+    """
+    GOOD_THRESHOLD = 3.0
+    BAD_THRESHOLD = 1.8
+
     balance_sheet = meta.get('balance_sheet')
     financials = meta.get('financials')
     info = meta.get('info')
@@ -285,8 +304,16 @@ def get_altman_z_score(meta: dict):
     altman_e = total_revenue[0] / total_assets[0]
     altman = altman_a + altman_b + altman_c + altman_d + altman_e
 
+    if altman >= GOOD_THRESHOLD:
+        color = "green"
+    elif altman > BAD_THRESHOLD:
+        color = "yellow"
+    else:
+        color = "red"
+
     z_score = {
         "score": altman,
+        "color": color,
         "values":
         {
             "A": altman_a,

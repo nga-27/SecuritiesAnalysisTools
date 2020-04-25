@@ -90,10 +90,10 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         vq = analysis[fund].get('metadata', {}).get(
             'volatility', {}).get('VQ')
         has_vq = False
-        rows = 4
+        rows = 5
         if vq is not None:
             has_vq = True
-            rows = 8
+            rows = rows + 4
             stop_loss = analysis[fund].get('metadata', {}).get(
                 'volatility', {}).get('stop_loss')
             high_close = analysis[fund].get('metadata', {}).get(
@@ -124,17 +124,30 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         table.cell(3, 1).text = str(
             np.round(analysis[fund][views]['statistics']['r_squared'], 5))
 
-        if has_vq:
-            table.cell(4, 0).text = 'Volatility Quotient'
-            table.cell(4, 1).text = str(vq)
-            table.cell(5, 0).text = 'Stop Loss'
-            table.cell(5, 1).text = str(stop_loss)
-            table.cell(6, 0).text = 'Last High Close'
-            table.cell(6, 1).text = str(high_close)
-            table.cell(7, 0).text = 'VQ Status'
-            table.cell(7, 1).text = str(status)
+        table.cell(4, 0).text = 'Altman-Z Score'
+        alt_z = analysis[fund].get('metadata', {}).get(
+            'altman_z', {})
+        alt_z_score = alt_z.get('score', "n/a")
+        alt_z_color = alt_z.get('color', "black")
+        if isinstance(alt_z_score, (float, int)):
+            alt_z_score = str(np.round(alt_z_score, 5))
+        table.cell(4, 1).text = alt_z_score
+        table.cell(4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+            alt_z_color)
 
-            table.cell(7, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+        end = 4
+
+        if has_vq:
+            table.cell(end+1, 0).text = 'Volatility Quotient'
+            table.cell(end+1, 1).text = str(vq)
+            table.cell(end+2, 0).text = 'Stop Loss'
+            table.cell(end+2, 1).text = str(stop_loss)
+            table.cell(end+3, 0).text = 'Last High Close'
+            table.cell(end+3, 1).text = str(high_close)
+            table.cell(end+4, 0).text = 'VQ Status'
+            table.cell(end+4, 1).text = str(status)
+
+            table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
                 vq_color)
 
         table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
