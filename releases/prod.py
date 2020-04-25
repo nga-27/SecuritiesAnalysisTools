@@ -40,7 +40,7 @@ from libs.utils import get_api_metadata
 from libs.utils import SP500
 
 # Imports that plot (many are imported in functions)
-from libs.utils import candlestick
+from libs.utils import candlestick_plot
 
 # Imports that drive custom metrics for market analysis
 from libs.metrics import future_returns
@@ -188,8 +188,8 @@ def run_prod(script: list):
                 fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
             filename = f"{fund_name}/{period}/candlestick_{fund_name}"
-            candlestick(fund, title=fund_print, filename=filename,
-                        saveFig=True, progress_bar=p)
+            candlestick_plot(fund, title=fund_print, filename=filename,
+                             saveFig=True, progress_bar=p)
 
             fund_data['price_gaps'] = analyze_price_gaps(
                 fund, name=fund_name, plot_output=False, progress_bar=p, view=period)

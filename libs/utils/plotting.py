@@ -502,7 +502,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     plt.clf()
 
 
-def candlestick(data: pd.DataFrame, **kwargs):
+def candlestick_plot(data: pd.DataFrame, **kwargs):
     """
     Plot candlestick chart
 

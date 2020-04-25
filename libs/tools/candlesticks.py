@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import ProgressBar
-from libs.utils import candlestick
+from libs.utils import candlestick_plot
 from .moving_average import simple_moving_avg
 from .full_stochastic import generate_full_stoch_signal
 
@@ -35,15 +35,22 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
 
     candle['thresholds'] = thresholding_determination(
         fund, plot_output=plot_output)
+    if pbar is not None:
+        pbar.uptick(increment=0.1)
+
     candle['classification'] = day_classification(fund, candle['thresholds'])
-    candle = pattern_detection(fund, candle)
+    if pbar is not None:
+        pbar.uptick(increment=0.1)
+
+    candle = pattern_detection(
+        fund, candle, plot_output=plot_output, pbar=pbar)
 
     if plot_output:
-        candlestick(fund, title=name)
+        candlestick_plot(fund, title=name)
     else:
         filename = f"{name}/{view}/candlestick_{name}"
-        candlestick(fund, title=name, filename=filename,
-                    saveFig=True)
+        candlestick_plot(fund, title=name, filename=filename,
+                         saveFig=True)
 
     if pbar is not None:
         pbar.uptick(increment=1.0)
@@ -59,10 +66,18 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
         fund {pd.DataFrame} -- fund dataset
         candle {dict} -- candlestick data object
 
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        pbar {ProgressBar} -- (default: {None})
+
     Returns:
         dict -- candlestick data object
     """
     plot_output = kwargs.get('plot_output', True)
+    pbar = kwargs.get('pbar')
+
+    if pbar is not None:
+        divisor = 0.7 / float(len(candle['classification']))
 
     patterns = []
     for i in range(len(candle['classification'])):
@@ -73,6 +88,10 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
                 value['value'] += val[0]
                 modified_pattern = f"{patt}-{val[1]}"
                 value['patterns'].append(modified_pattern)
+
+        if pbar is not None:
+            pbar.uptick(increment=divisor)
+
         patterns.append(value)
 
     patterns2 = filtered_reversal_patterns(fund, candle)
@@ -82,17 +101,17 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
             patterns[i]['value'] += patt['value']
             patterns[i]['patterns'].extend(patt['patterns'])
 
-    signal = simple_moving_avg(fund, 10)
-    for i, patt in enumerate(patterns):
-        if patt['value'] != 0:
-            signal[i] += (patt['value'] * 10.0)
-            print(f"index {i}: {patt['value']} => {patt['patterns']}")
-
     if plot_output:
+        signal = simple_moving_avg(fund, 10)
+        for i, patt in enumerate(patterns):
+            if patt['value'] != 0:
+                signal[i] += (patt['value'] * 10.0)
+                print(f"index {i}: {patt['value']} => {patt['patterns']}")
+
         plot_obj = {"plot": signal, "color": 'black',
                     "legend": 'candlestick signal'}
-        candlestick(fund, additional_plts=[
-                    plot_obj], title='Candlestick Signals')
+        candlestick_plot(fund, additional_plts=[
+            plot_obj], title='Candlestick Signals')
 
     candle['patterns'] = patterns
     return candle
@@ -137,8 +156,8 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
     if plot_output:
         print(f"\r\nThresholding for candlesticks:")
         pprint.pprint(thresholds)
-        candlestick(fund, title="Doji & Long/Short Days",
-                    threshold_candles=thresholds)
+        candlestick_plot(fund, title="Doji & Long/Short Days",
+                         threshold_candles=thresholds)
 
     return thresholds
 
