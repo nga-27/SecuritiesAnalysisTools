@@ -524,7 +524,6 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
     register_matplotlib_converters()
 
     title = kwargs.get('title', '')
-    legend = kwargs.get('legend', [])
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_candlestick.png')
     p_bar = kwargs.get('progress_bar', None)
