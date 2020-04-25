@@ -1440,6 +1440,41 @@ def upside_downside_gap_three_methods(day: list) -> dict:
                 if basic_2['Open'] < basic_1['Close'] and basic_2['Open'] > basic_1['Open'] and \
                         basic_2['Close'] > basic_0['Open'] and basic_2['Close'] < basic_2['Close']:
                     return {"type": 'bullish', "style": 'upside-+'}
+    return None
+
+
+def on_in_neck_line(day: list) -> dict:
+    THRESH = 0.05
+    if day[0]['trend'] == 'below':
+        candle_0 = day[0]['candlestick']
+        if candle_0['body'] == 'long' and candle_0['color'] == 'black':
+            if day[1]['candlestick']['color'] == 'white':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if basic_1['Open'] < basic_0['Low']:
+                    oc_thr = (basic_0['Open'] - basic_0['Close']) * THRESH
+                    point1 = basic_0['Close'] - oc_thr
+                    point2 = basic_0['Close'] + oc_thr
+                    if basic_1['Close'] >= point1 and basic_1['Close'] <= point2:
+                        return {"type": 'bearish', "style": 'in--'}
+                    if basic_1['Close'] <= basic_0['Close'] and basic_1['Close'] >= basic_0['Low']:
+                        return {"type": 'bearish', "style": 'on--'}
+
+    if day[0]['trend'] == 'above':
+        candle_0 = day[0]['candlestick']
+        if candle_0['body'] == 'long' and candle_0['color'] == 'white':
+            if day[1]['candlestick']['color'] == 'black':
+                basic_0 = day[0]['basic']
+                basic_1 = day[1]['basic']
+                if basic_1['Open'] > basic_0['High']:
+                    oc_thr = (basic_0['Close'] - basic_0['Open']) * THRESH
+                    point1 = basic_0['Close'] - oc_thr
+                    point2 = basic_0['Close'] + oc_thr
+                    if basic_1['Close'] >= point1 and basic_1['Close'] <= point2:
+                        return {"type": 'bullish', "style": 'in-+'}
+                    if basic_1['Close'] >= basic_0['Close'] and basic_1['Close'] <= basic_0['High']:
+                        return {"type": 'bullish', "style": 'on-+'}
+    return None
 
 
 PATTERNS = {
@@ -1477,5 +1512,6 @@ PATTERNS = {
     "tasuki_gap": {'days': 3, 'function': tasuki_gap_upside_downside},
     "side_by_side": {'days': 3, 'function': side_by_side_white_lines},
     "three_line_strike": {'days': 4, 'function': three_line_strike},
-    "gap_three_methods": {'days': 3, 'function': upside_downside_gap_three_methods}
+    "gap_three_methods": {'days': 3, 'function': upside_downside_gap_three_methods},
+    "neck_line": {'days': 2, 'function': on_in_neck_line}
 }
