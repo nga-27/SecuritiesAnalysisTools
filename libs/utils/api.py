@@ -34,6 +34,75 @@ NORMAL = STANDARD_COLORS["normal"]
 REVERSE_LINE = "\033[F"
 
 
+def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
+    """
+    Get Api Metadata
+
+    args:
+        fund_ticker:    (str) fund name
+
+    optional args:
+        progress_bar:   (ProgressBar) DEFAULT=None
+
+    returns:
+        metadata:       (dict) contains all financial metadata available
+    """
+    pb = kwargs.get('progress_bar', None)
+    max_close = kwargs.get('max_close', None)
+    dataset = kwargs.get('data')
+
+    fund_ticker_cleansed = SP500.get(fund_ticker, fund_ticker)
+    api_print = f"\r\nFetching API metadata for {FUND}{fund_ticker_cleansed}{NORMAL}..."
+    print(api_print)
+
+    metadata = {}
+    ticker = yf.Ticker(fund_ticker)
+    if pb is not None:
+        pb.uptick(increment=0.2)
+    st_tick = styf.Ticker(fund_ticker)
+    if pb is not None:
+        pb.uptick(increment=0.3)
+
+    metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
+    metadata['info'] = AVAILABLE_KEYS.get('info')(
+        ticker, st_tick, force_holdings=True)
+
+    if pb is not None:
+        pb.uptick(increment=0.2)
+
+    metadata['financials'] = AVAILABLE_KEYS.get('financials')(ticker, st_tick)
+    metadata['balance_sheet'] = AVAILABLE_KEYS.get('balance')(ticker, st_tick)
+
+    if pb is not None:
+        pb.uptick(increment=0.1)
+
+    metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker, st_tick)
+    metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker, st_tick)
+    metadata['recommendations'] = AVAILABLE_KEYS.get(
+        'recommendations')(ticker, st_tick)
+
+    metadata['recommendations']['tabular'] = calculate_recommendation_curve(
+        metadata['recommendations'])
+    # EPS needs some other figures to make it correct, but ok for now.
+    metadata['eps'] = calculate_eps(metadata)
+    if pb is not None:
+        pb.uptick(increment=0.1)
+
+    metadata['volatility'] = get_volatility(
+        fund_ticker, max_close=max_close, data=dataset)
+    if pb is not None:
+        pb.uptick(increment=0.1)
+
+    metadata['altman_z'] = AVAILABLE_KEYS.get('altman_z')(metadata)
+
+    api_print += "  Done."
+    print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
+
+    print(f"ALTMAN_Z: {metadata['altman_z']}")
+
+    return metadata
+
+
 def get_dividends(ticker):
     div = dict()
     try:
@@ -172,6 +241,64 @@ def get_recommendations(ticker, st) -> dict:
     return recom
 
 
+def get_altman_z_score(meta: dict):
+    balance_sheet = meta.get('balance_sheet')
+    financials = meta.get('financials')
+    info = meta.get('info')
+
+    if balance_sheet is None or financials is None or info is None:
+        return {"score": "n/a", "values": {}}
+    total_assets = balance_sheet.get("Total Assets")
+    if total_assets is None:
+        return {"score": "n/a", "values": {}}
+    current_assets = balance_sheet.get("Total Current Assets")
+    if current_assets is None:
+        return {"score": "n/a", "values": {}}
+    current_liabilities = balance_sheet.get("Total Current Liabilities")
+    if current_liabilities is None:
+        return {"score": "n/a", "values": {}}
+
+    working_capital = current_assets[0] / current_liabilities[0]
+    altman_a = working_capital / total_assets[0] * 1.2
+
+    retained_earnings = balance_sheet.get("Retained Earnings")
+    if retained_earnings is None:
+        return {"score": "n/a", "values": {}}
+    altman_b = 1.4 * (retained_earnings[0] / total_assets[0])
+
+    ebit = financials.get("Ebit")
+    if ebit is None:
+        return {"score": "n/a", "values": {}}
+    altman_c = 3.3 * (ebit[0] / total_assets[0])
+
+    market_cap = info.get("marketCap")
+    if market_cap is None:
+        return {"score": "n/a", "values": {}}
+    total_liabilities = balance_sheet.get("Total Liab")
+    if total_liabilities is None:
+        return {"score": "n/a", "values": {}}
+    altman_d = 0.6 * market_cap / total_liabilities[0]
+
+    total_revenue = financials.get("Total Revenue")
+    if total_revenue is None:
+        return {"score": "n/a", "values": {}}
+    altman_e = total_revenue[0] / total_assets[0]
+    altman = altman_a + altman_b + altman_c + altman_d + altman_e
+
+    z_score = {
+        "score": altman,
+        "values":
+        {
+            "A": altman_a,
+            "B": altman_b,
+            "C": altman_c,
+            "D": altman_d,
+            "E": altman_e
+        }
+    }
+    return z_score
+
+
 AVAILABLE_KEYS = {
     "dividends": get_dividends,
     "info": get_info,
@@ -179,73 +306,9 @@ AVAILABLE_KEYS = {
     "balance": get_balance_sheet,
     "cashflow": get_cashflow,
     "earnings": get_earnings,
-    "recommendations": get_recommendations
+    "recommendations": get_recommendations,
+    "altman_z": get_altman_z_score
 }
-
-
-def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
-    """
-    Get Api Metadata
-
-    args:
-        fund_ticker:    (str) fund name
-
-    optional args:
-        progress_bar:   (ProgressBar) DEFAULT=None
-
-    returns:
-        metadata:       (dict) contains all financial metadata available
-    """
-    pb = kwargs.get('progress_bar', None)
-    max_close = kwargs.get('max_close', None)
-    dataset = kwargs.get('data')
-
-    fund_ticker_cleansed = SP500.get(fund_ticker, fund_ticker)
-    api_print = f"\r\nFetching API metadata for {FUND}{fund_ticker_cleansed}{NORMAL}..."
-    print(api_print)
-
-    metadata = {}
-    ticker = yf.Ticker(fund_ticker)
-    if pb is not None:
-        pb.uptick(increment=0.2)
-    st_tick = styf.Ticker(fund_ticker)
-    if pb is not None:
-        pb.uptick(increment=0.3)
-
-    metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
-    metadata['info'] = AVAILABLE_KEYS.get('info')(
-        ticker, st_tick, force_holdings=True)
-
-    if pb is not None:
-        pb.uptick(increment=0.2)
-
-    metadata['financials'] = AVAILABLE_KEYS.get('financials')(ticker, st_tick)
-    metadata['balance_sheet'] = AVAILABLE_KEYS.get('balance')(ticker, st_tick)
-
-    if pb is not None:
-        pb.uptick(increment=0.1)
-
-    metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker, st_tick)
-    metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker, st_tick)
-    metadata['recommendations'] = AVAILABLE_KEYS.get(
-        'recommendations')(ticker, st_tick)
-
-    metadata['recommendations']['tabular'] = calculate_recommendation_curve(
-        metadata['recommendations'])
-    # EPS needs some other figures to make it correct, but ok for now.
-    metadata['eps'] = calculate_eps(metadata)
-    if pb is not None:
-        pb.uptick(increment=0.1)
-
-    metadata['volatility'] = get_volatility(
-        fund_ticker, max_close=max_close, data=dataset)
-    if pb is not None:
-        pb.uptick(increment=0.1)
-
-    api_print += "  Done."
-    print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
-
-    return metadata
 
 
 def calculate_recommendation_curve(recoms: dict) -> dict:
