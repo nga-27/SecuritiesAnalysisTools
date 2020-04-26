@@ -195,7 +195,10 @@ def fund_statistics(pdf, fund_data: dict, **kwargs):
                       ['statistics']['current_change'], 2)
     percent = np.round(fund_data[sample_view]
                        ['statistics']['current_percent_change'], 2)
-    price_str = f"${price}   ({change}, {percent}%)"
+    if change > 0.0:
+        price_str = f"${price}   (+{change}, +{percent}%)"
+    else:
+        price_str = f"${price}   ({change}, {percent}%)"
 
     colo = "black"
     if change > 0.0:
@@ -313,5 +316,15 @@ def fund_volatility(pdf, fund_data: dict):
     pdf.cell(quad_val, 0.2, txt=sl_str2, align='L')
     pdf.cell(quad_name, 0.2, txt=md_str, align='L')
     pdf.cell(quad_val, 0.2, txt=md_str2, align='L', ln=1)
+
+    altman_z = fund_data['metadata'].get('altman_z', {})
+    altman_z_score = altman_z.get('score')
+    if isinstance(altman_z_score, (int, float)):
+        altman_z_score = str(np.round(altman_z_score, 5))
+    az_str = f"Altman-Z Score:"
+    az_str2 = altman_z_score
+
+    pdf.cell(quad_name, 0.2, txt=az_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=az_str2, align='L')
 
     return pdf

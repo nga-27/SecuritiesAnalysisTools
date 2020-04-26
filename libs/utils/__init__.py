@@ -10,7 +10,7 @@ from .formatting import name_parser, index_extractor, fund_list_extractor, index
 from .formatting import dates_extractor_list, date_extractor, dates_convert_from_index
 
 from .plotting import dual_plotting, generic_plotting, bar_chart, specialty_plotting, shape_plotting
-from .plotting import candlestick
+from .plotting import candlestick_plot
 
 from .progress_bar import ProgressBar
 
