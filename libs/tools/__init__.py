@@ -28,5 +28,6 @@ from .total_power import total_power
 from .on_balance_volume import on_balance_volume
 
 from .statistics import get_high_level_stats
+from .candlesticks import candlesticks
 
 from .bollinger_bands import bollinger_bands

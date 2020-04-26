@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+from mpl_finance import candlestick_ochl
 from pandas.plotting import register_matplotlib_converters
 
 from .formatting import dates_extractor_list
@@ -501,19 +502,21 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     plt.clf()
 
 
-def candlestick(data: pd.DataFrame, **kwargs):
+def candlestick_plot(data: pd.DataFrame, **kwargs):
     """
     Plot candlestick chart
 
     args:
-        data:           (list) list of y-values to be plotted 
+        data:               (list) list of y-values to be plotted 
 
     optional args:
-        title:          (str) title of plot; DEFAULT=''
-        legend:         (list) list of plot labels in legend; DEFAULT=[] 
-        saveFig:        (bool) True will save as 'filename'; DEFAULT=False
-        filename:       (str) path to save plot; DEFAULT='temp_candlestick.png'
-        progress_bar:   (ProgressBar) increments progressbar as processes data
+        title:              (str) title of plot; DEFAULT=''
+        legend:             (list) list of plot labels in legend; DEFAULT=[] 
+        saveFig:            (bool) True will save as 'filename'; DEFAULT=False
+        filename:           (str) path to save plot; DEFAULT='temp_candlestick.png'
+        progress_bar:       (ProgressBar) increments progressbar as processes data
+        threshold_candles:  (dict) candlestick thresholds for days; DEFAULT=None
+        additional_plts:    (list) plot_objects "plot", "color", "legend"; DEFAULT=[]
 
     returns:
         None
@@ -521,10 +524,11 @@ def candlestick(data: pd.DataFrame, **kwargs):
     register_matplotlib_converters()
 
     title = kwargs.get('title', '')
-    legend = kwargs.get('legend', [])
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_candlestick.png')
     p_bar = kwargs.get('progress_bar', None)
+    additional_plts = kwargs.get('additional_plts', [])
+    threshold_candles = kwargs.get('threshold_candles', None)
 
     _, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
@@ -535,37 +539,80 @@ def candlestick(data: pd.DataFrame, **kwargs):
 
     increment = 0.5 / float(len(data['Close']) + 1)
 
+    th_candles = False
+    if threshold_candles is not None:
+        _doji = threshold_candles.get('doji', 0.0)
+        _short = threshold_candles.get('short', 0.0)
+        _long = threshold_candles.get('long', 0.0)
+        _ratio = threshold_candles.get('doji_ratio', 5.0)
+        th_candles = True
+
     for i in range(len(data['Close'])):
         op = data['Open'][i]
         close = data['Close'][i]
         high = data['High'][i]
         low = data['Low'][i]
 
-        if data['Close'][i] > data['Open'][i]:
-            colors = 'green'
-        elif data['Close'][i] == data['Open'][i]:
+        shadow_color = 'black'
+        if th_candles:
+            diff = np.abs(data['Close'][i] - data['Open'][i])
             colors = 'black'
-            if i > 0:
-                op = data['Open'][i-1]
-                if op > close:
+            if diff >= _long:
+                colors = 'blue'
+            if diff <= _short:
+                colors = 'orange'
+            if diff <= _doji:
+                shadow = data['High'][i] - data['Low'][i]
+                if shadow >= (diff * _ratio):
                     colors = 'red'
-                else:
-                    colors = 'green'
+
+            # Handle mutual fund case here:
+            if (diff == 0) and (data['High'][i] == data['Low'][i]) and (i > 0):
+                colors = 'black'
+                op = data['Open'][i-1]
+            shadow_color = colors
+
         else:
-            colors = 'red'
+            if data['Close'][i] > data['Open'][i]:
+                colors = 'green'
+            elif data['Close'][i] == data['Open'][i]:
+                colors = 'black'
+                if i > 0:
+                    op = data['Open'][i-1]
+                    if op > close:
+                        colors = 'red'
+                    else:
+                        colors = 'green'
+            else:
+                colors = 'red'
+
         oc = plt.Line2D((x[i], x[i]), (op, close), lw=3,
                         ls='-', alpha=1, color=colors)
         plt.gca().add_line(oc)
         hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75,
-                        ls='-', alpha=1, color='black')
+                        ls='-', alpha=1, color=shadow_color)
         plt.gca().add_line(hl)
 
         if p_bar is not None:
             p_bar.uptick(increment=increment)
 
+    handles = []
+    if len(additional_plts) > 0:
+        for add_plt in additional_plts:
+            color = add_plt.get('color')
+            label = add_plt.get('legend')
+            if color is not None:
+                line, = plt.plot(x, add_plt["plot"],
+                                 add_plt["color"], label=label,
+                                 linewidth=0.5)
+            else:
+                line, = plt.plot(x, add_plt["plot"],
+                                 label=label, linewidth=0.5)
+            handles.append(line)
+
     plt.title(title)
-    if len(legend) > 0:
-        plt.legend(legend)
+    if len(handles) > 0:
+        plt.legend(handles=handles)
 
     plot_xaxis_disperse(ax)
 
