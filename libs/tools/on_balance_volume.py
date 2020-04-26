@@ -178,7 +178,8 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
         interval=[0, 2, 4, 7],
         trend_window=[3, 15, 31, max_window])
 
-    get_trendlines_regression(obv)
+    if obv[0] != 0.0 and obv[2] != 0.0 and obv[5] != 0.0:
+        get_trendlines_regression(obv)
 
     # obv_dict['trends'] = dict()
     # sub_name = f"obv_{name}"
