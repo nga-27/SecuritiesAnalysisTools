@@ -603,9 +603,11 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
             label = add_plt.get('legend')
             if color is not None:
                 line, = plt.plot(x, add_plt["plot"],
-                                 add_plt["color"], label=label)
+                                 add_plt["color"], label=label,
+                                 linewidth=0.5)
             else:
-                line, = plt.plot(x, add_plt["plot"], label=label)
+                line, = plt.plot(x, add_plt["plot"],
+                                 label=label, linewidth=0.5)
             handles.append(line)
 
     plt.title(title)

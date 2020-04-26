@@ -45,15 +45,21 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     candle = pattern_detection(
         fund, candle, plot_output=plot_output, pbar=pbar)
 
+    fifty_day = simple_moving_avg(fund, 50)
+    two_hundred_day = simple_moving_avg(fund, 200)
+    plot_50 = {"plot": fifty_day, "color": "blue", "legend": "50-day MA"}
+    plot_200 = {"plot": two_hundred_day,
+                "color": "black", "legend": "200-day MA"}
+
     if plot_output:
-        candlestick_plot(fund, title=name)
+        candlestick_plot(fund, title=name, additional_plts=[plot_50, plot_200])
     else:
         filename = f"{name}/{view}/candlestick_{name}"
         candlestick_plot(fund, title=name, filename=filename,
-                         saveFig=True)
+                         saveFig=True, additional_plts=[plot_50, plot_200])
 
     if pbar is not None:
-        pbar.uptick(increment=1.0)
+        pbar.uptick(increment=0.1)
     return candle
 
 
