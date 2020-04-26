@@ -5,7 +5,7 @@ import numpy as np
 
 from libs.utils import ProgressBar
 from libs.utils import candlestick_plot
-from .moving_average import simple_moving_avg
+from .moving_average import simple_moving_avg, exponential_moving_avg
 from .full_stochastic import generate_full_stoch_signal
 
 
@@ -160,15 +160,30 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
         open_close.append(np.abs(op - fund['Close'][i]))
         high_low.append(np.abs(fund['High'][i] - fund['Low'][i]))
 
+    volatility = exponential_moving_avg(high_low, 25, data_type='list')
+    long_price = []
+    short_price = []
+    long_thresh = float(LONG) / 100.0
+    short_thresh = float(SHORT) * 2.0 / 100.0
+    for i, low in enumerate(fund['Low']):
+        price_l = low + (volatility[i] * long_thresh)
+        price_s = low + (volatility[i] * short_thresh)
+        long_price.append(price_l)
+        short_price.append(price_s)
+
     thresholds = dict()
     thresholds['short'] = np.percentile(open_close, SHORT)
     thresholds['long'] = np.percentile(open_close, LONG)
     thresholds['doji'] = np.percentile(open_close, DOJI)
     thresholds['doji_ratio'] = DOJI_RATIO
+    thresholds['volatility'] = {"long": long_price, "short": short_price}
 
     if plot_output:
         print(f"\r\nThresholding for candlesticks:")
-        pprint.pprint(thresholds)
+        print(f"\r\nShort: {thresholds['short']}")
+        print(f"Long: {thresholds['long']}")
+        print(f"Doji: {thresholds['doji']}")
+        print(f"Doji Ratio: {thresholds['doji_ratio']}")
         candlestick_plot(fund, title="Doji & Long/Short Days",
                          threshold_candles=thresholds)
 
@@ -192,6 +207,9 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
     SHORT = thresholds['short']
     DOJI = thresholds['doji']
     RATIO = thresholds['doji_ratio']
+
+    vol_long = thresholds['volatility']['long']
+    vol_short = thresholds['volatility']['short']
 
     # Classification elements:
     for i, close in enumerate(fund['Close']):
@@ -224,6 +242,13 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
             stats['candlestick']['body'] = 'short'
         else:
             stats['candlestick']['body'] = 'normal'
+
+        if fund['High'] > vol_long:
+            stats['candlestick']['vol_body'] = 'long'
+        elif fund['High'] < vol_short:
+            stats['candlestick']['vol_body'] = 'short'
+        else:
+            stats['candlestick']['vol_body'] = 'normal'
 
         if close > fund['Open'][i]:
             stats['candlestick']['color'] = 'white'
@@ -304,7 +329,7 @@ def filtered_reversal_patterns(fund: pd.DataFrame,
 #   PATTERN DETECTION LIBRARY
 ###################################
 
-def pattern_library(pattern: str, days: list, index: int) -> list:
+def pattern_library(pattern: str, days: list, index: int, body='body') -> list:
     """Pattern Library
 
     Command function for properly configuring and running various pattern detections.
@@ -335,7 +360,7 @@ def pattern_library(pattern: str, days: list, index: int) -> list:
     if isinstance(sub_days, (dict)):
         sub_days = [sub_days]
 
-    detection = function(sub_days)
+    detection = function(sub_days, body=body)
     if detection is not None:
         if detection['type'] == 'bearish':
             return -1 * weight, detection['style']
@@ -347,7 +372,7 @@ def pattern_library(pattern: str, days: list, index: int) -> list:
 
 ###################################
 
-def doji_pattern(day: list) -> dict:
+def doji_pattern(day: list, body='body') -> dict:
     THRESH = 0.05
     day = day[0]
     if day.get('candlestick', {}).get('doji'):
@@ -364,11 +389,11 @@ def doji_pattern(day: list) -> dict:
     return None
 
 
-def dark_cloud_or_piercing_line(day: list) -> dict:
+def dark_cloud_or_piercing_line(day: list, body='body') -> dict:
     # Dark Cloud
     if day[0].get('trend') == 'above':
         candle_0 = day[0].get('candlestick')
-        if candle_0.get('body') == 'long':
+        if candle_0.get(body) == 'long':
             if candle_0.get('color') == 'white':
                 basic_0 = day[0].get('basic')
                 high_0 = basic_0.get('High')
@@ -385,7 +410,7 @@ def dark_cloud_or_piercing_line(day: list) -> dict:
     # Piercing Line
     elif day[0].get('trend') == 'below':
         candle_0 = day[0].get('candlestick')
-        if candle_0.get('body') == 'long':
+        if candle_0.get(body) == 'long':
             if candle_0.get('color') == 'black':
                 basic_0 = day[0].get('basic')
                 low_0 = basic_0.get('Low')
@@ -402,118 +427,113 @@ def dark_cloud_or_piercing_line(day: list) -> dict:
     return None
 
 
-def evening_morning_star(day: list) -> dict:
+def evening_morning_star(day: list, body='body') -> dict:
     # Evening star
     if day[0].get('trend') == 'above':
         candle_0 = day[0].get('candlestick')
-        if candle_0.get('body') == 'long':
-            if candle_0.get('color') == 'white':
-                basic_0 = day[0].get('basic')
-                basic_1 = day[1].get('basic')
-                close_0 = basic_0.get('Close')
-                open_1 = basic_1.get('Open')
-                if open_1 > close_0:
-                    candle_1 = day[1].get('candlestick')
-                    if candle_1.get('body') == 'short':
-                        close_1 = basic_1.get('Close')
-                        if close_1 > close_0:
-                            basic_2 = day[2].get('basic')
-                            open_2 = basic_2.get('Open')
-                            if open_2 < min(close_1, open_1):
-                                open_0 = basic_0.get('Open')
-                                mid_pt = ((close_0 - open_0) / 2.0) + open_0
-                                close_2 = basic_2.get('Close')
-                                if close_2 <= mid_pt:
-                                    if candle_1['doji']:
-                                        if basic_1['Low'] > max(basic_0['High'], basic_1['High']):
-                                            return {"type": 'bearish', "style": 'abandonedbaby--'}
-                                        return {"type": 'bearish', "style": 'eveningstar-doji'}
-                                    return {'type': 'bearish', 'style': 'eveningstar'}
+        if candle_0[body] == 'long' and candle_0['color'] == 'white':
+            basic_0 = day[0].get('basic')
+            basic_1 = day[1].get('basic')
+            close_0 = basic_0.get('Close')
+            open_1 = basic_1.get('Open')
+            if open_1 > close_0:
+                candle_1 = day[1].get('candlestick')
+                if candle_1[body] == 'short':
+                    close_1 = basic_1.get('Close')
+                    if close_1 > close_0:
+                        basic_2 = day[2].get('basic')
+                        open_2 = basic_2.get('Open')
+                        if open_2 < min(close_1, open_1):
+                            open_0 = basic_0.get('Open')
+                            mid_pt = ((close_0 - open_0) / 2.0) + open_0
+                            close_2 = basic_2.get('Close')
+                            if close_2 <= mid_pt:
+                                if candle_1['doji']:
+                                    if basic_1['Low'] > max(basic_0['High'], basic_1['High']):
+                                        return {"type": 'bearish', "style": 'abandonedbaby--'}
+                                    return {"type": 'bearish', "style": 'eveningstar-doji'}
+                                return {'type': 'bearish', 'style': 'eveningstar'}
 
     # Morning star
     if day[0].get('trend') == 'below':
         candle_0 = day[0].get('candlestick')
-        if candle_0.get('body') == 'long':
-            if candle_0.get('color') == 'black':
-                basic_0 = day[0].get('basic')
-                basic_1 = day[1].get('basic')
-                close_0 = basic_0.get('Close')
-                open_1 = basic_1.get('Open')
-                if open_1 < close_0:
-                    candle_1 = day[1].get('candlestick')
-                    if candle_1.get('body') == 'short':
-                        close_1 = basic_1.get('Close')
-                        if close_1 < close_0:
-                            basic_2 = day[2].get('basic')
-                            open_2 = basic_2.get('Open')
-                            if open_2 > max(close_1, open_1):
-                                open_0 = basic_0.get('Open')
-                                mid_pt = ((close_0 - open_0) / 2.0) + open_0
-                                close_2 = basic_2.get('Close')
-                                if close_2 >= mid_pt:
-                                    if candle_1['doji']:
-                                        if basic_1['High'] < min(basic_0['Low'], basic_1['Low']):
-                                            return {"type": 'bullish', "style": 'abandonedbaby-+'}
-                                        return {"type": 'bullish', "style": 'morningstar-doji'}
-                                    return {'type': 'bullish', 'style': 'morningstar'}
-
+        if candle_0[body] == 'long' and candle_0['color'] == 'black':
+            basic_0 = day[0].get('basic')
+            basic_1 = day[1].get('basic')
+            close_0 = basic_0.get('Close')
+            open_1 = basic_1.get('Open')
+            if open_1 < close_0:
+                candle_1 = day[1].get('candlestick')
+                if candle_1[body] == 'short':
+                    close_1 = basic_1.get('Close')
+                    if close_1 < close_0:
+                        basic_2 = day[2].get('basic')
+                        open_2 = basic_2.get('Open')
+                        if open_2 > max(close_1, open_1):
+                            open_0 = basic_0.get('Open')
+                            mid_pt = ((close_0 - open_0) / 2.0) + open_0
+                            close_2 = basic_2.get('Close')
+                            if close_2 >= mid_pt:
+                                if candle_1['doji']:
+                                    if basic_1['High'] < min(basic_0['Low'], basic_1['Low']):
+                                        return {"type": 'bullish', "style": 'abandonedbaby-+'}
+                                    return {"type": 'bullish', "style": 'morningstar-doji'}
+                                return {'type': 'bullish', 'style': 'morningstar'}
     return None
 
 
-def rising_falling_three_methods(day: list) -> dict:
+def rising_falling_three_methods(day: list, body='body') -> dict:
     # Rising three methods (continuation of bull trend)
     if day[0].get('trend') == 'above':
         candle_0 = day[0].get('candlestick')
-        if candle_0.get('body') == 'long':
-            if candle_0.get('color') == 'white':
-                basic_0 = day[0].get('basic')
-                high_0 = basic_0.get('High')
-                low_0 = basic_0.get('Low')
-                close_0 = basic_0.get('Close')
-                basic_1 = day[1].get('basic')
-                if high_0 >= max(basic_1.get('Open'), basic_1.get('Close')):
-                    if low_0 <= min(basic_1.get('Open'), basic_1.get('Close')):
-                        if day[1].get('candlestick').get('body') == 'short':
-                            basic_2 = day[1].get('basic')
-                            if high_0 >= max(basic_2.get('Open'), basic_2.get('Close')):
-                                if low_0 <= min(basic_2.get('Open'), basic_2.get('Close')):
-                                    basic_3 = day[1].get('basic')
-                                    if high_0 >= max(basic_3.get('Open'), basic_3.get('Close')):
-                                        if low_0 <= min(basic_3.get('Open'), basic_3.get('Close')):
-                                            candle_4 = day[4].get(
-                                                'candlestick')
-                                            if candle_4.get('body') == 'long':
-                                                if candle_4.get('color') == 'white':
-                                                    if day[4].get('basic', {}).get('Close') > close_0:
-                                                        return {"type": 'bullish',
-                                                                "style": 'risingthreemethods'}
+        if candle_0[body] == 'long' and candle_0['color'] == 'white':
+            basic_0 = day[0].get('basic')
+            high_0 = basic_0.get('High')
+            low_0 = basic_0.get('Low')
+            close_0 = basic_0.get('Close')
+            basic_1 = day[1].get('basic')
+            if high_0 >= max(basic_1.get('Open'), basic_1.get('Close')):
+                if low_0 <= min(basic_1.get('Open'), basic_1.get('Close')):
+                    if day[1]['candlestick'][body] == 'short':
+                        basic_2 = day[1].get('basic')
+                        if high_0 >= max(basic_2.get('Open'), basic_2.get('Close')):
+                            if low_0 <= min(basic_2.get('Open'), basic_2.get('Close')):
+                                basic_3 = day[1].get('basic')
+                                if high_0 >= max(basic_3.get('Open'), basic_3.get('Close')):
+                                    if low_0 <= min(basic_3.get('Open'), basic_3.get('Close')):
+                                        candle_4 = day[4].get(
+                                            'candlestick')
+                                        if candle_4[body] == 'long' and \
+                                                candle_4['color'] == 'white':
+                                            if day[4].get('basic', {}).get('Close') > close_0:
+                                                return {"type": 'bullish',
+                                                        "style": 'risingthreemethods'}
 
     # Falling three methods (continuation of bear trend)
     if day[0].get('trend') == 'below':
         candle_0 = day[0].get('candlestick')
-        if candle_0.get('body') == 'long':
-            if candle_0.get('color') == 'black':
-                basic_0 = day[0].get('basic')
-                high_0 = basic_0.get('High')
-                low_0 = basic_0.get('Low')
-                close_0 = basic_0.get('Close')
-                basic_1 = day[1].get('basic')
-                if low_0 <= min(basic_1.get('Open'), basic_1.get('Close')):
-                    if high_0 >= max(basic_1.get('Open'), basic_1.get('Close')):
-                        if day[1].get('candlestick').get('body') == 'short':
-                            basic_2 = day[1].get('basic')
-                            if low_0 <= min(basic_2.get('Open'), basic_2.get('Close')):
-                                if high_0 >= max(basic_2.get('Open'), basic_2.get('Close')):
-                                    basic_3 = day[1].get('basic')
-                                    if low_0 <= min(basic_3.get('Open'), basic_3.get('Close')):
-                                        if high_0 >= max(basic_3.get('Open'), basic_3.get('Close')):
-                                            candle_4 = day[4].get(
-                                                'candlestick')
-                                            if candle_4.get('body') == 'long':
-                                                if candle_4.get('color') == 'black':
-                                                    if day[4].get('basic', {}).get('Close') < close_0:
-                                                        return {"type": 'bearish',
-                                                                "style": 'fallingthreemethods'}
+        if candle_0[body] == 'long' and candle_0['color'] == 'black':
+            basic_0 = day[0].get('basic')
+            high_0 = basic_0.get('High')
+            low_0 = basic_0.get('Low')
+            close_0 = basic_0.get('Close')
+            basic_1 = day[1].get('basic')
+            if low_0 <= min(basic_1.get('Open'), basic_1.get('Close')):
+                if high_0 >= max(basic_1.get('Open'), basic_1.get('Close')):
+                    if day[1]['candlestick'][body] == 'short':
+                        basic_2 = day[1].get('basic')
+                        if low_0 <= min(basic_2.get('Open'), basic_2.get('Close')):
+                            if high_0 >= max(basic_2.get('Open'), basic_2.get('Close')):
+                                basic_3 = day[1].get('basic')
+                                if low_0 <= min(basic_3.get('Open'), basic_3.get('Close')):
+                                    if high_0 >= max(basic_3.get('Open'), basic_3.get('Close')):
+                                        candle_4 = day[4].get(
+                                            'candlestick')
+                                        if candle_4[body] == 'long' and \
+                                                candle_4['color'] == 'black':
+                                            if day[4].get('basic', {}).get('Close') < close_0:
+                                                return {"type": 'bearish',
+                                                        "style": 'fallingthreemethods'}
 
     return None
 
