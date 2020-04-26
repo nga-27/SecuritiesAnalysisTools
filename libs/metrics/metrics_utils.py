@@ -26,7 +26,8 @@ ACCEPTED_ATTS = [
     'momentum_oscillator',
     'bear_bull_power',
     'total_power',
-    'hull_moving_average'
+    'hull_moving_average',
+    'candlesticks'
 ]
 
 """ Utilities for creating data metrics for plotting later """

@@ -101,14 +101,19 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
         patterns.append(value)
 
     patterns2 = filtered_reversal_patterns(fund, candle)
+    tabular = [0.0] * len(patterns)
 
     for i, patt in enumerate(patterns2):
         if patt['value'] != 0:
             patterns[i]['value'] += patt['value']
             patterns[i]['patterns'].extend(patt['patterns'])
 
+    for i, patt in enumerate(patterns):
+        tabular[i] += float(patt['value'])
+
     if plot_output:
         signal = simple_moving_avg(fund, 10)
+
         for i, patt in enumerate(patterns):
             if patt['value'] != 0:
                 signal[i] += (patt['value'] * 10.0)
@@ -120,6 +125,8 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
             plot_obj], title='Candlestick Signals')
 
     candle['patterns'] = patterns
+    candle['tabular'] = tabular
+
     return candle
 
 
