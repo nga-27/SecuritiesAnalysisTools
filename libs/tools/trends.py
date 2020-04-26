@@ -152,14 +152,15 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
         fund:           (pd.DataFrame) fund historical data
 
     optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        name:           (str) name of fund, primarily for plotting; DEFAULT=''
         plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        interval:       (list of ints) list of trend window time periods; DEFAULT=[4, 8, 16, 32]
+        interval:       (list) list of windowed filter time periods; DEFAULT=[4, 8, 16, 32]
         progress_bar:   (ProgressBar) DEFAULT=None
         sub_name:       (str) file extension within 'name' directory; DEFAULT=name
         view:           (str) directory of plots; DEFAULT=''
         meta:           (dict) 'metadata' object for fund; DEFAULT=None
         out_suppress:   (bool) if True, skips plotting; DEFAULT=False
+        trend_window:   (list) list of line time windows; DEFAULT=[163, 91, 56, 27]
 
     returns:
         trends:         (dict) contains all trend lines determined by algorithm
@@ -172,6 +173,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view', '')
     meta = kwargs.get('meta')
     out_suppress = kwargs.get('out_suppress', False)
+    trend_window = kwargs.get('trend_window', [163, 91, 56, 27])
 
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -235,10 +237,11 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     # mins_xd = [fund.index[x] for x in mins_x]
     # maxes_xd = [fund.index[x] for x in maxes_x]
 
-    long_term = 163
-    intermediate_term = 91
-    short_term = 56
-    near_term = 27
+    long_term = trend_window[0]
+    intermediate_term = trend_window[1]
+    short_term = trend_window[2]
+    near_term = trend_window[3]
+
     X0, Y0 = get_lines_from_period(
         fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term, vq=vq)
     X1, Y1 = get_lines_from_period(
@@ -395,6 +398,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
                 count += 1
                 st_count = count
 
+            end_count = st_count
             while (count < len(maxes_x)) and (maxes_x[count] < end):
                 count += 1
                 end_count = count
@@ -775,3 +779,90 @@ def autotrend(data, **kwargs) -> list:
                 trend[i] = (trend[i] / max_factor) * 0.35
 
     return trend
+
+
+######################################################
+DIVISORS = [4, 5, 7, 9, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+
+
+def get_trendlines_regression(signal: list, **kwargs) -> dict:
+
+    iterations = kwargs.get('iterations', 15)
+    threshold = kwargs.get('threshold', 0.1)
+
+    indexes = list(range(len(signal)))
+
+    if iterations > len(DIVISORS):
+        iterations = len(DIVISORS)
+    divisors = DIVISORS[0:iterations]
+
+    lines = []
+    x_s = []
+    for div in divisors:
+        period = int(len(signal) / div)
+        for i in range(div):
+            for k in range(2):
+                data = dict()
+                if i == div-1:
+                    data['value'] = signal[period*i: len(signal)].copy()
+                    data['x'] = indexes[period*i: len(signal)].copy()
+                else:
+                    data['value'] = signal[period*i: period*(i+1)].copy()
+                    data['x'] = indexes[period*i: period*(i+1)].copy()
+
+                data = pd.DataFrame.from_dict(data)
+
+                while len(data['x']) > 3:
+                    reg = linregress(data['x'], data['value'])
+                    if k == 0:
+                        data = data.loc[data['value'] >
+                                        reg[0] * data['x'] + reg[1]]
+                    else:
+                        data = data.loc[data['value'] <
+                                        reg[0] * data['x'] + reg[1]]
+
+                reg = linregress(data['x'], data['value'])
+                line = []
+                for ind in indexes:
+                    line.append(reg[0] * ind + reg[1])
+
+                x_line = indexes.copy()
+                removals = []
+                for j, lin in enumerate(line):
+                    if lin < 0.0:
+                        if lin < ((1.0 + threshold) * signal[j]) or lin > ((1.0 - threshold) * signal[j]):
+                            removals.append(j)
+                    else:
+                        if lin > ((1.0 + threshold) * signal[j]) or lin < ((1.0 - threshold) * signal[j]):
+                            removals.append(j)
+
+                line_corrected = []
+                x_corrected = []
+                for x in x_line:
+                    if x not in removals:
+                        x_corrected.append(x)
+
+                if len(x_corrected) > 0:
+                    start = min(x_corrected)
+                    end = max(x_corrected)
+                    line_corrected = line[start:end+1].copy()
+                    x_corrected = list(range(start, end+1))
+
+                lines.append(line_corrected.copy())
+                x_s.append(x_corrected.copy())
+                # lines.append(line)
+                # x_s.append(x_line)
+
+    # handle over load of lines (consolidate)
+
+    plots = []
+    x_plots = []
+    plots.append(signal)
+    x_plots.append(list(range(len(signal))))
+    plots.extend(lines)
+    x_plots.extend(x_s)
+
+    generic_plotting(plots, x=x_plots)
+
+    trends = dict()
+    return trends
