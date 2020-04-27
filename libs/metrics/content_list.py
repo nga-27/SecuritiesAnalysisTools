@@ -42,14 +42,31 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 5, **kwargs) -> dict:
     else:
         metadata = [meta_sub]
 
+    content = {"signals": []}
     for sub in metadata:
-        print(f"metasub keys: {sub.keys()}")
+        print(f"metasub keys: {sub.keys()}\r\n")
         for key in sub:
             if key in INDICATOR_NAMES:
-                print(f"\r\nKey: {key}\r\n")
                 if SIGNAL_KEY in sub[key] and SIZE_KEY in sub[key]:
                     start_period = sub[key][SIZE_KEY] - lookback - 1
+                    for signal in sub[key][SIGNAL_KEY]:
+                        if signal['index'] >= start_period:
+                            data = {
+                                "type": signal['type'],
+                                "indicator": key,
+                                "value": signal['value'],
+                                "date": signal['date'],
+                                "days_ago": (sub[key][SIZE_KEY] - 1 - signal['index'])
+                            }
+                            content["signals"].append(data)
 
     if pbar is not None:
         pbar.uptick(increment=1.0)
-    return {}
+
+    if print_out:
+        print("\r\n")
+        for sig in content["signals"]:
+            print(f"({sig['days_ago']}) {sig['type'].upper()} :: {sig['indicator']} " +
+                  f"({sig['value']}) :: {sig['date']}")
+
+    return content
