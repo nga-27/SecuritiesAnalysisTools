@@ -351,7 +351,7 @@ def filtered_reversal_patterns(fund: pd.DataFrame,
 #   PATTERN DETECTION LIBRARY
 ###################################
 
-def pattern_library(pattern: str, days: list, index: int, body='body') -> list:
+def pattern_library(pattern: str, days: list, index: int, body: str = 'body') -> list:
     """Pattern Library
 
     Command function for properly configuring and running various pattern detections.
@@ -360,6 +360,9 @@ def pattern_library(pattern: str, days: list, index: int, body='body') -> list:
         pattern {str} -- key from PATTERNS object
         days {list} -- candle objects generated from day_classification
         index {int} -- index of DataFrame or list
+
+    Keyword Arguments:
+        body {str} -- body generation style (quartile vs. volatility); (default: {'body'})
 
     Returns:
         list -- tuple (value of patterns, named pattern)

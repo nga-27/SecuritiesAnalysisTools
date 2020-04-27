@@ -63,7 +63,7 @@ def run_prod(script: list):
         script {list} -- dataset, funds, periods, config
 
     Returns:
-        [dict] -- analysis object of fund data
+        dict -- analysis object of fund data
     """
     dataset = script[0]
     funds = script[1]

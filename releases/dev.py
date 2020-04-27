@@ -43,6 +43,7 @@ from libs.utils import SP500
 # Imports that drive custom metrics for market analysis
 from libs.metrics import future_returns
 from libs.metrics import generate_synopsis
+from libs.metrics import assemble_last_signals
 
 # Imports that start process and show progress doing so
 from libs.utils import ProgressBar
@@ -63,7 +64,7 @@ def run_dev(script: list):
         script {list} -- dataset, funds, periods, config
 
     Returns:
-        [dict] -- analysis object of fund data
+        dict -- analysis object of fund data
     """
     dataset = script[0]
     funds = script[1]
@@ -203,6 +204,10 @@ def run_dev(script: list):
 
             # Various Fund-specific Metrics
             fund_data['futures'] = future_returns(fund, progress_bar=p)
+
+            # Parse through indicators and pull out latest signals (must be last)
+            fund_data['last_signals'] = assemble_last_signals(
+                fund_data, progress_bar=p)
 
             p.end()
 
