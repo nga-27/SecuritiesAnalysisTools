@@ -360,7 +360,20 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
 
 
 def clustered_signals(sig_list: list, **kwargs) -> list:
+    """clustered_signals
 
+    List a thresholded-set of clustered oscillator signals
+
+    Arguments:
+        sig_list {list} -- list of signals != 0
+
+    Optional Args:
+        upper_thresh {int} -- upper percentile (default: {90})
+        lower_thresh {int} -- lower percentile (default: {10})
+
+    Returns:
+        list -- filtered clustered oscillator signals
+    """
     upper_thresh = kwargs.get('upper_thresh', 90)
     lower_thresh = kwargs.get('lower_thresh', 10)
 

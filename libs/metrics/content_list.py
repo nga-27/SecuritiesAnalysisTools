@@ -1,20 +1,25 @@
 import pprint
 
 from libs.utils import ProgressBar
-from libs.utils import STANDARD_COLORS
+from libs.utils import STANDARD_COLORS, TREND_COLORS
 
 NORMAL = STANDARD_COLORS["normal"]
 WARNING = STANDARD_COLORS["warning"]
+NOTIFY = STANDARD_COLORS["ticker"]
+BULL = TREND_COLORS["good"]
+BEAR = TREND_COLORS["bad"]
+
 
 SIGNAL_KEY = 'signals'
 SIZE_KEY = 'length_of_data'
 
 INDICATOR_NAMES = [
-    "clustered_osc"
+    "clustered_osc",
+    "full_stochastic"
 ]
 
 
-def assemble_last_signals(meta_sub: dict, lookback: int = 5, **kwargs) -> dict:
+def assemble_last_signals(meta_sub: dict, lookback: int = 20, **kwargs) -> dict:
     """assemble_last signals
 
     Look through all indicators of lookback time and list them
@@ -47,7 +52,10 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 5, **kwargs) -> dict:
         print(f"metasub keys: {sub.keys()}\r\n")
         for key in sub:
             if key in INDICATOR_NAMES:
+                print(f"sub sub keys: {sub[key].keys()}\r\n")
+                # print(f"{sub[key]['bullish']}\r\n")
                 if SIGNAL_KEY in sub[key] and SIZE_KEY in sub[key]:
+                    print(f"signal for {key}")
                     start_period = sub[key][SIZE_KEY] - lookback - 1
                     for signal in sub[key][SIGNAL_KEY]:
                         if signal['index'] >= start_period:
@@ -60,13 +68,22 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 5, **kwargs) -> dict:
                             }
                             content["signals"].append(data)
 
+    content["signals"].sort(key=lambda x: x['days_ago'])
+
     if pbar is not None:
         pbar.uptick(increment=1.0)
 
     if print_out:
         print("\r\n")
+        print(f"{NOTIFY}(Periods ago) Type :: Indicator (value/signal) :: date{NORMAL}")
+        print("")
         for sig in content["signals"]:
-            print(f"({sig['days_ago']}) {sig['type'].upper()} :: {sig['indicator']} " +
-                  f"({sig['value']}) :: {sig['date']}")
+            if sig['type'] == 'bearish':
+                string = f"{BEAR}({sig['days_ago']}) {sig['type'].upper()} :: {sig['indicator']} " + \
+                    f"({sig['value']}) :: {sig['date']}{NORMAL}"
+            else:
+                string = f"{BULL}({sig['days_ago']}) {sig['type'].upper()} :: {sig['indicator']} " + \
+                    f"({sig['value']}) :: {sig['date']}{NORMAL}"
+            print(string)
 
     return content
