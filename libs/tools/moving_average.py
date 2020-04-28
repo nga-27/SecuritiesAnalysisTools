@@ -402,7 +402,8 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     mast['tabular']['medium'] = me
     mast['tabular']['long'] = ln
 
-    mast = generate_swing_signal(fund, mast, max_period=config[2])
+    mast = generate_swing_signal(
+        fund, mast, max_period=config[2], config=config)
     mast = swing_trade_metrics(fund, mast)
 
     swings = mast['metrics']
@@ -456,8 +457,9 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
     Returns:
         dict -- swing trade data object
     """
-
     max_period = kwargs.get('max_period', 18)
+    config = kwargs.get('config')
+
     sh = swings['tabular']['short']
     md = swings['tabular']['medium']
     ln = swings['tabular']['long']
@@ -479,35 +481,88 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         elif (sh[i] < md[i]) or (sh[i] < ln[i]):
             states[i] = 'e1'
 
+    periods = ''
+    if config is not None:
+        periods = f"{config[0]}-{config[1]}-{config[2]}"
+
     # Search for transitions
+    features = []
     signal = [0.0] * len(states)
+    set_block = 'n'
     for i in range(1, len(signal)):
+        date = position.index[i].strftime("%Y-%m-%d")
+        data = None
+
         if (states[i] == 'u2'):
             if (states[i-1] == 'e3') or (states[i-1] == 'e2') or (states[i-1] == 'e1'):
                 signal[i] = 0.5
+                set_block = 'u1'
+                data = {
+                    "type": 'bullish',
+                    "value": f'swing crossover ({periods})',
+                    "index": i,
+                    "date": date
+                }
 
-        elif (states[i] == 'u3') and (states[i] != states[i-1]):
+        elif (states[i] == 'u3') and (states[i] != states[i-1]) and (set_block != 'u'):
             signal[i] = 1.0
+            set_block = 'u'
+            data = {
+                "type": 'bullish',
+                "value": f'confirmed bull trend ({periods})',
+                "index": i,
+                "date": date
+            }
 
         elif close[i] > ln[i]:
             signal[i] = 0.1
 
         elif (states[i] == 'e2'):
             if (states[i-1] == 'u3') or (states[i-1] == 'u2') or (states[i-1] == 'u1'):
+                set_block = 'e1'
                 signal[i] = -0.5
+                data = {
+                    "type": 'bearish',
+                    "value": f'swing crossover ({periods})',
+                    "index": i,
+                    "date": date
+                }
 
-        elif (states[i] == 'e3') and (states[i] != states[i-1]):
+        elif (states[i] == 'e3') and (states[i] != states[i-1]) and (set_block != 'e'):
+            set_block = 'e'
             signal[i] = -1.0
+            data = {
+                "type": 'bearish',
+                "value": f'confirmed bear trend ({periods})',
+                "index": i,
+                "date": date
+            }
 
         elif close[i] < ln[i]:
             signal[i] = -0.1
 
+        if data is not None:
+            features.append(data)
+
     swings['tabular']['swing'] = signal
+    swings['signals'] = features
+    swings['length_of_data'] = len(swings['tabular']['swing'])
+
     return swings
 
 
 def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
+    """Swing Trade Metrics
 
+    Standard 1.0 to -1.0 metrics
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        swings {dict} -- swing trade data object
+
+    Returns:
+        dict -- swing trade data object
+    """
     weights = [1.0, 0.55, 0.25, 0.1]
 
     # Convert features to a "tabular" array
@@ -539,6 +594,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
 
 
 def normalize_signals_local(signals: list) -> list:
+    """ Normalize local signals based off max """
     max_ = 0.0
     for sig in signals:
         m = np.max(np.abs(sig))
@@ -557,6 +613,17 @@ def normalize_signals_local(signals: list) -> list:
 
 
 def find_crossovers(mov_avg: dict, position: pd.DataFrame) -> list:
+    """Find Crossovers
+
+    Find crossovers in signals, particularly with a short/medium/long average
+
+    Arguments:
+        mov_avg {dict} -- triple moving average data object
+        position {pd.DataFrame} -- fund dataset
+
+    Returns:
+        list -- list of crossover event dictionaries
+    """
     tshort = mov_avg['tabular']["short"]
     tmed = mov_avg['tabular']["medium"]
     tlong = mov_avg['tabular']["long"]
