@@ -16,7 +16,8 @@ SIZE_KEY = 'length_of_data'
 INDICATOR_NAMES = [
     "clustered_osc",
     "full_stochastic",
-    "rsi"
+    "rsi",
+    "ultimate"
 ]
 
 
