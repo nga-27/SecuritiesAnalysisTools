@@ -34,11 +34,11 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
                            name=name, progress_bar=progress_bar, view=view)
 
     ao['tabular'] = signal
-    ao['features'] = ao_feature_detection(
+    ao['signals'] = ao_feature_detection(
         signal, position=position, progress_bar=progress_bar)
 
     plus_minus, x_index = integrator_differentiator(
-        ao['features'], position, plot_output)
+        ao['signals'], position, plot_output)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
@@ -47,6 +47,8 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
 
     ao = awesome_metrics(position, ao, plot_output=plot_output,
                          name=name, progress_bar=progress_bar, view=view)
+
+    ao['length_of_data'] = len(ao['tabular'])
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
@@ -187,11 +189,23 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
     is_positive = signal[0] > 0.0
     for i, sig in enumerate(signal):
         if is_positive and (sig < 0.0):
-            feat = {'index': i, 'feature': 'zero crossover', 'type': 'bearish'}
+            date = position.index[i].strftime("%Y-%m-%d")
+            feat = {
+                'index': i,
+                'value': 'zero crossover',
+                'type': 'bearish',
+                "date": date
+            }
             features.append(feat)
             is_positive = False
         if (not is_positive) and (sig > 0.0):
-            feat = {'index': i, 'feature': 'zero crossover', 'type': 'bullish'}
+            date = position.index[i].strftime("%Y-%m-%d")
+            feat = {
+                'index': i,
+                'value': 'zero crossover',
+                'type': 'bullish',
+                "date": date
+            }
             features.append(feat)
             is_positive = True
 
@@ -199,12 +213,12 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
         p_bar.uptick(increment=0.1)
 
     # "Twin Peaks" feature detection
-    tpd = twin_peaks_detection(signal)
+    tpd = twin_peaks_detection(signal, position)
     for t in tpd:
         features.append(t)
 
     # "Saucer" feature detection
-    saucer = saucer_detection(signal)
+    saucer = saucer_detection(signal, position)
     for s in saucer:
         features.append(s)
 
@@ -216,7 +230,7 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
     return features
 
 
-def twin_peaks_detection(signal: list) -> list:
+def twin_peaks_detection(signal: list, position: pd.DataFrame) -> list:
     tpd = []
 
     is_positive = signal[0] > 0.0
@@ -252,7 +266,13 @@ def twin_peaks_detection(signal: list) -> list:
                 if signal[i] < signal[i-1]:
                     # Condition found!
                     state = 'bear_peaks'
-                    tp = {'index': i, 'feature': 'twin peaks', 'type': 'bearish'}
+                    date = position.index[i].strftime("%Y-%m-%d")
+                    tp = {
+                        'index': i,
+                        'value': 'twin peaks',
+                        'type': 'bearish',
+                        "date": date
+                    }
                     tpd.append(tp)
             else:
                 max_ = signal[i]
@@ -282,7 +302,13 @@ def twin_peaks_detection(signal: list) -> list:
             if signal[i] > min_:
                 if signal[i] > signal[i-1]:
                     state = 'bull_peaks'
-                    tp = {'index': i, 'feature': 'twin peaks', 'type': 'bullish'}
+                    date = position.index[i].strftime("%Y-%m-%d")
+                    tp = {
+                        'index': i,
+                        'value': 'twin peaks',
+                        'type': 'bullish',
+                        "date": date
+                    }
                     tpd.append(tp)
             else:
                 min_ = signal[i]
@@ -297,7 +323,7 @@ def twin_peaks_detection(signal: list) -> list:
     return tpd
 
 
-def saucer_detection(signal: list) -> list:
+def saucer_detection(signal: list, position: pd.DataFrame) -> list:
     sd = []
     if signal[0] > 0.0:
         state = 'pos'
@@ -326,7 +352,13 @@ def saucer_detection(signal: list) -> list:
                 state = 'neg'
             elif signal[i] > signal[i-1]:
                 state = 'pos'
-                s = {'index': i, 'feature': 'saucer', 'type': 'bullish'}
+                date = position.index[i].strftime("%Y-%m-%d")
+                s = {
+                    'index': i,
+                    'value': 'saucer',
+                    'type': 'bullish',
+                    "date": date
+                }
                 sd.append(s)
             continue
 
@@ -351,7 +383,13 @@ def saucer_detection(signal: list) -> list:
                 state = 'pos'
             elif signal[i] < signal[i-1]:
                 state = 'neg'
-                s = {'index': i, 'feature': 'saucer', 'type': 'bearish'}
+                date = position.index[i].strftime("%Y-%m-%d")
+                s = {
+                    'index': i,
+                    'value': 'saucer',
+                    'type': 'bearish',
+                    "date": date
+                }
                 sd.append(s)
             continue
 

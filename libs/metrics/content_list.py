@@ -17,7 +17,8 @@ INDICATOR_NAMES = [
     "clustered_osc",
     "full_stochastic",
     "rsi",
-    "ultimate"
+    "ultimate",
+    "awesome"
 ]
 
 
