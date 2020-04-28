@@ -245,6 +245,8 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.1)
 
     tma['type'] = 'trend'
+    tma['length_of_data'] = len(tma['tabular']['short'])
+    tma['signals'] = find_crossovers(tma, fund)
 
     return tma
 
@@ -288,9 +290,9 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
         p_bar.uptick(increment=0.2)
 
     tema['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
-    tema['short'] = config[0]
-    tema['medium'] = config[1]
-    tema['long'] = config[2]
+    tema['short'] = {"period": config[0]}
+    tema['medium'] = {"period": config[1]}
+    tema['long'] = {"period": config[2]}
 
     mshort = []
     mmed = []
@@ -326,6 +328,8 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
         p_bar.uptick(increment=0.2)
 
     tema['type'] = 'trend'
+    tema['length_of_data'] = len(tema['tabular']['short'])
+    tema['signals'] = find_crossovers(tema, fund)
 
     return tema
 
@@ -550,3 +554,108 @@ def normalize_signals_local(signals: list) -> list:
             signals[i] = new_sig.copy()
 
     return signals
+
+
+def find_crossovers(mov_avg: dict, position: pd.DataFrame) -> list:
+    tshort = mov_avg['tabular']["short"]
+    tmed = mov_avg['tabular']["medium"]
+    tlong = mov_avg['tabular']["long"]
+
+    sh_period = mov_avg['short']['period']
+    md_period = mov_avg['medium']['period']
+    ln_period = mov_avg['long']['period']
+
+    features = []
+    state = 'at'
+    for i, sh in enumerate(tshort):
+        data = None
+        date = position.index[i].strftime("%Y-%m-%d")
+
+        if state == 'at':
+            if sh > tmed[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (midterm: {sh_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+            elif sh < tmed[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (midterm: {md_period}d > {sh_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'above':
+            if sh < tmed[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (midterm: {md_period}d > {sh_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'below':
+            if sh > tmed[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (midterm: {sh_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        if data is not None:
+            features.append(data)
+
+    state = 'at'
+    for i, md in enumerate(tmed):
+        data = None
+        date = position.index[i].strftime("%Y-%m-%d")
+
+        if state == 'at':
+            if md > tlong[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (longterm: {md_period}d > {ln_period}d)',
+                    "index": i,
+                    "date": date
+                }
+            elif md < tlong[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (longterm: {ln_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'above':
+            if md < tlong[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (longterm: {ln_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'below':
+            if md > tlong[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (longterm: {md_period}d > {ln_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        if data is not None:
+            features.append(data)
+
+    return features

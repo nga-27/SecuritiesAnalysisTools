@@ -35,3 +35,8 @@ TREND_COLORS = {
     "hold": TEXT_COLOR_MAP["yellow"],
     "bad": TEXT_COLOR_MAP["red"]
 }
+
+EXEMPT_METRICS = [
+    "metadata",
+    "synopsis"
+]

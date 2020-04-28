@@ -14,5 +14,5 @@ from .plotting import candlestick_plot
 
 from .progress_bar import ProgressBar
 
-from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS, TREND_COLORS
+from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS, TREND_COLORS, EXEMPT_METRICS
 from .constants import SP500

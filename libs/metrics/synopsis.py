@@ -1,6 +1,6 @@
 import numpy as np
 
-from libs.utils import SP500, TEXT_COLOR_MAP
+from libs.utils import SP500, TEXT_COLOR_MAP, EXEMPT_METRICS
 
 DOWN = TEXT_COLOR_MAP.get('red')
 UP = TEXT_COLOR_MAP.get('green')
@@ -25,7 +25,7 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
 
     for period in analysis[name]:
 
-        if (period != 'metadata') and (period != 'synopsis'):
+        if period not in EXEMPT_METRICS:
             synopsis[period] = {'tabular': {}, 'metrics': {},
                                 'tabular_delta': {}, 'metrics_delta': {},
                                 'tabular_categories': {},

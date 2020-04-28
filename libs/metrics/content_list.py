@@ -1,7 +1,7 @@
 import pprint
 
 from libs.utils import ProgressBar
-from libs.utils import STANDARD_COLORS, TREND_COLORS
+from libs.utils import STANDARD_COLORS, TREND_COLORS, EXEMPT_METRICS
 
 NORMAL = STANDARD_COLORS["normal"]
 WARNING = STANDARD_COLORS["warning"]
@@ -20,7 +20,9 @@ INDICATOR_NAMES = [
     "ultimate",
     "awesome",
     "momentum_oscillator",
-    "on_balance_volume"
+    "on_balance_volume",
+    "moving_average",
+    "exp_moving_average"
 ]
 
 
@@ -48,7 +50,7 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 25, **kwargs) -> dict:
 
     if standalone:
         for key in meta_sub:
-            if key != 'metadata' and key != 'synopsis':
+            if key not in EXEMPT_METRICS:
                 metadata.append(meta_sub[key])
                 meta_keys.append(key)
     else:
@@ -93,7 +95,7 @@ def content_printer(content: dict, meta_key: str):
     print("\r\n")
     print(f"Content for {NOTIFY}{meta_key}\r\n{NORMAL}")
     print(
-        f"{NOTIFY}(Ago)\tType\t::\tIndicator\t\t(value/signal)\t\t\t:: date{NORMAL}")
+        f"{NOTIFY}(Ago)\tType\t::\tIndicator\t\t(value/signal)\t\t\t\t\t:: date{NORMAL}")
     print("")
     for sig in content["signals"]:
         if sig['type'] == 'bearish':
@@ -114,12 +116,16 @@ def content_printer(content: dict, meta_key: str):
 
         value = f"({sig['value']})"
         value_tabs = '\t'
-        if len(value) < 24:
+        if len(value) < 40:
             value_tabs = '\t\t'
-        if len(value) < 16:
+        if len(value) < 32:
             value_tabs = '\t\t\t'
-        if len(value) < 8:
+        if len(value) < 24:
             value_tabs = '\t\t\t\t'
+        if len(value) < 16:
+            value_tabs = '\t\t\t\t\t'
+        if len(value) < 8:
+            value_tabs = '\t\t\t\t\t\t'
 
         string = f"{color}({sig['days_ago']})\t{sig['type'].upper()}\t::\t" + \
             f"{indicator}{indicator_tabs}{value}{value_tabs}:: {sig['date']}{NORMAL}"
