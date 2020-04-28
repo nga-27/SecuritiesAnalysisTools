@@ -18,7 +18,8 @@ INDICATOR_NAMES = [
     "full_stochastic",
     "rsi",
     "ultimate",
-    "awesome"
+    "awesome",
+    "momentum_oscillator"
 ]
 
 

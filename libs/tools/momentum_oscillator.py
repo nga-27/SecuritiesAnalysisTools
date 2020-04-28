@@ -36,13 +36,13 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
 
     # Check against signal line (9-day MA)
     mo['bear_bull'] = compare_against_signal_line(
-        mo['tabular'], position=position, name=name)
+        mo['tabular'], position=position, name=name, plot_output=plot_output)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
     # Feature detection, primarily divergences (5% drop from peak1 then rise again to peak2?)
-    mo['features'] = mo_feature_detection(
+    mo['signals'] = mo_feature_detection(
         mo['tabular'], position, plot_output=plot_output, name=name)
 
     if progress_bar is not None:
@@ -56,6 +56,7 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.2)
 
     mo['type'] = 'oscillator'
+    mo['length_of_data'] = len(mo['tabular'])
 
     return mo
 
@@ -95,7 +96,22 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
 
 
 def compare_against_signal_line(signal: list, **kwargs) -> list:
-    plot_output = kwargs.get('plot_output', False)
+    """compare_against_signal_line
+
+    Compare momentum oscillator signal vs. sma signal line
+
+    Arguments:
+        signal {list} -- momentum oscillator signal
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        interval {int} -- lookback for simple moving average (default: {9})
+        position {pd.DataFrame} -- fund dataset (default: {[]})
+
+    Returns:
+        list -- bear_bull oscillator signal
+    """
+    plot_output = kwargs.get('plot_output', True)
     interval = kwargs.get('interval', 9)
     position = kwargs.get('position', [])
 
@@ -117,6 +133,17 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
 
 
 def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list:
+    """mo_feature_detection
+
+    Find various features associated with this oscillator
+
+    Arguments:
+        signal {list} -- momentum oscillator signal
+        position {pd.DataFrame} -- fund dataset
+
+    Returns:
+        list -- list of feature dictionaries
+    """
     price_extrema = find_local_extrema(position['Close'])
     signal_extrema = find_local_extrema(signal, threshold=0.40, points=True)
 
@@ -129,6 +156,19 @@ def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list
 
 def feature_matches(pos_extrema: list, mo_extrema: list,
                     position: pd.DataFrame, mo_signal: list, **kwargs) -> list:
+    """feature_matches
+
+    Search for and match for various features associated with momentum oscillator
+
+    Arguments:
+        pos_extrema {list} -- price extrema list
+        mo_extrema {list} -- momentum oscillator extrema list
+        position {pd.DataFrame} -- fund dataset
+        mo_signal {list} -- momentum oscillator signal
+
+    Returns:
+        list -- feature list of dictionaries
+    """
     features = []
     closes = position['Close']
 
@@ -139,9 +179,12 @@ def feature_matches(pos_extrema: list, mo_extrema: list,
             if closes[maxes[i]['index']] >= closes[maxes[i-1]['index']]:
                 # Bearish divergence
                 date = closes.index[maxes[i]['index']].strftime("%Y-%m-%d")
-                obj = {"index": maxes[i]['index'],
-                       "type": 'bearish', 'category': 'divergence',
-                       "date": date}
+                obj = {
+                    "index": maxes[i]['index'],
+                    "type": 'bearish',
+                    'value': 'divergence',
+                    "date": date
+                }
                 features.append(obj)
 
     mins = list(filter(lambda x: x['type'] == 'min', mo_extrema))
@@ -150,9 +193,12 @@ def feature_matches(pos_extrema: list, mo_extrema: list,
             if closes[mins[i]['index']] <= closes[mins[i-1]['index']]:
                 # Bullish divergence
                 date = closes.index[mins[i]['index']].strftime("%Y-%m-%d")
-                obj = {"index": mins[i]['index'],
-                       "type": 'bullish', 'category': 'divergence',
-                       "date": date}
+                obj = {
+                    "index": mins[i]['index'],
+                    "type": 'bullish',
+                    'value': 'divergence',
+                    "date": date
+                }
                 features.append(obj)
 
     return features
@@ -185,7 +231,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     # Convert features to a "tabular" array
     tot_len = len(position['Close'])
     metrics = [0.0] * tot_len
-    mo_features = mo_dict['features']
+    mo_features = mo_dict['signals']
     signal = mo_dict['tabular']
 
     for feat in mo_features:
