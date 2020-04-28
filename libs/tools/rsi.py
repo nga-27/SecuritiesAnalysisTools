@@ -8,6 +8,93 @@ from .trends import autotrend
 from .moving_average import windowed_moving_avg
 
 
+def RSI(position: pd.DataFrame, **kwargs) -> dict:
+    """
+    Relative Strength Indicator
+
+    args:
+        position:       (pd.DataFrame) list of y-value datasets to be plotted (multiple)
+
+    optional args:
+        name:           (list) name of fund, primarily for plotting; DEFAULT=''
+        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+        period:         (int) size of RSI indicator; DEFAULT=14 
+        out_suppress:   (bool) output plot/prints are suppressed; DEFAULT=True
+        progress_bar:   (ProgressBar) DEFAULT=None
+        overbought:     (float) threshold to trigger overbought/sell condition; DEFAULT=70.0
+        oversold:       (float) threshold to trigger oversold/buy condition; DEFAULT=30.0
+        auto_trend:     (bool) True calculates basic trend, applies to thresholds; DEFAULT=True
+
+    returns:
+        rsi_swings:     (dict) contains all rsi information
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    period = kwargs.get('period', 14)
+    out_suppress = kwargs.get('out_suppress', True)
+    progress_bar = kwargs.get('progress_bar', None)
+    overbought = kwargs.get('overbought', 70.0)
+    oversold = kwargs.get('oversold', 30.0)
+    auto_trend = kwargs.get('auto_trend', True)
+    view = kwargs.get('view', '')
+
+    rsi_data = dict()
+
+    rsi = generate_rsi_signal(position, period=period, p_bar=progress_bar)
+    rsi_data['tabular'] = rsi
+
+    slope_trend = []
+    if auto_trend:
+        slope_trend = autotrend(position['Close'], periods=[
+                                period*3, period*5.5, period*8], weights=[0.45, 0.33, 0.22], normalize=True)
+
+    over_thresholds = over_threshold_lists(
+        overbought, oversold, len(position['Close']), slope_list=slope_trend)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
+
+    rsi_data['thresholds'] = over_thresholds
+
+    # Determine indicators, swing rejection and divergences
+    rsi_data = determine_rsi_swing_rejection(
+        position, rsi_data, p_bar=progress_bar)
+
+    rsi_data = rsi_divergence(
+        position, rsi_data, plot_output=plot_output, p_bar=progress_bar)
+
+    # Determine metrics, primarily using both indicators
+    rsi_data = rsi_metrics(position, rsi_data, p_bar=progress_bar)
+
+    main_plots = [rsi, over_thresholds['overbought'],
+                  over_thresholds['oversold']]
+
+    if not out_suppress:
+        name3 = SP500.get(name, name)
+        name2 = name3 + ' - RSI'
+        if plot_output:
+            dual_plotting(position['Close'], main_plots,
+                          'Position Price', 'RSI', title=name2)
+            dual_plotting(position['Close'], rsi_data['metrics'],
+                          'Position Price', 'RSI Indicators', title=name2)
+        else:
+            filename1 = name + f"/{view}" + '/RSI_standard_{}.png'.format(name)
+            filename2 = name + f"/{view}" + \
+                '/RSI_indicator_{}.png'.format(name)
+            dual_plotting(position['Close'], main_plots, 'Position Price', 'RSI',
+                          title=name2, saveFig=True, filename=filename1)
+            dual_plotting(position['Close'], rsi_data['metrics'], 'Position Price', 'RSI Metrics',
+                          title=name2, saveFig=True, filename=filename2)
+
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.1)
+
+    rsi_data['type'] = 'oscillator'
+    rsi_data['length_of_data'] = len(rsi)
+    rsi_data['signals'] = rsi_signals(rsi_data['bullish'], rsi_data['bearish'])
+
+    return rsi_data
+
+
 def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
     """Generate RSI Signal
 
@@ -158,8 +245,12 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
         elif (state == 4):
             if rsi_signal[i] > maxima:
                 # Have found a bullish breakout!
-                rsi_data['bullish'].append(
-                    [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                rsi_data['bullish'].append([
+                    date_extractor(position.index[i], _format='str'),
+                    position['Close'][i],
+                    i,
+                    "swing rejection"
+                ])
                 state = 0
                 minima = 0.0
                 maxima = 0.0
@@ -197,8 +288,12 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
             indicator.append(0.0)
         elif (state == 8):
             if rsi_signal[i] < minima:
-                rsi_data['bearish'].append(
-                    [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                rsi_data['bearish'].append([
+                    date_extractor(position.index[i], _format='str'),
+                    position['Close'][i],
+                    i,
+                    "swing rejection"
+                ])
                 state = 0
                 minima = 0.0
                 maxima = 0.0
@@ -219,7 +314,10 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
     return rsi_data
 
 
-def over_threshold_lists(overbought: float, oversold: float, fund_length: int, slope_list=[]) -> dict:
+def over_threshold_lists(overbought: float,
+                         oversold: float,
+                         fund_length: int,
+                         slope_list=[]) -> dict:
     """Over Threshold Lists
 
     Arguments:
@@ -282,7 +380,6 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     """
     plot_output = kwargs.get('plot_output', True)
     p_bar = kwargs.get('p_bar')
-    view = kwargs.get('view')
 
     signal = rsi_data['tabular']
     ovb_th = rsi_data['thresholds']['overbought']
@@ -330,8 +427,12 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
                     if (prices[1] < prices[0]) and (rsi_vals[0] < rsi_vals[1]):
                         # Bullish divergence!
                         divs[i] = 1.0
-                        rsi_data['bullish'].append(
-                            [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                        rsi_data['bullish'].append([
+                            date_extractor(position.index[i], _format='str'),
+                            position['Close'][i],
+                            i,
+                            "divergence"
+                        ])
                         state = 'n'
                     else:
                         state = 'n'
@@ -371,8 +472,12 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
                     if (prices[1] > prices[0]) and (rsi_vals[0] > rsi_vals[1]):
                         # Bearish divergence!
                         divs[i] = -1.0
-                        rsi_data['bearish'].append(
-                            [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                        rsi_data['bearish'].append([
+                            date_extractor(position.index[i], _format='str'),
+                            position['Close'][i],
+                            i,
+                            "divergence"
+                        ])
                         state = 'n'
                     else:
                         state = 'n'
@@ -466,86 +571,35 @@ def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
     return rsi
 
 
-def RSI(position: pd.DataFrame, **kwargs) -> dict:
+def rsi_signals(bull_list: list, bear_list: list) -> list:
+    """rsi_signals
+
+    Format all rsi signals into a single list
+
+    Arguments:
+        bull_list {list} -- list of bullish signals
+        bear_list {list} -- list of bearish signals
+
+    Returns:
+        list -- list of rsi signals
     """
-    Relative Strength Indicator
+    signals_of_note = []
+    for sig in bull_list:
+        data = {
+            "type": 'bullish',
+            "value": sig[3],
+            "index": sig[2],
+            "date": sig[0]
+        }
+        signals_of_note.append(data)
 
-    args:
-        position:       (pd.DataFrame) list of y-value datasets to be plotted (multiple)
+    for sig in bear_list:
+        data = {
+            "type": 'bearish',
+            "value": sig[3],
+            "index": sig[2],
+            "date": sig[0]
+        }
+        signals_of_note.append(data)
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        period:         (int) size of RSI indicator; DEFAULT=14 
-        out_suppress:   (bool) output plot/prints are suppressed; DEFAULT=True
-        progress_bar:   (ProgressBar) DEFAULT=None
-        overbought:     (float) threshold to trigger overbought/sell condition; DEFAULT=70.0
-        oversold:       (float) threshold to trigger oversold/buy condition; DEFAULT=30.0
-        auto_trend:     (bool) True calculates basic trend, applies to thresholds; DEFAULT=True
-
-    returns:
-        rsi_swings:     (dict) contains all rsi information
-    """
-    name = kwargs.get('name', '')
-    plot_output = kwargs.get('plot_output', True)
-    period = kwargs.get('period', 14)
-    out_suppress = kwargs.get('out_suppress', True)
-    progress_bar = kwargs.get('progress_bar', None)
-    overbought = kwargs.get('overbought', 70.0)
-    oversold = kwargs.get('oversold', 30.0)
-    auto_trend = kwargs.get('auto_trend', True)
-    view = kwargs.get('view', '')
-
-    rsi_data = dict()
-
-    RSI = generate_rsi_signal(position, period=period, p_bar=progress_bar)
-    rsi_data['tabular'] = RSI
-
-    slope_trend = []
-    if auto_trend:
-        slope_trend = autotrend(position['Close'], periods=[
-                                period*3, period*5.5, period*8], weights=[0.45, 0.33, 0.22], normalize=True)
-
-    over_thresholds = over_threshold_lists(
-        overbought, oversold, len(position['Close']), slope_list=slope_trend)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
-
-    rsi_data['thresholds'] = over_thresholds
-
-    # Determine indicators, swing rejection and divergences
-    rsi_data = determine_rsi_swing_rejection(
-        position, rsi_data, p_bar=progress_bar)
-
-    rsi_data = rsi_divergence(
-        position, rsi_data, plot_output=plot_output, p_bar=progress_bar)
-
-    # Determine metrics, primarily using both indicators
-    rsi_data = rsi_metrics(position, rsi_data, p_bar=progress_bar)
-
-    main_plots = [RSI, over_thresholds['overbought'],
-                  over_thresholds['oversold']]
-
-    if not out_suppress:
-        name3 = SP500.get(name, name)
-        name2 = name3 + ' - RSI'
-        if plot_output:
-            dual_plotting(position['Close'], main_plots,
-                          'Position Price', 'RSI', title=name2)
-            dual_plotting(position['Close'], rsi_data['metrics'],
-                          'Position Price', 'RSI Indicators', title=name2)
-        else:
-            filename1 = name + f"/{view}" + '/RSI_standard_{}.png'.format(name)
-            filename2 = name + f"/{view}" + \
-                '/RSI_indicator_{}.png'.format(name)
-            dual_plotting(position['Close'], main_plots, 'Position Price', 'RSI',
-                          title=name2, saveFig=True, filename=filename1)
-            dual_plotting(position['Close'], rsi_data['metrics'], 'Position Price', 'RSI Metrics',
-                          title=name2, saveFig=True, filename=filename2)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
-
-    rsi_data['type'] = 'oscillator'
-
-    return rsi_data
+    return signals_of_note

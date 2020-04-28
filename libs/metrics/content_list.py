@@ -15,11 +15,12 @@ SIZE_KEY = 'length_of_data'
 
 INDICATOR_NAMES = [
     "clustered_osc",
-    "full_stochastic"
+    "full_stochastic",
+    "rsi"
 ]
 
 
-def assemble_last_signals(meta_sub: dict, lookback: int = 20, **kwargs) -> dict:
+def assemble_last_signals(meta_sub: dict, lookback: int = 25, **kwargs) -> dict:
     """assemble_last signals
 
     Look through all indicators of lookback time and list them
@@ -53,9 +54,7 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 20, **kwargs) -> dict:
         for key in sub:
             if key in INDICATOR_NAMES:
                 print(f"sub sub keys: {sub[key].keys()}\r\n")
-                # print(f"{sub[key]['bullish']}\r\n")
                 if SIGNAL_KEY in sub[key] and SIZE_KEY in sub[key]:
-                    print(f"signal for {key}")
                     start_period = sub[key][SIZE_KEY] - lookback - 1
                     for signal in sub[key][SIGNAL_KEY]:
                         if signal['index'] >= start_period:
