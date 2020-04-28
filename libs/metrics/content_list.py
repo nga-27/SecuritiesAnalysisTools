@@ -19,7 +19,8 @@ INDICATOR_NAMES = [
     "rsi",
     "ultimate",
     "awesome",
-    "momentum_oscillator"
+    "momentum_oscillator",
+    "on_balance_volume"
 ]
 
 
@@ -43,17 +44,23 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 25, **kwargs) -> dict:
     pbar = kwargs.get('progress_bar')
 
     metadata = []
+    meta_keys = []
 
     if standalone:
         for key in meta_sub:
             if key != 'metadata' and key != 'synopsis':
                 metadata.append(meta_sub[key])
+                meta_keys.append(key)
     else:
         metadata = [meta_sub]
+        meta_keys.append('')
+
+    increment = 1.0 / float(len(metadata))
 
     content = {"signals": []}
-    for sub in metadata:
+    for a, sub in enumerate(metadata):
         print(f"metasub keys: {sub.keys()}\r\n")
+        content['signals'] = []
         for key in sub:
             if key in INDICATOR_NAMES:
                 print(f"sub sub keys: {sub[key].keys()}\r\n")
@@ -70,22 +77,50 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 25, **kwargs) -> dict:
                             }
                             content["signals"].append(data)
 
-    content["signals"].sort(key=lambda x: x['days_ago'])
+        content["signals"].sort(key=lambda x: x['days_ago'])
 
-    if pbar is not None:
-        pbar.uptick(increment=1.0)
+        if pbar is not None:
+            pbar.uptick(increment=increment)
 
-    if print_out:
-        print("\r\n")
-        print(f"{NOTIFY}(Periods ago) Type :: Indicator (value/signal) :: date{NORMAL}")
-        print("")
-        for sig in content["signals"]:
-            if sig['type'] == 'bearish':
-                string = f"{BEAR}({sig['days_ago']}) {sig['type'].upper()} :: {sig['indicator']} " + \
-                    f"({sig['value']}) :: {sig['date']}{NORMAL}"
-            else:
-                string = f"{BULL}({sig['days_ago']}) {sig['type'].upper()} :: {sig['indicator']} " + \
-                    f"({sig['value']}) :: {sig['date']}{NORMAL}"
-            print(string)
+        if print_out:
+            content_printer(content, meta_keys[a])
 
     return content
+
+
+def content_printer(content: dict, meta_key: str):
+
+    print("\r\n")
+    print(f"Content for {NOTIFY}{meta_key}\r\n{NORMAL}")
+    print(
+        f"{NOTIFY}(Ago)\tType\t::\tIndicator\t\t(value/signal)\t\t\t:: date{NORMAL}")
+    print("")
+    for sig in content["signals"]:
+        if sig['type'] == 'bearish':
+            color = BEAR
+        else:
+            color = BULL
+
+        indicator = sig['indicator'].split('_')
+        for i, ind in enumerate(indicator):
+            indicator[i] = ind.capitalize()
+        indicator = ' '.join(indicator)
+
+        indicator_tabs = '\t'
+        if len(indicator) < 16:
+            indicator_tabs = '\t\t'
+        if len(indicator) < 8:
+            indicator_tabs = '\t\t\t'
+
+        value = f"({sig['value']})"
+        value_tabs = '\t'
+        if len(value) < 24:
+            value_tabs = '\t\t'
+        if len(value) < 16:
+            value_tabs = '\t\t\t'
+        if len(value) < 8:
+            value_tabs = '\t\t\t\t'
+
+        string = f"{color}({sig['days_ago']})\t{sig['type'].upper()}\t::\t" + \
+            f"{indicator}{indicator_tabs}{value}{value_tabs}:: {sig['date']}{NORMAL}"
+        print(string)

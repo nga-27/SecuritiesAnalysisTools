@@ -21,7 +21,7 @@ ACCEPTED_ATTS = [
     'futures',
     'moving_average',
     'swing_trade',
-    'obv',
+    'on_balance_volume',
     'awesome',
     'momentum_oscillator',
     'bear_bull_power',

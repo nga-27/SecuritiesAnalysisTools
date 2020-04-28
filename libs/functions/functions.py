@@ -429,6 +429,7 @@ def assemble_last_signals_function(config: dict):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
+
     with open(meta_file) as m_file:
         m_data = json.load(m_file)
         m_file.close()

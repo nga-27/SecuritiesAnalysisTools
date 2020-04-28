@@ -130,7 +130,7 @@ def run_dev(script: list):
             fund_data['momentum_oscillator'] = momentum_oscillator(
                 fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
-            fund_data['obv'] = on_balance_volume(
+            fund_data['on_balance_volume'] = on_balance_volume(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['moving_average'] = triple_moving_average(
