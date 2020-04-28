@@ -24,7 +24,8 @@ INDICATOR_NAMES = [
     "moving_average",
     "exp_moving_average",
     "sma_swing_trade",
-    "ema_swing_trade"
+    "ema_swing_trade",
+    "hull_moving_average"
 ]
 
 

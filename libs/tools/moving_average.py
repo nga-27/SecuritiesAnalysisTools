@@ -453,6 +453,7 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
 
     Optional Args:
         max_period {int} -- longest term for triple moving average (default: {18})
+        config {list} -- list of moving average lookback periods (default: {None})
 
     Returns:
         dict -- swing trade data object
