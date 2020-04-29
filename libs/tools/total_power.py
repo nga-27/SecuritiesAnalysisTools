@@ -173,6 +173,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
 
     tab = tp['tabular']
     metrics = [0.0] * len(tab['total'])
+    features = []
 
     if tab['bulls'][0] > tab['bears'][0]:
         on_top = 'bull'
@@ -181,19 +182,49 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
 
     tot_above = ''
     for i, tot in enumerate(tab['total']):
+        date = position.index[i].strftime("%Y-%m-%d")
+
         if (tot >= 99.0) and (tab['bulls'][i] >= 99.0):
             metrics[i] += 3.0
+            data = {
+                "type": 'bullish',
+                "value": 'full bullish signal: 100%',
+                "index": i,
+                "date": date
+            }
+            features.append(data)
 
         if (tot >= 99.0) and (tab['bears'][i] >= 99.0):
             metrics[i] += -3.0
+            data = {
+                "type": 'bearish',
+                "value": 'full bearish signal: 100%',
+                "index": i,
+                "date": date
+            }
+            features.append(data)
 
         if (on_top == 'bull') and (tab['bears'][i] > tab['bulls'][i]):
             metrics[i] += -1.0
             on_top = 'bear'
+            data = {
+                "type": 'bearish',
+                "value": 'bear-bull crossover',
+                "index": i,
+                "date": date
+            }
+            features.append(data)
 
         if (on_top == 'bear') and (tab['bulls'][i] > tab['bears'][i]):
             metrics[i] += -1.0
             on_top = 'bull'
+            data = {
+                "type": 'bullish',
+                "value": 'bear-bull crossover',
+                "index": i,
+                "date": date
+            }
+            features.append(data)
 
         if tot > tab['bulls'][i]:
             tot_above = 'bull'
@@ -204,17 +235,45 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
         if (tot_above == 'bull') and (tab['bulls'][i] > tot):
             tot_above = ''
             metrics[i] += 1.0
+            data = {
+                "type": 'bullish',
+                "value": 'bull-total crossover',
+                "index": i,
+                "date": date
+            }
+            features.append(data)
 
         if (tot_above == 'bear') and (tab['bears'][i] > tot):
             tot_above = ''
             metrics[i] += -1.0
+            data = {
+                "type": 'bearish',
+                "value": 'bear-total crossover',
+                "index": i,
+                "date": date
+            }
+            features.append(data)
 
         if i > 0:
             if (tab['bulls'][i-1] < adj_level) and (tab['bulls'][i] > adj_level):
                 metrics[i] += 1.0
+                data = {
+                    "type": 'bullish',
+                    "value": 'bull-adjustment level crossover',
+                    "index": i,
+                    "date": date
+                }
+                features.append(data)
 
             if (tab['bears'][i-1] < adj_level) and (tab['bears'][i] > adj_level):
                 metrics[i] += -1.0
+                data = {
+                    "type": 'bearish',
+                    "value": 'bear-adjustment level crossover',
+                    "index": i,
+                    "date": date
+                }
+                features.append(data)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -248,12 +307,16 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
     title = name2 + ' - Total Power Metrics'
     if plot_output:
         dual_plotting(position['Close'], metrics, 'Price', 'Metrics')
+        for feat in features:
+            print(f"Total Power: {feat}")
     else:
         filename = name + f"/{view}" + f'/total_pwr_metrics_{name}'
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=title, saveFig=True, filename=filename)
 
     tp['metrics'] = metrics
+    tp['signals'] = features
+    tp['length_of_data'] = len(tp['tabular']['bears'])
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)

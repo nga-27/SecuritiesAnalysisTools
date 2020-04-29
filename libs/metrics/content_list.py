@@ -28,7 +28,8 @@ INDICATOR_NAMES = [
     "hull_moving_average",
     "macd",
     "candlesticks",
-    "bear_bull_power"
+    "bear_bull_power",
+    "total_power"
 ]
 
 
