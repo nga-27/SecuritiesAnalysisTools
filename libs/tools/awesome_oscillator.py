@@ -486,12 +486,12 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
         metrics4.append(met + ao_signal[i])
 
     changes = []
-    min_ = min(metrics4) + 1.0
+    min_ = 1.0 - min(metrics4)
     for _ in range(period_change):
         changes.append(0.0)
     for i in range(period_change, len(metrics4)):
         c = (((metrics4[i] + min_) /
-              (metrics4[i-period_change] + min_)) - 1.0) * 100.0
+              (metrics4[i-period_change] + min_)) - min_) * 100.0
         changes.append(c)
 
     ao_dict['metrics'] = metrics4

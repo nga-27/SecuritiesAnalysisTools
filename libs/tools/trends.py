@@ -203,7 +203,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
                                  data_type='list', filter_type='exponential')
         ex = find_filtered_local_extrema(ma)
         r = reconstruct_extrema(
-            fund['Close'], extrema=ex, ma_size=ma_size, ma_type='windowed')
+            fund, extrema=ex, ma_size=ma_size, ma_type='windowed')
 
         # Cleanse data sample for duplicates and errors
         r = remove_duplicates(r, method='point')

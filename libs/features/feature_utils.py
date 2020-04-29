@@ -76,8 +76,16 @@ def find_local_extrema(position: list, threshold=0.03, points=False) -> list:
 
 
 def find_filtered_local_extrema(filtered: list, raw=False) -> dict:
-    """
+    """Find Filtered Local Extrema
+
     Assuming a filtered list input, finds local minima and maxima
+
+    Arguments:
+        filtered {list} -- filtered list of extrema
+
+    Keyword Arguments:
+        raw {bool} -- bypass of extrema unfiltered (default: {False})
+
     Returns:
         extrema - dict() -> dictionary of lists of extrema indices of 'filtered'
             keys: 'min', 'max'
@@ -108,25 +116,32 @@ def find_filtered_local_extrema(filtered: list, raw=False) -> dict:
     return extrema
 
 
-def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int, ma_type='simple') -> dict:
-    """ 
+def reconstruct_extrema(original: pd.DataFrame,
+                        extrema: dict,
+                        ma_size: int,
+                        ma_type='simple') -> dict:
+    """Reconstruct Extrema
+
     Function to find true extrema on 'original', especially when 'extrema' is generated
     from a filtered / averaged signal (moving averages introduce time shifting). Uses 
-    Args:
-        original:   pd.DataFrame -> specifically of 'Close' key (so easily castable to type list)
-        extrema:    dict -> keys: 'min', 'max' of filtered signal
-        ma_size:    int -> moving average filter size (used for reconditioning)
-        ma_type:    type of filter (matching for reconstruction is key)
+
+    Arguments:
+        original {pd.DataFrame} -- fund dataset
+        extrema {dict} -- keys: 'min', 'max' of filtered signal
+        ma_size {int} -- moving average filter size (used for reconditioning)
+
+    Keyword Arguments:
+        ma_type {str} -- type of filter (matching for reconstruction is key) (default: {'simple'})
 
     Returns:
-        recon:      dict -> keys: 'min', 'max'; each key has a list of format:
+        dict -- keys: 'min', 'max'; each key has a list of format:
                     [index_of_min_or_max, value]
     """
 
     recon = {}
     recon['max'] = []
     recon['min'] = []
-    olist = list(original)
+    olist = list(original['Close'])
 
     if ma_type == 'simple':
         for _max in extrema['max']:
@@ -177,46 +192,80 @@ def reconstruct_extrema(original: pd.DataFrame, extrema: dict, ma_size: int, ma_
 
 
 def remove_duplicates(recon: dict, method='threshold', threshold=0.01) -> dict:
-    """ Removes duplicates of extrema (due to equal tops/bottoms, errors, those w/in a threshold of its neighbor) """
+    """ Remove Duplicates
+
+    Removes duplicates of extrema (due to equal tops/bottoms, errors, those w/in a threshold of
+    its neighbor)
+
+    Arguments:
+        recon {dict} -- reconstruction features data object
+
+    Keyword Arguments:
+        method {str} -- "point" or "threshold" duplicate removal (default: {'threshold'})
+        threshold {float} -- used if method='threshold'; to filter from +/- (default: {0.01})
+
+    Returns:
+        dict -- reconstruction features data object
+    """
     if method == 'threshold':
         most_recent = 0
         newlist = []
-        for i in range(len(recon['max'])):
-            if (recon['max'][i][0] != most_recent) and ((recon['max'][i][1] > recon['max'][i-1][1] * (1+threshold)) or (recon['max'][i][1] < recon['max'][i-1][1] * (1-threshold))):
+        for i in range(1, len(recon['max'])):
+            if (recon['max'][i][0] != most_recent) and \
+                ((recon['max'][i][1] > recon['max'][i-1][1] * (1+threshold)) or
+                    (recon['max'][i][1] < recon['max'][i-1][1] * (1-threshold))):
                 most_recent = recon['max'][i][0]
                 newlist.append(recon['max'][i])
+
         recon['max'] = newlist
         newlist = []
         most_recent = 0
-        for i in range(len(recon['min'])):
-            if (recon['min'][i][0] != most_recent) and ((recon['min'][i][1] > recon['min'][i-1][1] * (1+threshold)) or (recon['min'][i][1] < recon['min'][i-1][1] * (1-threshold))):
+
+        for i in range(1, len(recon['min'])):
+            if (recon['min'][i][0] != most_recent) and \
+                ((recon['min'][i][1] > recon['min'][i-1][1] * (1+threshold)) or
+                    (recon['min'][i][1] < recon['min'][i-1][1] * (1-threshold))):
                 most_recent = recon['min'][i][0]
                 newlist.append(recon['min'][i])
         recon['min'] = newlist
 
-    """ In some extrema dicts, we want granularity but not duplicated points. If an x-axis value matches one in the list, do not add it.  Simple! """
+    # In some extrema dicts, we want granularity but not duplicated points. If an x-axis value
+    # matches one in the list, do not add it.  Simple!
     if method == 'point':
         most_recent = 0
         newlist = []
-        for i in range(len(recon['max'])):
-            if (recon['max'][i][0] != most_recent):
-                most_recent = recon['max'][i][0]
-                newlist.append(recon['max'][i])
-        recon['max'] = newlist
+
+        for _max in recon['max']:
+            if _max[0] != most_recent:
+                most_recent = _max[0]
+                newlist.append(_max)
+
+        recon['max'] = newlist.copy()
         newlist = []
         most_recent = 0
-        for i in range(len(recon['min'])):
-            if (recon['min'][i][0] != most_recent):
-                most_recent = recon['min'][i][0]
-                newlist.append(recon['min'][i])
-        recon['min'] = newlist
+
+        for _min in recon['min']:
+            if _min[0] != most_recent:
+                most_recent = _min[0]
+                newlist.append(_min)
+
+        recon['min'] = newlist.copy()
 
     return recon
 
 
 def add_daterange(original: pd.DataFrame, extrema: dict, num_feature_points: int) -> dict:
-    """
+    """ Add Date Range
+
     Looks at index ranges of 'extrema' and adds actual dates from 'original' to 'extrema'
+
+    Arguments:
+        original {pd.DataFrame} -- fund dataset
+        extrema {dict} -- extrema data object
+        num_feature_points {int} -- selectable number of points to add dates
+
+    Returns:
+        dict -- extrema data object
     """
     for feat in extrema['features']:
         if feat:
@@ -230,8 +279,15 @@ def add_daterange(original: pd.DataFrame, extrema: dict, num_feature_points: int
 
 
 def remove_empty_keys(dictionary: dict) -> dict:
-    """ 
+    """ Remove Empty Keys
+
     Cleans and removes empty dictionary or list parameters for concise structuring
+
+    Arguments:
+        dictionary {dict} -- dictionary to cleanse
+
+    Returns:
+        dict -- cleansed dictionary
     """
     new_dict = {}
     new_dict['min'] = dictionary['min']
@@ -246,8 +302,19 @@ def remove_empty_keys(dictionary: dict) -> dict:
 
 
 def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
-    """
+    """Feature Plotter
+
     Plots a rectangle of where the feature was detected overlayed on the ticker signal.
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        shapes {list} -- list of shape objects
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        feature {str} -- to control content (default: {'head_and_shoulders'})
+        name {str} -- name of fund (default: {''})
+        view {str} -- period of viewing of dataset (default: {''})
     """
     plot_output = kwargs.get('plot_output', True)
     feature = kwargs.get('feature', 'head_and_shoulders')
@@ -274,6 +341,17 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
 
 
 def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
+    """Raw Signal Extrema
+
+    Arguments:
+        signal {list} -- signal to find extrema (unfiltered)
+
+    Keyword Arguments:
+        threshold_start {float} -- value to start threshold searching in list (default: {0.01})
+
+    Returns:
+        dict -- extrema data object
+    """
     extrema = {}
     extrema['max'] = []
     extrema['min'] = []
@@ -297,20 +375,25 @@ def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
                 if temp[0]['type'] == -1:
                     # We have a potential local max
                     if signal[i] > temp[0]['value'] * (1.0 + threshold):
+
                         # Valid minima, remove from list
                         extrema['min'].append(temp[0]['index'])
                         need_to_pop = True
                         was_max = False
+
                     if signal[i] < temp[0]['value'] * (1.0 - threshold):
                         # Was not valid by threshold, so remove and wait
                         need_to_pop = True
+
                 if temp[0]['type'] == 1:
                     # We have a potential local max
+
                     if signal[i] < temp[0]['value'] * (1.0 - threshold):
                         # Valid minima, remove from list
                         extrema['max'].append(temp[0]['index'])
                         need_to_pop = True
                         was_max = True
+
                     if signal[i] > temp[0]['value'] * (1.0 + threshold):
                         # Was not valid by threshold, so remove and wait
                         need_to_pop = True
@@ -346,6 +429,14 @@ def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
 
 
 def cleanse_to_json(content: dict) -> dict:
+    """Cleanse to Json
+
+    Arguments:
+        content {dict} -- dictionary to cleanse to be json-serializable
+
+    Returns:
+        dict -- serialized json object
+    """
     for i in range(len(content['content']['features'])):
         for j in range(len(content['content']['features'][i]['indexes'])):
             vol = content['content']['features'][i]['indexes'][j][2]
@@ -356,6 +447,16 @@ def cleanse_to_json(content: dict) -> dict:
 
 
 def normalize_signals(signals: list) -> list:
+    """Normalize Signals
+
+    General function for normalizing all values to np.abs() maximum
+
+    Arguments:
+        signals {list} -- signal to normalize
+
+    Returns:
+        list -- normalized signal
+    """
     max_ = 0.0
     for sig in signals:
         m = np.max(np.abs(sig))

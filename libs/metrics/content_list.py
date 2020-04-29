@@ -69,11 +69,9 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 25, **kwargs) -> dict:
 
     content = {"signals": []}
     for a, sub in enumerate(metadata):
-        print(f"metasub keys: {sub.keys()}\r\n")
         content['signals'] = []
         for key in sub:
             if key in INDICATOR_NAMES:
-                print(f"sub sub keys: {sub[key].keys()}\r\n")
                 if SIGNAL_KEY in sub[key] and SIZE_KEY in sub[key]:
                     start_period = sub[key][SIZE_KEY] - lookback - 1
                     for signal in sub[key][SIGNAL_KEY]:
