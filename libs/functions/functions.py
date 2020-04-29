@@ -8,11 +8,13 @@ from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 from libs.utils import generic_plotting
 from libs.utils import get_volatility, vq_status_print
+
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
 from libs.metrics import metadata_to_dataset
 from libs.metrics import generate_synopsis
 from libs.metrics import assemble_last_signals
+
 from libs.tools import get_trendlines, find_resistance_support_lines
 from libs.tools import cluster_oscs, RSI, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
@@ -22,7 +24,9 @@ from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
 from libs.tools import candlesticks
+
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
+
 from libs.ui_generation import slide_creator, PDF_creator
 
 TICKER = STANDARD_COLORS["ticker"]
@@ -35,6 +39,7 @@ DOWN_COLOR = TEXT_COLOR_MAP["red"]
 
 
 def only_functions_handler(config: dict):
+    """ Main control function for functions """
     if config.get('run_functions') == ['nf']:
         print(f"Running {TICKER}NASIT{NORMAL} generation...")
     elif (config.get('run_functions') == ['tci']) or (config.get('run_functions') == ['bci']) \
@@ -354,6 +359,8 @@ def nasit_generation_function(config: dict, print_only=False):
         return
     with open(nasit_file) as f:
         nasit = json.load(f)
+        f.close()
+
         fund_list = nasit.get('Funds', [])
         nasit_funds = dict()
         for fund in fund_list:
@@ -371,12 +378,14 @@ def nasit_generation_function(config: dict, print_only=False):
                     change = np.round(price - nasit_funds[f][-2], 2)
                     changep = np.round(
                         (price - nasit_funds[f][-2]) / nasit_funds[f][-2] * 100.0, 3)
+
                     if change > 0.0:
                         color = UP_COLOR
                     elif change < 0.0:
                         color = DOWN_COLOR
                     else:
                         color = NORMAL
+
                     print("")
                     print(
                         f"{TICKER}{fund}{color}   ${price} (${change}, {changep}%){NORMAL}")
@@ -392,6 +401,7 @@ def nasit_generation_function(config: dict, print_only=False):
         plotable2 = []
         names = []
         names2 = []
+
         for f in nasit_funds:
             if '_ret' not in f:
                 plotable.append(nasit_funds[f])
@@ -399,6 +409,7 @@ def nasit_generation_function(config: dict, print_only=False):
             else:
                 plotable2.append(nasit_funds[f])
                 names2.append(f)
+
         generic_plotting(plotable, legend=names, title='NASIT Passives')
         generic_plotting(plotable2, legend=names2,
                          title='NASIT Passives [Returns]')
@@ -410,9 +421,11 @@ def synopsis_function(config: dict):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
+
     with open(meta_file) as m_file:
         m_data = json.load(m_file)
         m_file.close()
+
         for fund in m_data:
             if fund != '_METRICS_':
                 print("")
@@ -433,24 +446,22 @@ def assemble_last_signals_function(config: dict):
     with open(meta_file) as m_file:
         m_data = json.load(m_file)
         m_file.close()
+
         for fund in m_data:
             if fund != '_METRICS_':
                 print("")
-                last_signals = assemble_last_signals(
+                assemble_last_signals(
                     m_data[fund], standalone=True, print_out=True)
                 print("")
-                if last_signals is None:
-                    print(
-                        f"{WARNING}Warning: key 'last_signals' not present.{NORMAL}")
-                    return
 
 
 def pptx_output_function(config: dict):
-    meta_file = "output/metadata.json"
+    meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
+
     with open(meta_file) as m_file:
         m_data = json.load(m_file)
         m_file.close()
@@ -475,11 +486,12 @@ def pptx_output_function(config: dict):
 
 
 def pdf_output_function(config: dict):
-    meta_file = "output/metadata.json"
+    meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
+
     with open(meta_file) as m_file:
         m_data = json.load(m_file)
         m_file.close()

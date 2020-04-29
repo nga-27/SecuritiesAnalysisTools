@@ -13,18 +13,122 @@
         "Financial Services": "VFH",
         "Consumer Discretionary": "VCR",
         "Consumer Cyclical": "VCR"
-    }, 
+    },
     "Comparison": {
-        "VGT": ["AAPL", "MSFT", "V"],
-        "VOX": ["FB", "GOOG", "T"],
-        "VIS": ["BA", "HON", "UTX", "UNP"],
-        "VDC": ["PG", "KO", "PEP", "WMT"],
-        "VDE": ["XOM", "CVX"],
-        "VHT": ["JNJ", "UNH", "MRK", "PFE"],
-        "VPU": ["NEE", "DUK", "D", "SO"],
-        "VNQ": ["AMT", "CCI", "PLD"],
-        "VAW": ["LIN", "ECL", "SHW", "APD"],
-        "VFH": ["JPM", "BAC", "BRK-B", "WFC"],
-        "VCR": ["AMZN", "HD", "MCD"]
+        "VGT": [
+            "AAPL",
+            "MSFT",
+            "V",
+            "INTC",
+            "MA"
+        ],
+        "VOX": [
+            "FB",
+            "GOOG",
+            "T",
+            "NFLX",
+            "VZ"
+        ],
+        "VIS": [
+            "BA",
+            "HON",
+            "LMT",
+            "UNP",
+            "MMM"
+        ],
+        "VDC": [
+            "PG",
+            "KO",
+            "PEP",
+            "WMT",
+            "COST"
+        ],
+        "VDE": [
+            "XOM",
+            "CVX",
+            "COP",
+            "KMI",
+            "SLB"
+        ],
+        "VHT": [
+            "JNJ",
+            "UNH",
+            "MRK",
+            "PFE",
+            "ABT"
+        ],
+        "VPU": [
+            "NEE",
+            "DUK",
+            "D",
+            "SO",
+            "XEL"
+        ],
+        "VNQ": [
+            "AMT",
+            "CCI",
+            "PLD",
+            "EQIX",
+            "PSA"
+        ],
+        "VAW": [
+            "LIN",
+            "ECL",
+            "SHW",
+            "APD",
+            "PPG"
+        ],
+        "VFH": [
+            "JPM",
+            "BAC",
+            "BRK-B",
+            "WFC",
+            "AXP"
+        ],
+        "VCR": [
+            "AMZN",
+            "HD",
+            "MCD",
+            "SBUX",
+            "NKE"
+        ]
+    },
+    "Bond_Weight": {
+        "International": [
+            {
+                "BNDX": 0.85
+            },
+            {
+                "VWOB": 0.15
+            }
+        ],
+        "Treasury": [
+            {
+                "VTEB": 0.05
+            },
+            {
+                "VMBS": 0.15
+            },
+            {
+                "VGSH": 0.5
+            },
+            {
+                "VGIT": 0.18
+            },
+            {
+                "VGLT": 0.12
+            }
+        ],
+        "Corporate": [
+            {
+                "VCSH": 0.3666
+            },
+            {
+                "VCIT": 0.2935
+            },
+            {
+                "VCLT": 0.3398
+            }
+        ]
     }
 }
