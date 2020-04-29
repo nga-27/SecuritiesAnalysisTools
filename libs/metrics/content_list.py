@@ -26,7 +26,8 @@ INDICATOR_NAMES = [
     "sma_swing_trade",
     "ema_swing_trade",
     "hull_moving_average",
-    "macd"
+    "macd",
+    "candlesticks"
 ]
 
 
