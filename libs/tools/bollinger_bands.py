@@ -59,10 +59,14 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
     bb = bollinger_metrics(position, bb, period=period,
                            plot_output=plot_output, name=name, view=view)
 
+    features = bollinger_band_features(bb, position, plot_output=plot_output)
+
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
     bb['type'] = 'oscillator'
+    bb['signals'] = features
+    bb['length_of_data'] = len(bb['tabular']['upper_band'])
 
     return bb
 
@@ -163,6 +167,32 @@ def bollinger_indicators(position: pd.DataFrame, bol_bands: dict, **kwargs) -> d
     bol_bands = get_extremes_ratios(position, bol_bands, period=period)
 
     return bol_bands
+
+
+def bollinger_band_features(bol_bands: dict, position: pd.DataFrame, plot_output=False) -> list:
+    """Bollinger Band Features
+
+    Arguments:
+        bol_bands {dict} -- bollinger bands data object
+        position {pd.DataFrame} -- fund dataset
+
+    Returns:
+        list -- list of bollinger band feature dictionaries
+    """
+    features = []
+    for indicator in bol_bands['indicators']:
+        date = position.index[indicator['index']].strftime("%Y-%m-%d")
+        data = {
+            "type": indicator['type'],
+            "value": f"{indicator['style']} feature detection",
+            "index": indicator['index'],
+            "date": date
+        }
+        features.append(data)
+        if plot_output:
+            print(f"Bollinger Band: {data}")
+
+    return features
 
 
 def volatility_calculation(position: pd.DataFrame, **kwargs) -> list:
@@ -377,14 +407,14 @@ def get_extremes_ratios(position: pd.DataFrame, bol_bands: dict, **kwargs) -> di
             if close[i] <= bb['lower_band'][i]:
                 state = 'e2'
                 bol_bands['indicators'].append(
-                    {'index': i, 'type': 'bearish', 'style': 'extremes'})
+                    {'index': i, 'type': 'bearish', 'style': 'lower band crossover'})
             if close[i] > bb['middle_band'][i]:
                 state = 'u1'
 
         elif state == 'e2':
             if close[i] <= bb['lower_band'][i]:
                 bol_bands['indicators'].append(
-                    {'index': i, 'type': 'bearish', 'style': 'extremes'})
+                    {'index': i, 'type': 'bearish', 'style': 'lower band extreme'})
             else:
                 state = 'e3'
 
@@ -396,14 +426,14 @@ def get_extremes_ratios(position: pd.DataFrame, bol_bands: dict, **kwargs) -> di
             if close[i] >= bb['upper_band'][i]:
                 state = 'u2'
                 bol_bands['indicators'].append(
-                    {'index': i, 'type': 'bullish', 'style': 'extremes'})
+                    {'index': i, 'type': 'bullish', 'style': 'upper band crossover'})
             if close[i] < bb['middle_band'][i]:
                 state = 'e1'
 
         elif state == 'u2':
             if close[i] >= bb['upper_band'][i]:
                 bol_bands['indicators'].append(
-                    {'index': i, 'type': 'bullish', 'style': 'extremes'})
+                    {'index': i, 'type': 'bullish', 'style': 'upper band extreme'})
             else:
                 state = 'u3'
 

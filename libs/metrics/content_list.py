@@ -29,7 +29,8 @@ INDICATOR_NAMES = [
     "macd",
     "candlesticks",
     "bear_bull_power",
-    "total_power"
+    "total_power",
+    "bollinger_bands"
 ]
 
 
