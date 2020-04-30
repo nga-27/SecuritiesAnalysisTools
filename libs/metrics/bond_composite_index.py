@@ -11,7 +11,8 @@ import pandas as pd
 import numpy as np
 
 from libs.tools import cluster_oscs, windowed_moving_avg
-from libs.utils import dual_plotting, ProgressBar, index_appender, dates_extractor_list
+from libs.utils import dual_plotting, generic_plotting
+from libs.utils import ProgressBar, index_appender, dates_extractor_list
 from libs.utils import download_data_indexes
 
 
@@ -210,7 +211,8 @@ def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Trea
                       title=f'{bond_type} Bond Composite Index', x=dates,
                       saveFig=True, filename=f'{bond_type}_BCI.png')
     p.uptick()
-    return composite2
+
+    return composite2, data_to_plot, dates
 
 
 def bond_composite_index(config: dict, **kwargs):
@@ -226,6 +228,8 @@ def bond_composite_index(config: dict, **kwargs):
 
     period = config['period']
     properties = config['properties']
+    plots = []
+    legend = []
 
     # Validate each index key is set to True in the --core file
     if properties is not None:
@@ -235,19 +239,43 @@ def bond_composite_index(config: dict, **kwargs):
                 if props['Treasury Bond'] == True:
                     data, sectors, index_type = metrics_initializer(
                         period=period, bond_type='Treasury')
-                    composite_index(data, sectors, plot_output=plot_output,
-                                    bond_type='Treasury', index_type=index_type)
+                    _, data, dates = composite_index(data, sectors,
+                                                     plot_output=plot_output,
+                                                     bond_type='Treasury',
+                                                     index_type=index_type)
+                    plots.append(data)
+                    legend.append("Treasury")
 
             if 'Corporate Bond' in props:
                 if props['Corporate Bond'] == True:
                     data, sectors, index_type = metrics_initializer(
                         period=period, bond_type='Corporate')
-                    composite_index(data, sectors, plot_output=plot_output,
-                                    bond_type='Corporate', index_type=index_type)
+                    _, data, dates = composite_index(data, sectors,
+                                                     plot_output=plot_output,
+                                                     bond_type='Corporate',
+                                                     index_type=index_type)
+                    plots.append(data)
+                    legend.append("Corporate")
 
             if 'International Bond' in props:
                 if props['International Bond'] == True:
                     data, sectors, index_type = metrics_initializer(
                         period=period, bond_type='International')
-                    composite_index(data, sectors, plot_output=plot_output,
-                                    bond_type='International', index_type=index_type)
+                    _, data, dates = composite_index(data, sectors,
+                                                     plot_output=plot_output,
+                                                     bond_type='International',
+                                                     index_type=index_type)
+                    plots.append(data)
+                    legend.append("International")
+
+            if len(plots) > 0:
+                if plot_output:
+                    generic_plotting(
+                        plots, x=dates, title='Bond Composite Indexes',
+                        legend=legend, ylabel='Normalized Price')
+                else:
+                    filename = f"combined_BCI.png"
+                    generic_plotting(
+                        plots, x=dates, title='Bond Composite Indexes',
+                        legend=legend, saveFig=True, filename=filename,
+                        ylabel='Normalized Price')

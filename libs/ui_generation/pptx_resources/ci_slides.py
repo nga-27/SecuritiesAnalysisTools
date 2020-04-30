@@ -144,6 +144,20 @@ def make_BCI_slides(prs):
             slide.shapes.add_picture(
                 content, left, top, height=height, width=width)
 
+    content = f'output/temp/combined_BCI.png'
+    if os.path.exists(content):
+
+        title = f"Combined Bond Composite Indexes"
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = slide_title_header(slide, title)
+
+        left = Inches(1.42)
+        top = Inches(1.27)
+        height = Inches(6.1)
+        width = Inches(10.5)
+        slide.shapes.add_picture(
+            content, left, top, height=height, width=width)
+
     return prs
 
 
