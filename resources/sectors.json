@@ -94,41 +94,21 @@
         ]
     },
     "Bond_Weight": {
-        "International": [
-            {
-                "BNDX": 0.85
-            },
-            {
-                "VWOB": 0.15
-            }
-        ],
-        "Treasury": [
-            {
-                "VTEB": 0.05
-            },
-            {
-                "VMBS": 0.15
-            },
-            {
-                "VGSH": 0.5
-            },
-            {
-                "VGIT": 0.18
-            },
-            {
-                "VGLT": 0.12
-            }
-        ],
-        "Corporate": [
-            {
-                "VCSH": 0.3666
-            },
-            {
-                "VCIT": 0.2935
-            },
-            {
-                "VCLT": 0.3398
-            }
-        ]
+        "International": {
+            "BNDX": 0.85,
+            "VWOB": 0.15
+        },
+        "Treasury": {
+            "VTEB": 0.05,
+            "VMBS": 0.15,
+            "VGSH": 0.5,
+            "VGIT": 0.18,
+            "VGLT": 0.12
+        },
+        "Corporate": {
+            "VCSH": 0.3666,
+            "VCIT": 0.2935,
+            "VCLT": 0.3398
+        }
     }
 }

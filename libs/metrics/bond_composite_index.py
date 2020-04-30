@@ -6,7 +6,8 @@ for various bond types of the bond market represented by the Vanguard ETFs liste
 'tickers' below in 'metrics_initializer'. Note - bond oscillators are not as accurate 
 as market oscillators, but the metrics can still provide buy-sell signals.
 """
-
+import os
+import json
 import pandas as pd
 import numpy as np
 
@@ -24,23 +25,36 @@ def metrics_initializer(period='2y', bond_type='Treasury'):
         bond_type {str} -- (default: {'Treasury'})
 
     Returns:
-        list -- downloaded_data, sector_list, index
+        list -- downloaded_data, sector_list, index, metrics_file data
     """
+    metrics_file = os.path.join("resources", "sectors.json")
+    if os.path.exists(metrics_file):
+        with open(metrics_file) as m_file:
+            m_data = json.load(m_file)
+            m_file.close()
+            m_data = m_data.get("Bond_Weight")
+    else:
+        return {}, [], '', None
+
     if bond_type == 'Treasury':
         # Treasury (Gov't only - general alternative would be BSV/BIV/BLV)
-        tickers = 'VGSH VGLT VGIT VTEB VMBS'
+        data = m_data[bond_type]
+        tickers = list(data.keys())
+        tickers = ' '.join(tickers)
         index = 'Government'
 
     elif bond_type == 'Corporate':
         # Corporate investment-grade bonds (BBB/BAA or higher)
-        tickers = 'VCSH VCIT VCLT'
+        data = m_data[bond_type]
+        tickers = list(data.keys())
+        tickers = ' '.join(tickers)
         index = 'Corporate'
 
     elif bond_type == 'International':
-        # BNDX - International investment grade: (roughly) 55% Europe, 25% Pacific, 10% N. America,
-        #           4% Emerging
-        # VWOB - Emerging Gov't: <45% below investment grade, 60% emerging markets
-        tickers = 'BNDX VWOB'
+        # BNDX & VWOB
+        data = m_data[bond_type]
+        tickers = list(data.keys())
+        tickers = ' '.join(tickers)
         index = 'International'
 
     else:
@@ -56,107 +70,50 @@ def metrics_initializer(period='2y', bond_type='Treasury'):
     data, _ = download_data_indexes(
         indexes=sectors, tickers=tickers, period=period, interval='1d')
     print(" ")
-    return data, sectors, index
+    return data, sectors, index, m_data
 
 
-def treasury_index_generator(data: pd.DataFrame) -> list:
-    """Treasury Index Generator
+def bond_type_index_generator(data: pd.DataFrame, m_data: dict, bond_type='Treasury') -> list:
+    """Bond Type Index Generator
 
     Arguments:
-        data {pd.DataFrame} -- data with corp bond tickers
+        data {pd.DataFrame} -- fund dataset
+        m_data {dict} -- bond content from sectors.json
+
+    Keyword Arguments:
+        bond_type {str} -- Either 'Treasury', 'International', or 'Corporate' (default: {'Treasury'})
 
     Returns:
-        list -- corp bond index
+        list -- the bond type index
     """
-    SH_WEIGHT = 0.5
-    IN_WEIGHT = 0.18
-    LN_WEIGHT = 0.12
-    MB_WEIGHT = 0.15
-    MN_WEIGHT = 0.05
-
+    weights = m_data[bond_type]
+    key_start = list(weights.keys())[0]
     index_chart = [25.0]
-    for i in range(1, len(data['VGSH']['Close'])):
-        v1 = (data['VGSH']['Close'][i] - data['VGSH']
-              ['Close'][i-1]) / data['VGSH']['Close'][i-1]
-        v1 *= SH_WEIGHT
-        v2 = (data['VGIT']['Close'][i] - data['VGIT']
-              ['Close'][i-1]) / data['VGIT']['Close'][i-1]
-        v2 *= IN_WEIGHT
-        v3 = (data['VGLT']['Close'][i] - data['VGLT']
-              ['Close'][i-1]) / data['VGLT']['Close'][i-1]
-        v3 *= LN_WEIGHT
-        v4 = (data['VMBS']['Close'][i] - data['VMBS']
-              ['Close'][i-1]) / data['VMBS']['Close'][i-1]
-        v4 *= MB_WEIGHT
-        v5 = (data['VTEB']['Close'][i] - data['VTEB']
-              ['Close'][i-1]) / data['VTEB']['Close'][i-1]
-        v5 *= MN_WEIGHT
+    for i in range(1, len(data[key_start]['Close'])):
+        base = 0.0
+        for tick in weights:
+            val = (data[tick]['Close'][i] - data[tick]
+                   ['Close'][i-1]) / data[tick]['Close'][i-1]
+            val *= weights[tick]
+            base += val
 
-        val = v1 + v2 + v3 + v4 + v5
-        val = index_chart[-1] * (1.0 + val)
-        index_chart.append(val)
+        base = index_chart[-1] * (1.0 + base)
+        index_chart.append(base)
     return index_chart
 
 
-def international_index_generator(data: pd.DataFrame) -> list:
-    """International Index Generator
-
-    Arguments:
-        data {pd.DataFrame} -- Data set (with BNDX, VWOB)
-
-    Returns:
-        list -- the international bond index
-    """
-    BNDX_WEIGHT = 0.85
-    VWOB_WEIGHT = 0.15
-
-    index_chart = [25.0]
-    for i in range(1, len(data['BNDX']['Close'])):
-        v1 = (data['BNDX']['Close'][i] - data['BNDX']
-              ['Close'][i-1]) / data['BNDX']['Close'][i-1]
-        v1 *= BNDX_WEIGHT
-        v2 = (data['VWOB']['Close'][i] - data['VWOB']
-              ['Close'][i-1]) / data['VWOB']['Close'][i-1]
-        v2 *= VWOB_WEIGHT
-        val = v1 + v2
-        val = index_chart[-1] * (1.0 + val)
-        index_chart.append(val)
-    return index_chart
-
-
-def corporate_index_generator(data: pd.DataFrame) -> list:
-    """Corporate Index Generator
-
-    Arguments:
-        data {pd.DataFrame} -- data with corp bond tickers
-
-    Returns:
-        list -- corp bond index
-    """
-    VCIT_WEIGHT = 0.2935
-    VCSH_WEIGHT = 0.3666
-    VCLT_WEIGHT = 0.3398
-
-    index_chart = [25.0]
-    for i in range(1, len(data['VCLT']['Close'])):
-        v1 = (data['VCLT']['Close'][i] - data['VCLT']
-              ['Close'][i-1]) / data['VCLT']['Close'][i-1]
-        v2 = (data['VCIT']['Close'][i] - data['VCIT']
-              ['Close'][i-1]) / data['VCIT']['Close'][i-1]
-        v3 = (data['VCSH']['Close'][i] - data['VCSH']
-              ['Close'][i-1]) / data['VCSH']['Close'][i-1]
-        val = (v1 * VCLT_WEIGHT) + (v2 * VCIT_WEIGHT) + (v3 * VCSH_WEIGHT)
-        val = index_chart[-1] * (1.0 + val)
-        index_chart.append(val)
-    return index_chart
-
-
-def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Treasury', index_type='BND'):
+def composite_index(data: dict,
+                    sectors: list,
+                    index_dict: dict,
+                    plot_output=True,
+                    bond_type='Treasury',
+                    index_type='BND'):
     """Composite Index
 
     Arguments:
         data {dict} -- Data of composites
         sectors {list} -- sector list
+        index_dict {dict} -- data pulled from sectors.json file (can be None)
 
     Keyword Arguments:
         plot_output {bool} -- (default: {True})
@@ -192,15 +149,10 @@ def composite_index(data: dict, sectors: list, plot_output=True, bond_type='Trea
     max_ = np.max(np.abs(composite2))
     composite2 = [x / max_ for x in composite2]
 
-    if bond_type == 'International':
-        data_to_plot = international_index_generator(data)
-        dates = dates_extractor_list(data['BNDX'])
-    elif bond_type == 'Corporate':
-        data_to_plot = corporate_index_generator(data)
-        dates = dates_extractor_list(data['VCIT'])
-    elif bond_type == 'Treasury':
-        data_to_plot = treasury_index_generator(data)
-        dates = dates_extractor_list(data['VGIT'])
+    key = list(data.keys())[0]
+    data_to_plot = bond_type_index_generator(
+        data, index_dict, bond_type=bond_type)
+    dates = dates_extractor_list(data[key])
 
     if plot_output:
         dual_plotting(data_to_plot, composite2, y1_label=index_type,
@@ -237,36 +189,39 @@ def bond_composite_index(config: dict, **kwargs):
             props = properties['Indexes']
             if 'Treasury Bond' in props:
                 if props['Treasury Bond'] == True:
-                    data, sectors, index_type = metrics_initializer(
+                    data, sectors, index_type, m_data = metrics_initializer(
                         period=period, bond_type='Treasury')
-                    _, data, dates = composite_index(data, sectors,
-                                                     plot_output=plot_output,
-                                                     bond_type='Treasury',
-                                                     index_type=index_type)
-                    plots.append(data)
-                    legend.append("Treasury")
+                    if m_data:
+                        _, data, dates = composite_index(data, sectors, m_data,
+                                                         plot_output=plot_output,
+                                                         bond_type='Treasury',
+                                                         index_type=index_type)
+                        plots.append(data)
+                        legend.append("Treasury")
 
             if 'Corporate Bond' in props:
                 if props['Corporate Bond'] == True:
-                    data, sectors, index_type = metrics_initializer(
+                    data, sectors, index_type, m_data = metrics_initializer(
                         period=period, bond_type='Corporate')
-                    _, data, dates = composite_index(data, sectors,
-                                                     plot_output=plot_output,
-                                                     bond_type='Corporate',
-                                                     index_type=index_type)
-                    plots.append(data)
-                    legend.append("Corporate")
+                    if m_data:
+                        _, data, dates = composite_index(data, sectors, m_data,
+                                                         plot_output=plot_output,
+                                                         bond_type='Corporate',
+                                                         index_type=index_type)
+                        plots.append(data)
+                        legend.append("Corporate")
 
             if 'International Bond' in props:
                 if props['International Bond'] == True:
-                    data, sectors, index_type = metrics_initializer(
+                    data, sectors, index_type, m_data = metrics_initializer(
                         period=period, bond_type='International')
-                    _, data, dates = composite_index(data, sectors,
-                                                     plot_output=plot_output,
-                                                     bond_type='International',
-                                                     index_type=index_type)
-                    plots.append(data)
-                    legend.append("International")
+                    if m_data:
+                        _, data, dates = composite_index(data, sectors, m_data,
+                                                         plot_output=plot_output,
+                                                         bond_type='International',
+                                                         index_type=index_type)
+                        plots.append(data)
+                        legend.append("International")
 
             if len(plots) > 0:
                 if plot_output:
