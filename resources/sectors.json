@@ -126,5 +126,20 @@
             "VPU",
             "VAW"
         ]
+    },
+    "Market_Composite": {
+        "tickers": [
+            "VGT",
+            "VHT",
+            "VCR",
+            "VDC",
+            "VFH",
+            "VDE",
+            "VIS",
+            "VOX",
+            "VNQ",
+            "VPU",
+            "VAW"
+        ]
     }
 }
