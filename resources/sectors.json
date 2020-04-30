@@ -110,5 +110,21 @@
             "VCIT": 0.2935,
             "VCLT": 0.3398
         }
+    },
+    "Correlation": {
+        "start": "2005-01-01",
+        "tickers": [
+            "VGT",
+            "VHT",
+            "VCR",
+            "VDC",
+            "VFH",
+            "VDE",
+            "VIS",
+            "VOX",
+            "VNQ",
+            "VPU",
+            "VAW"
+        ]
     }
 }

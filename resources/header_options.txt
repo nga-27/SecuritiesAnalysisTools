@@ -3,6 +3,7 @@ OPTIONS:
 --q                 :       exits program without running any functionality; "--quit" also supported
 --core              :       normal operation run with parameters found in core.json
 --test              :       similar to '--core' but with test.json (for testing only)
+--dataset           :       similar to '--core' but with dataset.json (alternative to core, used for data exportation)
 --ni                :       does not include S&P500 index, omits comparison operations; "--noindex" also supported
 --f                 :       triggers only designated functions (below); "--function" also supported
 

@@ -146,6 +146,17 @@ def tci_function(config: dict):
     type_composite_index(config=config, plot_output=True)
 
 
+def correlation_index_function(config: dict):
+    config['properties'] = config.get('properties', {})
+    config['properties']['Indexes'] = config['properties'].get('Indexes', {})
+
+    timeframe = config.get('duration', 'short')
+    temp = {"run": True, "type": timeframe}
+    config['properties']['Indexes']['Correlation'] = config['properties']['Indexes'].get(
+        'Correlation', temp)
+    correlation_composite_index(config=config)
+
+
 def trends_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
@@ -182,17 +193,6 @@ def head_and_shoulders_function(config: dict):
                 f"Head and Shoulders feature detection of {TICKER}{fund}{NORMAL}...")
             feature_detection_head_and_shoulders(
                 data[fund], name=fund, plot_output=True)
-
-
-def correlation_index_function(config: dict):
-    config['properties'] = config.get('properties', {})
-    config['properties']['Indexes'] = config['properties'].get('Indexes', {})
-
-    timeframe = config.get('duration', 'long')
-    temp = {"run": True, "type": timeframe}
-    config['properties']['Indexes']['Correlation'] = config['properties']['Indexes'].get(
-        'Correlation', temp)
-    correlation_composite_index(config=config)
 
 
 def export_function(config: dict):

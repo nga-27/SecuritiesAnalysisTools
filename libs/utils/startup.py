@@ -133,6 +133,8 @@ def header_json_parse(key: str) -> list:
         json_path = 'core.json'
     if key == '--test':
         json_path = 'test.json'
+    if key == '--dataset':
+        json_path = 'dataset.json'
 
     if os.path.exists(json_path):
         tickers = ''
@@ -276,6 +278,17 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['exports'] = core[4]
             config['views'] = core[5]
 
+    if '--dataset' in i_keys:
+        core = header_json_parse('--dataset')
+        if core is not None:
+            config['tickers'] = core[0]
+            config['period'] = core[1]
+            config['interval'] = core[2]
+            config['properties'] = core[3]
+            config['core'] = True
+            config['exports'] = core[4]
+            config['views'] = core[5]
+
     if ('--noindex' in i_keys) or ('--ni' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'no_index')
 
@@ -283,7 +296,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(config, 'state', 'suppress_pptx')
 
     # Exporting of data from metadata.json to dataframe-like file
-    if ('--export-dataset' in i_keys) or ('--export' in i_keys):
+    if '--export' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'function run')
         config = add_str_to_dict_key(
             config, 'run_functions', 'export', type_='list')

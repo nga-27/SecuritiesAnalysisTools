@@ -28,13 +28,13 @@ def metrics_initializer(period='2y', bond_type='Treasury'):
         list -- downloaded_data, sector_list, index, metrics_file data
     """
     metrics_file = os.path.join("resources", "sectors.json")
-    if os.path.exists(metrics_file):
-        with open(metrics_file) as m_file:
-            m_data = json.load(m_file)
-            m_file.close()
-            m_data = m_data.get("Bond_Weight")
-    else:
+    if not os.path.exists(metrics_file):
         return {}, [], '', None
+
+    with open(metrics_file) as m_file:
+        m_data = json.load(m_file)
+        m_file.close()
+        m_data = m_data.get("Bond_Weight")
 
     if bond_type == 'Treasury':
         # Treasury (Gov't only - general alternative would be BSV/BIV/BLV)
