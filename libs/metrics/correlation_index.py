@@ -8,24 +8,24 @@ from libs.tools import beta_comparison_list
 
 
 def correlation_composite_index(config: dict, **kwargs) -> dict:
-    """
-    Correlation Composite Index (CCI)
+    """Correlation Composite Index (CCI)
 
-    args:
-        config:         (dict) controlling config dictionary; DEFAULT=None
+    Arguments:
+        config {dict} -- controlling config dictionary
 
-    optional args:
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
+    Optional Args:
+        plot_output {bool} -- (default: {True})
 
-    returns:
-        corr            (dict) contains all correlation items
+    Returns:
+        dict -- contains all correlation items
     """
     plot_output = kwargs.get('plot_output', True)
 
     corr = dict()
-    if config.get('properties', {}).get('Indexes', {}).get('Correlation', {}).get('run', False):
-        config['duration'] = config.get('properties', {}).get(
-            'Indexes', {}).get('Correlation', {}).get('type', 'long')
+    corr_config = config.get('properties', {}).get(
+        'Indexes', {}).get('Correlation', {})
+    if corr_config.get('run', False):
+        config['duration'] = corr_config.get('type', 'long')
         data, sectors = metrics_initializer(config['duration'])
         corr = get_correlation(data, sectors, plot_output=plot_output)
     return corr
