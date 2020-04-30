@@ -141,5 +141,40 @@
             "VPU",
             "VAW"
         ]
+    },
+    "Type_Composite": {
+        "Components": [
+            "VGT",
+            "VHT",
+            "VCR",
+            "VDC",
+            "VFH",
+            "VDE",
+            "VIS",
+            "VOX",
+            "VNQ",
+            "VPU",
+            "VAW"
+        ],
+        "Defensive": {
+            "VHT": 0.161,
+            "VDC": 0.323,
+            "VPU": 0.323,
+            "VNQ": 0.193
+        },
+        "Sensitive": {
+            "VOX": 0.25,
+            "VDE": 0.125,
+            "VHT": 0.125,
+            "VIS": 0.25,
+            "VGT": 0.25
+        },
+        "Cyclical": {
+            "VCR": 0.256,
+            "VDE": 0.129,
+            "VAW": 0.256,
+            "VFH": 0.256,
+            "VNQ": 0.103
+        }
     }
 }

@@ -1,9 +1,9 @@
 """
 bond_composite_index.py
 
-An quasi-weighted aggregate metric that takes the computed clustered oscillator metric 
+An quasi-weighted aggregate metric that takes the computed clustered oscillator metric
 for various bond types of the bond market represented by the Vanguard ETFs listed under
-'tickers' below in 'metrics_initializer'. Note - bond oscillators are not as accurate 
+'tickers' below in 'metrics_initializer'. Note - bond oscillators are not as accurate
 as market oscillators, but the metrics can still provide buy-sell signals.
 """
 import os
@@ -15,6 +15,10 @@ from libs.tools import cluster_oscs, windowed_moving_avg
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import ProgressBar, index_appender, dates_extractor_list
 from libs.utils import download_data_indexes
+from libs.utils import STANDARD_COLORS
+
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
 
 
 def metrics_initializer(period='2y', bond_type='Treasury'):
@@ -29,6 +33,9 @@ def metrics_initializer(period='2y', bond_type='Treasury'):
     """
     metrics_file = os.path.join("resources", "sectors.json")
     if not os.path.exists(metrics_file):
+        print(
+            f"{WARNING}WARNING: '{metrics_file}' not found for " +
+            f"'metrics_initializer'. Failed.{NORMAL}")
         return {}, [], '', None
 
     with open(metrics_file) as m_file:

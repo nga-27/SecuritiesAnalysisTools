@@ -14,17 +14,76 @@ import json
 import pandas as pd
 import numpy as np
 
-import yfinance as yf
-
 from libs.tools import cluster_oscs, beta_comparison_list
 from libs.tools import windowed_moving_avg
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import ProgressBar, index_appender
 from libs.utils import download_data_indexes
-from libs.utils import TEXT_COLOR_MAP
+from libs.utils import STANDARD_COLORS
 
-ERROR_COLOR = TEXT_COLOR_MAP["red"]
-NORMAL_COLOR = TEXT_COLOR_MAP["white"]
+ERROR_COLOR = STANDARD_COLORS["error"]
+WARNING = STANDARD_COLORS["warning"]
+NORMAL_COLOR = STANDARD_COLORS["normal"]
+
+
+def market_composite_index(**kwargs) -> dict:
+    """Market Composite Index (MCI)
+
+    Optional Args:
+        config {dict} -- controlling config dictionary (default: {None})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        period {str / list} -- time period for data (e.g. '2y') (default: {None})
+
+    returns:
+        dict -- contains all mci information 
+    """
+    config = kwargs.get('config')
+    period = kwargs.get('period')
+    plot_output = kwargs.get('plot_output', True)
+
+    if config is not None:
+        period = config['period']
+        properties = config['properties']
+
+    elif period is None:
+        print(
+            f"{ERROR_COLOR}ERROR: config and period both provided {period} " +
+            f"for market_composite_index{NORMAL_COLOR}")
+        return {}
+
+    else:
+        # Support for release 1 versions
+        period = period
+        properties = dict()
+        properties['Indexes'] = {}
+        properties['Indexes']['Market Sector'] = True
+
+    # Validate each index key is set to True in the --core file
+    if properties is not None:
+        if 'Indexes' in properties.keys():
+            props = properties['Indexes']
+            if 'Market Sector' in props.keys():
+                if props['Market Sector'] == True:
+
+                    mci = dict()
+                    data, sectors = metrics_initializer(period=period)
+
+                    if data:
+                        p = ProgressBar(len(sectors)*2+5,
+                                        name='Market Composite Index')
+                        p.start()
+
+                        composite = composite_index(
+                            data, sectors, plot_output=plot_output, progress_bar=p)
+                        correlations = composite_correlation(
+                            data, sectors, plot_output=plot_output, progress_bar=p)
+
+                        mci['tabular'] = {'mci': composite}
+                        mci['correlations'] = correlations
+                        p.end()
+
+                        return mci
+    return {}
 
 
 def metrics_initializer(period='5y', name='Market Composite Index'):
@@ -39,6 +98,9 @@ def metrics_initializer(period='5y', name='Market Composite Index'):
     """
     metrics_file = os.path.join("resources", "sectors.json")
     if not os.path.exists(metrics_file):
+        print(
+            f"{WARNING}WARNING: '{metrics_file}' not found for " +
+            f"'metrics_initializer'. Failed.{NORMAL_COLOR}")
         return None, []
 
     with open(metrics_file) as m_file:
@@ -229,202 +291,3 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         progress_bar.uptick()
 
     return correlations
-
-
-def market_composite_index(**kwargs) -> dict:
-    """
-    Market Composite Index (MCI)
-
-    Optional Args:
-        config {dict} -- controlling config dictionary (default: {None})
-        plot_output {bool} -- True to render plot in realtime (default: {True})
-        period {str / list} -- time period for data (e.g. '2y') (default: {None})
-
-    returns:
-        mci:            (dict) contains all mci information 
-    """
-    config = kwargs.get('config')
-    period = kwargs.get('period')
-    plot_output = kwargs.get('plot_output', True)
-
-    if config is not None:
-        period = config['period']
-        properties = config['properties']
-
-    elif period is None:
-        print(
-            f"{ERROR_COLOR}ERROR: config and period both provided {period} " +
-            f"for market_composite_index{NORMAL_COLOR}")
-        return {}
-
-    else:
-        # Support for release 1 versions
-        period = period
-        properties = dict()
-        properties['Indexes'] = {}
-        properties['Indexes']['Market Sector'] = True
-
-    # Validate each index key is set to True in the --core file
-    if properties is not None:
-        if 'Indexes' in properties.keys():
-            props = properties['Indexes']
-            if 'Market Sector' in props.keys():
-                if props['Market Sector'] == True:
-
-                    mci = dict()
-                    data, sectors = metrics_initializer(period=period)
-
-                    if data:
-                        p = ProgressBar(len(sectors)*2+5,
-                                        name='Market Composite Index')
-                        p.start()
-
-                        composite = composite_index(
-                            data, sectors, plot_output=plot_output, progress_bar=p)
-                        correlations = composite_correlation(
-                            data, sectors, plot_output=plot_output, progress_bar=p)
-
-                        mci['tabular'] = {'mci': composite}
-                        mci['correlations'] = correlations
-                        p.end()
-
-                        return mci
-    return {}
-
-
-def type_composite_index(**kwargs):
-    """ Similar to MCI, TCI compares broader market types (sensitive, cyclical, and defensive) """
-    config = kwargs.get('config')
-    period = kwargs.get('period')
-    plot_output = kwargs.get('plot_output', True)
-
-    if config is not None:
-        period = config['period']
-        properties = config['properties']
-    elif period is None:
-        print(
-            f"{ERROR_COLOR}ERROR: config and period both provided {period} for type_composite_index{NORMAL_COLOR}")
-        return {}
-    else:
-        # Support for release 1 versions
-        period = period
-        properties = dict()
-        properties['Indexes'] = {}
-        properties['Indexes']['Type Sector'] = True
-
-    """ Validate each index key is set to True in the --core file """
-    if properties is not None:
-        if 'Indexes' in properties.keys():
-            props = properties['Indexes']
-            if 'Type Sector' in props.keys():
-                if props['Type Sector'] == True:
-
-                    data, sectors = metrics_initializer(
-                        period='2y', name='Type Composite Index')
-
-                    p = ProgressBar(13, name='Type Composite Index')
-                    p.start()
-
-                    tci = dict()
-                    defensive = []
-                    d_val = [25.0]
-                    cyclical = []
-                    c_val = [25.0]
-                    sensitive = []
-                    s_val = [25.0]
-
-                    composite = {}
-                    for sect in sectors:
-                        cluster = cluster_oscs(
-                            data[sect], plot_output=False, function='market', wma=False, progress_bar=p)
-                        graph = cluster['tabular']
-                        composite[sect] = graph
-
-                    for i in range(len(composite['VGT'])):
-                        d = float(composite['VHT'][i]) * 0.5
-                        d += float(composite['VPU'][i])
-                        d += float(composite['VDC'][i])
-                        d += float(composite['VNQ'][i]) * 0.6
-                        defensive.append(d)
-
-                        c = float(composite['VNQ'][i]) * 0.4
-                        c += float(composite['VCR'][i])
-                        c += float(composite['VFH'][i])
-                        c += float(composite['VAW'][i])
-                        c += float(composite['VDE'][i]) * 0.5
-                        cyclical.append(c)
-
-                        s = float(composite['VIS'][i])
-                        s += float(composite['VOX'][i])
-                        s += float(composite['VDE'][i]) * 0.5
-                        s += float(composite['VGT'][i])
-                        s += float(composite['VHT'][i]) * 0.5
-                        sensitive.append(s)
-
-                        if i > 0:
-                            d1 = (data['VHT']['Close'][i] - data['VHT']
-                                  ['Close'][i-1]) / data['VHT']['Close'][i-1] * 0.5
-                            d2 = (data['VPU']['Close'][i] - data['VPU']
-                                  ['Close'][i-1]) / data['VPU']['Close'][i-1]
-                            d3 = (data['VDC']['Close'][i] - data['VDC']
-                                  ['Close'][i-1]) / data['VDC']['Close'][i-1]
-                            d4 = (data['VNQ']['Close'][i] - data['VNQ']
-                                  ['Close'][i-1]) / data['VNQ']['Close'][i-1] * 0.6
-                            d = (d1 + d2 + d3 + d4) / 3.1
-                            d_val.append(d_val[-1] * (1.0 + d))
-
-                            d1 = (data['VCR']['Close'][i] - data['VCR']
-                                  ['Close'][i-1]) / data['VCR']['Close'][i-1]
-                            d2 = (data['VFH']['Close'][i] - data['VFH']
-                                  ['Close'][i-1]) / data['VFH']['Close'][i-1]
-                            d3 = (data['VAW']['Close'][i] - data['VAW']
-                                  ['Close'][i-1]) / data['VAW']['Close'][i-1]
-                            d4 = (data['VNQ']['Close'][i] - data['VNQ']
-                                  ['Close'][i-1]) / data['VNQ']['Close'][i-1] * 0.4
-                            d5 = (data['VDE']['Close'][i] - data['VDE']
-                                  ['Close'][i-1]) / data['VDE']['Close'][i-1] * 0.5
-                            d = (d1 + d2 + d3 + d4 + d5) / 3.9
-                            c_val.append(c_val[-1] * (1.0 + d))
-
-                            d1 = (data['VIS']['Close'][i] - data['VIS']
-                                  ['Close'][i-1]) / data['VIS']['Close'][i-1]
-                            d2 = (data['VOX']['Close'][i] - data['VOX']
-                                  ['Close'][i-1]) / data['VOX']['Close'][i-1]
-                            d3 = (data['VDE']['Close'][i] - data['VDE']
-                                  ['Close'][i-1]) / data['VDE']['Close'][i-1] * 0.5
-                            d4 = (data['VGT']['Close'][i] - data['VGT']
-                                  ['Close'][i-1]) / data['VGT']['Close'][i-1]
-                            d5 = (data['VHT']['Close'][i] - data['VHT']
-                                  ['Close'][i-1]) / data['VHT']['Close'][i-1] * 0.5
-                            d = (d1 + d2 + d3 + d4 + d5) / 4.0
-                            s_val.append(s_val[-1] * (1.0 + d))
-
-                    p.uptick()
-
-                    d_val = windowed_moving_avg(d_val, 3, data_type='list')
-                    c_val = windowed_moving_avg(c_val, 3, data_type='list')
-                    s_val = windowed_moving_avg(s_val, 3, data_type='list')
-
-                    tci['defensive'] = {
-                        "tabular": d_val, "clusters": defensive}
-                    tci['sensitive'] = {
-                        "tabular": s_val, "clusters": sensitive}
-                    tci['cyclical'] = {"tabular": c_val, "clusters": cyclical}
-
-                    dates = data['VGT'].index
-                    if plot_output:
-                        dual_plotting(y1=d_val, y2=defensive, y1_label='Defensive Index',
-                                      y2_label='Clustered Osc', title='Defensive Index', x=dates)
-                        dual_plotting(y1=s_val, y2=sensitive, y1_label='Sensitive Index',
-                                      y2_label='Clustered Osc', title='Sensitive Index', x=dates)
-                        dual_plotting(y1=c_val, y2=cyclical, y1_label='Cyclical Index',
-                                      y2_label='Clustered Osc', title='Cyclical Index', x=dates)
-                        generic_plotting([d_val, s_val, c_val], legend=[
-                            'Defensive', 'Sensitive', 'Cyclical'], title='Type Indexes', x=dates)
-                    else:
-                        generic_plotting([d_val, s_val, c_val], legend=['Defensive', 'Sensitive', 'Cyclical'], title='Type Indexes',
-                                         x=dates, saveFig=True, ylabel='Normalized "Price"', filename='tci.png')
-
-                    p.end()
-                    return tci
-    return {}
