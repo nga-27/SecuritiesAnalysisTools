@@ -1,3 +1,4 @@
+import os
 import math
 import pandas as pd
 import numpy as np
@@ -171,21 +172,22 @@ def weighted_moving_avg(dataset, interval: int, **kwargs) -> list:
 
 
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
-    """
-    Triple Moving Avg:  3 simple moving averages of "config" length
+    """Triple Moving Average
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    3 simple moving averages of "config" length
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        config:         (list of ints) list of moving average time periods; DEFAULT=[12, 50, 200]
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
+
+    Optional Args:
+        name {list} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        config {list of ints} -- list of moving average time periods (default: {[12, 50, 200]})
+        progress_bar {ProgressBar} -- (default: {None})
         view {str} -- directory of plots (default: {''})
 
-    returns:
-        tma:            (dict) contains all ma information in "short", "medium", and "long" keys
+    Returns:
+        tma {dict} -- contains all ma information in "short", "medium", and "long" keys
     """
     name = kwargs.get('name', '')
     config = kwargs.get('config', [12, 50, 200])
@@ -229,8 +231,8 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2)
         else:
-            filename = name + f"/{view}" + \
-                '/simple_moving_averages_{}.png'.format(name)
+            filename = os.path.join(
+                name, view, f"simple_moving_averages_{name}.png")
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2, saveFig=True, filename=filename)
 
@@ -315,12 +317,13 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
                 config[0], config[1], config[2])
         legend = ['Price', f'{config[0]}-EMA',
                   f'{config[1]}-EMA', f'{config[2]}-EMA']
+
         if plot_output:
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2)
         else:
-            filename = name + f"/{view}" + \
-                '/exp_moving_averages_{}.png'.format(name)
+            filename = os.path.join(
+                name, view, f"exp_moving_averages_{name}.png")
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2, saveFig=True, filename=filename)
 
@@ -335,22 +338,23 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
 
 
 def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
-    """
-    Triple Moving Avg:  3 simple moving averages of "config" length
+    """Triple Moving Average
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    3 simple moving averages of "config" length
 
-    optional args:
-        function:       (str) type of filtering scheme; DEFAULT='ema'
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        config:         (list of ints) list of moving average time periods; DEFAULT=[]
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
+
+    Optional Args:
+        function {str} -- type of filtering scheme (default: {'sma'})
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        config {list} -- list of moving average time periods (default: {[4, 9, 18]})
+        progress_bar {ProgressBar} -- (default: {None})
         view {str} -- directory for plot (default: {''})
 
-    returns:
-        mast:           (dict) contains all ma information in "short", "medium", "long", and "swing" keys
+    Returns:
+        mast {dict} -- contains all ma information in "short", "medium", "long", and "swing" keys
     """
     function = kwargs.get('function', 'sma')
     name = kwargs.get('name', '')
@@ -414,11 +418,12 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Swing Trade SMAs'
     legend = ['Price', 'Short-SMA', 'Medium-SMA', 'Long-SMA', 'Swing Signal']
+
     if plot_output:
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[
                            4], legend=legend, title=name2)
     else:
-        filename = name + f"/{view}" + '/swing_trades_sma_{}.png'.format(name)
+        filename = os.path.join(name, view, f"swing_trades_sma_{name}.png")
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
                            'Swing Signal'], title=name2, saveFig=True, filename=filename)
 

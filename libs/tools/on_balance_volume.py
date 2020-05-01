@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -9,20 +10,24 @@ from .trends import get_trendlines, get_trendlines_regression
 
 
 def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
-    """
-    On Balance Volume:  indirect measure of leading momentum in buys and sells
+    """On Balance Volume
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    Measure of cumulative relative change in volume. It is an indirect measure of leading momentum
+    in buys and sells.
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        filter_factor:  (float) divisor of absolute max of signal to filter out (only sig signals passed); DEFAULT=5.0
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
 
-    returns:
-        obv_dict:       (dict) contains all obv information
+    Optional Args:
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        filter_factor {float} -- divisor of absolute max of signal to filter out (only sig signals
+                                passed) (default: {5.0})
+        progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- (default: {''})
+
+    Returns:
+        obv_dict {dict} -- contains all obv information
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -83,7 +88,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
-    """Generate On Balance Signal
+    """Generate On Balance Signal Content
 
     Arguments:
         fund {pd.DataFrame}
@@ -138,22 +143,28 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
     name2 = name3 + ' - On Balance Volume (OBV)'
     name4 = name3 + ' - Significant OBV Changes'
     name5 = name3 + ' - Volume'
+
     if plot_output:
         dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price',
                       y2_label='On Balance Volume', x_label='Trading Days', title=name2)
         dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price',
                       y2_label='OBV-DIFF', x_label='Trading Days', title=name4)
         bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
+
     else:
-        filename = name + f"/{view}" + '/obv_diff_{}.png'.format(name)
-        filename2 = name + f"/{view}" '/obv_standard_{}.png'.format(name)
-        filename3 = name + f"/{view}" '/volume_{}.png'.format(name)
+        filename = os.path.join(name, view, f"obv_diff_{name}.png")
+        filename2 = os.path.join(name, view, f"obv_standard_{name}.png")
+        filename3 = os.path.join(name, view, f"volume_{name}.png")
+
         bar_chart(volume, x=x, position=fund, title=name5,
                   saveFig=True, filename=filename3, all_positive=True)
         bar_chart(ofilter, x=x, position=fund, title=name4,
                   saveFig=True, filename=filename)
-        dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price', y2_label='On Balance Volume',
-                      x_label='Trading Days', title=name2, saveFig=True, filename=filename2)
+        dual_plotting(fund['Close'], obv, x=x,
+                      y1_label='Position Price',
+                      y2_label='On Balance Volume',
+                      x_label='Trading Days', title=name2,
+                      saveFig=True, filename=filename2)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)
@@ -164,7 +175,7 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def generate_obv_signal(fund: pd.DataFrame) -> list:
-    """generate_obv_signal
+    """Generate On Balance Value Signal
 
     Arguments:
         fund {pd.DataFrame} -- fund dataset
