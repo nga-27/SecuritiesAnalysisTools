@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -5,30 +6,31 @@ from .moving_average import exponential_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 from libs.features import normalize_signals
 from libs.utils import ProgressBar, SP500
-from libs.utils import TREND_COLORS, TEXT_COLOR_MAP
+from libs.utils import TREND_COLORS, STANDARD_COLORS
 
 
 RED = TREND_COLORS.get('bad')
 YELLOW = TREND_COLORS.get('hold')
 GREEN = TREND_COLORS.get('good')
-NORMAL = TEXT_COLOR_MAP.get('white')
+
+NORMAL = STANDARD_COLORS.get('normal')
+WARNING = STANDARD_COLORS.get('warning')
 
 
 def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
-    """
-    Moving Average Convergence Divergence (MACD)
+    """Moving Average Convergence Divergence (MACD)
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Optional Args:
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
         view {str} -- directory of plots (default: {''})
 
-    returns:
-        macd:           (dict) contains all ma information in regarding macd
+    Returns:
+        dict -- contains all macd information in regarding macd
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -56,7 +58,7 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
         print_macd_statistics(macd)
 
     else:
-        filename = name + f"/{view}" + '/macd_{}.png'.format(name)
+        filename = os.path.join(name, view, f"macd_{name}.png")
         dual_plotting(fund['Close'], [macd_sig, sig_line], 'Position Price',
                       ['MACD', 'Signal Line'], title=name2, saveFig=True, filename=filename)
 
@@ -77,7 +79,7 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     'signal' = macd(ema(9))
 
     Arguments:
-        fund {pd.DataFrame}
+        fund {pd.DataFrame} -- fund dataset
 
     Keyword Arguments:
         plotting {bool} -- (default: {True})
@@ -118,7 +120,7 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     if plotting:
         bar_chart(m_bar, position=fund, x=x, title=name2)
     else:
-        filename = name + f"/{view}" + '/macd_bar_{}.png'.format(name)
+        filename = os.path.join(name, view, f"macd_bar_{name}.png")
         bar_chart(m_bar, position=fund, x=x, title=name2,
                   saveFig=True, filename=filename)
 
@@ -199,7 +201,7 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics,
                       'Price', 'Metrics', title=name2)
     else:
-        filename = name + f"/{view}" + f"/macd_metrics_{name}.png"
+        filename = os.path.join(name, view, f"macd_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=name2, saveFig=True, filename=filename)
 
@@ -565,6 +567,7 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
             state = 1
         else:
             state = 0
+
         if state == 1:
             i = len(macd)-2
             group_size = 0
@@ -580,6 +583,7 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                 return 'rising'
             else:
                 return 'falling'
+
         else:
             i = len(macd)-2
             group_size = 0
@@ -597,7 +601,8 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                 return 'falling'
 
     else:
-        print("WARNING - no valid 'trend_type' provided in 'get_macd_trend'")
+        print(
+            f"{WARNING}WARNING - no valid 'trend_type' provided in 'get_macd_trend'.{NORMAL}")
         return None
 
 

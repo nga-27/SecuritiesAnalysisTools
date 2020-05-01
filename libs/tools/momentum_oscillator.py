@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -62,11 +63,26 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
 
 
 def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
-    # https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/cmo
+    """Generate Momentum Signal
+
+    https://www.fidelity.com/learning-center/trading-investing/technical-analysis/technical-indicator-guide/cmo
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+
+    Optional Args:
+        interval {int} -- lookback period (default: {20})
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        view {str} -- (default: {''})
+
+    Returns:
+        list -- momentum signal
+    """
     interval = kwargs.get('interval', 20)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    view = kwargs.get('view')
+    view = kwargs.get('view', '')
 
     signal = []
     for i in range(interval-1):
@@ -87,7 +103,7 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         dual_plotting(position['Close'], signal, 'Price',
                       'CMO', title='(Chande) Momentum Oscillator')
     else:
-        filename = name + f"/{view}" + f'/momentum_oscillator_{name}'
+        filename = os.path.join(name, view, f"momentum_oscillator_{name}.png")
         dual_plotting(position['Close'], signal, 'Price',
                       'CMO', title='(Chande) Momentum Oscillator',
                       filename=filename, saveFig=True)
@@ -96,7 +112,7 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
 
 
 def compare_against_signal_line(signal: list, **kwargs) -> list:
-    """compare_against_signal_line
+    """Compare Against Signal Line
 
     Compare momentum oscillator signal vs. sma signal line
 
@@ -133,7 +149,7 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
 
 
 def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list:
-    """mo_feature_detection
+    """MO Feature Detection
 
     Find various features associated with this oscillator
 
@@ -156,7 +172,7 @@ def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list
 
 def feature_matches(pos_extrema: list, mo_extrema: list,
                     position: pd.DataFrame, mo_signal: list, **kwargs) -> list:
-    """feature_matches
+    """Feature Matches
 
     Search for and match for various features associated with momentum oscillator
 
@@ -217,6 +233,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
         plot_output {bool} -- plots in real time if True (default: {True})
         name {str} -- name of fund (default: {''})
         progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- (default: {''})
 
     Returns:
         dict -- mo_dict w/ updated keys and data
@@ -224,7 +241,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     period_change = kwargs.get('period_change', 5)
-    view = kwargs.get('view')
+    view = kwargs.get('view', '')
 
     weights = [1.3, 0.85, 0.55, 0.1]
 
@@ -280,7 +297,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics4,
                       'Price', 'Metrics', title=title)
     else:
-        filename = name + f"/{view}" + f'/momentum_metrics_{name}'
+        filename = os.path.join(name, view, f"momentum_metrics_{name}.png")
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

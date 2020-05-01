@@ -6,7 +6,6 @@ import numpy as np
 from datetime import datetime
 from scipy.stats import linregress
 
-from .math_functions import linear_regression
 from .moving_average import simple_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
 from libs.utils import STANDARD_COLORS

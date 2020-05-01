@@ -3,54 +3,19 @@ import numpy as np
 from scipy.stats import linregress
 
 
-def linear_regression(x_list, y_list) -> list:
-    """ returns [m_slope, intercept] """
-    x = np.array(x_list)
-    y = np.array(y_list)
+def lower_low(data, start_val: float, start_ind: int) -> list:
+    """Lower Low
 
-    n = np.size(x)
-    m_x = np.mean(x)
-    m_y = np.mean(y)
-    SS_xy = np.sum(y * x) - (n * m_y * m_x)
-    SS_xx = np.sum(x * x) - (n * m_x * m_x)
+    Looks for a bounce (rise) then lower low
 
-    m_slope = SS_xy / SS_xx
-    intercept = m_y - (m_slope * m_x)
+    Arguments:
+        data {list} -- price data
+        start_val {float} -- a low to find a lower
+        start_ind {int} -- starting index where the low exists
 
-    return [m_slope, intercept]
-
-
-def local_minima(pricing) -> list:
-    """ returns: minimas = [traded_day, value] """
-    pricing = list(pricing)
-
-    minimas = []
-    dropping = False
-    min_val = pricing[0]
-    min_ind = 0
-
-    for pt in range(len(pricing)):
-
-        if dropping == False:
-            if (pricing[pt] < min_val):
-                dropping = True
-
-            min_val = pricing[pt]
-            min_ind = pt
-
-        else:
-            if (pricing[pt] > min_val):
-                minimas.append([min_ind, min_val])
-                dropping = False
-
-            min_ind = pt
-            min_val = pricing[pt]
-
-    return minimas
-
-
-def lower_low(data, start_val, start_ind) -> list:
-    """ Looks for a bounce (rise) then lower low """
+    Returns:
+        list - [lower_value, respective_index]
+    """
     data = list(data)
     track_ind = start_ind
     track_val = start_val
@@ -81,8 +46,19 @@ def lower_low(data, start_val, start_ind) -> list:
     return lows
 
 
-def higher_high(data, start_val, start_ind) -> list:
-    """ Looks for a bounce (rise) then lower low """
+def higher_high(data, start_val: float, start_ind: int) -> list:
+    """Higher High
+
+    Looks for a bounce (drop) then higher high
+
+    Arguments:
+        data {list} -- price data
+        start_val {float} -- a low to find a lower
+        start_ind {int} -- starting index where the low exists
+
+    Returns:
+        list - [lower_value, respective_index]
+    """
     data = list(data)
     track_ind = start_ind
     track_val = start_val
@@ -113,7 +89,20 @@ def higher_high(data, start_val, start_ind) -> list:
     return highs
 
 
-def bull_bear_th(osc, start, thresh, bull_bear='bull'):
+def bull_bear_th(osc: list, start: int, thresh: float, bull_bear='bull'):
+    """Bull Bear Thresholding
+
+    Arguments:
+        osc {list} -- oscillator signal
+        start {int} -- starting index to find the threshold
+        thresh {float} -- threshold for comparison
+
+    Keyword Arguments:
+        bull_bear {str} -- type, either 'bull' or 'bear' (default: {'bull'})
+
+    Returns:
+        int -- index that is above/below threshold
+    """
     count = start
     if bull_bear == 'bull':
         while count < len(osc):
@@ -131,16 +120,14 @@ def bull_bear_th(osc, start, thresh, bull_bear='bull'):
 
 
 def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> list:
-    """
-    Beta Comparison 
+    """Beta Comparison 
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
-        benchmark:      (pd.DataFrame) a particular benchmark's fund historical data
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
+        benchmark {pd.DataFrame} -- a particular benchmark's fund historical data
 
-    returns:
-        beta:           (float) 
-        rsqd:           (float)
+    Returns:
+        list -- beta {float}, r-squared {float}
     """
     tot_len = len(fund['Close'])
     if pd.isna(fund['Close'][len(fund['Close'])-1]):
@@ -166,6 +153,17 @@ def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> list:
 
 
 def beta_comparison_list(fund: list, benchmark: list) -> list:
+    """Beta Comparison List
+
+    Like above, but compares entire list versus a benchmark
+
+    Arguments:
+        fund {list} -- list of the fund to compare
+        benchmark {list} -- list of the benchmark, such as S&P500
+
+    Returns:
+        list -- beta, r-squared
+    """
     tot_len = len(fund)
 
     fund_return = []
