@@ -410,7 +410,7 @@ def export_data(all_data: dict):
     if not os.path.exists(pathname):
         os.mkdir(pathname)
 
-    pathname = os.path.join("output", 'datasets')
+    pathname = os.path.join("output", "datasets")
     if not os.path.exists(pathname):
         os.mkdir(pathname)
 

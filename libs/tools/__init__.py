@@ -1,8 +1,9 @@
-from .math_functions import linear_regression, lower_low, higher_high, bull_bear_th, local_minima
+from .math_functions import linear_regression
+from .math_functions import lower_low, higher_high, bull_bear_th, local_minima
 from .math_functions import beta_comparison, beta_comparison_list
 
-from .moving_average import exponential_moving_avg, simple_moving_avg, windowed_moving_avg
-from .moving_average import weighted_moving_avg
+from .moving_average import exponential_moving_avg, simple_moving_avg
+from .moving_average import weighted_moving_avg, windowed_moving_avg
 from .moving_average import triple_moving_average, moving_average_swing_trade
 from .moving_average import triple_exp_mov_average
 from .hull_moving_average import hull_moving_average

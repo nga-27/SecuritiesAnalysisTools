@@ -357,6 +357,7 @@ def nasit_generation_function(config: dict, print_only=False):
         print(
             f"{WARNING}WARNING: 'nasit.json' not found. Exiting...{NORMAL}")
         return
+
     with open(nasit_file) as f:
         nasit = json.load(f)
         f.close()

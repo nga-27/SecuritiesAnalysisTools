@@ -1,8 +1,9 @@
+import os
 import pandas as pd
 import numpy as np
 
 from libs.utils import dual_plotting, date_extractor
-from libs.utils import ProgressBar, SP500
+from libs.utils import ProgressBar, SP500, STANDARD_COLORS
 from libs.features import normalize_signals
 
 from .ultimate_oscillator import ultimate_oscillator
@@ -11,6 +12,9 @@ from .full_stochastic import full_stochastic
 
 from .moving_average import windowed_moving_avg
 from .trends import autotrend
+
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
 
 BASE_WEIGHTS = {
     'stoch': 2,
@@ -23,21 +27,20 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     """
     2-3-5-8 multiplier comparing several different osc lengths
 
-    args:
-        position:       (pd.DataFrame) list of y-value datasets to be plotted (multiple)
+    Arguments:
+        position {pd.DataFrame} -- list of y-value datasets to be plotted (multiple)
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        function:       (str) type of oscillator; DEFAULT='full_stochastic' 
+    Optional Args:
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        function {str} -- type of oscillator (default: {'full_stochastic'}) 
                                 (others: ultimate, rsi, all, market)
-        wma:            (bool) output signal is filtered by windowed moving average; DEFAULT=True
-        progress_bar:   (ProgressBar) DEFAULT=None
+        wma {bool} -- output signal is filtered by windowed moving average (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
         view {str} -- file directory of plots (default: {''})
 
-    returns:
-        cluster_oscs:   (dict) contains all clustered oscillator informatio
-        clusters:       (list) clustered oscillator signal
+    Returns:
+        list -- dict of all clustered oscillator info, list of clustered osc signal
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -77,12 +80,13 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     if plot_output:
         dual_plotting(position['Close'], clusters, 'Position Price',
                       'Clustered Oscillator', x_label='Trading Days', title=name2)
-        #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
+
     else:
-        filename = name + f"/{view}" + \
-            '/clustering_{}_{}.png'.format(name, function)
-        dual_plotting(y1=position['Close'], y2=clusters, y1_label='Price', y2_label='Clustered Oscillator',
-                      x_label='Trading Days', title=name2, saveFig=True, filename=filename)
+        filename = os.path.join(name, view, f"clustering_{name}_{function}")
+        dual_plotting(y1=position['Close'], y2=clusters, y1_label='Price',
+                      y2_label='Clustered Oscillator',
+                      x_label='Trading Days', title=name2,
+                      saveFig=True, filename=filename)
 
     if prog_bar is not None:
         prog_bar.uptick(increment=0.2)
@@ -173,7 +177,21 @@ def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
 
 
 def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None) -> list:
-    """ subfunction to do clustering (removed from main for flexibility) """
+    """Generate Cluster
+
+    Subfunction to do clustering (removed from main for flexibility)
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        function {str} -- function to develop cluster signal 
+
+    Keyword Arguments:
+        name {str} -- (default: {''})
+        p_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        list -- cluster signal
+    """
     clusters = []
 
     for _ in range(len(position)):
@@ -226,7 +244,7 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
 
     else:
         print(
-            f'Warning: Unrecognized function input of {function} in cluster_oscs.')
+            f'{WARNING}Warning: Unrecognized function input of {function} in cluster_oscs.{NORMAL}')
         return None
 
     if p_bar is not None:
@@ -265,10 +283,23 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
 
 
 def generate_weights(position, **kwargs) -> dict:
-    """ Using trend slopes, will assign slightly different weights to each oscillator """
+    """Generate Weights
 
+    Using trend slopes, will assign slightly different weights to each oscillator
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+
+    Optional Args:
+        types {list} -- types of functions (default: {['stoch', 'rsi', 'ultimate']})
+        speeds {list} -- types of speeds (default: {['fast', 'medium', 'slow']})
+
+    Returns:
+        dict -- cluster weights
+    """
     types = kwargs.get('types', ['stoch', 'rsi', 'ultimate'])
     speeds = kwargs.get('speeds', ['fast', 'medium', 'slow'])
+
     trend = autotrend(position['Close'], periods=[28, 56, 84], weights=[
                       0.3, 0.4, 0.3], normalize=True)
 
@@ -352,7 +383,8 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
         dual_plotting(position['Close'], metrics,
                       'Price', 'Metrics', title=name2)
     else:
-        filename = name + f"/{view}" + f"/clustered_osc_metrics_{name}.png"
+        filename = os.path.join(
+            name, view, f"clustered_osc_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=name2, filename=filename, saveFig=True)
 

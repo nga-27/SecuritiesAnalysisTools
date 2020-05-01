@@ -1,3 +1,4 @@
+import os
 import pprint
 import pandas as pd
 import numpy as np
@@ -94,11 +95,13 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
             mid_points, short_period, data_type='list')
         long_signal = simple_moving_avg(
             mid_points, long_period, data_type='list')
+
     elif filter_style == 'ema':
         short_signal = exponential_moving_avg(
             mid_points, short_period, data_type='list')
         long_signal = exponential_moving_avg(
             mid_points, long_period, data_type='list')
+
     else:
         short_signal = []
         long_signal = []
@@ -137,7 +140,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
                       'Awesome', 'Triggers'], 'Price')
         bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
     else:
-        filename = name + f"/{view}" + f'/awesome_bar_{name}'
+        filename = os.path.join(name, view, f"awesome_bar{name}")
         bar_chart(signal, position=position, x=x,
                   saveFig=True, filename=filename, title=name2, bar_delta=True)
 
@@ -148,6 +151,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
 
 
 def ao_signal_trigger(signal: list, medium: list, longer: list) -> list:
+    """ Triggers of various signals (experimental) """
     trigger = []
     for i, sig in enumerate(signal):
         if (sig > 0.0) and (medium[i] > 0.0) and (longer[i] > 0.0):
@@ -231,6 +235,7 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
 
 
 def twin_peaks_detection(signal: list, position: pd.DataFrame) -> list:
+    """ Twin Peaks signal """
     tpd = []
 
     is_positive = signal[0] > 0.0
@@ -324,6 +329,7 @@ def twin_peaks_detection(signal: list, position: pd.DataFrame) -> list:
 
 
 def saucer_detection(signal: list, position: pd.DataFrame) -> list:
+    """ Saucer feature detection """
     sd = []
     if signal[0] > 0.0:
         state = 'pos'
@@ -397,16 +403,19 @@ def saucer_detection(signal: list, position: pd.DataFrame) -> list:
 
 
 def integrator_differentiator(features: list, position: pd.DataFrame, plot_output: bool, name='') -> list:
+    """ Integrator Differentiator (experimental) """
     base = int(max(position['Close']) / 20.0)
 
     plus_minus = []
     x_vals = []
     current_value = 0
+
     for feat in features:
         if feat['type'] == 'bullish':
             current_value += base
             plus_minus.append(current_value)
             x_vals.append(feat['index'])
+
         if feat['type'] == 'bearish':
             current_value -= base
             plus_minus.append(current_value)
@@ -502,7 +511,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics4,
                       'Price', 'Metrics', title=title)
     else:
-        filename = name + f"/{view}" + f'/awesome_metrics_{name}'
+        filename = os.path.join(name, view, f"awesome_metrics_{name}.png")
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from scipy.stats import linregress
 
@@ -223,7 +224,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
         dual_plotting(position['Close'], state4, 'Price',
                       'Bear Bull Power', title=title)
     else:
-        filename = name + f"/{view}" + f'/bear_bull_power_{name}'
+        filename = os.path.join(name, view, f"bear_bull_power_{name}.png")
         dual_plotting(position['Close'], state4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

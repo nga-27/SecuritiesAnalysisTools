@@ -1,3 +1,4 @@
+import os
 import pprint
 from copy import deepcopy
 import pandas as pd
@@ -57,7 +58,7 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     if plot_output:
         candlestick_plot(fund, title=name, additional_plts=[plot_50, plot_200])
     else:
-        filename = f"{name}/{view}/candlestick_{name}"
+        filename = os.path.join(name, view, f"candlestick_{name}.png")
         candlestick_plot(fund, title=name, filename=filename,
                          saveFig=True, additional_plts=[plot_50, plot_200])
 

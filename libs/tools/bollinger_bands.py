@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -139,7 +140,9 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
         dual_plotting(position['Close'], norm_signal, 'Price',
                       'Indicators', title=name2)
     else:
-        filename = name + f"/{view}" + f"/bollinger_band_metrics_{name}.png"
+        filename = os.path.join(
+            name, view, f"bollinger_band_metrics{name}.png")
+        # filename = name + f"/{view}" + f"/bollinger_band_metrics_{name}.png"
         dual_plotting(position['Close'], norm_signal, 'Price',
                       'Metrics', title=name2, saveFig=True, filename=filename)
 
@@ -189,6 +192,7 @@ def bollinger_band_features(bol_bands: dict, position: pd.DataFrame, plot_output
             "date": date
         }
         features.append(data)
+
         if plot_output:
             print(f"Bollinger Band: {data}")
 
@@ -301,7 +305,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
                          legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'])
 
     else:
-        filename = name + f"/{view}" + f'/bollinger_bands_{name}.png'
+        filename = os.path.join(name, view, f"bolling_bands_{name}.png")
         generic_plotting([position['Close'], ma, upper, lower],
                          title=name2, x=position.index,
                          legend=['Price', 'Moving Avg',
@@ -389,7 +393,17 @@ def find_W_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
 
 
 def get_extremes_ratios(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict:
+    """Get Extremes Ratios
 
+    Look for extreme (upper/lower band crossovers) features
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        bol_bands {dict} -- bollinger bands data object
+
+    Returns:
+        dict -- bollinger bands data object
+    """
     period = kwargs.get('period', 20)
     bb = bol_bands['tabular']
 
