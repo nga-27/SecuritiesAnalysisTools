@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -72,8 +73,13 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     p_bar = kwargs.get('p_bar')
     view = kwargs.get('view')
 
-    hull = {'short': {}, 'medium': {},
-            'long': {}, 'tabular': {}}
+    hull = {
+        'short': {},
+        'medium': {},
+        'long': {},
+        'tabular': {}
+    }
+
     hull['short'] = {'period': period[0]}
     hull['medium'] = {'period': period[1]}
     hull['long'] = {'period': period[2]}
@@ -95,7 +101,11 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         if p_bar is not None:
             p_bar.uptick(increment=0.1)
 
-    hull['tabular'] = {'short': plots[0], 'medium': plots[1], 'long': plots[2]}
+    hull['tabular'] = {
+        'short': plots[0],
+        'medium': plots[1],
+        'long': plots[2]
+    }
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Hull Moving Averages'
@@ -105,7 +115,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         generic_plotting([position['Close'], plots[0], plots[1],
                           plots[2]], legend=legend, title=name2)
     else:
-        filename = name + f"/{view}" + f"/hull_moving_average_{name}.png"
+        filename = os.path.join(name, view, f"hull_moving_average_{name}.png")
         generic_plotting([position['Close'], plots[0], plots[1],
                           plots[2]], legend=legend, title=name2, saveFig=True, filename=filename)
 
@@ -314,7 +324,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title='Hull Moving Average Metrics')
     else:
-        filename2 = name + f"/{view}" + f"/hull_metrics_{name}.png"
+        filename2 = os.path.join(name, view, f"hull_metrics_name.png")
         dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title=name2, saveFig=True, filename=filename2)
 

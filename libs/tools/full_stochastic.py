@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -420,8 +421,9 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
         if plot_output:
             dual_plotting(position['Close'], full_stoch['indicator'],
                           'Position Price', 'Oscillator Signal', title=name2)
+
         else:
-            filename = name + '/' + view + '/stochastic_{}.png'.format(name)
+            filename = os.path.join(name, view, f"stochastic_{name}.png")
             dual_plotting(position['Close'], full_stoch['indicator'], 'Position Price', 'Stochastic Oscillator',
                           x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
