@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -44,21 +45,30 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
         ultimate, len(position['Close']), p_bar=p_bar)
 
     ultimate = ultimate_osc_metrics(
-        position, ultimate, plot_output=plot_output, out_suppress=out_suppress,
-        name=name, p_bar=p_bar, view=view)
+        position,
+        ultimate,
+        plot_output=plot_output,
+        out_suppress=out_suppress,
+        name=name,
+        p_bar=p_bar,
+        view=view)
 
     if not out_suppress:
         name3 = SP500.get(name, name)
         name2 = name3 + ' - Ultimate Oscillator'
+
         if plot_output:
             dual_plotting(position['Close'], ult_osc, 'Position Price',
                           'Ultimate Oscillator', title=name2)
             dual_plotting(position['Close'], ultimate['plots'],
                           'Position Price', 'Buy-Sell Signal', title=name2)
+
         else:
-            filename = name + f"/{view}" + '/ultimate_osc_{}.png'.format(name)
+            filename = os.path.join(name, view, f"ultimate_osc_{name}.png")
+            filename2 = os.path.join(
+                name, view, f"ultimate_osc_raw_{name}.png")
             dual_plotting(position['Close'], ult_osc, 'Position Price',
-                          'Ultimate Oscillator', title=name2, saveFig=True, filename=filename)
+                          'Ultimate Oscillator', title=name2, saveFig=True, filename=filename2)
             dual_plotting(position['Close'], ultimate['plots'], 'Position Price',
                           'Buy-Sell Signal', title=name2, saveFig=True, filename=filename)
 
@@ -170,6 +180,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
             marker_val = close
             marker_ind = i
             lows = lower_low(position['Close'], marker_val, marker_ind)
+
             if len(lows) != 0:
                 ult2 = ult_osc[lows[-1][1]]
 
@@ -178,6 +189,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                     interval = np.max(ult_osc[i:start_ind+1])
                     start_ind = bull_bear_th(
                         ult_osc, start_ind, interval, bull_bear='bull')
+
                     if start_ind is not None:
                         trigger.append([
                             "BULLISH",
@@ -194,6 +206,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
             marker_val = position['Close'][i]
             marker_ind = i
             highs = higher_high(position['Close'], marker_val, marker_ind)
+
             if len(highs) != 0:
                 ult2 = ult_osc[highs[-1][1]]
 
@@ -202,6 +215,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                     interval = np.min(ult_osc[i:start_ind+1])
                     start_ind = bull_bear_th(
                         ult_osc, start_ind, interval, bull_bear='bear')
+
                     if start_ind is not None:
                         trigger.append([
                             "BEARISH",
@@ -270,6 +284,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                     # False breakout, see if this is the new max:
                     state = 'u3'
                     ults[1] = ult
+
             elif ult < ults[2]:
                 # There may have been a false signal
                 ults[2] = ult
@@ -324,6 +339,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                     # False breakout, see if this is the new max:
                     state = 'e3'
                     ults[1] = ult
+
             elif ult > ults[2]:
                 # There may have been a false signal
                 ults[2] = ult
@@ -346,12 +362,20 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
 
 
 def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
-    """ Simplifies signals to easy to view plot and dictionary
-    Returns:
-        list:
-            plot (list): easy signal to plot on top of a position's price plot
-            ultimate (dict): dictionary of specific information represented by 'plot' signal
+    """Ultimate Oscillator Output
 
+    Simplifies signals to easy to view plot and dictionary
+
+    Arguments:
+        ultimate {dict} -- ultimate oscillator data object
+        len_of_position {int} -- length of fund dataset (without passing it)
+
+    Optional Args:
+        p_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        list -- plot (list), easy signal to plot on top of a position's price plot;
+                ultimate (dict), dictionary of specific information represented by 'plot' signal
     """
     p_bar = kwargs.get('p_bar')
 
@@ -361,26 +385,27 @@ def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
     trigger = ultimate['indicator']
 
     simplified = []
-    plots = []
-
-    for i in range(len_of_position):
-        plots.append(0.0)
+    plots = [0.0] * len_of_position
     present = False
 
-    for i, trig in enumerate(trigger):
+    for trig in trigger:
         for j in range(len(simplified)):
             if simplified[j][3] == trig[3]:
                 present = True
+
         if not present:
             simplified.append(trig)
+
             if trig[0] == "BEARISH":
                 plots[trig[3]] = -1.0
                 ultimate['bearish'].append(
                     [trig[1], trig[2], trig[3], trig[4]])
+
             else:
                 plots[trig[3]] = 1.0
                 ultimate['bullish'].append(
                     [trig[1], trig[2], trig[3], trig[4]])
+
         present = False
 
     if p_bar is not None:
@@ -395,11 +420,15 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     """Ultimate Oscillator Metrics
 
     Arguments:
-        position {pd.DataFrame} -- dataset
+        position {pd.DataFrame} -- fund dataset
         ultimate {dict} -- ultimate osc data object
 
     Optional Args:
         p_bar {ProgressBar} -- (default: {None})
+        plot_output {bool} -- (default: {True})
+        out_suppress {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        view {str} -- (default: {''})
 
     Returns:
         dict -- ultimate osc data object
@@ -408,7 +437,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     name = kwargs.get('name', '')
-    view = kwargs.get('view')
+    view = kwargs.get('view', '')
 
     ults = ultimate['plots']
 
@@ -447,11 +476,14 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     if not out_suppress:
         name3 = SP500.get(name, name)
         name2 = name3 + ' - Ultimate Oscillator Metrics'
+
         if plot_output:
             dual_plotting(position['Close'], metrics, 'Price',
                           'Metrics', title='Ultimate Oscillator Metrics')
+
         else:
-            filename = name + f"/{view}" + f"/ultimate_osc_metrics_{name}.png"
+            filename = os.path.join(
+                name, view, f"ultimate_osc_metrics_{name}.png")
             dual_plotting(position['Close'], metrics, 'Price',
                           'Metrics', title=name2, filename=filename, saveFig=True)
 
@@ -461,7 +493,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
 
 
 def ultimate_osc_signals(bull_list: list, bear_list: list) -> list:
-    """ultimate_osc_signals
+    """Ultimate Oscillator Signals
 
     Format all ultimate_osc signals into a single list
 
