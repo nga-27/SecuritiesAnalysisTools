@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -46,7 +47,7 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     """Generate Total Power Signal
 
     Arguments:
-        position {pd.DataFrame} -- dataset
+        position {pd.DataFrame} -- fund dataset
 
     Optional Args:
         lookback {int} -- period for total power signal (default: {45})
@@ -66,8 +67,13 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     p_bar = kwargs.get('p_bar')
     view = kwargs.get('view')
 
-    signals = {"bears_raw": [], "bulls_raw": [],
-               "total": [], "bears": [], "bulls": []}
+    signals = {
+        "bears_raw": [],
+        "bulls_raw": [],
+        "total": [],
+        "bears": [],
+        "bulls": []
+    }
 
     ema = exponential_moving_avg(position, powerback)
 
@@ -134,13 +140,21 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     name2 = SP500.get(name, name)
     title = name2 + ' - Total Power'
     if plot_output:
-        dual_plotting(position['Close'], [
-                      signals['bears'], signals['bulls'], signals['total']], 'Price', ['Bear', 'Bull', 'Total'],
+        dual_plotting(position['Close'],
+                      [signals['bears'], signals['bulls'], signals['total']],
+                      'Price',
+                      ['Bear', 'Bull', 'Total'],
                       title=title)
+
     else:
-        filename = name + f"/{view}" + f'/total_power_{name}'
-        dual_plotting(position['Close'], [signals['bears'], signals['bulls'], signals['total']], 'Price', ['Bear', 'Bull', 'Total'],
-                      title=title, saveFig=True, filename=filename)
+        filename = os.path.join(name, view, f"total_power_{name}.png")
+        dual_plotting(position['Close'],
+                      [signals['bears'], signals['bulls'], signals['total']],
+                      'Price',
+                      ['Bear', 'Bull', 'Total'],
+                      title=title,
+                      saveFig=True,
+                      filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -309,8 +323,9 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
         dual_plotting(position['Close'], metrics, 'Price', 'Metrics')
         for feat in features:
             print(f"Total Power: {feat}")
+
     else:
-        filename = name + f"/{view}" + f'/total_pwr_metrics_{name}'
+        filename = os.path.join(name, view, f"total_pwr_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=title, saveFig=True, filename=filename)
 

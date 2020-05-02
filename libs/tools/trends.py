@@ -1,3 +1,4 @@
+import os
 import warnings
 import pprint
 import math
@@ -49,16 +50,29 @@ def get_trend(position: pd.DataFrame, **kwargs) -> dict:
     if style == 'sma':
         trend['tabular'] = simple_moving_avg(
             position, ma_size, data_type='list')
+
         trend['difference'] = difference_from_trend(position, trend['tabular'])
+
         trend['magnitude'] = trend_of_dates(
             position, trend_difference=trend['difference'], dates=date_range)
+
         trend['method'] = f'SMA-{ma_size}'
 
     return trend
 
 
 def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
-    """ Simple difference of close from trend values """
+    """Difference from Trend
+
+    Simple difference of close from trend values 
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        trend {list} -- given trend
+
+    Returns:
+        list -- difference, point by point
+    """
     diff_from_trend = []
     for i in range(len(trend)):
         diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
@@ -85,10 +99,12 @@ def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) 
         # Trend of entire period provided
         trend = np.round(np.average(trend_difference), 6)
         overall_trend = trend
+
     else:
         i = 0
         d_start = datetime.strptime(dates[0], '%Y-%m-%d')
         d_match = datetime.strptime(position['Date'][0], '%Y-%m-%d')
+
         while ((i < len(position['Date'])) and (d_start > d_match)):
             i += 1
             d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
@@ -96,6 +112,7 @@ def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) 
         start = i
         d_end = datetime.strptime(dates[1], '%Y-%m-%d')
         d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
+
         while ((i < len(position['Date'])) and (d_end > d_match)):
             i += 1
             if i < len(position['Date']):
@@ -109,8 +126,24 @@ def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) 
     return overall_trend
 
 
-def get_trend_analysis(position: pd.DataFrame, date_range: list = [], config=[50, 25, 12]) -> dict:
-    """ Determines long, med, and short trend of a position """
+def get_trend_analysis(position: pd.DataFrame,
+                       date_range: list = [],
+                       config: list = [50, 25, 12]) -> dict:
+    """Get Trend Analysis
+
+    Determines long, med, and short trend of a position
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+
+    Keyword Arguments:
+        date_range {list} -- (defaults: {[]})
+        config {list} -- list of moving average lookbacks, longest to shortest
+                         (default: {[50, 25, 12]})
+
+    Returns:
+        dict -- trend notes
+    """
     tlong = get_trend(position, style='sma', ma_size=config[0])
     tmed = get_trend(position, style='sma', ma_size=config[1])
     tshort = get_trend(position, style='sma', ma_size=config[2])
