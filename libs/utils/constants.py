@@ -36,6 +36,10 @@ TREND_COLORS = {
     "bad": TEXT_COLOR_MAP["red"]
 }
 
+PRINT_CONSTANTS = {
+    "return_same_line": "\033[F"
+}
+
 EXEMPT_METRICS = [
     "metadata",
     "synopsis"

@@ -1,5 +1,5 @@
-import json
 import os
+import json
 import pprint
 import requests
 
@@ -11,9 +11,10 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 import libs.utils.stable_yf as styf
+
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
-from .constants import STANDARD_COLORS, SP500
+from .constants import STANDARD_COLORS, SP500, PRINT_CONSTANTS
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -31,21 +32,22 @@ WARNING = STANDARD_COLORS["warning"]
 FUND = STANDARD_COLORS["ticker"]
 NORMAL = STANDARD_COLORS["normal"]
 
-REVERSE_LINE = "\033[F"
+REVERSE_LINE = PRINT_CONSTANTS["return_same_line"]
 
 
 def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
-    """
-    Get Api Metadata
+    """Get API Metadata
 
-    args:
-        fund_ticker:    (str) fund name
+    Arguments:
+        fund_ticker {str} -- fund name
 
-    optional args:
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Optional Args:
+        progress_bar {ProgressBar} -- (default: {None})
+        max_close {float} -- max close for a period, for VQ (default: {None})
+        data {pd.DataFrame} -- dataset, primarily for VQ (default: {None})
 
-    returns:
-        metadata:       (dict) contains all financial metadata available
+    Returns:
+        dict -- contains all financial metadata available
     """
     pb = kwargs.get('progress_bar', None)
     max_close = kwargs.get('max_close', None)
@@ -59,13 +61,14 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     ticker = yf.Ticker(fund_ticker)
     if pb is not None:
         pb.uptick(increment=0.2)
-    st_tick = styf.Ticker(fund_ticker)
+
+    st_tick = dict()
     if pb is not None:
         pb.uptick(increment=0.3)
 
     metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
     metadata['info'] = AVAILABLE_KEYS.get('info')(
-        ticker, st_tick, force_holdings=True)
+        ticker, st_tick, force_holdings=False)
 
     if pb is not None:
         pb.uptick(increment=0.2)
@@ -102,6 +105,14 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
 
 
 def get_dividends(ticker):
+    """Get Dividends
+
+    Arguments:
+        ticker {yf-object} -- ticker object from yfinance
+
+    Returns:
+        dict -- dividend data object
+    """
     div = dict()
     try:
         t = ticker.dividends
@@ -114,6 +125,18 @@ def get_dividends(ticker):
 
 
 def get_info(ticker, st, force_holdings=False):
+    """Get Info
+
+    Arguments:
+        ticker {yf-object} -- ticker object from yfinance
+        st {yf-object} -- ticker object from yfinance (0.1.50)
+
+    Keyword Arguments:
+        force_holdings {bool} -- only try old version (default: {False})
+
+    Returns:
+        dict -- fund info data object
+    """
     if force_holdings:
         try:
             info = st.info
