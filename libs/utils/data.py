@@ -53,6 +53,7 @@ def download_data_all(config: dict, **kwargs) -> list:
                 f'Fetching data for {TICKER}{ticker_print}{NORMAL} from dates {start} to {end}...')
             data = yf.download(tickers=tickers, period=per, interval=inter,
                                group_by='ticker', start=start, end=end)
+
         else:
             print(
                 f'Fetching data for {TICKER}{ticker_print}{NORMAL} for {per} at {inter} intervals...')
@@ -94,9 +95,11 @@ def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
     if (start is not None) and (end is not None):
         data1 = yf.download(tickers=tickers, start=start,
                             end=end, interval=interval, group_by='ticker')
+
     else:
         data1 = yf.download(tickers=tickers, period=period,
                             interval=interval, group_by='ticker')
+
     data = data_format(data1, config=None,
                        list_of_funds=indexes, fund_len=fund_len)
 
@@ -133,11 +136,13 @@ def download_data(config: dict, **kwargs) -> list:
             f'Fetching data for {TICKER}{ticker_print}{NORMAL} from dates {start} to {end}...')
         data = yf.download(tickers=tickers, period=period, interval=interval,
                            group_by='ticker', start=start, end=end)
+
     else:
         print(
             f'Fetching data for {TICKER}{ticker_print}{NORMAL} for {period} at {interval} intervals...')
         data = yf.download(tickers=tickers, period=period,
                            interval=interval, group_by='ticker')
+
     print(" ")
 
     funds = fund_list_extractor(data, config=config)
@@ -175,6 +180,7 @@ def download_single_fund(fund: str, config: dict, fund_len=None, **kwargs) -> di
             f'Fetching sector data for {TICKER}{ticker}{NORMAL}...')
         data = yf.download(tickers=ticker, period=period, interval=interval,
                            group_by='ticker', start=start, end=end)
+
     else:
         print("")
         print(
@@ -190,8 +196,22 @@ def download_single_fund(fund: str, config: dict, fund_len=None, **kwargs) -> di
     return data
 
 
-def add_status_message(status: list, new_message: str, message_index: int = None, key: str = None) -> str:
-    """ adds 'new_message' to status if it isn't added already """
+def add_status_message(status: list, new_message: str, message_index: int = None, key: str = None) -> list:
+    """Add Status Message
+
+    Adds 'new_message' to status if it isn't added already
+
+    Arguments:
+        status {list} -- list of statuses to add to
+        new_message {str} -- new message to add to status list
+
+    Keyword Arguments
+        message_index {int} -- fund index the status occurred (default: {None})
+        key {str} -- a particular key added to 'info' (default: {None})
+
+    Returns:
+        list -- status lists
+    """
     need_to_add = True
     for i, message in enumerate(status):
         if new_message == message['message']:
@@ -199,29 +219,43 @@ def add_status_message(status: list, new_message: str, message_index: int = None
             if key is not None:
                 status[i]['info'].append({key: message_index})
             need_to_add = False
+
     if need_to_add:
         if key is not None:
             status.append({'message': new_message, 'count': 1,
                            'info': [{key: message_index}]})
         else:
             status.append({'message': new_message, 'count': 1, 'info': []})
+
     return status
 
 
 def get_status_message(status: list) -> str:
+    """Get Status Message
+
+    Arguments:
+        status {list} -- status list
+
+    Returns:
+        str -- concatenated message and info
+    """
     message = ''
     info = ''
     for i, item in enumerate(status):
         message += f"{item['message']} ({item['count']})"
         info += f"{item['info']}"
+
         if i < len(status)-1:
             message += ', '
             info += ', '
+
     return message, info
 
 
 def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
-    """Data Format (aligns data in a more accessible way)
+    """Data Format
+
+    Aligns data in a more accessible way (dict of pd.DataFrames)
 
     Arguments:
         data {pd.DataFrame} -- entire historical data of all funds
@@ -296,6 +330,21 @@ def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
 
 
 def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
+    """Filter NaN
+
+    Removes "not a number" (NaN) values from fund if possible, usually due to a yfinance error.
+
+    Arguments:
+        frame_list {pd.DataFrame} -- fund dataset to cleanse, if needed
+
+    Optional Args:
+        fund_name {str} -- name of fund (default: {None})
+        column_key {str} -- name of column (default: {None})
+        fund_len {dict} -- length of desired list (default: {None})
+
+    Returns:
+        list -- newly, cleansed dataframe column
+    """
     fund_name = kwargs.get('fund_name')
     column_key = kwargs.get('column_key')
     fund_len = kwargs.get('fund_len')
@@ -313,49 +362,62 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
                 newer_list.extend(new_list)
                 new_list = newer_list.copy()
                 nans = insert_into_sorted_nans(nans, 0)
+
             elif frame_list.index[len(frame_list)-1] != fund_len['end']:
                 new_list.append(float('NaN'))
                 nans = insert_into_sorted_nans(nans, len(frame_list)-1)
+
             else:
                 newer_list = []
                 f_count = 0
                 d_count = 0
+
                 while (d_count < len(fund_len['dates'])) and (f_count < len(frame_list.index)):
                     if fund_len['dates'][d_count] == frame_list.index[f_count]:
                         newer_list.append(frame_list[f_count])
                         f_count += 1
                         d_count += 1
+
                     elif fund_len['dates'][d_count] < frame_list.index[f_count]:
                         newer_list.append(float('NaN'))
                         nans = insert_into_sorted_nans(nans, d_count)
                         d_count += 1
+
                     else:
                         newer_list.append(frame_list[f_count])
                         f_count += 1
+
                 new_list = newer_list.copy()
 
     if len(nans) > 0:
         corrected = True
         for na in nans:
+
             if (na == 0) and (not math.isnan(new_list[na+1])):
                 status = add_status_message(status, 'Row-0 nan')
                 new_list[na] = new_list[na+1]
-            elif (na != 0) and (na != len(new_list)-1) and (not math.isnan(new_list[na-1]) and (not math.isnan(new_list[na+1]))):
+
+            elif (na != 0) and (na != len(new_list)-1) and (not math.isnan(new_list[na-1]) and
+                                                            (not math.isnan(new_list[na+1]))):
                 status = add_status_message(status, 'Row-inner nan')
                 new_list[na] = np.round(
                     np.mean([new_list[na-1], new_list[na+1]]), 2)
+
             elif (na == len(new_list)-1) and (not math.isnan(new_list[na-1])):
                 status = add_status_message(status, 'Mutual Fund nan')
                 new_list[na] = new_list[na-1]
+
             elif not math.isnan(new_list[na-1]):
                 # More general case than above, different error.
                 status = add_status_message(
                     status, 'Generic progression nan', na, column_key)
                 new_list[na] = new_list[na-1]
+
             elif (na < len(new_list)-2) and (not math.isnan(new_list[na+1])):
                 status = add_status_message(
                     status, 'Generic progression nan', na, column_key)
                 new_list[na] = new_list[na+1]
+
             else:
                 status = add_status_message(
                     status, 'Unknown/unfixable nan', na, column_key)
@@ -364,20 +426,35 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
         message, info = get_status_message(status)
         if 'Unknown/unfixable nan' in message:
             print(
-                f"{ERROR}WARNING: 'NaN' found on {fund_name}. Type: '{message}': Correction FAILED.")
+                f"{ERROR}WARNING: 'NaN' found on {fund_name}. Type: '{message}': " +
+                f"Correction FAILED.")
             print(f"----> Content: {info}{NORMAL}")
+
         elif 'Generic progression nan' in message:
             print(
                 f"{NOTE}Note: 'NaN' found on {fund_name}. Type: '{message}': Corrected OK.")
             print(f"----> Content: {info}{NORMAL}")
+
         else:
             print(
-                f"{NOTE}Note: 'NaN' found on {fund_name} data. Type: '{message}': Corrected OK.{NORMAL}")
+                f"{NOTE}Note: 'NaN' found on {fund_name} data. Type: '{message}': " +
+                f"Corrected OK.{NORMAL}")
 
     return new_list
 
 
 def filter_date(dates, fund_len: dict = None):
+    """Filter Date
+
+    Arguments:
+        dates {list, pd.DataFrame} -- dates of a dataframe or list
+
+    Keyword Arguments:
+        fund_len {dict} -- desired length of date (default: {None})
+
+    Returns:
+        list -- list of cleansed dates
+    """
     if fund_len is not None:
         if len(dates) != fund_len['length']:
             if dates[0] != fund_len['start']:
@@ -392,22 +469,37 @@ def filter_date(dates, fund_len: dict = None):
                 newer_list = []
                 f_count = 0
                 d_count = 0
+
                 while (d_count < len(fund_len['dates'])) and (f_count < len(dates)):
                     if fund_len['dates'][d_count] == dates[f_count]:
                         newer_list.append(dates[f_count])
                         f_count += 1
                         d_count += 1
+
                     elif fund_len['dates'][d_count] < dates[f_count]:
                         newer_list.append(fund_len['dates'][d_count])
                         d_count += 1
+
                     else:
                         newer_list.append(dates[f_count])
                         f_count += 1
+
                 dates = newer_list.copy()
     return dates.copy()
 
 
 def insert_into_sorted_nans(nans: list, element: int) -> list:
+    """Insert into Sorted NaNs
+
+    Utilized when a missing length of fund is inserted
+
+    Arguments:
+        nans {list} -- list of not a numbers
+        element {int} -- specific index
+
+    Returns:
+        list -- new NaN list
+    """
     counter = 0
     new_nans = []
     while (counter < len(nans)) and (nans[counter] < element):
