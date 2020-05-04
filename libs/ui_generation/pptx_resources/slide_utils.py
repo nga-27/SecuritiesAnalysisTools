@@ -5,7 +5,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from libs.utils import SP500
+from libs.utils import SP500, STANDARD_COLORS
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -18,8 +18,26 @@ BLANK_SLIDE = 6
 CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
+
 
 def slide_title_header(slide, fund: str, include_time=True, price_details=''):
+    """Slide Title Header
+
+    Generates a consistent title header for fund slides.
+
+    Arguments:
+        slide {pptx-slide} -- slide object
+        fund {str} -- fund name
+
+    Keyword Arguments:
+        include_time {bool} -- will include time of pptx creation (default: {True})
+        price_details {str} -- price content for latest period (default: {''})
+
+    Returns:
+        pptx-slide -- updated slide with title content
+    """
     fund = SP500.get(fund, fund)
 
     left = Inches(0)  # Inches(3.86)
@@ -55,6 +73,7 @@ def slide_title_header(slide, fund: str, include_time=True, price_details=''):
         p.font.bold = True
         p.text = price_details
         deets = price_details.split(' ')
+
         if '+' in deets[1]:
             p.font.color.rgb = color_to_RGB('green')
         else:
@@ -64,7 +83,17 @@ def slide_title_header(slide, fund: str, include_time=True, price_details=''):
 
 
 def subtitle_header(slide, title: str):
-    """ Creates subtitle under main slide title """
+    """Subtitle Header
+
+    Creates subtitle under main slide title
+
+    Arguments:
+        slide {pptx-slide} -- slide object
+        title {str} -- title to add as subtitle
+
+    Returns:
+        pptx-slide -- modified slide object    
+    """
     top = Inches(0.61)
     left = Inches(0.42)
     width = height = Inches(0.5)
@@ -81,14 +110,27 @@ def subtitle_header(slide, title: str):
 
 
 def intro_slide(prs):
+    """Intro Slide
+
+    Adds some introductory slides to presentation, regarding metrics, etc.
+
+    Arguments:
+        prs {pptx-object} -- presentation
+
+    Returns:
+        pptx-object -- modified presentation
+    """
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     slide = slide_title_header(
         slide, 'Explanation of Analysis', include_time=False)
 
-    if os.path.exists('resources/metric_explanation.txt'):
-        filer = open('resources/metric_explanation.txt', 'r')
+    EXPLANATION_FILE = os.path.join("resources", "metric_explanation.txt")
+
+    if os.path.exists(EXPLANATION_FILE):
+        filer = open(EXPLANATION_FILE, 'r')
         content = filer.readlines()
         content2 = []
+
         for cont in content:
             c = cont.split('\r\n')[0]
             content2.append(c)
@@ -107,9 +149,11 @@ def intro_slide(prs):
         p.text = content[0]
         p.font.size = Pt(12)
         p.font.bold = True
+
         for i in range(1, len(content)):
             p = text_frame.add_paragraph()
             p.text = content[i]
+
             if i == 5:
                 p.font.size = Pt(12)
                 p.font.bold = True
@@ -118,12 +162,25 @@ def intro_slide(prs):
                 p.font.bold = False
 
     else:
-        print("WARNING - file 'metric_explanation.txt' not found.")
+        print(f"{WARNING}WARNING - file 'metric_explanation.txt' not found.{NORMAL}")
 
     return prs
 
 
-def color_to_RGB(color: str):
+def color_to_RGB(color: str, suppress_warnings=True):
+    """Color to RGB
+
+    String named color to RGB object for pptx
+
+    Arguments:
+        color {str} -- common name of color
+
+    Keyword Arguments:
+        suppress_warnings {bool} -- (default: {True})
+
+    Returns:
+        RGB Object -- RGB color object
+    """
     if color == 'black':
         return RGBColor(0x00, 0x00, 0x00)
     elif color == 'blue':
@@ -139,11 +196,23 @@ def color_to_RGB(color: str):
     elif color == 'red':
         return RGBColor(0xff, 0x00, 0x00)
     else:
-        print(f"WARNING: Color '{color}' not found in 'color_to_RGB'")
+        if not suppress_warnings:
+            print(f"WARNING: Color '{color}' not found in 'color_to_RGB'")
         return RGBColor(0x00, 0x00, 0x00)
 
 
 def pptx_ui_errors(slide, message: str):
+    """PPTX UI Errors
+
+    Log errors as they occur, print on slide itself
+
+    Arguments:
+        slide {pptx-slide} -- pptx-slide object, for logging purposes
+        message {str} -- message to log
+
+    Returns:
+        pptx-slide -- slide with error listed on it
+    """
     top = Inches(2.75)
     left = Inches(4)
     width = Inches(6)

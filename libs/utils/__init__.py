@@ -1,6 +1,5 @@
 from .startup import start_header, logo_renderer
 from .file_io import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
-from .file_io import windows_compatible_file_parse
 
 from .data import download_data, download_data_indexes, download_single_fund, download_data_all
 

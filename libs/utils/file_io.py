@@ -39,31 +39,3 @@ def create_sub_temp_dir(name: str, sub_periods=[]):
             period_path = os.path.join(fund_path, period)
             if not os.path.exists(period_path):
                 os.mkdir(period_path)
-
-
-def windows_compatible_file_parse(extension: str, **kwargs) -> list:
-    """File operations patch for Windows OS
-
-    Arguments:
-        extension {str} -- file extension
-
-    Optional Args:
-        parser {str} -- UNIX style directory (default: {'/'})
-        desired_len {int} -- file extension length (default: {4})
-        bad_parse {str} -- rendered extension to correct (default: {'\\'})
-
-    Returns:
-        list -- list of file path components
-    """
-    parser = kwargs.get('parser', '/')
-    desired_len = kwargs.get('desired_len', 4)
-    bad_parse = kwargs.get('bad_parse', '\\')
-
-    globbed = extension.split(parser)
-    if len(globbed) < desired_len:
-        end = globbed[desired_len-2].split(bad_parse)
-        globbed.pop(desired_len-2)
-        globbed.append(end[0])
-        globbed.append(end[1])
-
-    return globbed
