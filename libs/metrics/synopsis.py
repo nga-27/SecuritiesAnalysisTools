@@ -156,32 +156,38 @@ def strings_to_tabs(string: str, style='default') -> str:
         str -- properly formatted string
     """
     if style == 'default':
-        if len(string) < 7:
-            tabs = '\t\t\t\t\t'
-        elif len(string) < 12:
-            tabs = '\t\t\t\t'
-        elif len(string) < 15:
-            tabs = '\t\t\t\t'
-        elif len(string) < 23:
-            tabs = '\t\t\t'
-        elif len(string) < 30:
-            tabs = '\t\t'
-        else:
-            tabs = '\t'
+        LENGTH_KEY = 42
+        space_len = LENGTH_KEY - len(string)
+        tabs = " " * space_len
+        # if len(string) < 7:
+        #     tabs = '\t\t\t\t\t'
+        # elif len(string) < 12:
+        #     tabs = '\t\t\t\t'
+        # elif len(string) < 15:
+        #     tabs = '\t\t\t\t'
+        # elif len(string) < 23:
+        #     tabs = '\t\t\t'
+        # elif len(string) < 30:
+        #     tabs = '\t\t'
+        # else:
+        #     tabs = '\t'
 
     elif style == 'percent':
-        if len(string) < 7:
-            tabs = '\t\t\t'
-        elif len(string) < 12:
-            tabs = '\t\t'
-        elif len(string) < 15:
-            tabs = '\t\t'
-        elif len(string) < 23:
-            tabs = '\t'
-        elif len(string) < 30:
-            tabs = ''
-        else:
-            tabs = ''
+        LENGTH_KEY = 20
+        space_len = LENGTH_KEY - len(string)
+        tabs = " " * space_len
+        # if len(string) < 7:
+        #     tabs = '\t\t\t'
+        # elif len(string) < 12:
+        #     tabs = '\t\t'
+        # elif len(string) < 15:
+        #     tabs = '\t\t'
+        # elif len(string) < 23:
+        #     tabs = '\t'
+        # elif len(string) < 30:
+        #     tabs = ''
+        # else:
+        #     tabs = ''
 
     else:
         return ''
@@ -205,17 +211,18 @@ def output_to_terminal(synopsis: dict, print_out=False, **kwargs):
     """
     name = kwargs.get('name', '')
     name2 = SP500.get(name, name)
+
     if print_out:
         for period in synopsis:
 
-            if (period != 'metadata') and (period != 'synopsis'):
+            if period not in EXEMPT_METRICS:
                 print("\r\n")
                 print(f"Time period: {period} for {name2}")
                 print("")
 
                 tabs = strings_to_tabs("Tabular:")
                 tabs2 = strings_to_tabs("Current", style='percent')
-                print(f"\r\nTabular:{tabs} Current{tabs2}Previous\r\n")
+                print(f"\r\nTabular:{tabs}Current{tabs2}Previous\r\n")
 
                 for tab in synopsis[period]['tabular']:
                     custom_print(tab, synopsis[period]['tabular'][tab],
@@ -224,7 +231,7 @@ def output_to_terminal(synopsis: dict, print_out=False, **kwargs):
 
                 tabs = strings_to_tabs("Metrics:")
                 tabs2 = strings_to_tabs("Current", style='percent')
-                print(f"\r\n\r\nMetrics:{tabs} Current{tabs2}Previous\r\n")
+                print(f"\r\n\r\nMetrics:{tabs}Current{tabs2}Previous\r\n")
 
                 for met in synopsis[period]['metrics']:
                     custom_print(met, synopsis[period]['metrics'][met],
@@ -247,14 +254,16 @@ def custom_print(key: str, value, prev=None, thr=0.0):
     tabs = strings_to_tabs(key)
     if isinstance(value, (str, list)):
         print(
-            f"{key} {tabs} {value}")
+            f"{key}{tabs}{value}")
+
     else:
         value = np.round(value, 5)
         tabs2 = strings_to_tabs(str(value), style='percent')
         color = NORMAL
+
         if value > thr:
             color = UP
         elif value < thr:
             color = DOWN
         print(
-            f"{key} {tabs} {color}{value}{NORMAL}{tabs2}{prev}")
+            f"{key}{tabs}{color}{value}{NORMAL}{tabs2}{prev}")
