@@ -15,7 +15,7 @@ from .formatting import dates_extractor_list, date_extractor, dates_convert_from
 from .plotting import dual_plotting, generic_plotting, bar_chart, specialty_plotting
 from .plotting import candlestick_plot, shape_plotting
 
-from .progress_bar import ProgressBar
+from .progress_bar import ProgressBar, start_clock
 
 from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS, TREND_COLORS
 from .constants import EXEMPT_METRICS, PRINT_CONSTANTS

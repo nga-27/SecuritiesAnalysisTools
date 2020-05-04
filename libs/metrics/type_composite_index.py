@@ -24,6 +24,7 @@ def type_composite_index(**kwargs):
         config {dict} -- controlling config dictionary (default: {None})
         plot_output {bool} -- True to render plot in realtime (default: {True})
         period {str / list} -- time period for data (e.g. '2y') (default: {None})
+        clock {float} -- time for prog_bar (default: {None})
 
     returns:
         dict -- contains all tci information 
@@ -31,6 +32,7 @@ def type_composite_index(**kwargs):
     config = kwargs.get('config')
     period = kwargs.get('period')
     plot_output = kwargs.get('plot_output', True)
+    clock = kwargs.get('clock')
 
     if config is not None:
         period = config['period']
@@ -59,7 +61,8 @@ def type_composite_index(**kwargs):
                     data, sectors, m_data = metrics_initializer(period='2y')
 
                     if data:
-                        p = ProgressBar(19, name='Type Composite Index')
+                        p = ProgressBar(
+                            19, name='Type Composite Index', offset=clock)
                         p.start()
 
                         tci = dict()

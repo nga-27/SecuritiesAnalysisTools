@@ -41,10 +41,11 @@ def technical_analysis(config: dict, release='prod'):
         return
 
     # Start of automated process
+    clock = None
     if release == 'dev':
-        analysis = run_dev(script)
+        analysis, clock = run_dev(script)
     else:
-        analysis = run_prod(script)
+        analysis, clock = run_prod(script)
 
-    analysis = run_indexes(analysis, script)
+    analysis, clock = run_indexes(analysis, script, clock=clock)
     run_exports(analysis, script)

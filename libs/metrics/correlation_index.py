@@ -17,11 +17,13 @@ def correlation_composite_index(config: dict, **kwargs) -> dict:
 
     Optional Args:
         plot_output {bool} -- (default: {True})
+        clock {uint64_t} -- time for prog_bar (default: {None})
 
     Returns:
         dict -- contains all correlation items
     """
     plot_output = kwargs.get('plot_output', True)
+    clock = kwargs.get('clock')
 
     corr = dict()
     corr_config = config.get('properties', {}).get(
@@ -31,7 +33,8 @@ def correlation_composite_index(config: dict, **kwargs) -> dict:
         config['duration'] = corr_config.get('type', 'long')
         data, sectors = metrics_initializer(config['duration'])
         if data:
-            corr = get_correlation(data, sectors, plot_output=plot_output)
+            corr = get_correlation(
+                data, sectors, plot_output=plot_output, clock=clock)
     return corr
 
 
@@ -75,19 +78,23 @@ def metrics_initializer(duration: str = 'short') -> list:
     return data, sectors
 
 
-def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
+def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
     """Get Correlation
 
     Arguments:
         data {dict} -- downloaded data
         sectors {list} -- sector list
 
-    Keyword Arguments:
+    Optional Arguments:
         plot_output {bool} -- (default: {True})
+        clock {uint64_t} -- time for prog_bar (default: {None})
 
     Returns:
         dict -- object with correlations
     """
+    plot_output = kwargs.get('plot_output', True)
+    clock = kwargs.get('clock')
+
     PERIOD_LENGTH = [100, 50, 25]
     corr_data = dict()
 
@@ -103,7 +110,7 @@ def get_correlation(data: dict, sectors: list, plot_output=True) -> dict:
         pbar_count = np.ceil(tot_count / float(divisor))
 
         progress_bar = ProgressBar(
-            pbar_count, name="Correlation Composite Index")
+            pbar_count, name="Correlation Composite Index", offset=clock)
         progress_bar.start()
 
         corrs = {}

@@ -33,12 +33,14 @@ def market_composite_index(**kwargs) -> dict:
         config {dict} -- controlling config dictionary (default: {None})
         plot_output {bool} -- True to render plot in realtime (default: {True})
         period {str / list} -- time period for data (e.g. '2y') (default: {None})
+        clock {uint64_t} -- time for prog_bar (default: {None})
 
     returns:
         dict -- contains all mci information 
     """
     config = kwargs.get('config')
     period = kwargs.get('period')
+    clock = kwargs.get('clock')
     plot_output = kwargs.get('plot_output', True)
 
     if config is not None:
@@ -70,7 +72,7 @@ def market_composite_index(**kwargs) -> dict:
 
                     if data:
                         p = ProgressBar(len(sectors)*2+5,
-                                        name='Market Composite Index')
+                                        name='Market Composite Index', offset=clock)
                         p.start()
 
                         composite = composite_index(

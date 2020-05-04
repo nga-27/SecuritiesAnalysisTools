@@ -45,7 +45,7 @@ from libs.metrics import future_returns
 from libs.metrics import generate_synopsis
 
 # Imports that start process and show progress doing so
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, start_clock
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
@@ -71,6 +71,7 @@ def run_prod(script: list):
     config = script[3]
 
     analysis = {}
+    clock = start_clock()
 
     for fund_name in funds:
 
@@ -99,7 +100,8 @@ def run_prod(script: list):
             fund_data['name'] = fund_name
 
             fund_print2 = fund_print + f" ({period}) "
-            p = ProgressBar(config['process_steps'], name=fund_print2)
+            p = ProgressBar(config['process_steps'],
+                            name=fund_print2, offset=clock)
             p.start()
 
             fund_data['statistics'] = get_high_level_stats(fund)

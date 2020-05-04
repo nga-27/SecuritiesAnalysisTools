@@ -1,6 +1,9 @@
 """
 ProgressBar utility class
 """
+import time
+import numpy as np
+
 from .constants import TEXT_COLOR_MAP, STANDARD_COLORS
 
 BAR_COLOR = TEXT_COLOR_MAP["white"]
@@ -10,14 +13,19 @@ FUND_COLOR = TEXT_COLOR_MAP["cyan"]
 
 class ProgressBar(object):
 
-    def __init__(self, total_items: int, name: str = ''):
+    def __init__(self, total_items: int, name: str = '', stopwatch: bool = True, offset=None):
         self.total = float(total_items)
         self.name = name
         self.iteration = 0.0
         self.length_of_bar = 0
         self.has_finished = False
+        self.start_time = offset
+        self.show_clock = stopwatch
+        self.clock = self.start_time
 
     def start(self):
+        if self.start_time is None:
+            self.start_time = time.time()
         self.printProgressBar(self.iteration, self.total, obj=self.name)
 
     def update(self, iteration: int):
@@ -25,6 +33,7 @@ class ProgressBar(object):
 
     def end(self):
         self.printProgressBar(self.total, self.total, obj=self.name)
+        return time.time()
 
     def uptick(self, increment=1.0):
         self.iteration += increment
@@ -60,8 +69,30 @@ class ProgressBar(object):
         pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} {percent}% {suffix}"
         self.length_of_bar = len(pBar)
 
+        stopwatch = ""
+        if self.show_clock:
+            self.clock = np.round(
+                time.time() - self.start_time, 0)
+            if self.length_of_bar < 149:
+                stopwatch = f"\t{self.clock}s"
+            if self.length_of_bar < 141:
+                stopwatch = f"\t\t{self.clock}s"
+            if self.length_of_bar < 133:
+                stopwatch = f"\t\t\t{self.clock}s"
+            if self.length_of_bar < 125:
+                stopwatch = f"\t\t\t\t{self.clock}s"
+            if self.length_of_bar < 117:
+                stopwatch = f"\t\t\t\t\t{self.clock}s"
+
+        pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} {percent}% {suffix}{stopwatch}"
+        self.length_of_bar = len(pBar)
+
         print(pBar, end='\r')
 
         # Print New Line on Complete
         if iteration == total:
             print('')
+
+
+def start_clock():
+    return time.time()
