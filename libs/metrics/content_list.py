@@ -34,7 +34,7 @@ INDICATOR_NAMES = [
 ]
 
 
-def assemble_last_signals(meta_sub: dict, lookback: int = 25, **kwargs) -> dict:
+def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
     """assemble_last signals
 
     Look through all indicators of lookback time and list them

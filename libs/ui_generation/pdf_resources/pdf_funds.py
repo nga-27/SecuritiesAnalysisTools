@@ -48,6 +48,7 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
 
             for period in fund_data['synopsis']:
                 pdf = metrics_tables(pdf, fund_data, period)
+                pdf = latest_signals(pdf, fund_data, period)
 
     return pdf
 
@@ -331,5 +332,75 @@ def fund_volatility(pdf, fund_data: dict):
 
     pdf.cell(quad_name, 0.2, txt=az_str, align='L')
     pdf.cell(quad_val, 0.2, txt=az_str2, align='L')
+
+    return pdf
+
+
+def latest_signals(pdf, fund_data: dict, views: str, **kwargs):
+    """Latest Signals
+
+    Arguments:
+        pdf {pdf-object} -- pdf to create
+        fund_data {dict} -- fund data
+        views {str} -- period to create
+
+    Returns:
+        pdf-object -- pdf modified
+    """
+    signals = fund_data[views].get('last_signals')
+    if signals is None:
+        return pdf
+
+    signals = signals["signals"]
+
+    SPAN = pdf.w - 2 * pdf.l_margin
+    col_width = SPAN / 4
+    key_width = col_width - 0.5
+    val_width = col_width + 0.5
+
+    pdf.ln(0.5)
+
+    pdf = pdf_set_color_text(pdf, "black")
+    pdf.set_font('Arial', style='B', size=14.0)
+    pdf.cell(SPAN, 0.0, f'Latest Signals ({views})', align='C')
+
+    data = [["Time Period", "Date", "Indicator", "Signal Found"]]
+    colors = ["black"]
+
+    for sig in signals:
+        row = []
+        row.append(f"({sig['days_ago']}) days ago")
+        row.append(f"{sig['date']}")
+        row.append(f"{sig['indicator']}")
+        row.append(f"{sig['value']}")
+
+        data.append(row)
+
+        if sig['type'] == 'bearish':
+            colors.append('red')
+        else:
+            colors.append('green')
+
+    FONT_SIZE = 8.0
+    pdf.set_font('Arial', style='', size=FONT_SIZE)
+    pdf.ln(0.4)
+    height = pdf.font_size
+
+    for j, row in enumerate(data):
+        for i, col in enumerate(row):
+            if i == 0 or i == 1:
+                pdf = pdf_set_color_text(pdf, colors[j])
+                pdf.set_font('Arial', style='B', size=FONT_SIZE)
+                pdf.cell(key_width, height, str(col),
+                         align='L', border=0)
+
+            else:
+                col_str = col
+                pdf = pdf_set_color_text(pdf, colors[j])
+                pdf.set_font('Arial', style='B', size=FONT_SIZE)
+                pdf.cell(val_width, height, col_str,
+                         align='L', border=0)
+
+        pdf.ln(height * 2.0)
 
     return pdf
