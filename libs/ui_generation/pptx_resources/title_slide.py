@@ -19,14 +19,13 @@ def title_presentation(prs, year: str, VERSION: str, **kwargs):
     """Title Slide
 
     Arguments:
-        prs {pptx obj} -- powerpoint python object
-        year {str} -- '2001', for exampe
-        VERSION {str} -- '0.1.20', for example
+        prs {pptx-obj} -- powerpoint python object
+        year {str} -- '2020', for exampe
+        VERSION {str} -- '0.2.02', for example
 
     Returns:
-        pptx obj -- powerpoint object
+        pptx-obj -- powerpoint object
     """
-
     height = prs.slide_height
     width = int(16 * height / 9)
     prs.slide_width = width

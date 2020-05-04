@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -5,6 +6,58 @@ from libs.utils import dual_plotting, date_extractor
 from libs.utils import ProgressBar, SP500
 from libs.features import normalize_signals
 from .moving_average import windowed_moving_avg
+
+
+def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs) -> dict:
+    """Full Stochastic
+
+    Typical periods are [14, 3, 3], [10, 3, 3], [20, 5, 5]
+
+    Arguments:
+        position {pd.DataFrame} -- dataset
+
+    Keyword Arguments:
+        config {list} -- look back periods: fast %k, slow %k, slow %d (default: {[14, 3, 3]})
+
+    Optional Args:
+        name {str} -- (default: {''})
+        plot_output {bool} -- (default: {True})
+        out_suppress {bool} -- suppresses plotting for clusters (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- [description]
+    """
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    out_suppress = kwargs.get('out_suppress', True)
+    progress_bar = kwargs.get('progress_bar')
+    view = kwargs.get('view', '')
+
+    full_stoch = dict()
+
+    signals = generate_full_stoch_signal(
+        position, periods=config, plot_output=plot_output,
+        out_suppress=out_suppress, p_bar=progress_bar, view=view)
+    full_stoch['tabular'] = signals
+
+    full_stoch = get_crossover_features(
+        position, full_stoch, p_bar=progress_bar)
+
+    full_stoch = get_stoch_divergences(
+        position, full_stoch, plot_output=plot_output,
+        out_suppress=out_suppress, name=name, p_bar=progress_bar, view=view)
+
+    full_stoch = get_stoch_metrics(
+        position, full_stoch, plot_output=plot_output, name=name, p_bar=progress_bar)
+
+    full_stoch['signals'] = get_stoch_signals(
+        full_stoch['bullish'], full_stoch['bearish'])
+
+    full_stoch['type'] = 'oscillator'
+    full_stoch['length_of_data'] = len(full_stoch['tabular']['fast_k'])
+
+    return full_stoch
 
 
 def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwargs) -> dict:
@@ -131,8 +184,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
 
         elif (state == 'b3'):
             if (fast < OVER_BOUGHT):
-                bearish.append(
-                    [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                bearish.append([
+                    date_extractor(position.index[i], _format='str'),
+                    position['Close'][i],
+                    i,
+                    "crossover: fast-k/smooth-k"
+                ])
                 stochastic[i] += -1.0
                 state = 'n'
 
@@ -152,8 +209,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
 
         elif (state == 's3'):
             if (fast > OVER_SOLD):
-                bullish.append(
-                    [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                bullish.append([
+                    date_extractor(position.index[i], _format='str'),
+                    position['Close'][i],
+                    i,
+                    "crossover: fast-k/smooth-k"
+                ])
                 stochastic[i] += 1.0
                 state = 'n'
 
@@ -180,8 +241,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
 
         elif (state == 'b3'):
             if (slow < OVER_BOUGHT):
-                bearish.append(
-                    [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                bearish.append([
+                    date_extractor(position.index[i], _format='str'),
+                    position['Close'][i],
+                    i,
+                    "crossover: smooth-k/slow-d"
+                ])
                 stochastic[i] += -1.0
                 state = 'n'
 
@@ -201,8 +266,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
 
         elif (state == 's3'):
             if (slow > OVER_SOLD):
-                bullish.append(
-                    [date_extractor(position.index[i], _format='str'), position['Close'][i], i])
+                bullish.append([
+                    date_extractor(position.index[i], _format='str'),
+                    position['Close'][i],
+                    i,
+                    "crossover: smooth-k/slow-d"
+                ])
                 stochastic[i] += 1.0
                 state = 'n'
 
@@ -280,8 +349,12 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
             if fast < s_vals[1]:
                 prices[1] = position['Close'][i-1]
                 if (prices[0] < prices[1]) and (s_vals[0] > s_vals[1]):
-                    full_stoch['bearish'].append(
-                        [date_extractor(position.index[i], _format='str'), position['Close'][i-1], i])
+                    full_stoch['bearish'].append([
+                        date_extractor(position.index[i], _format='str'),
+                        position['Close'][i-1],
+                        i,
+                        "divergence"
+                    ])
                     full_stoch['indicator'][i] += -1.5
                     state = 'n'
                 else:
@@ -323,8 +396,12 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
             if fast > s_vals[1]:
                 prices[1] = position['Close'][i-1]
                 if (prices[0] > prices[1]) and (s_vals[0] < s_vals[1]):
-                    full_stoch['bullish'].append(
-                        [date_extractor(position.index[i], _format='str'), position['Close'][i-1], i])
+                    full_stoch['bullish'].append([
+                        date_extractor(position.index[i], _format='str'),
+                        position['Close'][i-1],
+                        i,
+                        "divergence"
+                    ])
                     full_stoch['indicator'][i] += 1.5
                     state = 'n'
                 else:
@@ -344,8 +421,9 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
         if plot_output:
             dual_plotting(position['Close'], full_stoch['indicator'],
                           'Position Price', 'Oscillator Signal', title=name2)
+
         else:
-            filename = name + '/' + view + '/stochastic_{}.png'.format(name)
+            filename = os.path.join(name, view, f"stochastic_{name}.png")
             dual_plotting(position['Close'], full_stoch['indicator'], 'Position Price', 'Stochastic Oscillator',
                           x_label='Trading Days', title=name2, saveFig=True, filename=filename)
 
@@ -415,49 +493,35 @@ def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dic
     return full_stoch
 
 
-def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs) -> dict:
-    """Full Stochastic
+def get_stoch_signals(bull_list: list, bear_list: list) -> list:
+    """get_stoch_signals
 
-    Typical periods are [14, 3, 3], [10, 3, 3], [20, 5, 5]
+    Format all stochastic signals into a single list
 
     Arguments:
-        position {pd.DataFrame} -- dataset
-
-    Keyword Arguments:
-        config {list} -- look back periods: fast %k, slow %k, slow %d (default: {[14, 3, 3]})
-
-    Optional Args:
-        name {str} -- (default: {''})
-        plot_output {bool} -- (default: {True})
-        out_suppress {bool} -- suppresses plotting for clusters (default: {True})
-        progress_bar {ProgressBar} -- (default: {None})
+        bull_list {list} -- list of bullish signals
+        bear_list {list} -- list of bearish signals
 
     Returns:
-        dict -- [description]
+        list -- list of stochastic signals
     """
-    plot_output = kwargs.get('plot_output', True)
-    name = kwargs.get('name', '')
-    out_suppress = kwargs.get('out_suppress', True)
-    progress_bar = kwargs.get('progress_bar')
-    view = kwargs.get('view', '')
+    signals_of_note = []
+    for sig in bull_list:
+        data = {
+            "type": 'bullish',
+            "value": sig[3],
+            "index": sig[2],
+            "date": sig[0]
+        }
+        signals_of_note.append(data)
 
-    full_stoch = dict()
+    for sig in bear_list:
+        data = {
+            "type": 'bearish',
+            "value": sig[3],
+            "index": sig[2],
+            "date": sig[0]
+        }
+        signals_of_note.append(data)
 
-    signals = generate_full_stoch_signal(
-        position, periods=config, plot_output=plot_output,
-        out_suppress=out_suppress, p_bar=progress_bar, view=view)
-    full_stoch['tabular'] = signals
-
-    full_stoch = get_crossover_features(
-        position, full_stoch, p_bar=progress_bar)
-
-    full_stoch = get_stoch_divergences(
-        position, full_stoch, plot_output=plot_output,
-        out_suppress=out_suppress, name=name, p_bar=progress_bar, view=view)
-
-    full_stoch = get_stoch_metrics(
-        position, full_stoch, plot_output=plot_output, name=name, p_bar=progress_bar)
-
-    full_stoch['type'] = 'oscillator'
-
-    return full_stoch
+    return signals_of_note

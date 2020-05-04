@@ -8,12 +8,70 @@ from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema
 from .feature_utils import find_filtered_local_extrema, feature_plotter, cleanse_to_json
 
 
-def find_head_shoulders(extrema: dict, fund: pd.DataFrame) -> dict:
+def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> dict:
+    """Feature Detection Head and Shoulders
+
+    PUBLIC FUNCTION: Complete detection of n sizes and features.
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+
+    optional args:
+        name {list} -- (default: {''})
+        plot_output {bool} -- (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- (default: {''})
+
+    returns:
+        dict -- head-shoulders data object
     """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    progress_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
+
+    head_shoulders = []
+    shapes = []
+
+    FILTER = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+              11, 13, 14, 16, 17, 19, 26, 35, 51]
+    increment = 1.0 / float(len(FILTER)+1)
+
+    for filt in FILTER:
+        d_temp = {'filter_size': filt, "content": {}}
+        hs2, _, shapes = feature_head_and_shoulders(
+            fund, FILTER_SIZE=filt, name=name, shapes=shapes)
+        d_temp['content'] = hs2
+        d_temp = cleanse_to_json(d_temp)
+        head_shoulders.append(d_temp)
+        if progress_bar is not None:
+            progress_bar.uptick(increment=increment)
+
+    feature_plotter(fund, shapes, name=name,
+                    feature='head_and_shoulders', plot_output=plot_output, view=view)
+    if progress_bar is not None:
+        progress_bar.uptick(increment=increment)
+
+    head_shoulders = {'data': head_shoulders}
+    head_shoulders['type'] = 'feature'
+
+    return head_shoulders
+
+
+def find_head_shoulders(extrema: dict, fund: pd.DataFrame) -> dict:
+    """Find Head and Shoulders
+
     Head and shoulders detection algorithm 
 
     For bearish, find 3 maxima alternated by 2 minima. The 2nd maximum must be higher 
     than the other 2 maxima. For bullish, the exact opposite.
+
+    Arguments:
+        extrema {dict} -- extrema data object
+        fund {pd.DataFrame} -- fund dataset
+
+    Returns:
+        dict -- extrema data object with head and shoulders content
     """
     extrema['features'] = []
     lmax = len(extrema['max'])
@@ -59,21 +117,30 @@ def find_head_shoulders(extrema: dict, fund: pd.DataFrame) -> dict:
 
 
 def feature_detection(features: list) -> dict:
-    """
-    Continuation of 'find_head_shoulders' above. If feature detected,
-    add various feature details as well.
+    """Feature Detection
+
+    Continuation of 'find_head_shoulders' above. If feature detected, add various feature
+    details as well.
+
+    Arguments:
+        features {list} -- list of features objects
+
+    Returns:
+        dict -- detected feature object (if any)
     """
     detected = {}
-    # print(features)
+
     if features[0][1] > features[1][1]:
         # potential TOP ('W') case (bearish)
         m1 = features[0][1]
         n1 = features[1][1]
         vol_L = features[0][2]
+
         if (features[2][1] > m1) and (features[2][1] > n1):
             m2 = features[2][1]
             n2 = features[3][1]
             vol_T = features[2][2]
+
             if (features[4][1] < m2) and (features[4][1] > n2) and (features[4][2] < vol_L):
                 # m3 = features[4][1]
                 # n3 = features[5][1]
@@ -85,6 +152,7 @@ def feature_detection(features: list) -> dict:
                 neckline['intercept'] = float(intercept)
                 line = neckline['intercept'] + \
                     neckline['slope'] * float(features[5][0])
+
                 if features[5][1] < line:
                     # Head and shoulders -> bearish
                     detected['type'] = 'bearish'
@@ -95,6 +163,7 @@ def feature_detection(features: list) -> dict:
                         'width': 0, 'avg': 0.0, 'stdev': 0.0, 'percent': 0.0}
                     detected['stats']['width'] = features[4][0] - \
                         features[0][0]
+
                     f = features.copy()
                     f = [f[i][1] for i in range(len(f))]
                     detected['stats']['avg'] = float(np.round(np.mean(f), 3))
@@ -107,10 +176,12 @@ def feature_detection(features: list) -> dict:
         m1 = features[0][1]
         n1 = features[1][1]
         vol_L = features[0][2]
+
         if (features[2][1] < m1) and (features[2][1] < n1):
             m2 = features[2][1]
             n2 = features[3][1]
             vol_T = features[3][2]
+
             if (features[4][1] > m2) and (features[4][1] < n2) and (vol_T > vol_L):
                 # m3 = features[4][1]
                 # n3 = features[5][1]
@@ -136,6 +207,7 @@ def feature_detection(features: list) -> dict:
                         'width': 0, 'avg': 0.0, 'stdev': 0.0, 'percent': 0.0}
                     detected['stats']['width'] = features[4][0] - \
                         features[0][0]
+
                     f = features.copy()
                     f = [f[i][1] for i in range(len(f))]
                     detected['stats']['avg'] = np.round(np.mean(f), 3)
@@ -146,27 +218,37 @@ def feature_detection(features: list) -> dict:
     return detected
 
 
-def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10, sanitize_dict=True, name=''):
-    """ 
-    PUBLIC FUNCTION (for deprecated r_1) - Find head and shoulders feature of a reversal 
-    Args:
-        fund - pd.DataFrame of fund over a period
-        FILTER_SIZE - (int) period of ema filter
-        sanitize_dict - (bool) if True, remove min/max lists so only feature-detected elements remain
-    Returns:
-        hs - dict of head and shoulders features
-        ma - (list) fund signal filtered with ema
-    """
+def feature_head_and_shoulders(fund: pd.DataFrame,
+                               shapes: list,
+                               FILTER_SIZE=10,
+                               sanitize_dict=True,
+                               name='') -> list:
+    """Feature Head and Shoulders
 
+    Find head and shoulders feature of a reversal
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        shapes {list} -- list of shape objects
+
+    Keyword Arguments:
+        FILTER_SIZE {int} -- period of exponential moving average filter
+        sanitize_dict {bool} -- removes min/max lists so only feature-detected elements remain
+                                (default: {True})
+        name {str} -- (default: {''})
+
+    Returns:
+        list -- dict of head shoulder features, moving average of fund, shapes
+    """
     # Filter and find extrema. Reconstruct where those extremes exist on the actual signal.
+
     # ma = exponential_ma(fund, FILTER_SIZE)
-    ma = windowed_moving_avg(
-        fund['Close'], interval=FILTER_SIZE, data_type='list')
+    ma = windowed_moving_avg(fund, interval=FILTER_SIZE)
     if FILTER_SIZE == 0:
         ex = find_filtered_local_extrema(ma, raw=True)
     else:
         ex = find_filtered_local_extrema(ma)
-    r = reconstruct_extrema(fund['Close'], ex, FILTER_SIZE, ma_type='windowed')
+    r = reconstruct_extrema(fund, ex, FILTER_SIZE, ma_type='windowed')
 
     # Cleanse data sample for duplicates and errors
     r = remove_duplicates(r)
@@ -190,52 +272,3 @@ def feature_head_and_shoulders(fund: pd.DataFrame, shapes: list, FILTER_SIZE=10,
             shapes.append(fe)
 
     return hs, ma, shapes
-
-
-def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> dict:
-    """
-    PUBLIC FUNCTION: Complete detection of n sizes and features.
-
-    args:
-        fund:           (pd.DataFrame) fund historical data
-
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        progress_bar:   (ProgressBar) DEFAULT=None
-        view:           (str) Directory of plots; DEFAULT=''
-
-    returns:
-        head_shoulders: (dict) head-shoulders data object
-    """
-    name = kwargs.get('name', '')
-    plot_output = kwargs.get('plot_output', True)
-    progress_bar = kwargs.get('progress_bar', None)
-    view = kwargs.get('view', '')
-
-    head_shoulders = []
-    shapes = []
-
-    FILTER = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-              11, 13, 14, 16, 17, 19, 26, 35, 51]
-    increment = 1.0 / float(len(FILTER)+1)
-
-    for filt in FILTER:
-        d_temp = {'filter_size': filt, "content": {}}
-        hs2, _, shapes = feature_head_and_shoulders(
-            fund, FILTER_SIZE=filt, name=name, shapes=shapes)
-        d_temp['content'] = hs2
-        d_temp = cleanse_to_json(d_temp)
-        head_shoulders.append(d_temp)
-        if progress_bar is not None:
-            progress_bar.uptick(increment=increment)
-
-    feature_plotter(fund, shapes, name=name,
-                    feature='head_and_shoulders', plot_output=plot_output, view=view)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=increment)
-
-    head_shoulders = {'data': head_shoulders}
-    head_shoulders['type'] = 'feature'
-
-    return head_shoulders

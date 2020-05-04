@@ -1,8 +1,9 @@
+import os
 import pandas as pd
 import numpy as np
 
 from libs.utils import dual_plotting, date_extractor
-from libs.utils import ProgressBar, SP500
+from libs.utils import ProgressBar, SP500, STANDARD_COLORS
 from libs.features import normalize_signals
 
 from .ultimate_oscillator import ultimate_oscillator
@@ -12,11 +13,90 @@ from .full_stochastic import full_stochastic
 from .moving_average import windowed_moving_avg
 from .trends import autotrend
 
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
+
 BASE_WEIGHTS = {
     'stoch': 2,
     'rsi': 3,
     'ultimate': 7
 }
+
+
+def cluster_oscs(position: pd.DataFrame, **kwargs):
+    """
+    2-3-5-8 multiplier comparing several different osc lengths
+
+    Arguments:
+        position {pd.DataFrame} -- list of y-value datasets to be plotted (multiple)
+
+    Optional Args:
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        function {str} -- type of oscillator (default: {'full_stochastic'}) 
+                                (others: ultimate, rsi, all, market)
+        wma {bool} -- output signal is filtered by windowed moving average (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- file directory of plots (default: {''})
+
+    Returns:
+        list -- dict of all clustered oscillator info, list of clustered osc signal
+    """
+    name = kwargs.get('name', '')
+    plot_output = kwargs.get('plot_output', True)
+    function = kwargs.get('function', 'full_stochastic')
+    wma = kwargs.get('wma', True)
+    prog_bar = kwargs.get('progress_bar', None)
+    view = kwargs.get('view', '')
+
+    cluster_oscs = {}
+
+    clusters = generate_cluster(position, function, p_bar=prog_bar)
+    cluster_oscs['tabular'] = clusters
+    cluster_oscs['length_of_data'] = len(clusters)
+
+    #clusters_filtered = cluster_filtering(clusters, filter_thresh)
+    clusters_wma = windowed_moving_avg(clusters, interval=3, data_type='list')
+    if prog_bar is not None:
+        prog_bar.uptick(increment=0.1)
+
+    dates = cluster_dates(clusters_wma, position)
+    if prog_bar is not None:
+        prog_bar.uptick(increment=0.1)
+
+    signals = clustered_signals(dates)
+    if prog_bar is not None:
+        prog_bar.uptick(increment=0.1)
+
+    cluster_oscs['clustered type'] = function
+    cluster_oscs[function] = dates
+    cluster_oscs['signals'] = signals
+
+    cluster_oscs = clustered_metrics(
+        position, cluster_oscs, plot_output=plot_output, name=name, view=view)
+
+    name3 = SP500.get(name, name)
+    name2 = name3 + ' - Clustering: ' + function
+    if plot_output:
+        dual_plotting(position['Close'], clusters, 'Position Price',
+                      'Clustered Oscillator', x_label='Trading Days', title=name2)
+
+    else:
+        filename = os.path.join(name, view, f"clustering_{name}_{function}")
+        dual_plotting(y1=position['Close'], y2=clusters, y1_label='Price',
+                      y2_label='Clustered Oscillator',
+                      x_label='Trading Days', title=name2,
+                      saveFig=True, filename=filename)
+
+    if prog_bar is not None:
+        prog_bar.uptick(increment=0.2)
+
+    if wma:
+        cluster_oscs['tabular'] = clusters_wma
+
+    cluster_oscs['type'] = 'oscillator'
+
+    return cluster_oscs
 
 
 def clustering(updatable: list, evaluator: dict, **kwargs) -> list:
@@ -87,6 +167,7 @@ def cluster_filtering(cluster_list: list, filter_thresh: int = 7) -> list:
 
 
 def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
+    """ Adds non-zero cluster values with date, price, and index """
     dates = []
     for i in range(len(cluster_list)):
         if cluster_list[i] != 0:
@@ -96,7 +177,21 @@ def cluster_dates(cluster_list: list, fund: pd.DataFrame) -> list:
 
 
 def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None) -> list:
-    """ subfunction to do clustering (removed from main for flexibility) """
+    """Generate Cluster
+
+    Subfunction to do clustering (removed from main for flexibility)
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        function {str} -- function to develop cluster signal 
+
+    Keyword Arguments:
+        name {str} -- (default: {''})
+        p_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        list -- cluster signal
+    """
     clusters = []
 
     for _ in range(len(position)):
@@ -149,7 +244,7 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
 
     else:
         print(
-            f'Warning: Unrecognized function input of {function} in cluster_oscs.')
+            f'{WARNING}Warning: Unrecognized function input of {function} in cluster_oscs.{NORMAL}')
         return None
 
     if p_bar is not None:
@@ -188,10 +283,23 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
 
 
 def generate_weights(position, **kwargs) -> dict:
-    """ Using trend slopes, will assign slightly different weights to each oscillator """
+    """Generate Weights
 
+    Using trend slopes, will assign slightly different weights to each oscillator
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+
+    Optional Args:
+        types {list} -- types of functions (default: {['stoch', 'rsi', 'ultimate']})
+        speeds {list} -- types of speeds (default: {['fast', 'medium', 'slow']})
+
+    Returns:
+        dict -- cluster weights
+    """
     types = kwargs.get('types', ['stoch', 'rsi', 'ultimate'])
     speeds = kwargs.get('speeds', ['fast', 'medium', 'slow'])
+
     trend = autotrend(position['Close'], periods=[28, 56, 84], weights=[
                       0.3, 0.4, 0.3], normalize=True)
 
@@ -275,78 +383,54 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
         dual_plotting(position['Close'], metrics,
                       'Price', 'Metrics', title=name2)
     else:
-        filename = name + f"/{view}" + f"/clustered_osc_metrics_{name}.png"
+        filename = os.path.join(
+            name, view, f"clustered_osc_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=name2, filename=filename, saveFig=True)
 
     return cluster_oscs
 
 
-def cluster_oscs(position: pd.DataFrame, **kwargs):
+def clustered_signals(sig_list: list, **kwargs) -> list:
+    """clustered_signals
+
+    List a thresholded-set of clustered oscillator signals
+
+    Arguments:
+        sig_list {list} -- list of signals != 0
+
+    Optional Args:
+        upper_thresh {int} -- upper percentile (default: {90})
+        lower_thresh {int} -- lower percentile (default: {10})
+
+    Returns:
+        list -- filtered clustered oscillator signals
     """
-    2-3-5-8 multiplier comparing several different osc lengths
+    upper_thresh = kwargs.get('upper_thresh', 90)
+    lower_thresh = kwargs.get('lower_thresh', 10)
 
-    args:
-        position:       (pd.DataFrame) list of y-value datasets to be plotted (multiple)
+    quartiles = [x[2] for x in sig_list]
+    upper = np.percentile(quartiles, upper_thresh)
+    lower = np.percentile(quartiles, lower_thresh)
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        function:       (str) type of oscillator; DEFAULT='full_stochastic' 
-                                (others: ultimate, rsi, all, market)
-        wma:            (bool) output signal is filtered by windowed moving average; DEFAULT=True
-        progress_bar:   (ProgressBar) DEFAULT=None
-        view {str} -- file directory of plots (default: {''})
+    signals_of_note = []
+    for sig in sig_list:
+        if sig[2] > upper:
+            data = {
+                "type": 'bullish',
+                "value": sig[2],
+                "index": sig[3],
+                "date": sig[0]
+            }
+            signals_of_note.append(data)
 
-    returns:
-        cluster_oscs:   (dict) contains all clustered oscillator informatio
-        clusters:       (list) clustered oscillator signal
-    """
-    name = kwargs.get('name', '')
-    plot_output = kwargs.get('plot_output', True)
-    function = kwargs.get('function', 'full_stochastic')
-    wma = kwargs.get('wma', True)
-    prog_bar = kwargs.get('progress_bar', None)
-    view = kwargs.get('view', '')
+        elif sig[2] < lower:
+            data = {
+                "type": 'bearish',
+                "value": sig[2],
+                "index": sig[3],
+                "date": sig[0]
+            }
+            signals_of_note.append(data)
 
-    cluster_oscs = {}
-
-    clusters = generate_cluster(position, function, p_bar=prog_bar)
-    cluster_oscs['tabular'] = clusters
-
-    #clusters_filtered = cluster_filtering(clusters, filter_thresh)
-    clusters_wma = windowed_moving_avg(clusters, interval=3, data_type='list')
-    if prog_bar is not None:
-        prog_bar.uptick(increment=0.1)
-
-    dates = cluster_dates(clusters_wma, position)
-    if prog_bar is not None:
-        prog_bar.uptick(increment=0.2)
-
-    cluster_oscs['clustered type'] = function
-    cluster_oscs[function] = dates
-
-    cluster_oscs = clustered_metrics(
-        position, cluster_oscs, plot_output=plot_output, name=name, view=view)
-
-    name3 = SP500.get(name, name)
-    name2 = name3 + ' - Clustering: ' + function
-    if plot_output:
-        dual_plotting(position['Close'], clusters, 'Position Price',
-                      'Clustered Oscillator', x_label='Trading Days', title=name2)
-        #dual_plotting(position['Close'], clusters_wma, 'price', 'clustered oscillator', 'trading days', title=name)
-    else:
-        filename = name + f"/{view}" + \
-            '/clustering_{}_{}.png'.format(name, function)
-        dual_plotting(y1=position['Close'], y2=clusters, y1_label='Price', y2_label='Clustered Oscillator',
-                      x_label='Trading Days', title=name2, saveFig=True, filename=filename)
-
-    if prog_bar is not None:
-        prog_bar.uptick(increment=0.2)
-
-    if wma:
-        cluster_oscs['tabular'] = clusters_wma
-
-    cluster_oscs['type'] = 'oscillator'
-
-    return cluster_oscs
+    return signals_of_note

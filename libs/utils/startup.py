@@ -1,12 +1,12 @@
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
 import os
 import shutil
 import glob
 import time
 import json
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS
 
@@ -26,15 +26,15 @@ def start_header(**kwargs) -> dict:
     """Primary User Input Controller
 
     Optional Args:
-        update_release {str} -- latest date of software release (default: {'2020-01-25'})
-        version {str} -- latest release version number (default: {0.1.24})
+        update_release {str} -- latest date of software release (default: {'2020-05-03'})
+        version {str} -- latest release version number (default: {0.2.02})
         default {str} -- default ticker when none given (default: {'VTI'})
 
     Returns:
         dict -- [description]
     """
-    update_release = kwargs.get('update_release', '2020-01-25')
-    version = kwargs.get('version', '0.1.24')
+    update_release = kwargs.get('update_release', '2020-05-03')
+    version = kwargs.get('version', '0.2.02')
     default = kwargs.get('default', 'VTI')
 
     print(" ")
@@ -79,7 +79,7 @@ def start_header(**kwargs) -> dict:
 
     else:
         if config['core'] == False:
-            config['tickers'] = ticker_list_to_str(list_of_tickers)
+            config['tickers'] = ' '.join(list_of_tickers)
             config['tickers'] = config['tickers'].strip()
 
     config['tickers'] = config['tickers'].upper()
@@ -93,17 +93,29 @@ def start_header(**kwargs) -> dict:
             ticker_print += t[0] + ' and S&P500'
         else:
             ticker_print += t[0]
+
     else:
         ticker_print = ', '.join(t)
         if 'no_index' not in config['state']:
             ticker_print += ', and S&P500'
+
     config['ticker print'] = ticker_print
     print(" ")
     return config
 
 
 def remove_whitespace(config: dict, default: str) -> list:
-    # Remove '' entries in list
+    """Remove Whitespace
+
+    In particular, blank inputs, random number of spaces, etc. General cleansing.
+
+    Arguments:
+        config {dict} -- controlling dictionary
+        default {str} -- default input (usually 'VTI')
+
+    Returns:
+        list -- ticker list, ticker string
+    """
     t2 = config['tickers'].split(' ')
     t = []
     for t1 in t2:
@@ -115,24 +127,22 @@ def remove_whitespace(config: dict, default: str) -> list:
     return t, config
 
 
-def remove_whitespace_str(input_str: str) -> str:
-    s = input_str.split(' ')
-    s1 = []
-    for s2 in s:
-        if s2 != '':
-            s1.append(s2)
-    if len(s1) == 0:
-        return ''
-    s = ' '.join(s1)
-    return s
-
-
 def header_json_parse(key: str) -> list:
+    """Header JSON Parse
+
+    Arguments:
+        key {str} -- direction to import a specific file
+
+    Returns:
+        list -- list of configuration content
+    """
     json_path = ''
     if key == '--core':
         json_path = 'core.json'
     if key == '--test':
         json_path = 'test.json'
+    if key == '--dataset':
+        json_path = 'dataset.json'
 
     if os.path.exists(json_path):
         tickers = ''
@@ -166,12 +176,21 @@ def header_json_parse(key: str) -> list:
 
 
 def key_parser(input_str: str) -> list:
+    """Key Parser
+
+    Arguments:
+        input_str {str} -- parse input keys into tickers and input keys
+
+    Returns:
+        list -- input keys, tickers
+    """
     keys = input_str.split(' ')
     i_keys = []
     o_keys = []
     for key in keys:
         if key != '':
             o_keys.append(key)
+
     ticks = []
     for key in o_keys:
         if '--' not in key:
@@ -182,14 +201,12 @@ def key_parser(input_str: str) -> list:
     return i_keys, ticks
 
 
-def ticker_list_to_str(ticker_list: list) -> str:
-    tick_str = ''
-    for tick in ticker_list:
-        tick_str += tick + ' '
-    return tick_str
-
-
 def header_options_print(options_read_lines):
+    """Header Options Print
+
+    Arguments:
+        options_read_lines {file} -- file read in object (.txt)
+    """
     print(" ")
     for line in options_read_lines:
         nline = line.replace("\n", "")
@@ -197,24 +214,27 @@ def header_options_print(options_read_lines):
             if nline[0].isupper():
                 # Pattern 1 - Title lines of options
                 nline = f"{OPT_TITLE_COLOR}{nline}{NORMAL}"
+
             else:
                 # Pattern 2 - Individual names colorized
                 if '{' in nline:
                     nline = nline.replace("{", f"{OPT_NAME_COLOR}")
                     nline = nline.replace("}", f"{NORMAL}")
+
         print(nline)
-    # print(options_read)
     print(" ")
 
 
 def logo_renderer():
+    """ Render logo from logo.txt file """
     MAIN_LOGO_LINES = 8
-    logo_file = 'resources/logo.txt'
+    logo_file = os.path.join("resources", "logo.txt")
     if os.path.exists(logo_file):
         fs = open(logo_file, 'r')
         logo_lines = fs.readlines()
         fs.close()
         print(" ")
+
         for i, line in enumerate(logo_lines):
             if i < MAIN_LOGO_LINES:
                 line = line.replace("\n", "")
@@ -223,6 +243,7 @@ def logo_renderer():
             else:
                 line = f"{COPYWRITE}{line}{NORMAL}"
             print(line)
+
         print("\r\n\r\n")
         time.sleep(1)
 
@@ -230,22 +251,31 @@ def logo_renderer():
 ####################################################################
 
 def header_options_parse(input_str: str, config: dict) -> list:
-    """ Input flag handling """
+    """Header Options Parse
 
+    Arguments:
+        input_str {str} -- input string from user input
+        config {dict} -- controlling dictionary
+
+    Returns:
+        list -- config, ticker_keys
+    """
     config['state'] = ''
     config['run_functions'] = []
     i_keys, ticker_keys = key_parser(input_str)
 
     if '--options' in i_keys:
-        options_file = 'resources/header_options.txt'
+        options_file = os.path.join("resources", "header_options.txt")
         if os.path.exists(options_file):
             fs = open(options_file, 'r')
-            options_read = fs.readlines()  # fs.read()
+            options_read = fs.readlines()
             fs.close()
             header_options_print(options_read)
+
         else:
             print(f"ERROR - NO {options_file} found.")
             print(" ")
+
         config['state'] = 'halt'
         return config, ticker_keys
 
@@ -276,6 +306,17 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config['exports'] = core[4]
             config['views'] = core[5]
 
+    if '--dataset' in i_keys:
+        core = header_json_parse('--dataset')
+        if core is not None:
+            config['tickers'] = core[0]
+            config['period'] = core[1]
+            config['interval'] = core[2]
+            config['properties'] = core[3]
+            config['core'] = True
+            config['exports'] = core[4]
+            config['views'] = core[5]
+
     if ('--noindex' in i_keys) or ('--ni' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'no_index')
 
@@ -283,13 +324,13 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(config, 'state', 'suppress_pptx')
 
     # Exporting of data from metadata.json to dataframe-like file
-    if ('--export-dataset' in i_keys) or ('--export' in i_keys):
+    if '--export' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'function run')
         config = add_str_to_dict_key(
             config, 'run_functions', 'export', type_='list')
         # No functions run, so no tickers should be present. Only metadata keys
         config['exports'] = {"run": True,
-                             "fields": ticker_list_to_str(ticker_keys)}
+                             "fields": ' '.join(ticker_keys)}
 
     # Only creating a pptx from existing metadata file
     if ('--pptx' in i_keys):
@@ -301,7 +342,8 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'pdf', type_='list')
 
     # Settings for 'intervals' and 'periods'
-    if ('--10y' in i_keys) or ('--5y' in i_keys) or ('--2y' in i_keys) or ('--1y' in i_keys):
+    if ('--10y' in i_keys) or ('--5y' in i_keys) or \
+            ('--2y' in i_keys) or ('--1y' in i_keys):
         config['period'] = []
 
     if ('--1d' in i_keys) or ('--1w' in i_keys) or ('--1m' in i_keys):
@@ -346,27 +388,27 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'tci', type_='list')
 
     if '--trend' in i_keys:
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'trend', type_='list')
 
     if '--support_resistance' in i_keys:
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'support_resistance', type_='list')
 
     if ('--sr' in i_keys) or ('--rs' in i_keys) or ('--support_resistance' in i_keys):
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'support_resistance', type_='list')
 
     if ('--clustered' in i_keys) or ('--clustered_osc' in i_keys) or ('--clusters' in i_keys):
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'clustered_oscs', type_='list')
 
     if ('--head_shoulders' in i_keys) or ('--hs' in i_keys):
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'head_shoulders', type_='list')
 
@@ -381,87 +423,88 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--rsi' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'rsi', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--stochastic' in i_keys) or ('--stoch' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'stoch', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--ultimate' in i_keys) or ('--ult' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'ultimate', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if '--macd' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'macd', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if '--relative_strength' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'relative_strength', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if '--awesome' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'awesome', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if '--momentum' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'momentum', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--obv' in i_keys) or ('--on_balance_volume' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'obv', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--ma' in i_keys) or ('--moving_average' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'ma', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--swings' in i_keys) or ('--swing_trade' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'swings', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--hull' in i_keys) or ('--hull_moving_average' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'hull', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--bull_bear' in i_keys) or ('--bear_bull' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'bear_bull', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--total_power' in i_keys) or ('--total' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'total_power', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
-    if ('--bollinger' in i_keys) or ('--bollinger_bands' in i_keys) or ('--bands' in i_keys):
+    if ('--bollinger' in i_keys) or ('--bollinger_bands' in i_keys) or \
+            ('--bands' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'bol_bands', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'gaps', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--candlesticks' in i_keys) or ('--candlestick' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'candlestick', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--vq' in i_keys) or ('--stop_loss' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'vq', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
 
     if ('--nasit_funds' in i_keys) or ('--nf' in i_keys):
         config = add_str_to_dict_key(
@@ -474,7 +517,12 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--synopsis' in i_keys) or ('--syn' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'synopsis', type_='list')
-        config['tickers'] = ticker_list_to_str(ticker_keys)
+        config['tickers'] = ' '.join(ticker_keys)
+
+    if ('--last' in i_keys) or ('--last_signals' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'last_signals', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
 
     # Configuration flags that control state outcomes and return immediately after setting
     if '--dev' in i_keys:
@@ -494,10 +542,24 @@ def header_options_parse(input_str: str, config: dict) -> list:
     return config, ticker_keys
 
 
-def add_str_to_dict_key(content: dict, key: str, item: str, type_='string'):
+def add_str_to_dict_key(content: dict, key: str, item: str, type_='string') -> dict:
+    """Add String to Dictionary Key
+
+    Arguments:
+        content {dict} -- dictionary to add keys to
+        key {str} -- key to append to
+        item {str} -- item to add to content[key]
+
+    Keyword Arguments:
+        type_ {str} -- to either append to (list) or concatenate to string (default: {'string'})
+
+    Returns:
+        dict -- modified content
+    """
     if type_ == 'list':
         content[key].append(item)
         return content
+
     if len(content[key]) > 0:
         content[key] += f", {item}"
     else:

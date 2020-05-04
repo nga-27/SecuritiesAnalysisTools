@@ -18,9 +18,20 @@ BLANK_SLIDE = 6
 CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
+TEMP_DIR = os.path.join("output", "temp")
+
 
 def make_MCI_slides(prs, analysis: dict):
-    content = f'output/temp/MCI.png'
+    """Make MCI Slide
+
+    Arguments:
+        prs {pptx-object} -- presentation object
+        analysis {dict} -- data object
+
+    Returns:
+        pptx-object -- modified pptx object
+    """
+    content = os.path.join(TEMP_DIR, "MCI.png")
     if os.path.exists(content):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = slide_title_header(slide, 'Market Composite Index')
@@ -32,7 +43,7 @@ def make_MCI_slides(prs, analysis: dict):
         slide.shapes.add_picture(
             content, left, top, height=height, width=width)
 
-    content = f"output/temp/MCI_correlations.png"
+    content = os.path.join(TEMP_DIR, "MCI_correlations.png")
     if os.path.exists(content):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = slide_title_header(slide, 'Market Composite Index')
@@ -50,6 +61,7 @@ def make_MCI_slides(prs, analysis: dict):
             fund_key = list(analysis['mci']['correlations'].keys())[0]
             time_periods = [analysis['mci']['correlations'][fund_key][0]['period'],
                             analysis['mci']['correlations'][fund_key][1]['period']]
+
             # list of look back periods, having both B & R, plus name
             num_cols = 5  # len(analysis['MCI'][temp_key]) * 2 + 1
 
@@ -102,7 +114,7 @@ def make_MCI_slides(prs, analysis: dict):
                 table.cell(i+2, 3).text_frame.paragraphs[0].font.size = Pt(14)
                 table.cell(i+2, 4).text_frame.paragraphs[0].font.size = Pt(14)
 
-    content = f"output/temp/MCI_net_correlation.png"
+    content = os.path.join(TEMP_DIR, "MCI_net_correlation.png")
     if os.path.exists(content):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = slide_title_header(slide, 'Market Composite Index')
@@ -119,6 +131,14 @@ def make_MCI_slides(prs, analysis: dict):
 
 
 def make_BCI_slides(prs):
+    """Make BCI Slides
+
+    Arguments:
+        prs {pptx-object} -- presentation object
+
+    Returns:
+        pptx-object -- presentation object
+    """
     NUM_BOND_INDEXES = 3
     for i in range(NUM_BOND_INDEXES):
         if i == 0:
@@ -130,7 +150,7 @@ def make_BCI_slides(prs):
         else:
             return prs
 
-        content = f'output/temp/{filekey}_BCI.png'
+        content = os.path.join(TEMP_DIR, f"{filekey}_BCI.png")
         if os.path.exists(content):
 
             title = f"{filekey} Bond Composite Index"
@@ -144,11 +164,33 @@ def make_BCI_slides(prs):
             slide.shapes.add_picture(
                 content, left, top, height=height, width=width)
 
+    content = os.path.join(TEMP_DIR, "combined_BCI.png")
+    if os.path.exists(content):
+
+        title = f"Combined Bond Composite Indexes"
+        slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+        slide = slide_title_header(slide, title)
+
+        left = Inches(1.42)
+        top = Inches(1.27)
+        height = Inches(6.1)
+        width = Inches(10.5)
+        slide.shapes.add_picture(
+            content, left, top, height=height, width=width)
+
     return prs
 
 
 def make_CCI_slides(prs):
-    content = f'output/temp/CCI_net_correlation.png'
+    """Make CCI Slides
+
+    Arguments:
+        prs {pptx-object} -- presentation object
+
+    Returns:
+        pptx-object -- presentation object
+    """
+    content = os.path.join(TEMP_DIR, "CCI_net_correlation.png")
     if os.path.exists(content):
 
         title = f"Correlation Composite Index"
@@ -166,7 +208,15 @@ def make_CCI_slides(prs):
 
 
 def make_TCI_slides(prs):
-    content = f"output/temp/tci.png"
+    """Make TCI Slides
+
+    Arguments:
+        prs {pptx-object} -- pptx presentation object
+
+    Returns:
+        pptx-object -- pptx presentation object
+    """
+    content = os.path.join(TEMP_DIR, "tci.png")
     if os.path.exists(content):
 
         title = f"Type Composite Index"

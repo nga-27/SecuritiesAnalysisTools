@@ -1,0 +1,35 @@
+{
+    "Properties": {
+        "Period": [
+            "2y"
+        ],
+        "Interval": [
+            "1d"
+        ],
+        "Indexes": {
+            "Market Sector": true,
+            "Type Sector": true,
+            "Corporate Bond": true,
+            "Treasury Bond": true,
+            "International Bond": true,
+            "Correlation": {
+                "run": true,
+                "type": "short"
+            }
+        }
+    },
+    "Views": {
+        "pptx": "2y"
+    },
+    "Exports": {
+        "run": true,
+        "fields": ""
+    },
+    "Keys": {
+        "Volatility_Quotient": ""
+    },
+    "Ticker Symbols": [
+        "AAPL",
+        "GLD"
+    ]
+}

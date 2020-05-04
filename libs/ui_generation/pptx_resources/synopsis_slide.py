@@ -8,7 +8,19 @@ from .slide_utils import pptx_ui_errors, color_to_RGB
 
 
 def generate_synopsis_slide(slide, analysis: dict, fund: str, **kwargs):
+    """Generate Synopsis Slide
 
+    Arguments:
+        slide {pptx-slide} -- slide object
+        analysis {dict} -- entire data object
+        fund {str} -- fund name
+
+    Optional Args:
+        views {str} -- (default: {None})
+
+    Returns:
+        pptx-slide -- modified slide object
+    """
     views = kwargs.get('views')
     if views is None:
         return pptx_ui_errors(slide, "No 'views' object passed.")
@@ -27,7 +39,17 @@ def generate_synopsis_slide(slide, analysis: dict, fund: str, **kwargs):
 
 
 def add_synopsis_title(slide, title: str):
+    """Synopsis Title
 
+    Add the title to the synopsis slide
+
+    Arguments:
+        slide {pptx-slide} -- slide object
+        title {str} -- title to add
+
+    Returns:
+        pptx-slide -- modified slide object
+    """
     top = Inches(0.7)
     left = Inches(4)
     width = Inches(5)
@@ -41,11 +63,24 @@ def add_synopsis_title(slide, title: str):
     p.font.bold = True
     p.font.size = Pt(40)
     p.font.name = 'Arial'
+
     return slide
 
 
 def add_synopsis_category_box(slide, category: str, content: dict, type_='metrics'):
+    """Add Synopsis Category Box
 
+    Arguments:
+        slide {pptx-slide} -- slide object
+        category {str} -- category name to add
+        content {dict} -- content to add
+
+    Keyword Arguments:
+        type_ {str} -- controlling key name (default: {'metrics'})
+
+    Returns:
+        pptx-slide -- modified slide object
+    """
     cat = type_ + "_categories"
     listed = content.get(cat, {}).get(category, [])
 
@@ -96,6 +131,7 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
                 value_str = f"{value}%"
                 delta_str = f"({delta}%)"
+
                 if value > 0.0:
                     value_str = f"+{value}%"
                 if delta > 0.0:
@@ -105,6 +141,7 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
                     value_str += "\t\t"
                 else:
                     value_str += "\t"
+
                 value_str = value_str + delta_str
 
                 table.cell(i+1, 0).text = item_str
@@ -182,6 +219,7 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
                     value_str = f"{np.round(value, 5)}\t\t"
                 else:
                     value_str = f"{np.round(value, 5)}\t"
+
                 delta_str = f"({np.round(delta, 5)})"
                 value_str = value_str + delta_str
 
@@ -238,9 +276,11 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
             for i, item in enumerate(listed):
                 periods = item.get('periods', 0)
                 term = ''
+
                 for key in item:
                     if key != 'periods':
                         term = key
+
                 style = item.get(term, '').capitalize()
                 term_str = pretty_up_key(term, parser=' ')
                 term_str = f"{term_str} ({periods})"
@@ -262,6 +302,17 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
 
 def pretty_up_key(key: str, parser='_') -> str:
+    """Pretty-Up Key
+
+    Arguments:
+        key {str} -- key to "make pretty"
+
+    Keyword Arguments:
+        parser {str} -- char to split key (default: {'_'})
+
+    Returns:
+        str -- new key, capitalized and w/o "parser" in it
+    """
     keys = key.split(parser)
     keys = [new_key.capitalize() for new_key in keys]
     output = ' '.join(keys)

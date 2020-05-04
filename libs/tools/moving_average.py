@@ -1,3 +1,4 @@
+import os
 import math
 import pandas as pd
 import numpy as np
@@ -171,21 +172,22 @@ def weighted_moving_avg(dataset, interval: int, **kwargs) -> list:
 
 
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
-    """
-    Triple Moving Avg:  3 simple moving averages of "config" length
+    """Triple Moving Average
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    3 simple moving averages of "config" length
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        config:         (list of ints) list of moving average time periods; DEFAULT=[12, 50, 200]
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
+
+    Optional Args:
+        name {list} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        config {list of ints} -- list of moving average time periods (default: {[12, 50, 200]})
+        progress_bar {ProgressBar} -- (default: {None})
         view {str} -- directory of plots (default: {''})
 
-    returns:
-        tma:            (dict) contains all ma information in "short", "medium", and "long" keys
+    Returns:
+        tma {dict} -- contains all ma information in "short", "medium", and "long" keys
     """
     name = kwargs.get('name', '')
     config = kwargs.get('config', [12, 50, 200])
@@ -229,8 +231,8 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2)
         else:
-            filename = name + f"/{view}" + \
-                '/simple_moving_averages_{}.png'.format(name)
+            filename = os.path.join(
+                name, view, f"simple_moving_averages_{name}.png")
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2, saveFig=True, filename=filename)
 
@@ -245,6 +247,8 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.1)
 
     tma['type'] = 'trend'
+    tma['length_of_data'] = len(tma['tabular']['short'])
+    tma['signals'] = find_crossovers(tma, fund)
 
     return tma
 
@@ -288,9 +292,9 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
         p_bar.uptick(increment=0.2)
 
     tema['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
-    tema['short'] = config[0]
-    tema['medium'] = config[1]
-    tema['long'] = config[2]
+    tema['short'] = {"period": config[0]}
+    tema['medium'] = {"period": config[1]}
+    tema['long'] = {"period": config[2]}
 
     mshort = []
     mmed = []
@@ -313,12 +317,13 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
                 config[0], config[1], config[2])
         legend = ['Price', f'{config[0]}-EMA',
                   f'{config[1]}-EMA', f'{config[2]}-EMA']
+
         if plot_output:
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2)
         else:
-            filename = name + f"/{view}" + \
-                '/exp_moving_averages_{}.png'.format(name)
+            filename = os.path.join(
+                name, view, f"exp_moving_averages_{name}.png")
             generic_plotting([fund['Close'], tshort, tmed, tlong],
                              legend=legend, title=name2, saveFig=True, filename=filename)
 
@@ -326,27 +331,30 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
         p_bar.uptick(increment=0.2)
 
     tema['type'] = 'trend'
+    tema['length_of_data'] = len(tema['tabular']['short'])
+    tema['signals'] = find_crossovers(tema, fund)
 
     return tema
 
 
 def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
-    """
-    Triple Moving Avg:  3 simple moving averages of "config" length
+    """Triple Moving Average
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    3 simple moving averages of "config" length
 
-    optional args:
-        function:       (str) type of filtering scheme; DEFAULT='ema'
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        config:         (list of ints) list of moving average time periods; DEFAULT=[]
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
+
+    Optional Args:
+        function {str} -- type of filtering scheme (default: {'sma'})
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        config {list} -- list of moving average time periods (default: {[4, 9, 18]})
+        progress_bar {ProgressBar} -- (default: {None})
         view {str} -- directory for plot (default: {''})
 
-    returns:
-        mast:           (dict) contains all ma information in "short", "medium", "long", and "swing" keys
+    Returns:
+        mast {dict} -- contains all ma information in "short", "medium", "long", and "swing" keys
     """
     function = kwargs.get('function', 'sma')
     name = kwargs.get('name', '')
@@ -398,7 +406,8 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     mast['tabular']['medium'] = me
     mast['tabular']['long'] = ln
 
-    mast = generate_swing_signal(fund, mast, max_period=config[2])
+    mast = generate_swing_signal(
+        fund, mast, max_period=config[2], config=config)
     mast = swing_trade_metrics(fund, mast)
 
     swings = mast['metrics']
@@ -409,11 +418,12 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Swing Trade SMAs'
     legend = ['Price', 'Short-SMA', 'Medium-SMA', 'Long-SMA', 'Swing Signal']
+
     if plot_output:
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[
                            4], legend=legend, title=name2)
     else:
-        filename = name + f"/{view}" + '/swing_trades_sma_{}.png'.format(name)
+        filename = os.path.join(name, view, f"swing_trades_sma_{name}.png")
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
                            'Swing Signal'], title=name2, saveFig=True, filename=filename)
 
@@ -448,12 +458,14 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
 
     Optional Args:
         max_period {int} -- longest term for triple moving average (default: {18})
+        config {list} -- list of moving average lookback periods (default: {None})
 
     Returns:
         dict -- swing trade data object
     """
-
     max_period = kwargs.get('max_period', 18)
+    config = kwargs.get('config')
+
     sh = swings['tabular']['short']
     md = swings['tabular']['medium']
     ln = swings['tabular']['long']
@@ -475,35 +487,88 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         elif (sh[i] < md[i]) or (sh[i] < ln[i]):
             states[i] = 'e1'
 
+    periods = ''
+    if config is not None:
+        periods = f"{config[0]}-{config[1]}-{config[2]}"
+
     # Search for transitions
+    features = []
     signal = [0.0] * len(states)
+    set_block = 'n'
     for i in range(1, len(signal)):
+        date = position.index[i].strftime("%Y-%m-%d")
+        data = None
+
         if (states[i] == 'u2'):
             if (states[i-1] == 'e3') or (states[i-1] == 'e2') or (states[i-1] == 'e1'):
                 signal[i] = 0.5
+                set_block = 'u1'
+                data = {
+                    "type": 'bullish',
+                    "value": f'swing crossover ({periods})',
+                    "index": i,
+                    "date": date
+                }
 
-        elif (states[i] == 'u3') and (states[i] != states[i-1]):
+        elif (states[i] == 'u3') and (states[i] != states[i-1]) and (set_block != 'u'):
             signal[i] = 1.0
+            set_block = 'u'
+            data = {
+                "type": 'bullish',
+                "value": f'confirmed bull trend ({periods})',
+                "index": i,
+                "date": date
+            }
 
         elif close[i] > ln[i]:
             signal[i] = 0.1
 
         elif (states[i] == 'e2'):
             if (states[i-1] == 'u3') or (states[i-1] == 'u2') or (states[i-1] == 'u1'):
+                set_block = 'e1'
                 signal[i] = -0.5
+                data = {
+                    "type": 'bearish',
+                    "value": f'swing crossover ({periods})',
+                    "index": i,
+                    "date": date
+                }
 
-        elif (states[i] == 'e3') and (states[i] != states[i-1]):
+        elif (states[i] == 'e3') and (states[i] != states[i-1]) and (set_block != 'e'):
+            set_block = 'e'
             signal[i] = -1.0
+            data = {
+                "type": 'bearish',
+                "value": f'confirmed bear trend ({periods})',
+                "index": i,
+                "date": date
+            }
 
         elif close[i] < ln[i]:
             signal[i] = -0.1
 
+        if data is not None:
+            features.append(data)
+
     swings['tabular']['swing'] = signal
+    swings['signals'] = features
+    swings['length_of_data'] = len(swings['tabular']['swing'])
+
     return swings
 
 
 def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
+    """Swing Trade Metrics
 
+    Standard 1.0 to -1.0 metrics
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        swings {dict} -- swing trade data object
+
+    Returns:
+        dict -- swing trade data object
+    """
     weights = [1.0, 0.55, 0.25, 0.1]
 
     # Convert features to a "tabular" array
@@ -535,6 +600,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
 
 
 def normalize_signals_local(signals: list) -> list:
+    """ Normalize local signals based off max """
     max_ = 0.0
     for sig in signals:
         m = np.max(np.abs(sig))
@@ -550,3 +616,119 @@ def normalize_signals_local(signals: list) -> list:
             signals[i] = new_sig.copy()
 
     return signals
+
+
+def find_crossovers(mov_avg: dict, position: pd.DataFrame) -> list:
+    """Find Crossovers
+
+    Find crossovers in signals, particularly with a short/medium/long average
+
+    Arguments:
+        mov_avg {dict} -- triple moving average data object
+        position {pd.DataFrame} -- fund dataset
+
+    Returns:
+        list -- list of crossover event dictionaries
+    """
+    tshort = mov_avg['tabular']["short"]
+    tmed = mov_avg['tabular']["medium"]
+    tlong = mov_avg['tabular']["long"]
+
+    sh_period = mov_avg['short']['period']
+    md_period = mov_avg['medium']['period']
+    ln_period = mov_avg['long']['period']
+
+    features = []
+    state = 'at'
+    for i, sh in enumerate(tshort):
+        data = None
+        date = position.index[i].strftime("%Y-%m-%d")
+
+        if state == 'at':
+            if sh > tmed[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (midterm: {sh_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+            elif sh < tmed[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (midterm: {md_period}d > {sh_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'above':
+            if sh < tmed[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (midterm: {md_period}d > {sh_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'below':
+            if sh > tmed[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (midterm: {sh_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        if data is not None:
+            features.append(data)
+
+    state = 'at'
+    for i, md in enumerate(tmed):
+        data = None
+        date = position.index[i].strftime("%Y-%m-%d")
+
+        if state == 'at':
+            if md > tlong[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (longterm: {md_period}d > {ln_period}d)',
+                    "index": i,
+                    "date": date
+                }
+            elif md < tlong[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (longterm: {ln_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'above':
+            if md < tlong[i]:
+                state = 'below'
+                data = {
+                    "type": 'bearish',
+                    "value": f'death crossover (longterm: {ln_period}d > {md_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'below':
+            if md > tlong[i]:
+                state = 'above'
+                data = {
+                    "type": 'bullish',
+                    "value": f'golden crossover (longterm: {md_period}d > {ln_period}d)',
+                    "index": i,
+                    "date": date
+                }
+
+        if data is not None:
+            features.append(data)
+
+    return features

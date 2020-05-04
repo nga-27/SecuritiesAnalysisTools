@@ -13,11 +13,11 @@
 #   
 """
 from libs.utils import start_header, logo_renderer
-from releases.technical_analysis import technical_analysis
+from releases.technical_analysis import technical_analysis, clock_management
 
 ################################
-_VERSION_ = '0.2.01'
-_DATE_REVISION_ = '2020-04-25'
+_VERSION_ = '0.2.02'
+_DATE_REVISION_ = '2020-05-04'
 ################################
 
 
@@ -33,11 +33,13 @@ class App:
 
         if 'run' in self.config['state']:
             self.config['release'] = False
-            technical_analysis(self.config)
+            clock = technical_analysis(self.config)
+            print(f"\r\nCompleted in {clock_management(clock)}.")
 
         if 'dev' in self.config['state']:
             self.config['release'] = True
-            technical_analysis(self.config, release='dev')
+            clock = technical_analysis(self.config, release='dev')
+            print(f"\r\nCompleted in {clock_management(clock)}.")
 
         print('Done.')
 

@@ -8,7 +8,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from libs.utils import fund_list_extractor, windows_compatible_file_parse, SP500
+from libs.utils import fund_list_extractor, SP500
 from libs.tools import trend_simple_forecast
 
 from .slide_utils import slide_title_header, color_to_RGB, pptx_ui_errors
@@ -25,6 +25,8 @@ BLANK_SLIDE = 6
 CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
+TEMP_DIR = os.path.join("output", "temp")
+
 
 def make_fund_slides(prs, analysis: dict, **kwargs):
     """Make Fund Slides
@@ -33,10 +35,13 @@ def make_fund_slides(prs, analysis: dict, **kwargs):
         prs {pptx obj} -- presentation
         analysis {dict} -- full data
 
+    Optional Args:
+        views {str} -- (default: {''})
+
     Returns:
         prs -- pptx presentation object
     """
-    views = kwargs.get('views')
+    views = kwargs.get('views', '')
     funds = analysis.keys()
     for fund in funds:
         if fund != '_METRICS_':
@@ -46,12 +51,24 @@ def make_fund_slides(prs, analysis: dict, **kwargs):
 
 
 def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
+    """Add Fund Content
 
-    views = kwargs.get('views')
+    Arguments:
+        prs {pptx-object} -- powerpoint object
+        fund {str} -- fund name
+        analysis {dict} -- analysis dictionary of data content
+
+    Optional Args:
+        views {str} -- (default: {''})
+
+    Returns:
+        pptx-object -- modified pptx
+    """
+    views = kwargs.get('views', '')
     if views is None:
         return prs
 
-    content_dir = f'output/temp/{fund}/{views}/'
+    content_dir = os.path.join(TEMP_DIR, fund, views)
 
     # Title slide for a fund
     fund_name = SP500.get(fund, fund)
@@ -73,7 +90,8 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
 
     p2 = text_frame.add_paragraph()
     p2.alignment = PP_ALIGN.CENTER
-    p2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  {analysis[fund][views]['dates_covered']['end']}"
+    p2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  " + \
+        f"{analysis[fund][views]['dates_covered']['end']}"
     p2.font.bold = False
     p2.font.size = Pt(18)
     p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
@@ -91,6 +109,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         'volatility', {}).get('VQ')
     has_vq = False
     rows = 5
+
     if vq is not None:
         has_vq = True
         rows = rows + 4
@@ -134,8 +153,10 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         'altman_z', {})
     alt_z_score = alt_z.get('score', "n/a")
     alt_z_color = alt_z.get('color', "black")
+
     if isinstance(alt_z_score, (float, int)):
         alt_z_score = str(np.round(alt_z_score, 5))
+
     table.cell(4, 1).text = alt_z_score
     table.cell(4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
         alt_z_color)
@@ -157,22 +178,26 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
 
     table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
     table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
+
     for i in range(1, rows):
         table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(14)
         table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(14)
+
     has_beta = True
 
-    content = content_dir + f"candlestick_{fund}.png"
+    content = os.path.join(content_dir, f"candlestick_{fund}.png")
     if os.path.exists(content):
         if has_beta:
             left = Inches(2.6)  # Inches(1.42)
         else:
             left = Inches(1.42)
+
         top = Inches(1.4)
         height = Inches(6)
         width = Inches(10.5)
         slide.shapes.add_picture(
             content, left, top, height=height, width=width)
+
     else:
         slide = pptx_ui_errors(slide, "No Candlestick Chart available.")
 
@@ -182,6 +207,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         analysis[fund][views]['statistics']['current_percent_change'], 3)
     price_chg = np.round(analysis[fund][views]
                          ['statistics']['current_change'], 2)
+
     if price_chg > 0.0:
         price_str = f"${price_pt} +{price_chg} (+{price_chg_p}%)"
     else:
@@ -228,7 +254,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     slide = slide_title_header(slide, fund, price_details=price_str)
     indexes.append(len(prs.slides)-1)
 
-    content = content_dir + '*.png'
+    content = os.path.join(content_dir, '*.png')
     pics = glob.glob(content)
     fund_analysis = analysis[fund]
     prs = format_plots(prs, indexes, pics,
@@ -238,20 +264,35 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
 
 
 def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}, **kwargs):
+    """Format Plots
 
+    Arguments:
+        prs {pptx-object} -- entire presentation
+        slide_indices {list} -- fund-specific slide numbers in a list for referencing
+        globs {list} -- plot file path list
+
+    Keyword Arguments:
+        fund_analysis {dict} -- fund data object (default: {{}})
+
+    Optional Args:
+        views {str} -- (default: {''})
+
+    Returns:
+        pptx-object -- filled in slides with content
+    """
     if len(globs) == 0:
         for ind in slide_indices:
             pptx_ui_errors(prs.slides[ind], "No plot files available.")
         return prs
 
     views = kwargs.get('views', '')
-    parts = windows_compatible_file_parse(globs[0])
-    header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/' + parts[3] + '/'
+
+    header, _ = os.path.split(globs[0])
 
     for globber in globs:
 
-        globbed = windows_compatible_file_parse(globber)
-        part = globbed[4]
+        _, part = os.path.split(globber)
+        picture = os.path.join(header, part)
 
         # Slide 1
         slide_num = 0
@@ -261,7 +302,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'RSI_standard' in part:
             left = Inches(6.5)
@@ -269,7 +310,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'macd_bar' in part:
             left = Inches(0.0)
@@ -277,7 +318,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'clustered_osc_metrics' in part:
             left = Inches(6.5)
@@ -285,7 +326,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         # Slide #2
         slide_num = 1
@@ -295,7 +336,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'exp_moving_averages' in part:
             left = Inches(6.5)
@@ -303,7 +344,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'swing_trades' in part:
             left = Inches(0.0)
@@ -311,7 +352,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'simple_moving_averages' in part:
             left = Inches(6.5)
@@ -319,7 +360,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         # Slide #3
         slide_num = 2
@@ -329,7 +370,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'obv_diff' in part:
             left = Inches(6.5)
@@ -337,7 +378,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'bollinger_bands' in part:
             left = Inches(0.0)
@@ -345,7 +386,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'bollinger_band_metrics' in part:
             left = Inches(6.5)
@@ -353,7 +394,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         # Slide #4
         slide_num = 3
@@ -363,7 +404,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'awesome_metrics' in part:
             left = Inches(6.5)
@@ -371,7 +412,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'macd_metrics' in part:
             left = Inches(0.0)
@@ -379,7 +420,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'momentum_metrics' in part:
             left = Inches(6.5)
@@ -387,7 +428,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         # Slide #5
         slide_num = 4
@@ -397,7 +438,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'price_gaps' in part:
             left = Inches(6.5)
@@ -405,7 +446,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'total_pwr_metrics' in part:
             left = Inches(6.5)
@@ -413,7 +454,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         if 'ultimate_osc_metrics' in part:
             left = Inches(0.0)
@@ -421,7 +462,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
         # Slide #6
         slide_num = 5
@@ -431,7 +472,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(4.7)
             width = Inches(7)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
             left = Inches(7)
             top = Inches(0.25)
@@ -486,7 +527,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             height = Inches(4.7)
             width = Inches(7)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                header+part, left, top, height=height, width=width)
+                picture, left, top, height=height, width=width)
 
             left = Inches(6.5)
             top = Inches(0.25)

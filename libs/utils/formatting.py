@@ -8,14 +8,6 @@ import pandas as pd
 from dateutil.relativedelta import relativedelta
 
 
-def name_parser(name: str) -> str:
-    """ parses file name to generate fund name """
-    name = name.split('.')[0]
-    name = name.split('/')
-    name = name[len(name)-1]
-    return name
-
-
 def index_extractor(tickers) -> str:
     """ tickers is a str of tickers, separated by a space """
     potential_indexes = ['^GSPC']
@@ -35,27 +27,48 @@ def index_appender(tickers: str) -> str:
 
 
 def fund_list_extractor(ticker_df: dict, config: dict = None) -> list:
-    """ Extracts fund names from ticker_df for accessing later """
+    """Fund List Extractor
+
+    Extracts fund names from ticker_df for accessing later
+
+    Arguments:
+        ticker_df {dict} -- fund dataset
+
+    Keyword Arguments:
+        config {dict} -- controlling dict (default: {None})
+
+    Returns:
+        list -- ticker funds
+    """
     funds = []
     if config is not None:
         # First check if a single fund (single dimension), only on 0.1.13+
-        if 'Open' in ticker_df.keys():
+        if 'Open' in ticker_df:
             funds = [config['tickers']]
             return funds
 
-    for key in ticker_df.keys():
-        """ Multi-level df, so we need to extract only name key (remove duplicates) """
+    for key in ticker_df:
+        # Multi-level df, so we need to extract only name key (remove duplicates)
         if (len(key) > 1) and (key[0] not in funds):
             funds.append(key[0])
+
     return funds
 
 
-def dates_extractor_list(df) -> list:
-    """ specifically for a fund """
+def dates_extractor_list(df: pd.DataFrame) -> list:
+    """Dates Extractor to List
+
+    Arguments:
+        df {pd.DataFrame, list} -- dataframe with dates as the 'index'
+
+    Returns:
+        list -- list of dates separated '%Y-%m-%d' or indexes (for a list)
+    """
     dates = []
     if type(df) == list:
         for i in range(len(df)):
             dates.append(i)
+
     else:
         for i in range(len(df.index)):
             date = str(df.index[i])
@@ -67,6 +80,20 @@ def dates_extractor_list(df) -> list:
 
 
 def date_extractor(date, _format=None):
+    """Date Extractor
+
+    Converts a date object into either a string date ('%Y-%m-%d'), an iso-format datetime object,
+    or a normal datetime object.
+
+    Arguments:
+        date {datetime} -- datetime object, typically
+
+    Keyword Arguments:
+        _format {str} -- either 'str' or 'iso' to control output format (default: {None})
+
+    Returns:
+        str, datetime -- either a string or datetime object
+    """
     date = str(date)
     date1 = date.split(' ')[0]
     date2 = datetime.strptime(date1, '%Y-%m-%d')
@@ -79,28 +106,22 @@ def date_extractor(date, _format=None):
     return dateX
 
 
-def period_parser(period: str):
-    """ returns [years, months, days] """
-    if 'y' in period:
-        yr = period.split('y')[0]
-        yr = int(yr)
-        return yr, 0, 0
-        # Year
-    elif 'm' in period:
-        m = period.split('m')[0]
-        m = int(m)
-        return 0, m, 0
-        # Month
-    elif 'd' in period:
-        d = period.split('d')[0]
-        d = int(d)
-        return 0, 0, d
-        # Day
-    else:
-        return 1, 0, 0
-
-
 def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list, to_str=False) -> list:
+    """Dates Convert from Index
+
+    Used primarily with various plots and complex plotting (e.g. "shapes")
+
+    Arguments:
+        df {pd.DataFrame} -- fund dataset
+        list_of_xlists {list} -- lists of standard x ranges of indexes needed for conversion to
+                                 lists of dates
+
+    Keyword Arguments:
+        to_str {bool} -- if True, convert to ('%Y-%m-%d') (default: {False})
+
+    Returns:
+        list -- list of new dates or list of list of new dates
+    """
     new_l_of_xls = []
     if len(list_of_xlists) > 0:
         for xlist in list_of_xlists:

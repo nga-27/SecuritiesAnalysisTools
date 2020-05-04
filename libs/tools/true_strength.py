@@ -8,65 +8,56 @@ from libs.utils import ProgressBar, SP500
 from libs.utils import api_sector_match, api_sector_funds
 
 
-def basic_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
-    ratio = []
+def normalized_ratio(fundA, fundB, data_type: str = 'dataframe', key: str = 'Adj Close') -> list:
+    """Normalized Ratio
 
-    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of
-    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
-    # length of plotting to accomodate.
-    tot_len = len(fundA['Adj Close']) if len(fundA['Adj Close']) <= len(
-        fundB['Adj Close']) else len(fundB['Adj Close'])
-    if pd.isna(fundA['Adj Close'][tot_len-1]) or pd.isna(fundB['Adj Close'][tot_len-1]):
-        tot_len -= 1
+    Handles both pd.DataFrames (default) and list comparisons
 
-    for close in range(tot_len):
-        ratio.append(np.round(fundA['Adj Close']
-                              [close] / fundB['Adj Close'][close], 6))
+    Arguments:
+        fundA {pd.DataFrame, list} -- fund A to compare
+        fundB {pd.DataFrame, list} -- fund B to compare
 
-    return ratio
+    Keyword Arguments:
+        data_type {str} -- type of data type, pd.DataFrame or list (default: {'dataframe'})
+        key {str} -- if pd.DataFrame, column key (default: {'Adj Close'})
 
-
-def normalized_ratio(fundA: pd.DataFrame, fundB: pd.DataFrame) -> list:
-    ratio = []
-    divisor = np.round(fundA['Adj Close'][0] / fundB['Adj Close'][0], 6)
-
-    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of
-    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
-    # length of plotting to accomodate.
-    tot_len = len(fundA['Adj Close']) if len(fundA['Adj Close']) <= len(
-        fundB['Adj Close']) else len(fundB['Adj Close'])
-    if pd.isna(fundA['Adj Close'][tot_len-1]) or pd.isna(fundB['Adj Close'][tot_len-1]):
-        tot_len -= 1
-
-    for close in range(tot_len):
-        ratio.append(np.round(
-            (fundA['Adj Close'][close] / fundB['Adj Close'][close] / divisor) - 1.0, 6))
-
-    return ratio
-
-
-def normalized_ratio_lists(fundA: list, fundB: list) -> list:
-    ratio = []
-    divisor = np.round(fundA[0] / fundB[0], 6)
-    tot_len = len(fundA) if len(fundA) <= len(fundB) else len(fundB)
-    if pd.isna(fundA[tot_len-1]) or pd.isna(fundB[tot_len-1]):
-        tot_len -= 1
-
-    for close in range(tot_len):
-        ratio.append(
-            np.round((fundA[close] / fundB[close] / divisor) - 1.0, 6))
-
-    return ratio
-
-
-def period_strength(fund_name: str, tickers: dict, periods: list, config: dict, **kwargs) -> list:
-    """
-    Try to provide ratio evaluations of 'fund' vs. market and sector
-    Args:
-        sector (str) - 'VGT', in the case of a tech fund
-        period (list) - list of lookback periods
     Returns:
-        ratio (dict)
+        list -- normalized ratio list of A/B
+    """
+    ratio = []
+
+    if data_type == 'dataframe':
+        divisor = np.round(fundA[key][0] / fundB[key][0], 6)
+        for i, close in enumerate(fundA[key]):
+            ratio.append(np.round(
+                (close / fundB[key][i] / divisor) - 1.0, 6))
+
+    elif data_type == 'list':
+        divisor = np.round(fundA[0] / fundB[0], 6)
+        for i, close in enumerate(fundA):
+            ratio.append(
+                np.round((close / fundB[i] / divisor) - 1.0, 6))
+
+    return ratio
+
+
+def period_strength(fund_name: str, tickers: dict, periods: list, **kwargs) -> list:
+    """Period Strength
+
+    Try to provide ratio evaluations of 'fund' vs. market and sector. Update utilizes sectors.json
+    file to pull information.
+
+    Arguments:
+        fund_name {str} -- 'MSFT', for example
+        tickers {dict} -- entire downloaded data object
+        periods {list} - list of lookback periods
+
+    Optional Args:
+        sector {str} -- name of sector, 'VGT' for Tech, for example (default: {''})
+        sector_data {pd.DataFrame} -- data of sector (default: {None})
+
+    Returns:
+        list -- list of ratio data objects
     """
     sector = kwargs.get('sector', '')
     sector_data = kwargs.get('sector_data')
@@ -75,7 +66,7 @@ def period_strength(fund_name: str, tickers: dict, periods: list, config: dict, 
     hasSP = False
     hasSector = False
 
-    sp = get_SP500_df(tickers, config=config)
+    sp = get_SP500_df(tickers)
     if sp is not None:
         hasSP = True
     if sector != '':
@@ -85,79 +76,93 @@ def period_strength(fund_name: str, tickers: dict, periods: list, config: dict, 
 
     fund = tickers[fund_name]
 
-    # Mutual funds tickers update daily, several hours after close. To accomodate for any pulls of
-    # data at any time, we must know that the last [current] index may not be 'None' / 'nan'. Update
-    # length of plotting to accomodate.
-    mutual_fund_mode = 0
-    if pd.isna(fund['Adj Close'][len(fund['Adj Close'])-1]):
-        mutual_fund_mode = 1
-
     for period in periods:
         entry = {}
+
         entry['period'] = period
         entry['dates'] = date_extractor(fund.index[len(fund.index)-period], _format='str') + \
             " : " + \
             date_extractor(fund.index[len(fund.index)-1], _format='str')
+
         if hasSP:
             entry['sp500'] = {}
+
             sp_temp = list(sp['Adj Close'])
             sp_temp = sp_temp[len(
-                sp_temp)-period-mutual_fund_mode:len(sp_temp)+1-mutual_fund_mode]
+                sp_temp)-period:len(sp_temp)+1]
+
             f_temp = list(fund['Adj Close'])
             f_temp = f_temp[len(f_temp)-period:len(f_temp)+1]
-            r = normalized_ratio_lists(f_temp, sp_temp)
-            entry['sp500']['avg'] = np.round(np.mean(r), 6)
-            entry['sp500']['stdev'] = np.round(np.std(r), 6)
-            entry['sp500']['min'] = np.min(r)
-            entry['sp500']['max'] = np.max(r)
-            entry['sp500']['current'] = r[len(r)-1]
+
+            rat = normalized_ratio(f_temp, sp_temp, data_type='list')
+
+            entry['sp500']['avg'] = np.round(np.mean(rat), 6)
+            entry['sp500']['stdev'] = np.round(np.std(rat), 6)
+            entry['sp500']['min'] = np.min(rat)
+            entry['sp500']['max'] = np.max(rat)
+            entry['sp500']['current'] = rat[-1]
 
         if hasSector:
             entry['sector'] = {}
             entry['sector']['name'] = sector
+
             sp_temp = list(sec['Adj Close'])
             sp_temp = sp_temp[len(
-                sp_temp)-period-mutual_fund_mode:len(sp_temp)+1-mutual_fund_mode]
+                sp_temp)-period:len(sp_temp)+1]
+
             f_temp = list(fund['Adj Close'])
             f_temp = f_temp[len(f_temp)-period:len(f_temp)+1]
-            r = normalized_ratio_lists(f_temp, sp_temp)
-            entry['sector']['avg'] = np.round(np.mean(r), 6)
-            entry['sector']['stdev'] = np.round(np.std(r), 6)
-            entry['sector']['min'] = np.min(r)
-            entry['sector']['max'] = np.max(r)
-            entry['sector']['current'] = r[len(r)-1]
+
+            rat = normalized_ratio(f_temp, sp_temp, data_type='list')
+
+            entry['sector']['avg'] = np.round(np.mean(rat), 6)
+            entry['sector']['stdev'] = np.round(np.std(rat), 6)
+            entry['sector']['min'] = np.min(rat)
+            entry['sector']['max'] = np.max(rat)
+            entry['sector']['current'] = rat[-1]
 
         ratio.append(entry)
 
     return ratio
 
 
-def get_SP500_df(tickers: dict, config: dict) -> pd.DataFrame:
+def get_SP500_df(tickers: dict) -> pd.DataFrame:
+    """Get S&P500 DataFrame
+
+    Simple way of getting the S&P-specific frame from the data dict.
+
+    Arguments:
+        tickers {dict} -- entire data object
+
+    Returns:
+        pd.DataFrame -- S&P500-specific DataFrame
+    """
     SP500_INDEX = '^GSPC'
-    if SP500_INDEX in tickers.keys():
+    if SP500_INDEX in tickers:
         return tickers[SP500_INDEX]
     return None
 
 
 def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict:
-    """
-    Relative Strength:          Compare a fund vs. market, sector, and/or other fund
+    """Relative Strength
 
-    args:
-        primary_name:           (str) primary fund to compare against
-        full_data_dict:         (dict) all retrieved funds by fund name
+    Compare a fund vs. market, sector, and/or other fund
 
-    optional args:
-        secondary_fund_names:   (list) fund names to compare against; DEFAULT=[]
-        meta:                   (dict) "metadata" from api calls
-        config:                 (dict) control config dictionary of software package; DEFAULT=None
-        sector:                 (str) sector fund (if in full_data_dict) for comparison; DEFAULT=''
-        plot_output:            (bool) True to render plot in realtime; DEFAULT=True
-        progress_bar:           (ProgressBar) DEFAULT=None
-        view:                   (str) Directory of plots; DEFAULT=''
+    Arguments:
+        primary_name {str} -- primary fund to compare against
+        full_data_dict {dict} -- all retrieved funds by fund name
 
-    returns:
-        r_strength:             (dict) contains all relative strength information
+    Optional Args:
+        secondary_fund_names {list} -- fund names to compare against (default: {[]})
+        meta {dict} -- "metadata" from api calls (default: {None})
+        config {dict} -- control config dictionary of software package (default: {None})
+        sector {str} -- sector fund (if in full_data_dict) for comparison (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
+        view {str} -- Directory of plots (default: {''})
+
+    Returns:
+        dict -- contains all relative strength information
     """
     secondary_fund_names = kwargs.get('secondary_fund_names', [])
     config = kwargs.get('config', None)
@@ -175,19 +180,23 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     comp_data = {}
     if meta is not None:
         match = meta.get('info', {}).get('sector')
+
         if match is not None:
             fund_len = {
                 'length': len(full_data_dict[primary_name]['Close']),
                 'start': full_data_dict[primary_name].index[0],
-                'end': full_data_dict[primary_name].index[len(full_data_dict[primary_name]['Close'])-1],
+                'end': full_data_dict[primary_name].index[
+                    len(full_data_dict[primary_name]['Close'])-1],
                 'dates': full_data_dict[primary_name].index
             }
 
             match_fund, match_data = api_sector_match(
                 match, config, fund_len=fund_len, period=period, interval=interval)
+
             if match_fund is not None:
                 comp_funds, comp_data = api_sector_funds(
                     match_fund, config, fund_len=fund_len, period=period, interval=interval)
+
                 if match_data is None:
                     match_data = full_data_dict
                 sector = match_fund
@@ -208,7 +217,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
         if sector_data.get(key) is None:
             sector_data[key] = comp_data[key]
 
-    sp = get_SP500_df(full_data_dict, config)
+    sp = get_SP500_df(full_data_dict)
     if sp is not None:
         rat_sp = normalized_ratio(full_data_dict[primary_name], sp)
     if progress_bar is not None:
@@ -226,15 +235,21 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
                 rat_secondaries.append(normalized_ratio(
                     full_data_dict[primary_name], full_data_dict[sfund]))
                 secondary_names.append(sfund)
+
             elif sector_data.get(sfund) is not None:
                 rat_secondaries.append(normalized_ratio(
                     full_data_dict[primary_name], sector_data[sfund]))
                 secondary_names.append(sfund)
+
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    st = period_strength(primary_name, full_data_dict, config=config, periods=[
-                         20, 50, 100], sector=sector, sector_data=sector_data.get(sector, None))
+    st = period_strength(primary_name,
+                         full_data_dict,
+                         config=config,
+                         periods=[20, 50, 100],
+                         sector=sector,
+                         sector_data=sector_data.get(sector, None))
 
     r_strength['market'] = {'tabular': rat_sp, 'comparison': 'S&P500'}
     r_strength['sector'] = {'tabular': rat_sector, 'comparison': sector}
@@ -252,9 +267,11 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     if len(rat_sp) > 0:
         output_data.append(rat_sp)
         legend.append("vs. S&P 500")
+
     if len(rat_sector) > 0:
         output_data.append(rat_sector)
         legend.append(f"vs. Sector ({sector})")
+
     if len(rat_secondaries) > 0:
         for i, rat in enumerate(rat_secondaries):
             output_data.append(rat)
@@ -272,12 +289,19 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     if plot_output:
         generic_plotting(output_data, x=dates, title=title,
                          legend=legend, ylabel='Difference Ratio')
+
     else:
-        filename = primary_name + f"/{view}" + \
-            '/relative_strength_{}.png'.format(primary_name)
-        generic_plotting(output_data, x=dates, title=title, saveFig=True,
-                         filename=filename, legend=legend, ylabel='Difference Ratio')
+        filename = os.path.join(
+            primary_name, view, f"relative_strength_{primary_name}.png")
+        generic_plotting(output_data,
+                         x=dates,
+                         title=title,
+                         saveFig=True,
+                         filename=filename,
+                         legend=legend,
+                         ylabel='Difference Ratio')
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
+
     return r_strength
