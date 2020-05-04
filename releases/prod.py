@@ -212,4 +212,4 @@ def run_prod(script: list):
         analysis[fund_name]['synopsis'] = generate_synopsis(
             analysis, name=fund_name)
 
-    return analysis
+    return analysis, clock

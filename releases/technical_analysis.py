@@ -13,6 +13,9 @@
 #   
 """
 
+# Imports from libraries
+from libs.utils import start_clock
+
 # Imports from releases
 from .load_start import init_script
 from .dev import run_dev
@@ -49,3 +52,11 @@ def technical_analysis(config: dict, release='prod'):
 
     analysis, clock = run_indexes(analysis, script, clock=clock)
     run_exports(analysis, script)
+
+    return clock
+
+
+def clock_management(start_time: float):
+    """ Clock management to handle elapsed time to higher levels """
+    elapsed = round(start_clock() - start_time)
+    return elapsed
