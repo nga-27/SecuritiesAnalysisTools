@@ -33,7 +33,7 @@ def slide_creator(analysis: dict, **kwargs):
     """
 
     year = kwargs.get('year')
-    version = kwargs.get('version', "0.1.28")
+    version = kwargs.get('version', "0.2.02")
     config = kwargs.get('config')
 
     if year is None:
@@ -46,6 +46,7 @@ def slide_creator(analysis: dict, **kwargs):
             year = config.get('date_release', '').split('-')[0]
             version = config.get('version')
             views = config.get('views', {}).get('pptx', '2y')
+
         else:
             year = year
             version = version
@@ -62,12 +63,13 @@ def slide_creator(analysis: dict, **kwargs):
             prs = make_TCI_slides(prs)
             prs = make_fund_slides(prs, analysis, views=views)
 
-            out_dir = "output/"
+            out_dir = "output"
             if not os.path.exists(out_dir):
                 os.mkdir(out_dir)
 
             title = f"Financial Analysis {year}.pptx"
-            prs.save(f"{out_dir}{title}")
+            filename = os.path.join(out_dir, title)
+            prs.save(filename)
 
             print(
                 f"Presentation '{PPTX_NAME_COLOR}{title}{NORMAL_COLOR}' created.")

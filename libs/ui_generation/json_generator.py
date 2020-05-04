@@ -12,12 +12,22 @@ import numpy as np
 
 
 def metadata_copy(data: dict) -> dict:
-    """ Speciality copy function to remove tabulars, etc. Pops selected tabular keys/data """
+    """Metadata Copy
+
+    Speciality copy function to remove tabulars, etc. Pops selected tabular keys/data
+
+    Arguments:
+        data {dict} -- data object
+
+    Returns:
+        dict - copied metadata
+    """
     meta = data.copy()
     for key in meta.keys():
         if 'clustered_osc' in meta[key]:
             meta[key].pop('clustered_osc')
-            """ Additional grooming / popping follows """
+            #  Additional grooming / popping follows
+
             # if 'features' in meta[key].keys():
             #     for feature in meta[key]['features']:
             #         for feat in range(len(meta[key]['features'][feature]['features'])):
@@ -28,9 +38,18 @@ def metadata_copy(data: dict) -> dict:
 
 
 def output_to_json(data: dict, exclude_tabular=True):
-    """ Simple function that outputs dictionary to JSON file """
-    filename = 'output/metadata.json'
-    if not os.path.exists('output/'):
+    """Output to JSON
+
+    Simple function that outputs dictionary to JSON file
+
+    Arguments:
+        data {dict} -- metadata to output to json file
+
+    Keyword Arguments:
+        exclude_tabular {bool} -- pop tabular data if True (default: {True})    
+    """
+    filename = os.path.join("output", "metadata.json")
+    if not os.path.exists('output'):
         os.mkdir('output')
     if os.path.exists(filename):
         os.remove(filename)

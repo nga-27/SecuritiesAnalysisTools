@@ -99,6 +99,7 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
     osc_values = [np.round(synopsis['metrics'][osc], 5) for osc in osc_keys]
     osc_deltas = [np.round(synopsis['metrics_delta'][osc], 5)
                   for osc in osc_keys]
+
     trend_keys = [
         f"{trend} %" for trend in synopsis['metrics_categories']['trend']]
     trend_values = [np.round(synopsis['metrics'][trend], 5)
@@ -236,9 +237,11 @@ def beta_rsq(pdf, fund_data: dict):
         if period != 'synopsis' and period != 'metadata':
             left_keys.append(f"Beta ({period})")
             right_keys.append(f"R-squared ({period})")
+
             if fund_data[period]['statistics'].get('beta') is None:
                 left_vals.append('')
                 right_vals.append('')
+
             else:
                 left_vals.append(
                     str(np.round(fund_data[period]['statistics'].get('beta', ''), 5)))
@@ -319,8 +322,10 @@ def fund_volatility(pdf, fund_data: dict):
 
     altman_z = fund_data['metadata'].get('altman_z', {})
     altman_z_score = altman_z.get('score')
+
     if isinstance(altman_z_score, (int, float)):
         altman_z_score = str(np.round(altman_z_score, 5))
+
     az_str = f"Altman-Z Score:"
     az_str2 = altman_z_score
 

@@ -1,3 +1,4 @@
+import os
 import datetime
 
 from fpdf import FPDF  # pylint: disable=F0401
@@ -20,13 +21,13 @@ def PDF_creator(analysis: dict, **kwargs):
         config {dict} -- (default: {None})
     """
     year = kwargs.get('year')
-    version = kwargs.get('version', "0.1.28")
+    version = kwargs.get('version', "0.2.02")
     config = kwargs.get('config')
 
     if year is None:
         year = datetime.datetime.now().strftime("%Y")
 
-    OUTFILE_NAME = f"output/Financial_Analysis_{year}.pdf"
+    OUTFILE_NAME = os.path.join("output", f"Financial_Analysis_{year}.pdf")
 
     print("")
     print("Starting metrics PDF creation.")
@@ -34,6 +35,7 @@ def PDF_creator(analysis: dict, **kwargs):
         year = config.get('date_release', '').split('-')[0]
         version = config.get('version')
         views = config.get('views', {}).get('pptx', '2y')
+
     else:
         year = year
         version = version

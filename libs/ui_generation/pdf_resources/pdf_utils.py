@@ -18,7 +18,18 @@ def pdf_set_color_text(pdf, color: str):
     return pdf
 
 
-def color_to_RGB_array(color: str):
+def color_to_RGB_array(color: str, suppress=True):
+    """Color to RGB Array
+
+    Arguments:
+        color {str} -- common text name of color
+
+    Keyword Arguments:
+        suppress {bool} -- will remove warnings if not valid color name (default: {True})
+
+    Returns:
+        list -- ascii color code for pdf outputs
+    """
     if color == 'black':
         return [0x00, 0x00, 0x00]
     elif color == 'blue':
@@ -34,7 +45,9 @@ def color_to_RGB_array(color: str):
     elif color == 'red':
         return [0xff, 0x00, 0x00]
     else:
-        print(f"WARNING: Color '{color}' not found in 'color_to_RGB_array'")
+        if not suppress:
+            print(
+                f"WARNING: Color '{color}' not found in 'color_to_RGB_array'")
         return [0x00, 0x00, 0x00]
 
 
