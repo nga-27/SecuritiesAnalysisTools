@@ -61,4 +61,8 @@ def clock_management(start_time: float):
     if start_time is None:
         return 0
     elapsed = round(start_clock() - start_time)
-    return elapsed
+    minutes = int(elapsed / 60)
+    seconds = int(elapsed % 60)
+    if minutes > 0:
+        return f"{minutes}m {seconds}s"
+    return f"{seconds}s"

@@ -106,7 +106,13 @@ class ProgressBar(object):
 
             num_spaces = EFFECTIVE_TIME_START - effective_length
             stopwatch = " " * num_spaces
-            stopwatch += f"{self.clock}s"
+            minutes = int(self.clock / 60)
+            seconds = int(self.clock % 60)
+
+            if minutes > 0:
+                stopwatch += f"{minutes}m {seconds}s"
+            else:
+                stopwatch += f"{self.clock}s"
 
         pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} " + \
             f"{percent}% {suffix}{stopwatch}"
