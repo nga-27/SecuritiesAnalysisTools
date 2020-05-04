@@ -58,5 +58,7 @@ def technical_analysis(config: dict, release='prod'):
 
 def clock_management(start_time: float):
     """ Clock management to handle elapsed time to higher levels """
+    if start_time is None:
+        return 0
     elapsed = round(start_clock() - start_time)
     return elapsed
