@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -72,8 +73,13 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     p_bar = kwargs.get('p_bar')
     view = kwargs.get('view')
 
-    hull = {'short': {}, 'medium': {},
-            'long': {}, 'tabular': {}}
+    hull = {
+        'short': {},
+        'medium': {},
+        'long': {},
+        'tabular': {}
+    }
+
     hull['short'] = {'period': period[0]}
     hull['medium'] = {'period': period[1]}
     hull['long'] = {'period': period[2]}
@@ -95,7 +101,11 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         if p_bar is not None:
             p_bar.uptick(increment=0.1)
 
-    hull['tabular'] = {'short': plots[0], 'medium': plots[1], 'long': plots[2]}
+    hull['tabular'] = {
+        'short': plots[0],
+        'medium': plots[1],
+        'long': plots[2]
+    }
 
     name3 = SP500.get(name, name)
     name2 = name3 + ' - Hull Moving Averages'
@@ -105,7 +115,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         generic_plotting([position['Close'], plots[0], plots[1],
                           plots[2]], legend=legend, title=name2)
     else:
-        filename = name + f"/{view}" + f"/hull_moving_average_{name}.png"
+        filename = os.path.join(name, view, f"hull_moving_average_{name}.png")
         generic_plotting([position['Close'], plots[0], plots[1],
                           plots[2]], legend=legend, title=name2, saveFig=True, filename=filename)
 
@@ -137,13 +147,14 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         swings {dict} -- swing trade data object
 
     Optional Args:
-        max_period {int} -- longest term for triple moving average (default: {18})
         p_bar {ProgressBar} -- (default: {None})
+        config {list} -- list of moving average lookback periods (default: {[9, 16, 36]})
 
     Returns:
         dict -- swing trade data object
     """
     p_bar = kwargs.get('p_bar')
+    config = kwargs.get('config', [9, 16, 36])
 
     max_period = kwargs.get('max_period', 36)
     sh = swings['tabular']['short']
@@ -167,33 +178,76 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         elif (sh[i] < md[i]) or (sh[i] < ln[i]):
             states[i] = 'e1'
 
+    periods = ''
+    if config is not None:
+        periods = f"{config[0]}-{config[1]}-{config[2]}"
+
     # Search for transitions
+    features = []
     signal = [0.0] * len(states)
+    set_block = 'n'
     for i in range(1, len(signal)):
+        date = position.index[i].strftime("%Y-%m-%d")
+        data = None
+
         if (states[i] == 'u2'):
             if (states[i-1] == 'e3') or (states[i-1] == 'e2') or (states[i-1] == 'e1'):
                 signal[i] = 0.5
+                set_block = 'u1'
+                data = {
+                    "type": 'bullish',
+                    "value": f'swing crossover ({periods})',
+                    "index": i,
+                    "date": date
+                }
 
-        elif (states[i] == 'u3') and (states[i] != states[i-1]):
+        elif (states[i] == 'u3') and (states[i] != states[i-1]) and (set_block != 'u'):
             signal[i] = 1.0
+            set_block = 'u'
+            data = {
+                "type": 'bullish',
+                "value": f'confirmed bull trend ({periods})',
+                "index": i,
+                "date": date
+            }
 
         elif close[i] > ln[i]:
             signal[i] = 0.1
 
         elif (states[i] == 'e2'):
             if (states[i-1] == 'u3') or (states[i-1] == 'u2') or (states[i-1] == 'u1'):
+                set_block = 'e1'
                 signal[i] = -0.5
+                data = {
+                    "type": 'bearish',
+                    "value": f'swing crossover ({periods})',
+                    "index": i,
+                    "date": date
+                }
 
-        elif (states[i] == 'e3') and (states[i] != states[i-1]):
+        elif (states[i] == 'e3') and (states[i] != states[i-1]) and (set_block != 'e'):
+            set_block = 'e'
             signal[i] = -1.0
+            data = {
+                "type": 'bearish',
+                "value": f'confirmed bear trend ({periods})',
+                "index": i,
+                "date": date
+            }
 
         elif close[i] < ln[i]:
             signal[i] = -0.1
+
+        if data is not None:
+            features.append(data)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
     swings['tabular']['swing'] = signal
+    swings['length_of_data'] = len(swings['tabular']['swing'])
+    swings['signals'] = features
+
     return swings
 
 
@@ -270,7 +324,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title='Hull Moving Average Metrics')
     else:
-        filename2 = name + f"/{view}" + f"/hull_metrics_{name}.png"
+        filename2 = os.path.join(name, view, f"hull_metrics_name.png")
         dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title=name2, saveFig=True, filename=filename2)
 

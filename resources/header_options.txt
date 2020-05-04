@@ -3,6 +3,7 @@ OPTIONS:
 --q                 :       exits program without running any functionality; "--quit" also supported
 --core              :       normal operation run with parameters found in core.json
 --test              :       similar to '--core' but with test.json (for testing only)
+--dataset           :       similar to '--core' but with dataset.json (alternative to core, used for data exportation)
 --ni                :       does not include S&P500 index, omits comparison operations; "--noindex" also supported
 --f                 :       triggers only designated functions (below); "--function" also supported
 
@@ -53,8 +54,10 @@ FUNCTIONS:          :       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --f
 --bear_bull         :       run {Bear / Bull Power Indicator} function for funds; "--bull_bear" also supported
 --gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
 --bands             :       run {Bollinger Bands} for funds; "--bollinger_bands" and "--bollinger" also supported
+--candlestick       :       run {Candlesticks} for funds; "--candlesticks" also supported
 --vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
 --syn               :       run {Synopsis} for funds (metrics); "--synopsis" also supported
+--last              :       run {Last Signals} for funds to show latest signals; "--last_signals" also supported
 --nf                :       run {Nasit Funds} for funds; "--nasit_funds" also supported
 --nf_now            :       run {Nasit Funds} but with current stats (price, % change, etc.)
 

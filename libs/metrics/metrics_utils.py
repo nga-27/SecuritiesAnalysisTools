@@ -21,7 +21,7 @@ ACCEPTED_ATTS = [
     'futures',
     'moving_average',
     'swing_trade',
-    'obv',
+    'on_balance_volume',
     'awesome',
     'momentum_oscillator',
     'bear_bull_power',
@@ -34,19 +34,20 @@ ACCEPTED_ATTS = [
 
 
 def future_returns(fund: pd.DataFrame, **kwargs):
-    """
-    Future Returns      Logging data of "futures" time period vs. a past time period
+    """Future Returns
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    Logging data of "futures" time period vs. a past time period
 
-    optional args:
-        futures         (list) list of time windows for future trading days; DEFAULT=[5, 15, 45, 90]
-        to_json         (bool) True outputs dates as json-stringifiable; DEFAULT=False
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
 
-    returns:
-        future:         (dict) future data
+    Optional Args:
+        futures {list} -- list of time windows for future trading days (default: {5, 15, 45, 90})
+        to_json {bool} -- True outputs dates as json-stringifiable (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- future data
     """
     futures = kwargs.get('futures', [5, 15, 45, 90])
     to_json = kwargs.get('to_json', True)
@@ -99,7 +100,7 @@ def metadata_to_dataset(config: dict):
     """
     if config.get('exports', {}).get('run'):
         print(f"Exporting datasets...")
-        metadata_file = "output/metadata.json"
+        metadata_file = os.path.join("output", "metadata.json")
         if not os.path.exists(metadata_file):
             print(f"WARNING: {metadata_file} does not exist. Exiting...")
             return None
@@ -118,6 +119,15 @@ def metadata_to_dataset(config: dict):
 
 
 def metadata_key_filter(keys: str, metadata: dict) -> dict:
+    """Metadata Key Filter
+
+    Arguments:
+        keys {str} -- keys to split
+        metadata {dict} -- metadata data object
+
+    Returns:
+        dict -- filtered metadata data object
+    """
     job_dict = dict()
     key_list = keys.split(' ')
     key_list = [k.strip(' ') for k in key_list]
@@ -177,20 +187,26 @@ def collate_data(job: dict, metadata: dict):
             if type(attr) == dict:
                 keys = attr.keys()
                 for key in keys:
+
                     if type(attr[key]) == dict:
                         sub_keys = attr[key].keys()
+
                         for sub in sub_keys:
                             if type(attr[key][sub]) == dict:
                                 sub_sub_keys = attr[key].keys()
+
                                 for sub_sub in sub_sub_keys:
                                     if type(attr[key][sub][sub_sub]) == dict:
                                         print(
-                                            f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                            f"WARNING: depth of dictionary exceeded with " +
+                                            f"attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+
                                     else:
                                         new_name = [att, str(key), str(
                                             sub), str(sub_sub)]
                                         new_name = '-'.join(new_name)
                                         all_data[ticker][new_name] = attr[key][sub][sub_sub]
+
                             else:
                                 new_name = [att, str(key), str(sub)]
                                 new_name = '-'.join(new_name)
@@ -248,8 +264,10 @@ def collate_data(job: dict, metadata: dict):
 def collate_data_periods(job: dict, metadata: dict, all_data=None):
     if all_data is None:
         all_data = dict()
+
     for ticker in job['tickers']:
         all_data[ticker] = dict()
+
         for period in job['periods']:
             for att in job['attributes']:
                 attr = metadata[ticker][period].get(att, {}).get('tabular')
@@ -259,30 +277,37 @@ def collate_data_periods(job: dict, metadata: dict, all_data=None):
                 # Flatten tree, if necessary
                 if type(attr) == dict:
                     keys = attr.keys()
+
                     for key in keys:
                         if type(attr[key]) == dict:
                             sub_keys = attr[key].keys()
+
                             for sub in sub_keys:
                                 if type(attr[key][sub]) == dict:
                                     sub_sub_keys = attr[key].keys()
+
                                     for sub_sub in sub_sub_keys:
                                         if type(attr[key][sub][sub_sub]) == dict:
                                             print(
-                                                f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                                f"WARNING: depth of dictionary exceeded with " +
+                                                f"attribute {att} -> {attr[key][sub][sub_sub].keys()}")
                                         else:
                                             new_name = [period, att, str(key), str(
                                                 sub), str(sub_sub)]
                                             new_name = '-'.join(new_name)
                                             all_data[ticker][new_name] = attr[key][sub][sub_sub]
+
                                 else:
                                     new_name = [period, att,
                                                 str(key), str(sub)]
                                     new_name = '-'.join(new_name)
                                     all_data[ticker][new_name] = attr[key][sub]
+
                         else:
                             new_name = [period, att, str(key)]
                             new_name = '-'.join(new_name)
                             all_data[ticker][new_name] = attr[key]
+
                 else:
                     new_name = [period, att]
                     new_name = '_'.join(new_name)
@@ -296,33 +321,40 @@ def collate_data_periods(job: dict, metadata: dict, all_data=None):
                 # Flatten tree, if necessary
                 if type(attr) == dict:
                     keys = attr.keys()
+
                     for key in keys:
                         if type(attr[key]) == dict:
                             sub_keys = attr[key].keys()
+
                             for sub in sub_keys:
                                 if type(attr[key][sub]) == dict:
                                     sub_sub_keys = attr[key].keys()
+
                                     for sub_sub in sub_sub_keys:
                                         if type(attr[key][sub][sub_sub]) == dict:
                                             print(
-                                                f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                                f"WARNING: depth of dictionary exceeded with " +
+                                                f"attribute {att} -> {attr[key][sub][sub_sub].keys()}")
                                         else:
                                             new_name = [period, att, str(key), str(
                                                 sub), str(sub_sub)]
                                             new_name = '-'.join(new_name)
                                             new_name += '-METRICS'
                                             all_data[ticker][new_name] = attr[key][sub][sub_sub]
+
                                 else:
                                     new_name = [period, att,
                                                 str(key), str(sub)]
                                     new_name = '-'.join(new_name)
                                     new_name += '-METRICS'
                                     all_data[ticker][new_name] = attr[key][sub]
+
                         else:
                             new_name = [period, att, str(key)]
                             new_name = '-'.join(new_name)
                             new_name += '-METRICS'
                             all_data[ticker][new_name] = attr[key]
+
                 else:
                     new_name = f'{period}-{att}-METRICS'
                     all_data[ticker][new_name] = attr
@@ -331,6 +363,17 @@ def collate_data_periods(job: dict, metadata: dict, all_data=None):
 
 
 def groom_data(data: dict) -> dict:
+    """Groom Data
+
+    Find the longest tabular data column, and extend all other columns to match that
+    by adding zeros.
+
+    Arguments:
+        data {dict} -- data to groom
+
+    Returns:
+        dict -- groomed data
+    """
     max_len = 0
     new_data = dict()
     for fund in data.keys():
@@ -350,6 +393,11 @@ def groom_data(data: dict) -> dict:
 
 
 def export_data(all_data: dict):
+    """Export Data
+
+    Arguments:
+        all_data {dict} -- data object to export
+    """
     exports = dict()
     for fund in all_data.keys():
         index = all_data[fund].get('futures-index', [])
@@ -358,13 +406,14 @@ def export_data(all_data: dict):
             df.set_index('futures-index')
         exports[fund] = df.copy()
 
-    pathname = 'output/'
+    pathname = 'output'
     if not os.path.exists(pathname):
         os.mkdir(pathname)
-    pathname += 'datasets/'
+
+    pathname = os.path.join("output", "datasets")
     if not os.path.exists(pathname):
         os.mkdir(pathname)
 
     for fund in exports.keys():
-        filepath = pathname + fund + '.csv'
+        filepath = os.path.join(pathname, f"{fund}.csv")
         exports[fund].to_csv(filepath)

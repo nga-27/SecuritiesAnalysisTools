@@ -13,6 +13,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.1.27, 2020-03-09 - Multi-period data analysis ('10y', '5y', '2y', '1y'; '1d', '1w', '1m')
 * 0.1.28, 2020-03-20 - PDF export of metrics, numerical details
 * **0.2.0, 2020-03-22** - Release 2: Reorganization of `dev` and `prod` as functions, stable base
+* 0.2.02, 2020-05-04 - Improved Windows compatibility, PDF having latest signals
 
 ## To Use
 1. Pull repository, start local, virtual, and/or global python environment.
@@ -50,6 +51,8 @@ gitignore, so privacy of one's funds will be maintained.
 New with 0.1.16, an optional `test.json` file can be added with the same functionality and concept as `--core`. For usage, simply enter
 `--test`.  This can be helpful when branching this repo and testing things separate from one's main `core.json` list. This is entirely 
 optional.
+
+New with 0.2.02, an optional `dataset.json` file can be added with the same functionality and concept as `--dataset`. For usage, simply enter `--dataset`.  This can be helpful when creating a set of stocks and/or metrics to do higher correlation data analysis and data science with while remaining separate from one's main `core.json` list. This is entirely optional.
 
 ### "Core" Properties
 * **Period** - timeframe of historical stock data. Default is 2 years. (Provides 'Open', 'Close', 'High', 'Low', 'Volume', and 'Adj Close' for each fund.) Options include: 1 year, 2 years, 5 years, and 10 years.

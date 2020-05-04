@@ -43,9 +43,10 @@ from libs.utils import SP500
 # Imports that drive custom metrics for market analysis
 from libs.metrics import future_returns
 from libs.metrics import generate_synopsis
+from libs.metrics import assemble_last_signals
 
 # Imports that start process and show progress doing so
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, start_clock
 
 # Imports in development / non-final "public" calls
 from test import test_competitive
@@ -63,7 +64,7 @@ def run_prod(script: list):
         script {list} -- dataset, funds, periods, config
 
     Returns:
-        [dict] -- analysis object of fund data
+        dict -- analysis object of fund data
     """
     dataset = script[0]
     funds = script[1]
@@ -71,6 +72,7 @@ def run_prod(script: list):
     config = script[3]
 
     analysis = {}
+    clock = start_clock()
 
     for fund_name in funds:
 
@@ -99,7 +101,8 @@ def run_prod(script: list):
             fund_data['name'] = fund_name
 
             fund_print2 = fund_print + f" ({period}) "
-            p = ProgressBar(config['process_steps'], name=fund_print2)
+            p = ProgressBar(config['process_steps'],
+                            name=fund_print2, offset=clock)
             p.start()
 
             fund_data['statistics'] = get_high_level_stats(fund)
@@ -128,7 +131,7 @@ def run_prod(script: list):
             fund_data['momentum_oscillator'] = momentum_oscillator(
                 fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
 
-            fund_data['obv'] = on_balance_volume(
+            fund_data['on_balance_volume'] = on_balance_volume(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['moving_average'] = triple_moving_average(
@@ -203,6 +206,10 @@ def run_prod(script: list):
             # Various Fund-specific Metrics
             fund_data['futures'] = future_returns(fund, progress_bar=p)
 
+            # Parse through indicators and pull out latest signals (must be last)
+            fund_data['last_signals'] = assemble_last_signals(
+                fund_data, progress_bar=p)
+
             p.end()
 
             analysis[fund_name][period] = fund_data
@@ -210,4 +217,4 @@ def run_prod(script: list):
         analysis[fund_name]['synopsis'] = generate_synopsis(
             analysis, name=fund_name)
 
-    return analysis
+    return analysis, clock

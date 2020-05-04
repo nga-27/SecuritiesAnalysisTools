@@ -1,5 +1,5 @@
-import json
 import os
+import json
 import pprint
 import requests
 
@@ -11,9 +11,10 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 import libs.utils.stable_yf as styf
+
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
-from .constants import STANDARD_COLORS, SP500
+from .constants import STANDARD_COLORS, SP500, PRINT_CONSTANTS
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -31,21 +32,22 @@ WARNING = STANDARD_COLORS["warning"]
 FUND = STANDARD_COLORS["ticker"]
 NORMAL = STANDARD_COLORS["normal"]
 
-REVERSE_LINE = "\033[F"
+REVERSE_LINE = PRINT_CONSTANTS["return_same_line"]
 
 
 def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
-    """
-    Get Api Metadata
+    """Get API Metadata
 
-    args:
-        fund_ticker:    (str) fund name
+    Arguments:
+        fund_ticker {str} -- fund name
 
-    optional args:
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Optional Args:
+        progress_bar {ProgressBar} -- (default: {None})
+        max_close {float} -- max close for a period, for VQ (default: {None})
+        data {pd.DataFrame} -- dataset, primarily for VQ (default: {None})
 
-    returns:
-        metadata:       (dict) contains all financial metadata available
+    Returns:
+        dict -- contains all financial metadata available
     """
     pb = kwargs.get('progress_bar', None)
     max_close = kwargs.get('max_close', None)
@@ -59,13 +61,14 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     ticker = yf.Ticker(fund_ticker)
     if pb is not None:
         pb.uptick(increment=0.2)
+
     st_tick = styf.Ticker(fund_ticker)
     if pb is not None:
         pb.uptick(increment=0.3)
 
     metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
     metadata['info'] = AVAILABLE_KEYS.get('info')(
-        ticker, st_tick, force_holdings=True)
+        ticker, st_tick, force_holdings=False)
 
     if pb is not None:
         pb.uptick(increment=0.2)
@@ -102,6 +105,14 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
 
 
 def get_dividends(ticker):
+    """Get Dividends
+
+    Arguments:
+        ticker {yf-object} -- ticker object from yfinance
+
+    Returns:
+        dict -- dividend data object
+    """
     div = dict()
     try:
         t = ticker.dividends
@@ -114,6 +125,18 @@ def get_dividends(ticker):
 
 
 def get_info(ticker, st, force_holdings=False):
+    """Get Info
+
+    Arguments:
+        ticker {yf-object} -- ticker object from yfinance
+        st {yf-object} -- ticker object from yfinance (0.1.50)
+
+    Keyword Arguments:
+        force_holdings {bool} -- only try old version (default: {False})
+
+    Returns:
+        dict -- fund info data object
+    """
     if force_holdings:
         try:
             info = st.info
@@ -131,10 +154,20 @@ def get_info(ticker, st, force_holdings=False):
 
 
 def get_financials(ticker, st):
+    """Get Financials
+
+    Arguments:
+        ticker {yf-object} -- yfinance data object
+        st {yf-object} -- ticker object from yfinance (0.1.50)
+
+    Returns:
+        dict -- finance data object
+    """
     try:
         t = ticker.financials
         fin = {index: list(row) for index, row in t.iterrows()}
         fin['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
+
     except:
         try:
             t = st.financials
@@ -142,14 +175,25 @@ def get_financials(ticker, st):
             fin['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
         except:
             fin = dict()
+
     return fin
 
 
 def get_balance_sheet(ticker, st):
+    """Get Balance Sheet
+
+    Arguments:
+        ticker {yf-object} -- yfinance data object
+        st {yf-object} -- ticker object from yfinance (0.1.50)
+
+    Returns:
+        dict -- Balance Sheet data object
+    """
     try:
         t = ticker.balance_sheet
         bal = {index: list(row) for index, row in t.iterrows()}
         bal['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
+
     except:
         try:
             t = st.balance_sheet
@@ -157,14 +201,25 @@ def get_balance_sheet(ticker, st):
             bal['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
         except:
             bal = dict()
+
     return bal
 
 
 def get_cashflow(ticker, st):
+    """Get Cashflow
+
+    Arguments:
+        ticker {yf-object} -- yfinance data object
+        st {yf-object} -- ticker object from yfinance (0.1.50)
+
+    Returns:
+        dict -- Cashflow data object
+    """
     try:
         t = ticker.cashflow
         cash = {index: list(row) for index, row in t.iterrows()}
         cash['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
+
     except:
         try:
             t = st.balance_sheet
@@ -172,11 +227,22 @@ def get_cashflow(ticker, st):
             cash['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
         except:
             cash = dict()
+
     return cash
 
 
 def get_earnings(ticker, st):
+    """Get Earnings
+
+    Arguments:
+        ticker {yf-object} -- yfinance data object
+        st {yf-object} -- ticker object from yfinance (0.1.50)
+
+    Returns:
+        dict -- Earnings data object
+    """
     earn = dict()
+
     try:
         t = ticker.earnings
         ey = dict()
@@ -190,6 +256,7 @@ def get_earnings(ticker, st):
         eq['revenue'] = [r for r in q['Revenue']]
         eq['earnings'] = [e for e in t['Earnings']]
         earn['quarterly'] = eq
+
     except:
         try:
             t = st.earnings
@@ -207,26 +274,29 @@ def get_earnings(ticker, st):
         except:
             earn['yearly'] = {}
             earn['quarterly'] = {}
+
     return earn
 
 
 def get_recommendations(ticker, st) -> dict:
-    """[summary]
+    """Get Recommendations
 
     Arguments:
-        ticker {Ticker} -- current yf Ticker object
-        st {Ticker} -- stable version of 0.1.50 of yf Ticker object
+        ticker {yf-object} -- current yf Ticker object
+        st {yf-object} -- ticker object from yfinance (0.1.50)
 
     Returns:
-        dict -- recommendations
+        dict -- Recommendations data object
     """
     recom = dict()
+
     try:
         t = ticker.recommendations
         recom['dates'] = [date.strftime('%Y-%m-%d') for date in t.index]
         recom['firms'] = [f for f in t['Firm']]
         recom['grades'] = [g for g in t['To Grade']]
         recom['actions'] = [a for a in t['Action']]
+
     except:
         try:
             t = st.recommendations
@@ -236,11 +306,12 @@ def get_recommendations(ticker, st) -> dict:
             recom['actions'] = [a for a in t['Action']]
         except:
             recom = {'dates': [], 'firms': [], 'grades': [], 'actions': []}
+
     return recom
 
 
 def get_altman_z_score(meta: dict) -> dict:
-    """get_altman_z_score
+    """Get Altman Z-Score
 
     Created by Prof. Edward Altman (1968), info here: 
     https://www.investopedia.com/terms/a/altman.asp
@@ -264,15 +335,17 @@ def get_altman_z_score(meta: dict) -> dict:
     balance_sheet = meta.get('balance_sheet')
     financials = meta.get('financials')
     info = meta.get('info')
-
     if balance_sheet is None or financials is None or info is None:
         return {"score": "n/a", "values": {}}
+
     total_assets = balance_sheet.get("Total Assets")
     if total_assets is None:
         return {"score": "n/a", "values": {}}
+
     current_assets = balance_sheet.get("Total Current Assets")
     if current_assets is None:
         return {"score": "n/a", "values": {}}
+
     current_liabilities = balance_sheet.get("Total Current Liabilities")
     if current_liabilities is None:
         return {"score": "n/a", "values": {}}
@@ -293,6 +366,7 @@ def get_altman_z_score(meta: dict) -> dict:
     market_cap = info.get("marketCap")
     if market_cap is None:
         return {"score": "n/a", "values": {}}
+
     total_liabilities = balance_sheet.get("Total Liab")
     if total_liabilities is None:
         return {"score": "n/a", "values": {}}
@@ -301,6 +375,7 @@ def get_altman_z_score(meta: dict) -> dict:
     total_revenue = financials.get("Total Revenue")
     if total_revenue is None:
         return {"score": "n/a", "values": {}}
+
     altman_e = total_revenue[0] / total_assets[0]
     altman = altman_a + altman_b + altman_c + altman_d + altman_e
 
@@ -323,6 +398,7 @@ def get_altman_z_score(meta: dict) -> dict:
             "E": altman_e
         }
     }
+
     return z_score
 
 
@@ -339,6 +415,14 @@ AVAILABLE_KEYS = {
 
 
 def calculate_recommendation_curve(recoms: dict) -> dict:
+    """Calculate Recommendation Curve
+
+    Arguments:
+        recoms {dict} -- recommendation data object
+
+    Returns:
+        dict -- recommendation curve data object
+    """
     tabular = dict()
     tabular['dates'] = []
     tabular['grades'] = []
@@ -371,6 +455,14 @@ def calculate_recommendation_curve(recoms: dict) -> dict:
 
 
 def grade_to_number(grades: list) -> list:
+    """Grade to Number
+
+    Arguments:
+        grades {list} -- list of recommendation grades (strings)
+
+    Returns:
+        list -- list of grades (floats)
+    """
     GRADES = {
         "Strong Buy": 1.0,
         "Buy": 2.0,
@@ -393,16 +485,36 @@ def grade_to_number(grades: list) -> list:
 
 
 def prune_ratings(firms: dict, date: str) -> dict:
+    """Prune Ratings
+
+    To keep ratings fresh, eliminate old ratings (beyond 2 years from 'date')
+
+    Arguments:
+        firms {dict} -- firm data object (from recommendation curve)
+        date {str} -- specific point in time to add 2 years to
+
+    Returns:
+        dict -- pruned firm list
+    """
     td = datetime.strptime(date, '%Y-%m-%d')
     for firm in list(firms):
         td2 = datetime.strptime(firms[firm]['date'], '%Y-%m-%d')
         td2 = td2 + relativedelta(years=2)
         if td > td2:
             firms.pop(firm)
+
     return firms
 
 
 def calculate_eps(meta: dict) -> dict:
+    """Calculate Earnings Per Share
+
+    Arguments:
+        meta {dict} -- metadata object
+
+    Returns:
+        dict -- EPS data object
+    """
     eps = dict()
     q_earnings = meta.get('earnings', {}).get('quarterly', {})
     shares = meta.get('info', {}).get('sharesOutstanding')
@@ -417,14 +529,29 @@ def calculate_eps(meta: dict) -> dict:
     return eps
 
 
-def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs):
+def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs) -> list:
+    """API Sector Match
 
+    Arguments:
+        sector {str} -- sector from sectors.json
+        config {dict} -- controlling configuration dictionary
+
+    Keyword Arguments:
+        fund_len {int} -- for downloading dataset (default: {None})
+
+    Optional Args:
+        period {str} -- different period than in config (default: {config['period']})
+        interval {str} -- different interval than in config (default: {config['interval']})
+
+    Returns:
+        list -- matched list of sector funds, data for matched list
+    """
     period = kwargs.get('period', config['period'])
     interval = kwargs.get('interval', config['interval'])
 
-    sector_match_file = "resources/sectors.json"
+    sector_match_file = os.path.join("resources", "sectors.json")
     if not os.path.exists(sector_match_file):
-        print(f"Warning: sector file '{sector_match_file}' not found.")
+        print(f"{WARNING}Warning: sector file '{sector_match_file}' not found.{NORMAL}")
         return None, None
 
     with open(sector_match_file) as f:
@@ -433,6 +560,7 @@ def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs):
         if matched is None:
             return None, None
 
+        # To save downloads, if the matched items are already in the ticker list, simply use them
         tickers = config.get('tickers', '').split(' ')
         if matched in tickers:
             return matched, None
@@ -442,11 +570,27 @@ def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs):
         return matched, fund_data
 
 
-def api_sector_funds(sector_fund: str, config: dict, fund_len=None, **kwargs):
+def api_sector_funds(sector_fund: str, config: dict, fund_len=None, **kwargs) -> list:
+    """API Sector Funds
+
+    Arguments:
+        sector {str} -- sector from sectors.json
+        config {dict} -- controlling configuration dictionary
+
+    Keyword Arguments:
+        fund_len {int} -- for downloading dataset (default: {None})
+
+    Optional Args:
+        period {str} -- different period than in config (default: {'2y'})
+        interval {str} -- different interval than in config (default: {'1d'})
+
+    Returns:
+        list -- [description]
+    """
     period = kwargs.get('period', '2y')
     interval = kwargs.get('interval', '1d')
 
-    sector_match_file = "resources/sectors.json"
+    sector_match_file = os.path.join("resources", "sectors.json")
     if not os.path.exists(sector_match_file):
         print(
             f"{WARNING}Warning: sector file '{sector_match_file}' not found.{NORMAL}")
@@ -454,9 +598,11 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None, **kwargs):
 
     if sector_fund is None:
         return [], {}
+
     with open(sector_match_file) as f:
         matcher = json.load(f)
         matched = matcher.get("Comparison", {}).get(sector_fund)
+
         if matched is None:
             return [], {}
 
@@ -468,10 +614,23 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None, **kwargs):
 #####################################################
 
 
-def get_volatility(ticker_str: str, **kwargs):
-    TIMEOUT = 5
+def get_volatility(ticker_str: str, **kwargs) -> dict:
+    """Get Volatility
+
+    Arguments:
+        ticker_str {str} -- ticker of fund
+
+    Optional Args:
+        max_close {float} -- highest close of a fund recently (default: {None})
+        data {pd.DataFrame} -- fund dataset (default: {None})
+
+    Returns:
+        dict -- volatility quotient data object
+    """
     max_close = kwargs.get('max_close', None)
     dataset = kwargs.get('data')
+
+    TIMEOUT = 5
     is_SP500 = False
     vq = {}
 
@@ -497,15 +656,19 @@ def get_volatility(ticker_str: str, **kwargs):
                 response = requests.get(url, timeout=TIMEOUT)
             except:
                 print(
-                    f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                    f"{WARNING}Exception: VQ Server failed to respond on initial VQ inquiry. " +
+                    f"No data returned.{NORMAL}\r\n")
                 return vq
+
             try:
                 r = response.json()
             except:
                 r = {}
+
             if response.status_code != 200:
                 print("")
-                print(f"{WARNING}Volatility Quotient failed on {ticker_str} request: '{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}")
+                print(f"{WARNING}Volatility Quotient failed on {ticker_str} request: " +
+                      f"'{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}\r\n")
                 print("")
                 return vq
 
@@ -528,7 +691,8 @@ def get_volatility(ticker_str: str, **kwargs):
                 response = requests.get(url, timeout=TIMEOUT)
             except:
                 print(
-                    f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                    f"{WARNING}Exception: VQ Server failed to respond for ticker lookup. " +
+                    f"No data returned.{NORMAL}\r\n")
                 return vq
 
             r = response.json()
@@ -545,12 +709,14 @@ def get_volatility(ticker_str: str, **kwargs):
                     start_str = start.strftime('%Y-%m-%d')
                     now_str = now.strftime('%Y-%m-%d')
 
-                    url = f"{VQ_API_BASE_URL}{VQ_DEEP_ANALYSIS_PARAM}{key}/{val}/{start_str}/{now_str}"
+                    url = \
+                        f"{VQ_API_BASE_URL}{VQ_DEEP_ANALYSIS_PARAM}{key}/{val}/{start_str}/{now_str}"
                     try:
                         response = requests.get(url, timeout=TIMEOUT)
                     except:
                         print(
-                            f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                            f"{WARNING}Exception: VQ Server failed to respond for deep analysis. " +
+                            f"No data returned.{NORMAL}\r\n")
                         return vq
 
                     r = response.json()
@@ -567,6 +733,15 @@ def get_volatility(ticker_str: str, **kwargs):
 
 
 def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
+    """VQ Stop Out Check
+
+    Arguments:
+        dataset {pd.DataFrame} -- fund dataset
+        vq_obj {dict} -- volatility quotient object
+
+    Returns:
+        str -- 'OK' or 'Stopped Out' (or 'n/a') status
+    """
     stop_loss = vq_obj.get('stop_loss', 'n/a')
     max_date = vq_obj.get('last_max', {}).get('Date')
 
@@ -582,9 +757,19 @@ def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
     return 'OK'
 
 
-def vq_status_print(vq: dict, fund: str):
+def vq_status_print(vq: dict, fund: str) -> list:
+    """VQ Status Print
+
+    Arguments:
+        vq {dict} -- volatility quotient data object
+        fund {str} -- fund name
+
+    Returns:
+        list -- status message, status color, and % away from highest close
+    """
     if not vq:
         return
+
     last_max = vq.get('last_max', {}).get('Price')
     stop_loss = vq.get('stop_loss')
     latest = vq.get('latest_price')

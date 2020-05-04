@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from scipy.stats import linregress
 
@@ -127,6 +128,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     incr = 0.6 / float(len(bb_interval))
 
     state = [0.0] * len(ema)
+    features = []
 
     for bb in bb_interval:
         # Determine the slope of the bear power signal at given points
@@ -146,6 +148,9 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
             bull_slopes.append(reg[0])
 
         for i in range(1, len(ema)):
+            data = None
+            date = position.index[i].strftime("%Y-%m-%d")
+
             if ema_slopes[i] > 0.0:
                 if bear_bull['tabular']['bears'][i] < 0.0:
                     if bear_slopes[i] > 0.0:
@@ -156,6 +161,12 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
                             if position['Close'][i] < position['Close'][i-1]:
                                 # Need to find bullish divergence!
                                 state[i] += 1.0
+                                data = {
+                                    "type": 'bullish',
+                                    "value": f'bullish divergence: {bb}d interval',
+                                    "index": i,
+                                    "date": date
+                                }
 
             if ema_slopes[i] < 0.0:
                 if bear_bull['tabular']['bulls'][i] > 0.0:
@@ -163,13 +174,25 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
                         # Determine the basic (first 2 conditions) bearish state (+1)
                         state[i] += -1.0
                         if bear_bull['tabular']['bears'][i] < bear_bull['tabular']['bears'][i-1]:
-                            state[i] -= 0.5
+                            state[i] += -0.5
                             if position['Close'][i] > position['Close'][i-1]:
-                                # Need to find bullish divergence!
-                                state[i] -= 1.0
+                                # Need to find bearish divergence!
+                                state[i] += -1.0
+                                data = {
+                                    "type": 'bearish',
+                                    "value": f'bearish divergence: {bb}d interval',
+                                    "index": i,
+                                    "date": date
+                                }
+
+            if data is not None:
+                features.append(data)
 
         if p_bar is not None:
             p_bar.uptick(increment=incr)
+
+    bear_bull['signals'] = filter_features(features, plot_output=plot_output)
+    bear_bull['length_of_data'] = len(bear_bull['tabular']['bears'])
 
     weights = [1.0, 0.75, 0.45, 0.1]
 
@@ -201,7 +224,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
         dual_plotting(position['Close'], state4, 'Price',
                       'Bear Bull Power', title=title)
     else:
-        filename = name + f"/{view}" + f'/bear_bull_power_{name}'
+        filename = os.path.join(name, view, f"bear_bull_power_{name}.png")
         dual_plotting(position['Close'], state4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 
@@ -211,3 +234,30 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
         p_bar.uptick(increment=0.1)
 
     return bear_bull
+
+
+def filter_features(feature_list: list, plot_output=False) -> list:
+    """Filter Features
+
+    Many features are duplicates based off intervals above; only accept first one.
+
+    Arguments:
+        feature_list {list} -- list of features from feature detection above
+
+    Keyword Arguments:
+        plot_output {bool} -- (default: {False})
+
+    Returns:
+        list -- filtered feature list
+    """
+    feature_list.sort(key=lambda x: x['index'])
+    new_list = []
+    latest_index = 0
+    for feat in feature_list:
+        if feat['index'] != latest_index:
+            new_list.append(feat)
+            latest_index = feat['index']
+            if plot_output:
+                print(f"BearBullPower: {feat}")
+
+    return new_list

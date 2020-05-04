@@ -1,3 +1,4 @@
+import os
 import pprint
 import pandas as pd
 import numpy as np
@@ -34,11 +35,11 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
                            name=name, progress_bar=progress_bar, view=view)
 
     ao['tabular'] = signal
-    ao['features'] = ao_feature_detection(
+    ao['signals'] = ao_feature_detection(
         signal, position=position, progress_bar=progress_bar)
 
     plus_minus, x_index = integrator_differentiator(
-        ao['features'], position, plot_output)
+        ao['signals'], position, plot_output)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
@@ -47,6 +48,8 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
 
     ao = awesome_metrics(position, ao, plot_output=plot_output,
                          name=name, progress_bar=progress_bar, view=view)
+
+    ao['length_of_data'] = len(ao['tabular'])
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
@@ -92,11 +95,13 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
             mid_points, short_period, data_type='list')
         long_signal = simple_moving_avg(
             mid_points, long_period, data_type='list')
+
     elif filter_style == 'ema':
         short_signal = exponential_moving_avg(
             mid_points, short_period, data_type='list')
         long_signal = exponential_moving_avg(
             mid_points, long_period, data_type='list')
+
     else:
         short_signal = []
         long_signal = []
@@ -135,7 +140,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
                       'Awesome', 'Triggers'], 'Price')
         bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
     else:
-        filename = name + f"/{view}" + f'/awesome_bar_{name}'
+        filename = os.path.join(name, view, f"awesome_bar{name}")
         bar_chart(signal, position=position, x=x,
                   saveFig=True, filename=filename, title=name2, bar_delta=True)
 
@@ -146,6 +151,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
 
 
 def ao_signal_trigger(signal: list, medium: list, longer: list) -> list:
+    """ Triggers of various signals (experimental) """
     trigger = []
     for i, sig in enumerate(signal):
         if (sig > 0.0) and (medium[i] > 0.0) and (longer[i] > 0.0):
@@ -187,11 +193,23 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
     is_positive = signal[0] > 0.0
     for i, sig in enumerate(signal):
         if is_positive and (sig < 0.0):
-            feat = {'index': i, 'feature': 'zero crossover', 'type': 'bearish'}
+            date = position.index[i].strftime("%Y-%m-%d")
+            feat = {
+                'index': i,
+                'value': 'zero crossover',
+                'type': 'bearish',
+                "date": date
+            }
             features.append(feat)
             is_positive = False
         if (not is_positive) and (sig > 0.0):
-            feat = {'index': i, 'feature': 'zero crossover', 'type': 'bullish'}
+            date = position.index[i].strftime("%Y-%m-%d")
+            feat = {
+                'index': i,
+                'value': 'zero crossover',
+                'type': 'bullish',
+                "date": date
+            }
             features.append(feat)
             is_positive = True
 
@@ -199,12 +217,12 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
         p_bar.uptick(increment=0.1)
 
     # "Twin Peaks" feature detection
-    tpd = twin_peaks_detection(signal)
+    tpd = twin_peaks_detection(signal, position)
     for t in tpd:
         features.append(t)
 
     # "Saucer" feature detection
-    saucer = saucer_detection(signal)
+    saucer = saucer_detection(signal, position)
     for s in saucer:
         features.append(s)
 
@@ -216,7 +234,8 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
     return features
 
 
-def twin_peaks_detection(signal: list) -> list:
+def twin_peaks_detection(signal: list, position: pd.DataFrame) -> list:
+    """ Twin Peaks signal """
     tpd = []
 
     is_positive = signal[0] > 0.0
@@ -252,7 +271,13 @@ def twin_peaks_detection(signal: list) -> list:
                 if signal[i] < signal[i-1]:
                     # Condition found!
                     state = 'bear_peaks'
-                    tp = {'index': i, 'feature': 'twin peaks', 'type': 'bearish'}
+                    date = position.index[i].strftime("%Y-%m-%d")
+                    tp = {
+                        'index': i,
+                        'value': 'twin peaks',
+                        'type': 'bearish',
+                        "date": date
+                    }
                     tpd.append(tp)
             else:
                 max_ = signal[i]
@@ -282,7 +307,13 @@ def twin_peaks_detection(signal: list) -> list:
             if signal[i] > min_:
                 if signal[i] > signal[i-1]:
                     state = 'bull_peaks'
-                    tp = {'index': i, 'feature': 'twin peaks', 'type': 'bullish'}
+                    date = position.index[i].strftime("%Y-%m-%d")
+                    tp = {
+                        'index': i,
+                        'value': 'twin peaks',
+                        'type': 'bullish',
+                        "date": date
+                    }
                     tpd.append(tp)
             else:
                 min_ = signal[i]
@@ -297,7 +328,8 @@ def twin_peaks_detection(signal: list) -> list:
     return tpd
 
 
-def saucer_detection(signal: list) -> list:
+def saucer_detection(signal: list, position: pd.DataFrame) -> list:
+    """ Saucer feature detection """
     sd = []
     if signal[0] > 0.0:
         state = 'pos'
@@ -326,7 +358,13 @@ def saucer_detection(signal: list) -> list:
                 state = 'neg'
             elif signal[i] > signal[i-1]:
                 state = 'pos'
-                s = {'index': i, 'feature': 'saucer', 'type': 'bullish'}
+                date = position.index[i].strftime("%Y-%m-%d")
+                s = {
+                    'index': i,
+                    'value': 'saucer',
+                    'type': 'bullish',
+                    "date": date
+                }
                 sd.append(s)
             continue
 
@@ -351,7 +389,13 @@ def saucer_detection(signal: list) -> list:
                 state = 'pos'
             elif signal[i] < signal[i-1]:
                 state = 'neg'
-                s = {'index': i, 'feature': 'saucer', 'type': 'bearish'}
+                date = position.index[i].strftime("%Y-%m-%d")
+                s = {
+                    'index': i,
+                    'value': 'saucer',
+                    'type': 'bearish',
+                    "date": date
+                }
                 sd.append(s)
             continue
 
@@ -359,16 +403,19 @@ def saucer_detection(signal: list) -> list:
 
 
 def integrator_differentiator(features: list, position: pd.DataFrame, plot_output: bool, name='') -> list:
+    """ Integrator Differentiator (experimental) """
     base = int(max(position['Close']) / 20.0)
 
     plus_minus = []
     x_vals = []
     current_value = 0
+
     for feat in features:
         if feat['type'] == 'bullish':
             current_value += base
             plus_minus.append(current_value)
             x_vals.append(feat['index'])
+
         if feat['type'] == 'bearish':
             current_value -= base
             plus_minus.append(current_value)
@@ -448,12 +495,12 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
         metrics4.append(met + ao_signal[i])
 
     changes = []
-    min_ = min(metrics4) + 1.0
+    min_ = 1.0 - min(metrics4)
     for _ in range(period_change):
         changes.append(0.0)
     for i in range(period_change, len(metrics4)):
         c = (((metrics4[i] + min_) /
-              (metrics4[i-period_change] + min_)) - 1.0) * 100.0
+              (metrics4[i-period_change] + min_)) - min_) * 100.0
         changes.append(c)
 
     ao_dict['metrics'] = metrics4
@@ -464,7 +511,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics4,
                       'Price', 'Metrics', title=title)
     else:
-        filename = name + f"/{view}" + f'/awesome_metrics_{name}'
+        filename = os.path.join(name, view, f"awesome_metrics_{name}.png")
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
                       saveFig=True, filename=filename)
 

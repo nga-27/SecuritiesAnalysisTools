@@ -1,3 +1,4 @@
+import os
 import warnings
 import pprint
 import math
@@ -6,7 +7,6 @@ import numpy as np
 from datetime import datetime
 from scipy.stats import linregress
 
-from .math_functions import linear_regression
 from .moving_average import simple_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
 from libs.utils import STANDARD_COLORS
@@ -50,16 +50,29 @@ def get_trend(position: pd.DataFrame, **kwargs) -> dict:
     if style == 'sma':
         trend['tabular'] = simple_moving_avg(
             position, ma_size, data_type='list')
+
         trend['difference'] = difference_from_trend(position, trend['tabular'])
+
         trend['magnitude'] = trend_of_dates(
             position, trend_difference=trend['difference'], dates=date_range)
+
         trend['method'] = f'SMA-{ma_size}'
 
     return trend
 
 
 def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
-    """ Simple difference of close from trend values """
+    """Difference from Trend
+
+    Simple difference of close from trend values 
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        trend {list} -- given trend
+
+    Returns:
+        list -- difference, point by point
+    """
     diff_from_trend = []
     for i in range(len(trend)):
         diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
@@ -86,10 +99,12 @@ def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) 
         # Trend of entire period provided
         trend = np.round(np.average(trend_difference), 6)
         overall_trend = trend
+
     else:
         i = 0
         d_start = datetime.strptime(dates[0], '%Y-%m-%d')
         d_match = datetime.strptime(position['Date'][0], '%Y-%m-%d')
+
         while ((i < len(position['Date'])) and (d_start > d_match)):
             i += 1
             d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
@@ -97,6 +112,7 @@ def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) 
         start = i
         d_end = datetime.strptime(dates[1], '%Y-%m-%d')
         d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
+
         while ((i < len(position['Date'])) and (d_end > d_match)):
             i += 1
             if i < len(position['Date']):
@@ -110,8 +126,22 @@ def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) 
     return overall_trend
 
 
-def get_trend_analysis(position: pd.DataFrame, date_range: list = [], config=[50, 25, 12]) -> dict:
-    """ Determines long, med, and short trend of a position """
+def get_trend_analysis(position: pd.DataFrame,
+                       config: list = [50, 25, 12]) -> dict:
+    """Get Trend Analysis
+
+    Determines long, med, and short trend of a position
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+
+    Keyword Arguments:
+        config {list} -- list of moving average lookbacks, longest to shortest
+                         (default: {[50, 25, 12]})
+
+    Returns:
+        dict -- trend notes
+    """
     tlong = get_trend(position, style='sma', ma_size=config[0])
     tmed = get_trend(position, style='sma', ma_size=config[1])
     tshort = get_trend(position, style='sma', ma_size=config[2])
@@ -135,35 +165,36 @@ def get_trend_analysis(position: pd.DataFrame, date_range: list = [], config=[50
     else:
         trend_analysis['report'] += 'DOWNWARD'
 
-    if ((trend_analysis['short'] > 0.0) and (trend_analysis['medium'] > 0.0) and (trend_analysis['long'] < 0.0)):
+    if ((trend_analysis['short'] > 0.0) and (trend_analysis['medium'] > 0.0) and
+            (trend_analysis['long'] < 0.0)):
         trend_analysis['report'] += ', rebounding from BOTTOM'
 
-    if ((trend_analysis['short'] < 0.0) and (trend_analysis['medium'] < 0.0) and (trend_analysis['long'] > 0.0)):
+    if ((trend_analysis['short'] < 0.0) and (trend_analysis['medium'] < 0.0) and
+            (trend_analysis['long'] > 0.0)):
         trend_analysis['report'] += ', falling from TOP'
 
     return trend_analysis
 
 
 def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
-    """
-    Get Trendlines
+    """Get Trendlines
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
 
-    optional args:
-        name:           (str) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        interval:       (list) list of windowed filter time periods; DEFAULT=[4, 8, 16, 32]
-        progress_bar:   (ProgressBar) DEFAULT=None
-        sub_name:       (str) file extension within 'name' directory; DEFAULT=name
-        view:           (str) directory of plots; DEFAULT=''
-        meta:           (dict) 'metadata' object for fund; DEFAULT=None
-        out_suppress:   (bool) if True, skips plotting; DEFAULT=False
-        trend_window:   (list) list of line time windows; DEFAULT=[163, 91, 56, 27]
+    Optional Args:
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        interval {list} -- list of windowed filter time periods (default: {[4, 8, 16, 32]})
+        progress_bar {ProgressBar} -- (default: {None})
+        sub_name {str} -- file extension within 'name' directory (default: {name})
+        view {str} -- directory of plots (default: {''})
+        meta {dict} -- 'metadata' object for fund (default: {None})
+        out_suppress {bool} -- if True, skips plotting (default: {False})
+        trend_window {list} -- line time windows (default: {[163, 91, 56, 27]})
 
-    returns:
-        trends:         (dict) contains all trend lines determined by algorithm
+    Returns:
+        trends {dict} -- contains all trend lines determined by algorithm
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -203,7 +234,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
                                  data_type='list', filter_type='exponential')
         ex = find_filtered_local_extrema(ma)
         r = reconstruct_extrema(
-            fund['Close'], extrema=ex, ma_size=ma_size, ma_type='windowed')
+            fund, extrema=ex, ma_size=ma_size, ma_type='windowed')
 
         # Cleanse data sample for duplicates and errors
         r = remove_duplicates(r, method='point')
@@ -258,21 +289,25 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     Y = []
     C = []
     L = []
+
     for i, x in enumerate(X0):
         X.append(x)
         Y.append(Y0[i])
         C.append('blue')
         L.append('long')
+
     for i, x in enumerate(X1):
         X.append(x)
         Y.append(Y1[i])
         C.append('green')
         L.append('intermediate')
+
     for i, x in enumerate(X2):
         X.append(x)
         Y.append(Y2[i])
         C.append('orange')
         L.append('short')
+
     for i, x in enumerate(X3):
         X.append(x)
         Y.append(Y3[i])
@@ -298,13 +333,15 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
 
     if not out_suppress:
         try:
+            title = f"{name2} Trend Lines for {near_term}, {short_term}, " + \
+                f"{intermediate_term}, and {long_term} Periods"
             if plot_output:
                 generic_plotting(Y, x=X, colors=C,
-                                 title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods")
+                                 title=title)
             else:
-                filename = f"{name}/{view}/{sub_name}.png"
+                filename = os.path.join(name, view, f"{sub_name}.png")
                 generic_plotting(Y, x=X, colors=C,
-                                 title=f"{name2} Trend Lines for {near_term}, {short_term}, {intermediate_term}, and {long_term} Periods",
+                                 title=title,
                                  saveFig=True, filename=filename)
 
         except:
@@ -334,8 +371,20 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwargs) -> list:
-    # print(f"Get Trendlines for period: {interval}")
+    """Get Lines from Period
 
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        kargs {list} -- mins and maxes of x and y lists
+        interval {int} -- period of time for a lookback of a trend
+
+    Optional Args:
+        vq {dict} -- volatility quotient, used to determine if a trendline is still valid at the
+                     end of the period by providing a volatility threshold (default: {0.06})
+
+    Returns:
+        list -- list of trendlines given the period
+    """
     vq = kwargs.get('vq', 0.06)
 
     EXTENSION = interval
@@ -449,7 +498,18 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
 
 
 def line_extender(fund: pd.DataFrame, x_range: list, reg_vals: list) -> int:
-    """ returns the end of a particular trend line. returns 0 if segment should be omitted """
+    """Line Extender
+
+    returns the end of a particular trend line. returns 0 if segment should be omitted
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        x_range {list} -- applicable x data points
+        reg_vals {list} -- linear regression values
+
+    Returns:
+        int -- new endpoint to end the inspected trendline
+    """
     slope = reg_vals[0]
     intercept = reg_vals[1]
     max_len = len(fund['Close'])
@@ -463,7 +523,7 @@ def line_extender(fund: pd.DataFrame, x_range: list, reg_vals: list) -> int:
                     # Original trendline was not good enough - omit
                 return 0
         # Now that original trendline is good, find ending
-        """ since we have 'line_reducer', send the maximum and let reducer fix it """
+        # Since we have 'line_reducer', send the maximum and let reducer fix it
         return max_len
 
     else:
@@ -475,14 +535,29 @@ def line_extender(fund: pd.DataFrame, x_range: list, reg_vals: list) -> int:
                 # Original trendline was not good enough - omit
                 return 0
         # Now that original trendline is good, find ending
-        """ since we have 'line_reducer', send the maximum and let reducer fix it """
+        # since we have 'line_reducer', send the maximum and let reducer fix it
         return max_len
 
     return end_pt
 
 
-def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) -> int:
-    """ returns shortened lines that protrude far away from overall fund price (to not distort plots) """
+def line_reducer(fund: pd.DataFrame, last_x_pt: int, reg_vals: list, threshold=0.05) -> int:
+    """Line Extender
+
+    returns shortened lines that protrude far away from overall fund price (to not distort plots)
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        last_x_pt {int} -- calculated last x point (from line_extender)
+        reg_vals {list} -- linear regression values
+
+    Keyword Arguments:
+        threshold {float} -- +/- threshold to see if trend is still valid at last point
+                             (default: {0.05})
+
+    Returns:
+        int -- new endpoint to end the inspected trendline
+    """
     slope = reg_vals[0]
     intercept = reg_vals[1]
     top_thresh = 1.0 + threshold
@@ -493,10 +568,13 @@ def line_reducer(fund: pd.DataFrame, last_x_pt, reg_vals: list, threshold=0.05) 
         x_pt = len(fund['Close'])
 
     last_pt = intercept + slope * x_pt
-    if (last_pt <= (top_thresh * fund['Close'][x_pt-1])) and (last_pt >= (bot_thresh * fund['Close'][x_pt-1])):
+    if (last_pt <= (top_thresh * fund['Close'][x_pt-1])) and \
+            (last_pt >= (bot_thresh * fund['Close'][x_pt-1])):
         return x_pt
+
     else:
-        while (x_pt-1 > 0) and (((last_pt > (top_thresh * fund['Close'][x_pt-1]))) or (last_pt < (bot_thresh * fund['Close'][x_pt-1]))):
+        while (x_pt-1 > 0) and (((last_pt > (top_thresh * fund['Close'][x_pt-1]))) or
+                                (last_pt < (bot_thresh * fund['Close'][x_pt-1]))):
             x_pt -= 1
             last_pt = intercept + slope * x_pt
 
@@ -508,6 +586,18 @@ def generate_analysis(fund: pd.DataFrame,
                       y_list: list,
                       len_list: list,
                       color_list: list) -> list:
+    """Generate Analysis
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        x_list {list} -- list of x-value lists
+        y_list {list} -- list of y-value lists
+        len_list {list} -- list of trendline lengths
+        color_list {list} -- list of colors, associated with each trendline
+
+    Returns:
+        list -- list of analysis data objects
+    """
     analysis = []
 
     for i, x in enumerate(x_list):
@@ -550,12 +640,23 @@ def generate_analysis(fund: pd.DataFrame,
 
 
 def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: dict) -> dict:
+    """Attribute Analysis
 
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        x_list {list} -- list of trendline x values
+        y_list {list} -- list of trendline y values
+        content {dict} -- trendline content data object
+
+    Returns:
+        dict -- trendline content data object
+    """
     touches = []
     if fund['Close'][x_list[0]] >= y_list[0]:
         state = 'above'
     else:
         state = 'below'
+
     for i, x in enumerate(x_list):
         if state == 'above':
             if fund['Close'][x] < y_list[i]:
@@ -565,6 +666,7 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
             if fund['Close'][x] == y_list[i]:
                 touches.append(
                     {'index': x, 'price': fund['Close'][x], 'type': 'touch', 'state': 'above'})
+
         else:
             if fund['Close'][x] >= y_list[i]:
                 state = 'above'
@@ -585,6 +687,7 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
         b_start_index = x_list[0]
         b_stop_index = x_list[0]
         state = 'above'
+
         for touch in touches:
             if touch['type'] == 'cross' and touch['state'] == 'below':
                 # End of a valid period
@@ -625,6 +728,7 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
             v['end']['index'] = v_stop_index
             v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
             valid.append(v)
+
         else:
             b_stop_index = x_list[len(x_list)-1]
             b = {'start': {}, 'end': {}}
@@ -641,6 +745,7 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
         b_start_index = x_list[0]
         b_stop_index = x_list[0]
         state = 'below'
+
         for touch in touches:
             if touch['type'] == 'cross' and touch['state'] == 'above':
                 # End of a valid period
@@ -681,6 +786,7 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
             v['end']['index'] = v_stop_index
             v['end']['date'] = fund.index[v_stop_index].strftime("%Y-%m-%d")
             valid.append(v)
+
         else:
             b_stop_index = x_list[len(x_list)-1]
             b = {'start': {}, 'end': {}}
@@ -696,19 +802,31 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
     return content
 
 
-""" Forecasters for trendlines - more 'future' development """
+#############################################################
+# Forecasters for trendlines - more 'future' development
+#############################################################
 
 
-def trend_simple_forecast(trend: dict, future_periods: list = [5, 10, 20], return_type='price') -> dict:
-    """
-    args:
-        trend:              dict -> each trend is a dict created by generate analysis / attribute analysis
-        future_periods:     list -> trading periods FROM last date of trend; if not a 'current' trend, ensure that
-                                    each future period is far enough in the future to be relevant to the present
-        return_type:        str ->  various return types possible: 'price' (primarily)
+def trend_simple_forecast(trend: dict,
+                          future_periods: list = [5, 10, 20],
+                          return_type='price') -> dict:
+    """Trend Simple Forecast
+
+    Arguments:
+        trend {dict} each trend is a dict created by generate analysis / attribute analysis
+
+    Keyword Arguments:
+        future_periods {list} -- trading periods FROM last date of trend; if not a 'current' trend,
+                                 ensure that each future period is far enough in the future to be
+                                 relevant to the present (default: {[5, 10, 20]})
+        return_type {str} -- various return types possible (default: {'price'})
+
+    Returns:
+        dict -- forecast data object
     """
     forecast = {'return_type': return_type,
                 'periods': future_periods, 'returns': []}
+
     if return_type == 'price':
         # Likely will be only return_type
         slope = trend['slope']
@@ -723,21 +841,22 @@ def trend_simple_forecast(trend: dict, future_periods: list = [5, 10, 20], retur
 
 
 def autotrend(data, **kwargs) -> list:
-    """
-    A more simplistic trend-determiner. Takes a dataset, finds "trend" for each listed period of "periods" and
-    returns either a 'slope' or other for all points in data.
+    """Autotrend
 
-    args:
-        data:           (list, pd.DataFrame) data to find trends at each point
+    A more simplistic trend-determiner. Takes a dataset, finds "trend" for each listed period of
+    "periods" and returns either a 'slope' or other for all points in data.
 
-    optional args:
-        periods:        (list) look-back periods for trend analysis; DEFAULT=[]
-        weights:        (list) weighting for look-back periods; DEFAULT=[]
-        return_type:    (str) type of item to return in list; DEFAULT='slope'
-        normalize:      (bool) True normalizes to max/min slopes; DEFAULT=False
+    Arguments:
+        data {list, pd.DataFrame} -- data to find trends at each point
 
-    returns:
-        trends:         (list) list of items desired in 'return_type'
+    Optional Args:
+        periods {list} -- look-back periods for trend analysis (default: {[]})
+        weights {list -- weighting for look-back periods (default: {[]})
+        return_type {str} -- type of item to return in list (default: {'slope'})
+        normalize {bool} -- True normalizes to max/min slopes (default: {False})
+
+    Returns:
+        list -- list of items desired in 'return_type'
     """
     periods = kwargs.get('periods', [])
     weights = kwargs.get('weights', [])
@@ -786,7 +905,22 @@ DIVISORS = [4, 5, 7, 9, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
 
 
 def get_trendlines_regression(signal: list, **kwargs) -> dict:
+    """Get Trendlines Regression
 
+    A regression-only based method of generating trendlines (w/o use of local minima and maxima).
+
+    Arguments:
+        signal {list} -- signal of which to find a trend (can be anything)
+
+    Optional Args:
+        iterations {int} -- number of types through trendline creation with "divisors"
+                            (default: {15})
+        threshold {float} -- acceptable ratio a trendline can be off and still counted in current
+                             plot (default: {0.1})
+
+    Returns:
+        dict -- trendline content
+    """
     iterations = kwargs.get('iterations', 15)
     threshold = kwargs.get('threshold', 0.1)
 

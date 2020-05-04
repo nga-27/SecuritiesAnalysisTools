@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 
@@ -5,30 +6,31 @@ from .moving_average import exponential_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 from libs.features import normalize_signals
 from libs.utils import ProgressBar, SP500
-from libs.utils import TREND_COLORS, TEXT_COLOR_MAP
+from libs.utils import TREND_COLORS, STANDARD_COLORS
 
 
 RED = TREND_COLORS.get('bad')
 YELLOW = TREND_COLORS.get('hold')
 GREEN = TREND_COLORS.get('good')
-NORMAL = TEXT_COLOR_MAP.get('white')
+
+NORMAL = STANDARD_COLORS.get('normal')
+WARNING = STANDARD_COLORS.get('warning')
 
 
 def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
-    """
-    Moving Average Convergence Divergence (MACD)
+    """Moving Average Convergence Divergence (MACD)
 
-    args:
-        fund:           (pd.DataFrame) fund historical data
+    Arguments:
+        fund {pd.DataFrame} -- fund historical data
 
-    optional args:
-        name:           (list) name of fund, primarily for plotting; DEFAULT=''
-        plot_output:    (bool) True to render plot in realtime; DEFAULT=True
-        progress_bar:   (ProgressBar) DEFAULT=None
+    Optional Args:
+        name {str} -- name of fund, primarily for plotting (default: {''})
+        plot_output {bool} -- True to render plot in realtime (default: {True})
+        progress_bar {ProgressBar} -- (default: {None})
         view {str} -- directory of plots (default: {''})
 
-    returns:
-        macd:           (dict) contains all ma information in regarding macd
+    Returns:
+        dict -- contains all macd information in regarding macd
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
@@ -56,7 +58,7 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
         print_macd_statistics(macd)
 
     else:
-        filename = name + f"/{view}" + '/macd_{}.png'.format(name)
+        filename = os.path.join(name, view, f"macd_{name}.png")
         dual_plotting(fund['Close'], [macd_sig, sig_line], 'Position Price',
                       ['MACD', 'Signal Line'], title=name2, saveFig=True, filename=filename)
 
@@ -64,6 +66,8 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.3)
 
     macd['type'] = 'oscillator'
+    macd['signals'] = get_macd_features(macd, fund)
+    macd['length_of_data'] = len(macd['tabular']['macd'])
 
     return macd
 
@@ -75,7 +79,7 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     'signal' = macd(ema(9))
 
     Arguments:
-        fund {pd.DataFrame}
+        fund {pd.DataFrame} -- fund dataset
 
     Keyword Arguments:
         plotting {bool} -- (default: {True})
@@ -116,7 +120,7 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     if plotting:
         bar_chart(m_bar, position=fund, x=x, title=name2)
     else:
-        filename = name + f"/{view}" + '/macd_bar_{}.png'.format(name)
+        filename = os.path.join(name, view, f"macd_bar_{name}.png")
         bar_chart(m_bar, position=fund, x=x, title=name2,
                   saveFig=True, filename=filename)
 
@@ -197,11 +201,132 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], metrics,
                       'Price', 'Metrics', title=name2)
     else:
-        filename = name + f"/{view}" + f"/macd_metrics_{name}.png"
+        filename = os.path.join(name, view, f"macd_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=name2, saveFig=True, filename=filename)
 
     return macd
+
+
+def get_macd_features(macd: dict, position: pd.DataFrame) -> list:
+    """Get MACD Features
+
+    Arguments:
+        macd {dict} -- macd data object
+        position {pd.DataFrame} -- fund dataset
+
+    Returns:
+        list -- list of feature dictionaries
+    """
+    features = []
+
+    # Copy divergence features into "features" list
+    for div in macd['indicators']:
+        date = position.index[div['index']].strftime("%Y-%m-%d")
+        data = {
+            "type": div['type'],
+            "value": "divergence",
+            "index": div['index'],
+            "date": date
+        }
+        features.append(data)
+
+    # Look for zero-crossing in raw MACD signal
+    macd_raw = macd['tabular']['macd']
+    state = 'n'
+    for i, mac in enumerate(macd_raw):
+        data = None
+        date = position.index[i].strftime("%Y-%m-%d")
+
+        if state == 'n':
+            if mac > 0.0:
+                state = 'u1'
+
+            elif mac < 0.0:
+                state = 'e1'
+
+        elif state == 'u1':
+            if mac < 0.0:
+                state = 'e1'
+            else:
+                state = 'u2'
+                data = {
+                    "type": 'bullish',
+                    "value": 'zero crossing: raw MACD',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'e1':
+            if mac > 0.0:
+                state = 'u1'
+            else:
+                state = 'e2'
+                data = {
+                    "type": 'bearish',
+                    "value": 'zero crossing: raw MACD',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'u2':
+            if mac < 0.0:
+                state = 'e1'
+        elif state == 'e2':
+            if mac > 0.0:
+                state = 'u1'
+
+        if data is not None:
+            features.append(data)
+
+    bar = macd['tabular']['bar']
+    state = 'n'
+    for i, mac in enumerate(bar):
+        data = None
+        date = position.index[i].strftime("%Y-%m-%d")
+
+        if state == 'n':
+            if mac > 0.0:
+                state = 'u'
+                data = {
+                    "type": 'bullish',
+                    "value": 'zero crossing: MACD & signal line',
+                    "index": i,
+                    "date": date
+                }
+            elif mac < 0.0:
+                state = 'e'
+                data = {
+                    "type": 'bearish',
+                    "value": 'zero crossing: MACD & signal line',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'u':
+            if mac < 0.0:
+                state = 'e'
+                data = {
+                    "type": 'bearish',
+                    "value": 'zero crossing: MACD & signal line',
+                    "index": i,
+                    "date": date
+                }
+
+        elif state == 'e':
+            if mac < 0.0:
+                state = 'u'
+                data = {
+                    "type": 'bullish',
+                    "value": 'zero crossing: MACD & signal line',
+                    "index": i,
+                    "date": date
+                }
+
+        if data is not None:
+            features.append(data)
+
+    return features
 
 
 def get_macd_statistics(macd: dict, **kwargs) -> dict:
@@ -319,6 +444,7 @@ def get_macd_state(macd: list) -> list:
 
 
 def has_crossover(signal: list, interval=3) -> str:
+    """ Check if a 0 crossing occurred in last 'interval' periods """
     if (signal[-1] > 0.0) and (signal[-1-interval] < 0.0):
         return 'crossover_bullish', GREEN
     elif (signal[-1] < 0.0) and (signal[-1-interval] > 0.0):
@@ -353,6 +479,7 @@ def get_group_duration_factor(signal: list, index: int, f_type='signal') -> floa
 
 
 def get_group_max(signal: list, index=-1) -> float:
+    """ Get group max of a specified range """
     if index == -1:
         index = len(signal)-1
     start, end, _ = get_group_range(signal, index)
@@ -361,6 +488,7 @@ def get_group_max(signal: list, index=-1) -> float:
 
 
 def get_macd_value(macd: list, value_type='current', index=-1) -> float:
+    """ Get MACD value to display in single function printout """
     if value_type == 'current':
         macd_max = np.max(np.abs(macd))
         return macd[-1] / macd_max * 100.0
@@ -427,6 +555,7 @@ def get_group_range(signal: list, index: int) -> list:
 
 
 def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
+    """ Get MACD Trend as a simple point-slope form """
     if trend_type == 'current':
         if macd[len(macd)-1] > macd[len(macd)-2]:
             return 'rising'
@@ -438,6 +567,7 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
             state = 1
         else:
             state = 0
+
         if state == 1:
             i = len(macd)-2
             group_size = 0
@@ -453,6 +583,7 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                 return 'rising'
             else:
                 return 'falling'
+
         else:
             i = len(macd)-2
             group_size = 0
@@ -470,13 +601,28 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                 return 'falling'
 
     else:
-        print("WARNING - no valid 'trend_type' provided in 'get_macd_trend'")
+        print(
+            f"{WARNING}WARNING - no valid 'trend_type' provided in 'get_macd_trend'.{NORMAL}")
         return None
 
 
 def macd_divergences(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
+    """MACD Divergences
 
+    Discover any MACD divergences with price
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        macd {dict} -- macd data object
+
+    Optional Args:
+        omit {int} -- starting index, so omit up to index (default: {0})
+
+    Returns:
+        dict -- macd data object
+    """
     omit = kwargs.get('omit', 0)
+
     macd['indicators'] = []
     state = 'n'
     prices = [0.0, 0.0]
