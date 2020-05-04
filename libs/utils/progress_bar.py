@@ -10,6 +10,8 @@ BAR_COLOR = TEXT_COLOR_MAP["white"]
 NORMAL = STANDARD_COLORS["normal"]
 FUND_COLOR = TEXT_COLOR_MAP["cyan"]
 
+EFFECTIVE_TIME_START = 120
+
 
 class ProgressBar(object):
     """ProgressBar
@@ -102,16 +104,9 @@ class ProgressBar(object):
             self.clock = np.round(
                 time.time() - self.start_time, 0)
 
-            if effective_length < 120:
-                stopwatch = f"\t{self.clock}s"
-            if effective_length < 112:
-                stopwatch = f"\t\t{self.clock}s"
-            if effective_length < 104:
-                stopwatch = f"\t\t\t{self.clock}s"
-            if effective_length < 96:
-                stopwatch = f"\t\t\t\t{self.clock}s"
-            if effective_length < 88:
-                stopwatch = f"\t\t\t\t\t{self.clock}s"
+            num_spaces = EFFECTIVE_TIME_START - effective_length
+            stopwatch = " " * num_spaces
+            stopwatch += f"{self.clock}s"
 
         pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} " + \
             f"{percent}% {suffix}{stopwatch}"

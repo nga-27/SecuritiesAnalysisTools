@@ -9,7 +9,7 @@ from libs.utils import TEXT_COLOR_MAP
 
 ################################
 _DEV_VERSION_ = '0.2.02'
-_DATE_REVISION_DEV_ = '2020-05-03'
+_DATE_REVISION_DEV_ = '2020-05-04'
 ################################
 PROCESS_STEPS_DEV = 24
 PROCESS_STEPS_PROD = 24
