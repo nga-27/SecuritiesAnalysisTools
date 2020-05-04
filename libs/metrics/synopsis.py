@@ -142,7 +142,7 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
 
 
 def strings_to_tabs(string: str, style='default') -> str:
-    """Strings to Tabs
+    """Strings to Tabs (now spaces)
 
     Applies a number of tabs to best create a fake column in terminal
 
@@ -159,35 +159,11 @@ def strings_to_tabs(string: str, style='default') -> str:
         LENGTH_KEY = 42
         space_len = LENGTH_KEY - len(string)
         tabs = " " * space_len
-        # if len(string) < 7:
-        #     tabs = '\t\t\t\t\t'
-        # elif len(string) < 12:
-        #     tabs = '\t\t\t\t'
-        # elif len(string) < 15:
-        #     tabs = '\t\t\t\t'
-        # elif len(string) < 23:
-        #     tabs = '\t\t\t'
-        # elif len(string) < 30:
-        #     tabs = '\t\t'
-        # else:
-        #     tabs = '\t'
 
     elif style == 'percent':
         LENGTH_KEY = 20
         space_len = LENGTH_KEY - len(string)
         tabs = " " * space_len
-        # if len(string) < 7:
-        #     tabs = '\t\t\t'
-        # elif len(string) < 12:
-        #     tabs = '\t\t'
-        # elif len(string) < 15:
-        #     tabs = '\t\t'
-        # elif len(string) < 23:
-        #     tabs = '\t'
-        # elif len(string) < 30:
-        #     tabs = ''
-        # else:
-        #     tabs = ''
 
     else:
         return ''
