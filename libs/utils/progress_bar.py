@@ -95,19 +95,22 @@ class ProgressBar(object):
             f"{percent}% {suffix}"
         self.length_of_bar = len(pBar)
 
+        effective_length = len(f" {obj} {prefix} |{bar}| {percent}% {suffix}")
+
         stopwatch = ""
         if self.show_clock:
             self.clock = np.round(
                 time.time() - self.start_time, 0)
-            if self.length_of_bar < 149:
+
+            if effective_length < 120:
                 stopwatch = f"\t{self.clock}s"
-            if self.length_of_bar < 141:
+            if effective_length < 112:
                 stopwatch = f"\t\t{self.clock}s"
-            if self.length_of_bar < 133:
+            if effective_length < 104:
                 stopwatch = f"\t\t\t{self.clock}s"
-            if self.length_of_bar < 125:
+            if effective_length < 96:
                 stopwatch = f"\t\t\t\t{self.clock}s"
-            if self.length_of_bar < 117:
+            if effective_length < 88:
                 stopwatch = f"\t\t\t\t\t{self.clock}s"
 
         pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} " + \

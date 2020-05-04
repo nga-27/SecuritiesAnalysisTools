@@ -60,5 +60,6 @@ def output_to_json(data: dict, exclude_tabular=True):
 
     with open(filename, 'w') as f:
         json.dump(meta, f)
+        f.close()
 
     print('\r\nJSON output complete.')

@@ -8,7 +8,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from libs.utils import fund_list_extractor, windows_compatible_file_parse, SP500
+from libs.utils import fund_list_extractor, SP500
 from libs.tools import trend_simple_forecast
 
 from .slide_utils import slide_title_header, color_to_RGB, pptx_ui_errors
@@ -288,14 +288,9 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
     views = kwargs.get('views', '')
 
     header, _ = os.path.split(globs[0])
-    # parts = windows_compatible_file_parse(globs[0])
-    # header = parts[0] + '/' + parts[1] + '/' + parts[2] + '/' + parts[3] + '/'
 
     for globber in globs:
 
-        globbed = windows_compatible_file_parse(globber)
-
-        # part = globbed[4]
         _, part = os.path.split(globber)
         picture = os.path.join(header, part)
 
