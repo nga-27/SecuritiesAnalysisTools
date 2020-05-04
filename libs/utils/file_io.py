@@ -53,7 +53,7 @@ def windows_compatible_file_parse(extension: str, **kwargs) -> list:
         bad_parse {str} -- rendered extension to correct (default: {'\\'})
 
     Returns:
-        list -- [description]
+        list -- list of file path components
     """
     parser = kwargs.get('parser', '/')
     desired_len = kwargs.get('desired_len', 4)

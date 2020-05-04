@@ -52,5 +52,6 @@ def color_to_RGB_array(color: str, suppress=True):
 
 
 def horizontal_spacer(pdf, height: float):
+    """ Wrapper to create a horizontal line spacing """
     pdf.ln(height)
     return pdf

@@ -656,16 +656,19 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
                 response = requests.get(url, timeout=TIMEOUT)
             except:
                 print(
-                    f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                    f"{WARNING}Exception: VQ Server failed to respond on initial VQ inquiry. " +
+                    f"No data returned.{NORMAL}\r\n")
                 return vq
+
             try:
                 r = response.json()
             except:
                 r = {}
+
             if response.status_code != 200:
                 print("")
                 print(f"{WARNING}Volatility Quotient failed on {ticker_str} request: " +
-                      f"'{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}")
+                      f"'{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}\r\n")
                 print("")
                 return vq
 
@@ -688,7 +691,8 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
                 response = requests.get(url, timeout=TIMEOUT)
             except:
                 print(
-                    f"{WARNING}Exception: VQ Server failed to respond. No data returned.{NORMAL}")
+                    f"{WARNING}Exception: VQ Server failed to respond for ticker lookup. " +
+                    f"No data returned.{NORMAL}\r\n")
                 return vq
 
             r = response.json()
@@ -711,8 +715,8 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
                         response = requests.get(url, timeout=TIMEOUT)
                     except:
                         print(
-                            f"{WARNING}Exception: VQ Server failed to respond. " +
-                            f"No data returned.{NORMAL}")
+                            f"{WARNING}Exception: VQ Server failed to respond for deep analysis. " +
+                            f"No data returned.{NORMAL}\r\n")
                         return vq
 
                     r = response.json()
