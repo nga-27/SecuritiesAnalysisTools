@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from mpl_finance import candlestick_ochl
 
 from pandas.plotting import register_matplotlib_converters
 
