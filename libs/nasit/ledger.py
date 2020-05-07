@@ -18,7 +18,8 @@ def generate_fund_from_ledger(ledger_name: str):
     content = extract_from_format(ledger)
     content = create_fund(content)
 
-    generic_plotting([content['tabular']])
+    generic_plotting([content['price'], content['bench']],
+                     title=content['title'], ylabel='Price', x=content['raw']['^GSPC'].index)
 
 
 def extract_from_format(ledger: pd.DataFrame) -> dict:
@@ -43,8 +44,8 @@ def extract_from_format(ledger: pd.DataFrame) -> dict:
     controller = {
         'start': content['start_date'],
         'end': content['end_date'],
-        'tickers': tickers,
-        'ticker print': ticker_str
+        'tickers': tickers + ' ^GSPC',
+        'ticker print': ticker_str + ', and S&P500'
     }
 
     data, _indexes = download_data(
@@ -89,7 +90,7 @@ def create_fund(content: dict) -> dict:
     temp_tick = ledger['Stock'][0]
     composite = {
         '_cash_': {
-            'value': [content['start_capital']] * len(data[temp_tick])
+            'value': [content['start_capital']] * len(data[temp_tick]['Close'])
         }
     }
 
@@ -131,13 +132,30 @@ def create_fund(content: dict) -> dict:
     content['details'] = composite
 
     value = []
-    for i in range(len(data[temp_tick])):
+    for i in range(len(data[temp_tick]['Close'])):
         val = 0.0
         for ticker in composite:
             val += composite[ticker]['value'][i]
         value.append(val)
 
     content['tabular'] = value
+
+    start_price = 25.0
+    price = [start_price]
+    for i in range(1, len(data[temp_tick]['Close'])):
+        prc = start_price * (content['tabular'][i] / content['start_capital'])
+        price.append(prc)
+
+    content['price'] = price
+
+    bench = [start_price]
+    if '^GSPC' in data:
+        for i in range(1, len(data['^GSPC'])):
+            prc = start_price * (data['^GSPC']['Close']
+                                 [i] / data['^GSPC']['Close'][0])
+            bench.append(prc)
+
+    content['bench'] = bench
 
     return content
 
