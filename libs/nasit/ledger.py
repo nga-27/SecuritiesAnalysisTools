@@ -1,5 +1,7 @@
 import os
+import math
 import datetime
+import glob
 import pandas as pd
 import numpy as np
 
@@ -8,29 +10,69 @@ from libs.utils import generic_plotting
 
 
 def generate_fund_from_ledger(ledger_name: str):
+    """Generate Fund from Ledger
 
-    path = os.path.join("resources", "ledgers", ledger_name)
-    if not os.path.exists(path):
-        print(f"No ledger named '{path}' found.")
-        return
+    Arguments:
+        ledger_name {str} -- either 'all' or a filename
+    """
+    if ledger_name == 'all' or ledger_name == 'all'.upper():
+        path = os.path.join("resources", "ledgers")
+        if not os.path.exists(path):
+            print(f"No ledger directory '{path}' found.")
+            return
 
-    ledger = pd.read_csv(path)
-    content = extract_from_format(ledger)
-    content = create_fund(content)
+        path = os.path.join(path, "*.csv")
+        globs = glob.glob(path)
 
-    generic_plotting([content['price'], content['bench']],
-                     title=content['title'], ylabel='Price', x=content['raw']['^GSPC'].index)
+    else:
+        path = os.path.join("resources", "ledgers", ledger_name)
+        if not os.path.exists(path):
+            print(f"No ledger named '{path}' found.")
+            return
+
+        globs = [path]
+
+    ledgers = {}
+    for i, path in enumerate(globs):
+        ledger = pd.read_csv(path)
+        content = extract_from_format(ledger, index=i)
+        content = create_fund(content)
+
+        ledgers[content['symbol']] = content
+
+    plots = create_plot_content(ledgers)
+
+    generic_plotting(plots['prices'],
+                     title="Custom Funds",
+                     ylabel='Price',
+                     legend=plots['tickers'],
+                     x=plots['x'])
 
 
-def extract_from_format(ledger: pd.DataFrame) -> dict:
+def extract_from_format(ledger: pd.DataFrame, index=0) -> dict:
+    """Extract from Format
 
+    Arguments:
+        ledger {pd.DataFrame} -- dataframe-converted csv of ledger file
+
+    Keyword Arguments:
+        index {int} -- to differentiate on 'ticker' (default: {0})
+
+    Returns:
+        dict -- content of ledger extracted
+    """
     content = {}
     content['title'] = ledger.columns[0]
     content['start_capital'] = float(ledger['Unnamed: 1'][1])
+
+    content['symbol'] = f"NGAxy-{index}"
+    if not math.isnan(ledger['Unnamed: 1'][2]):
+        content['symbol'] = ledger['Unnamed: 1'][2]
+
     content['start_index'] = find_start_index(ledger, content['title'])
 
     funds, new_ledger = extract_funds(
-        ledger, content['start_index'], content['title'])
+        ledger, content['start_index'])
     content['funds'] = funds
     content['ledger'] = new_ledger
     content['start_date'] = new_ledger['Date'][0]
@@ -56,10 +98,19 @@ def extract_from_format(ledger: pd.DataFrame) -> dict:
     return content
 
 
-def find_start_index(ledger: pd.DataFrame, title: str) -> int:
+def find_start_index(ledger: pd.DataFrame, column_name: str) -> int:
+    """Find Start Index
+
+    Arguments:
+        ledger {pd.DataFrame} -- ledger file content
+        title {str} -- column name in ledger
+
+    Returns:
+        int -- index of start of actual ledger content
+    """
     KEY = 'Stock'
     MAX = 1000
-    for i, row in enumerate(ledger[title]):
+    for i, row in enumerate(ledger[column_name]):
         if row == KEY:
             return (i+1)
         if i > MAX:
@@ -68,7 +119,17 @@ def find_start_index(ledger: pd.DataFrame, title: str) -> int:
             return None
 
 
-def extract_funds(ledger: pd.DataFrame, start_index: int, title: str) -> list:
+def extract_funds(ledger: pd.DataFrame, start_index: int) -> list:
+    """Extract Funds
+
+    Arguments:
+        ledger {pd.DataFrame} -- ledger content
+        start_index {int} -- start index of actual fund data
+        title {str} -- [description]
+
+    Returns:
+        list -- ticker list, cleansed ledger dataframe
+    """
     new_columns = {col: ledger[col][start_index-1]
                    for col in ledger.columns}
     new_ledger = ledger.rename(columns=new_columns)
@@ -84,6 +145,14 @@ def extract_funds(ledger: pd.DataFrame, start_index: int, title: str) -> list:
 
 
 def create_fund(content: dict) -> dict:
+    """Create Fund
+
+    Arguments:
+        content {dict} -- data object with all fund data
+
+    Returns:
+        dict -- updates content with actual fund
+    """
     ledger = content['ledger']
     data = content['raw']
 
@@ -161,6 +230,19 @@ def create_fund(content: dict) -> dict:
 
 
 def date_converter(ledger_date: str, _type='date') -> str:
+    """Date Converter
+
+    Swaps date form to match that of either a string or dataframe date
+
+    Arguments:
+        ledger_date {str} -- string-based date from ledger file
+
+    Keyword Arguments:
+        _type {str} -- output type, either 'date' or 'str' (default: {'date'})
+
+    Returns:
+        str -- converted date, technically could be a datetime object too
+    """
     if _type == 'date':
         new_date = datetime.datetime.strptime(
             ledger_date, "%m/%d/%Y")
@@ -168,3 +250,34 @@ def date_converter(ledger_date: str, _type='date') -> str:
         new_date = datetime.datetime.strptime(
             ledger_date, "%m/%d/%Y").strftime("%Y-%m-%d")
     return new_date
+
+
+def create_plot_content(dataset: dict) -> dict:
+    """Create Plot Content
+
+    Consolidate plots and data content to make it easy to plot
+
+    Arguments:
+        dataset {dict} -- entire dataset of all created funds
+
+    Returns:
+        dict -- plot content for plotting
+    """
+    plot_content = dict()
+
+    plots = []
+    tickers = []
+    for ticker in dataset:
+        bench_mark = dataset[ticker]['bench']
+        plots.append(dataset[ticker]['price'])
+        tickers.append(dataset[ticker]['symbol'])
+        x = dataset[ticker]['raw']['^GSPC'].index
+
+    plots.append(bench_mark)
+    tickers.append("S&P 500")
+
+    plot_content['x'] = x
+    plot_content['prices'] = plots
+    plot_content['tickers'] = tickers
+
+    return plot_content
