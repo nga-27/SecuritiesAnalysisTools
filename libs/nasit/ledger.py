@@ -227,8 +227,6 @@ def create_fund(content: dict) -> dict:
 
     content['details'] = composite
 
-    # content['dividends'] = generate_dividends(content)
-
     value = []
     for i in range(len(data[temp_tick]['Close'])):
         val = 0.0
@@ -254,6 +252,8 @@ def create_fund(content: dict) -> dict:
             bench.append(prc)
 
     content['bench'] = bench
+
+    content['dividends'] = generate_dividends(content)
 
     return content
 
@@ -281,14 +281,92 @@ def date_converter(ledger_date: str, _type='date') -> str:
     return new_date
 
 
+def date_to_index(date, content: dict, try_again=False) -> int:
+
+    if isinstance(date, str):
+        date = datetime.datetime.strptime(date, "%Y-%m-%d")
+
+    data = content['raw']
+    temp_tick = list(data.keys())[0]
+    date_list = data[temp_tick].index
+
+    idx = None
+    for a, date_x in enumerate(date_list):
+        if date == date_x:
+            idx = a
+            break
+
+        if try_again:
+            if date <= date_x:
+                idx = a
+                break
+    return idx
+
+
 def generate_dividends(content: dict) -> dict:
 
-    divs = {'raw': {}}
+    divs = {'raw': {}, 'refined': {'dates': [], 'dividends': []}}
     data = content['raw']
+
+    temp_tick = list(data.keys())[0]
+    start_date = data[temp_tick].index[0]
+
+    print(f"Fetching Dividends...")
     for ticker in data:
         if ticker != '^GSPC':
             divs['raw'][ticker] = get_dividends(None, symbol=ticker)
-            print(f"{ticker} => {divs['raw'][ticker]}")
+
+            if len(divs['raw'][ticker]['dates']) > 0:
+                fund = content['details'][ticker]
+                first_index = None
+
+                for i, date in enumerate(divs['raw'][ticker]['dates']):
+                    date_time = datetime.datetime.strptime(date, "%Y-%m-%d")
+                    if date_time >= start_date:
+                        first_index = i
+                        break
+
+                if first_index is not None:
+                    for i in range(first_index, len(divs['raw'][ticker]['dates'])):
+                        date = datetime.datetime.strptime(
+                            divs['raw'][ticker]['dates'][i], "%Y-%m-%d")
+                        idx = date_to_index(date, content)
+
+                        if fund['shares'][idx] > 0.0:
+                            divs['refined']['dates'].append(date)
+                            amt = fund['shares'][idx] * \
+                                divs['raw'][ticker]['dividends'][i]
+                            divs['refined']['dividends'].append(amt)
+
+    QUARTERS = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]
+    divs['actual'] = {}
+
+    for i, date in enumerate(divs['refined']['dates']):
+        year = str(date.year)
+        if year not in divs['actual']:
+            divs['actual'][year] = [{"value": 0.0}, {
+                "value": 0.0}, {"value": 0.0}, {"value": 0.0}]
+
+        month = date.month
+        for j, qtr in enumerate(QUARTERS):
+            if month in qtr:
+                divs['actual'][year][j]['value'] += np.round(
+                    divs['refined']['dividends'][i], 2)
+
+    for year in divs['actual']:
+        for i, qtr in enumerate(divs['actual'][year]):
+            month = max(QUARTERS[i])
+            day = 27
+            date = f"{year}-{month}-{day}"
+            index = date_to_index(date, content, try_again=True)
+
+            if index is not None:
+                ratio = qtr['value'] / content['tabular'][index]
+                _yield = np.round(ratio * 400.0, 2)
+                price = np.round(ratio * content['price'][index], 3)
+
+                divs['actual'][year][i]['price'] = f"${price}"
+                divs['actual'][year][i]['yield'] = f"{_yield}%"
 
     return divs
 
@@ -355,6 +433,23 @@ def export_funds(dataset: dict):
             content['holdings'].append("")
             content['percent'].append("")
             content['total'].append("")
+
+        content['dividend period'] = []
+        content['dividend amount'] = []
+        content['dividend yield'] = []
+
+        dividends = dataset[ticker]['dividends']['actual']
+        for year in dividends:
+            for i, qtr in enumerate(dividends[year]):
+                period = f"{year}-Q{i+1}"
+                content['dividend period'].append(period)
+                content['dividend amount'].append(qtr.get('price', ""))
+                content['dividend yield'].append(qtr.get('yield', ""))
+
+        for _ in range(len(content['dividend yield']), len(content['price'])):
+            content['dividend period'].append("")
+            content['dividend amount'].append("")
+            content['dividend yield'].append("")
 
         df = pd.DataFrame.from_dict(content)
         df = df.set_index('date')
