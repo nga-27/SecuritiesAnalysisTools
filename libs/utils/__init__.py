@@ -5,6 +5,7 @@ from .data import download_data, download_data_indexes, download_single_fund, do
 
 from .api import get_api_metadata, api_sector_match, api_sector_funds
 from .api import get_volatility, vq_status_print
+from .api import get_dividends
 
 from .error_handler import has_critical_error
 

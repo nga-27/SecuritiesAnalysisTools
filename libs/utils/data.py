@@ -123,6 +123,7 @@ def download_data(config: dict, **kwargs) -> list:
     interval = config.get('interval', '1d')
     tickers = config['tickers']
     ticker_print = config['ticker print']
+
     start = kwargs.get('start')
     end = kwargs.get('end')
 

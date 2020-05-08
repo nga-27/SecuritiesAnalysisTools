@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from mpl_finance import candlestick_ochl
 
 from pandas.plotting import register_matplotlib_converters
 
@@ -192,6 +191,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
 
     Optional Args:
         x {list} -- x-value data, can be list of lists, length(s) must match length(s) of y plot(s).
+                    NOTE: for list of list of dates, ensure each list is wrapped in a list()
                     (default: {[]})
         colors {list} -- color data for each plot (default: {[]})
         title {str} -- title of plot (default: {''})

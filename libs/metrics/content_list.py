@@ -1,7 +1,7 @@
 import pprint
 
 from libs.utils import ProgressBar
-from libs.utils import STANDARD_COLORS, TREND_COLORS, EXEMPT_METRICS
+from libs.utils import STANDARD_COLORS, TREND_COLORS, EXEMPT_METRICS, SP500
 
 NORMAL = STANDARD_COLORS["normal"]
 WARNING = STANDARD_COLORS["warning"]
@@ -48,6 +48,7 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
     Optional Args:
         standalone {bool} -- if run as a function, fetch all metadata info (default: {False})
         print_out {bool} -- print in terminal (default: {False})
+        name {str} -- (default: {''})
         pbar {ProgressBar} -- (default: {None})
 
     Returns:
@@ -55,10 +56,12 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
     """
     standalone = kwargs.get('standalone', False)
     print_out = kwargs.get('print_out', False)
+    name = kwargs.get('name', '')
     pbar = kwargs.get('progress_bar')
 
     metadata = []
     meta_keys = []
+    name = SP500.get(name, name)
 
     if standalone:
         for key in meta_sub:
@@ -98,12 +101,12 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
             pbar.uptick(increment=increment)
 
         if print_out:
-            content_printer(content, meta_keys[a])
+            content_printer(content, meta_keys[a], name=name)
 
     return content
 
 
-def content_printer(content: dict, meta_key: str):
+def content_printer(content: dict, meta_key: str, **kwargs):
     """Content Printer
 
     Print to terminal with correct formatting.
@@ -111,7 +114,12 @@ def content_printer(content: dict, meta_key: str):
     Arguments:
         content {dict} -- content dictionary
         meta_key {str} -- key for content
+
+    Optional Args:
+        name {str} -- (default: {''})
     """
+    name = kwargs.get('name', '')
+
     COL_1_SPACE = 8
     COL_2_SPACE = 8
     COL_3_SPACE = 8
@@ -119,7 +127,8 @@ def content_printer(content: dict, meta_key: str):
     COL_5_SPACE = 48
 
     print("\r\n")
-    print(f"Content for {NOTIFY}{meta_key}\r\n{NORMAL}")
+    print(
+        f"Content for {NOTIFY}{name}{NORMAL} for {NOTIFY}{meta_key}\r\n{NORMAL}")
 
     spaces_1 = " " * (COL_1_SPACE - len("(Ago)"))
     spaces_2 = " " * (COL_2_SPACE - len("Type"))
@@ -128,7 +137,8 @@ def content_printer(content: dict, meta_key: str):
     spaces_5 = " " * (COL_5_SPACE - len("(value/signal)"))
 
     print(
-        f"{NOTIFY}(Ago){spaces_1}Type{spaces_2}::{spaces_3}Indicator{spaces_4}(value/signal){spaces_5}:: date{NORMAL}")
+        f"{NOTIFY}(Ago){spaces_1}Type{spaces_2}::{spaces_3}Indicator{spaces_4}" +
+        f"(value/signal){spaces_5}:: date{NORMAL}")
     print("")
 
     for sig in content["signals"]:
