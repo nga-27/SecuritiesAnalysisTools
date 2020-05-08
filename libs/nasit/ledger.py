@@ -5,7 +5,7 @@ import glob
 import pandas as pd
 import numpy as np
 
-from libs.utils import download_data
+from libs.utils import download_data, get_dividends
 from libs.utils import generic_plotting
 
 
@@ -140,7 +140,7 @@ def extract_funds(ledger: pd.DataFrame, start_index: int) -> list:
 
     funds = []
     for ticker in new_ledger['Stock']:
-        if ticker not in funds:
+        if ticker not in funds and '_' not in ticker:
             funds.append(ticker)
 
     return funds, new_ledger
@@ -161,11 +161,36 @@ def create_fund(content: dict) -> dict:
     temp_tick = ledger['Stock'][0]
     composite = {
         '_cash_': {
-            'value': [content['start_capital']] * len(data[temp_tick]['Close'])
+            'value': [float(content['start_capital'])] * len(data[temp_tick]['Close'])
         }
     }
 
+    full_dates = data[temp_tick].index
+
     for i, ticker in enumerate(ledger['Stock']):
+        if '_' in ticker:
+            action = ledger['Action'][i]
+
+            date = date_converter(ledger['Date'][i])
+            idx = 0
+            for a, ind in enumerate(full_dates):
+                if ind == date:
+                    idx = a
+                    break
+
+            if action == 'Deposit':
+                action = 'Sell'
+            if action == 'Withdraw':
+                action = 'Buy'
+
+            if action == 'Buy':
+                composite['_cash_']['value'][idx] -= float(ledger['Shares'][i]) * \
+                    float(ledger['Price of Action'][i])
+            if action == 'Sell':
+                composite['_cash_']['value'][idx] += float(ledger['Shares'][i]) * \
+                    float(ledger['Price of Action'][i])
+            continue
+
         t_data = data[ticker]
 
         if ticker not in composite:
@@ -201,6 +226,8 @@ def create_fund(content: dict) -> dict:
                     composite['_cash_']['value'][j] = composite['_cash_']['value'][j-1]
 
     content['details'] = composite
+
+    # content['dividends'] = generate_dividends(content)
 
     value = []
     for i in range(len(data[temp_tick]['Close'])):
@@ -254,6 +281,18 @@ def date_converter(ledger_date: str, _type='date') -> str:
     return new_date
 
 
+def generate_dividends(content: dict) -> dict:
+
+    divs = {'raw': {}}
+    data = content['raw']
+    for ticker in data:
+        if ticker != '^GSPC':
+            divs['raw'][ticker] = get_dividends(None, symbol=ticker)
+            print(f"{ticker} => {divs['raw'][ticker]}")
+
+    return divs
+
+
 def create_plot_content(dataset: dict) -> dict:
     """Create Plot Content
 
@@ -302,18 +341,20 @@ def export_funds(dataset: dict):
         filepath = os.path.join(out_dir, filename)
 
         content = {'date': [], 'price': [],
-                   'benchmark': [], 'holdings': [], 'percent': []}
+                   'benchmark': [], 'holdings': [], 'percent': [], 'total': []}
         content['date'] = dataset[ticker]['raw']['^GSPC'].index
         content['price'] = dataset[ticker]['price']
         content['benchmark'] = dataset[ticker]['bench']
 
-        holdings, percent = holdings_calculation(dataset[ticker])
+        holdings, percent, total = holdings_calculation(dataset[ticker])
         content['holdings'] = holdings
         content['percent'] = percent
+        content['total'] = total
 
         for _ in range(len(content['holdings']), len(content['price'])):
             content['holdings'].append("")
             content['percent'].append("")
+            content['total'].append("")
 
         df = pd.DataFrame.from_dict(content)
         df = df.set_index('date')
@@ -332,6 +373,7 @@ def holdings_calculation(fund: dict) -> list:
     """
     holdings = []
     percent = []
+    total = []
 
     total_value = fund['tabular'][-1]
 
@@ -344,12 +386,14 @@ def holdings_calculation(fund: dict) -> list:
         value = np.round(fund['details'][stock]['value']
                          [-1] / total_value * 100.0, 2)
         percent.append(value)
+        total.append(np.round(fund['details'][stock]['value'][-1], 2))
 
-    zipped = list(zip(holdings, percent))
+    zipped = list(zip(holdings, percent, total))
     zipped = sorted(zipped, key=lambda x: x[1], reverse=True)
     split = list(zip(*zipped))
 
     holdings = list(split[0])
     percent = list(split[1])
+    total = list(split[2])
 
-    return holdings, percent
+    return holdings, percent, total
