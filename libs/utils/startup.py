@@ -514,6 +514,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'nfnow', type_='list')
 
+    if '--ledger' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'ledger', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
     if ('--synopsis' in i_keys) or ('--syn' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'synopsis', type_='list')

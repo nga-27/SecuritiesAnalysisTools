@@ -25,6 +25,8 @@ from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
 from libs.tools import candlesticks
 
+from libs.nasit import generate_fund_from_ledger
+
 from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 from libs.ui_generation import slide_creator, PDF_creator
@@ -109,6 +111,8 @@ def only_functions_handler(config: dict):
         nasit_generation_function(config)
     if 'nfnow' in config['run_functions']:
         nasit_generation_function(config, print_only=True)
+    if 'ledger' in config['run_functions']:
+        ledger_function(config)
     if 'synopsis' in config['run_functions']:
         synopsis_function(config)
     if 'last_signals' in config['run_functions']:
@@ -416,6 +420,10 @@ def nasit_generation_function(config: dict, print_only=False):
                          title='NASIT Passives [Returns]')
 
 
+def ledger_function(config: dict):
+    generate_fund_from_ledger(config['tickers'])
+
+
 def synopsis_function(config: dict):
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
@@ -452,7 +460,7 @@ def assemble_last_signals_function(config: dict):
             if fund != '_METRICS_':
                 print("")
                 assemble_last_signals(
-                    m_data[fund], standalone=True, print_out=True)
+                    m_data[fund], standalone=True, print_out=True, name=fund)
                 print("")
 
 

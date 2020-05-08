@@ -104,16 +104,24 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     return metadata
 
 
-def get_dividends(ticker):
+def get_dividends(ticker, symbol=None):
     """Get Dividends
+
+    Will run yfinance API if ticker is None and symbol is not None 
 
     Arguments:
         ticker {yf-object} -- ticker object from yfinance
+
+    Keyword Arguments:
+        symbol {str} -- ticker symbol (default: {None})
 
     Returns:
         dict -- dividend data object
     """
     div = dict()
+    if ticker is None and symbol is not None:
+        ticker = yf.Ticker(symbol)
+
     try:
         t = ticker.dividends
         div['dates'] = [date.strftime("%Y-%m-%d") for date in t.keys()]
