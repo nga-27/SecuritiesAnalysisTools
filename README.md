@@ -14,6 +14,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.1.28, 2020-03-20 - PDF export of metrics, numerical details
 * **0.2.0, 2020-03-22** - Release 2: Reorganization of `dev` and `prod` as functions, stable base
 * 0.2.02, 2020-05-04 - Improved Windows compatibility, PDF having latest signals
+* 0.2.03, 2020-05-08 - NASIT 'ledger' simulator (more info below) introduced
 
 ## To Use
 1. Pull repository, start local, virtual, and/or global python environment.
@@ -91,6 +92,15 @@ An example input to generate an output of an RSI, EMA, and Hull Moving Average f
 `--f --rsi --ema --hull --5y --1w aapl mmm vwinx`
 
 All plots created during the process are rendered in real time. Note: **nothing is saved in "functions" mode**. To have saved plots or data, one must run the full program and `--export`.  Any function added without the `--f` flag will not be registered as a function and could give undesired behavior.
+
+### NASIT "Ledger" Simulator
+Starting with **0.2.03**, a user can create a ledger .csv file to track prospective trades. The _ledger_ function in _functions_ reads the ledger file (`Ledger_Template.csv`), pulls the relevant data from the yfinance and SAT APIs, and creates a simulated "fund" based off the stock trades and dates. It will export a tabular .csv in `output/ledgers/` and generate a plot comparison of all ledger funds vs. the S&P500 given the particular time period of the fund.
+
+To run this new functionality, simply run the functions below:
+
+`--f --ledger all`
+
+Ensure that all ledgers are in the directory specified by the path above and in the format of the template above.
 
 ## Python Libraries / Issues
 Software is designed and run on **Python 3.6+**.

@@ -159,6 +159,14 @@ def create_fund(content: dict) -> dict:
     data = content['raw']
 
     temp_tick = ledger['Stock'][0]
+    MAX = 100
+    i = 0
+    while(i < MAX):
+        if temp_tick in data:
+            break
+        i += 1
+        temp_tick = ledger['Stock'][i]
+
     composite = {
         '_cash_': {
             'value': [float(content['start_capital'])] * len(data[temp_tick]['Close'])
@@ -282,7 +290,22 @@ def date_converter(ledger_date: str, _type='date') -> str:
 
 
 def date_to_index(date, content: dict, try_again=False) -> int:
+    """Date to Index
 
+    Returns index of the stock dataset that the 'date' refers to. If try_again is True
+    and the date is not exactly in the dataset (e.g. a weekend, holiday), it will find
+    the next later applicable date. A true match will exist if try_again is false.
+
+    Arguments:
+        date {str, datetime} -- date to match
+        content {dict} -- fund ticker data object (entirety)
+
+    Keyword Arguments:
+        try_again {bool} -- true to find nearest neighbor on a match miss (default: {False})
+
+    Returns:
+        int -- index of match (or nearest if try_again=True)
+    """
     if isinstance(date, str):
         date = datetime.datetime.strptime(date, "%Y-%m-%d")
 
@@ -304,7 +327,20 @@ def date_to_index(date, content: dict, try_again=False) -> int:
 
 
 def generate_dividends(content: dict) -> dict:
+    """Generate Dividends
 
+    Uses yfinance api to pull dividends of stocks, this function then 
+    generates the new 'fund' dividends using applicable rules.
+
+    Arguments:
+        content {dict} -- new 'fund' data object
+
+    Returns:
+        dict -- dividend data object
+
+    Yields:
+        Iterator[dict] -- ??
+    """
     divs = {'raw': {}, 'refined': {'dates': [], 'dividends': []}}
     data = content['raw']
 
@@ -386,14 +422,16 @@ def create_plot_content(dataset: dict) -> dict:
 
     plots = []
     tickers = []
+    x = []
     for ticker in dataset:
         bench_mark = dataset[ticker]['bench']
         plots.append(dataset[ticker]['price'])
         tickers.append(dataset[ticker]['symbol'])
-        x = dataset[ticker]['raw']['^GSPC'].index
+        x.append(list(dataset[ticker]['raw']['^GSPC'].index))
 
-    plots.append(bench_mark)
-    tickers.append("S&P 500")
+        plots.append(bench_mark)
+        x.append(x[-1])
+        tickers.append(f"S&P 500 - {tickers[-1]}")
 
     plot_content['x'] = x
     plot_content['prices'] = plots
