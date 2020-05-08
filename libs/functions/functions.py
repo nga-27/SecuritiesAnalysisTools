@@ -460,7 +460,7 @@ def assemble_last_signals_function(config: dict):
             if fund != '_METRICS_':
                 print("")
                 assemble_last_signals(
-                    m_data[fund], standalone=True, print_out=True)
+                    m_data[fund], standalone=True, print_out=True, name=fund)
                 print("")
 
 
