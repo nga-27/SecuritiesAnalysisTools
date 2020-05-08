@@ -48,6 +48,8 @@ def generate_fund_from_ledger(ledger_name: str):
                      legend=plots['tickers'],
                      x=plots['x'])
 
+    export_funds(ledgers)
+
 
 def extract_from_format(ledger: pd.DataFrame, index=0) -> dict:
     """Extract from Format
@@ -281,3 +283,34 @@ def create_plot_content(dataset: dict) -> dict:
     plot_content['tickers'] = tickers
 
     return plot_content
+
+
+def export_funds(dataset: dict):
+    """Export Funds
+
+    Export generated content to .csv
+
+    Arguments:
+        dataset {dict} -- entire dataset of funds
+    """
+    out_dir = os.path.join("output", "custom")
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    for ticker in dataset:
+        filename = ticker + ".csv"
+        filepath = os.path.join(out_dir, filename)
+
+        content = {'date': [], 'price': [], 'benchmark': [], 'holdings': []}
+        content['date'] = dataset[ticker]['raw']['^GSPC'].index
+        content['price'] = dataset[ticker]['price']
+        content['holdings'] = dataset[ticker]['funds']
+        content['benchmark'] = dataset[ticker]['bench']
+
+        for _ in range(len(content['holdings']), len(content['price'])):
+            content['holdings'].append("")
+
+        df = pd.DataFrame.from_dict(content)
+        df.set_index('date')
+
+        df.to_csv(filepath)
