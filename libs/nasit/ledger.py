@@ -68,7 +68,7 @@ def extract_from_format(ledger: pd.DataFrame, index=0) -> dict:
     content['start_capital'] = float(ledger['Unnamed: 1'][1])
 
     content['symbol'] = f"NGAxy-{index}"
-    if not math.isnan(ledger['Unnamed: 1'][2]):
+    if ledger['Unnamed: 1'][2] != 'NaN':
         content['symbol'] = ledger['Unnamed: 1'][2]
 
     content['start_index'] = find_start_index(ledger, content['title'])
@@ -301,16 +301,55 @@ def export_funds(dataset: dict):
         filename = ticker + ".csv"
         filepath = os.path.join(out_dir, filename)
 
-        content = {'date': [], 'price': [], 'benchmark': [], 'holdings': []}
+        content = {'date': [], 'price': [],
+                   'benchmark': [], 'holdings': [], 'percent': []}
         content['date'] = dataset[ticker]['raw']['^GSPC'].index
         content['price'] = dataset[ticker]['price']
-        content['holdings'] = dataset[ticker]['funds']
         content['benchmark'] = dataset[ticker]['bench']
+
+        holdings, percent = holdings_calculation(dataset[ticker])
+        content['holdings'] = holdings
+        content['percent'] = percent
 
         for _ in range(len(content['holdings']), len(content['price'])):
             content['holdings'].append("")
+            content['percent'].append("")
 
         df = pd.DataFrame.from_dict(content)
-        df.set_index('date')
+        df = df.set_index('date')
 
         df.to_csv(filepath)
+
+
+def holdings_calculation(fund: dict) -> list:
+    """Holdings Calculation
+
+    Arguments:
+        fund {dict} -- subset of entire ledger dict, specific to a custom fund
+
+    Returns:
+        list -- holdings, percent for each holding
+    """
+    holdings = []
+    percent = []
+
+    total_value = fund['tabular'][-1]
+
+    for stock in fund['details']:
+        if stock == '_cash_':
+            holdings.append("Cash")
+        else:
+            holdings.append(stock)
+
+        value = np.round(fund['details'][stock]['value']
+                         [-1] / total_value * 100.0, 2)
+        percent.append(value)
+
+    zipped = list(zip(holdings, percent))
+    zipped = sorted(zipped, key=lambda x: x[1], reverse=True)
+    split = list(zip(*zipped))
+
+    holdings = list(split[0])
+    percent = list(split[1])
+
+    return holdings, percent
