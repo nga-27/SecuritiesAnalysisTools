@@ -171,6 +171,29 @@ def weighted_moving_avg(dataset, interval: int, **kwargs) -> list:
     return wma
 
 
+def typical_price_signal(data: pd.DataFrame) -> list:
+    """Typical Price Signal
+
+    Generate the typical price calculation (close + high + low) / 3
+
+    Arguments:
+        data {pd.DataFrame} -- dataframe dataset
+
+    Returns:
+        list -- typical price signal
+    """
+    tps = []
+    for i, close in enumerate(data['Close']):
+        summed = close + data['Low'][i] + data['High'][i]
+        summed /= 3.0
+        tps.append(summed)
+
+    return tps
+
+
+###################################################################
+
+
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     """Triple Moving Average
 

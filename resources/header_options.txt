@@ -39,7 +39,7 @@ FUNCTIONS:          :       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --f
 --sr                :       run {Support/Resistance Line} analysis; "--support_resistance" and "--rs" also supported
 --clustered         :       run {Clustered Oscillators} for 'all'; "--clustered_osc" and "--clusters" also supported
 --head_shoulders    :       run feature detection of {Head and Shoulders} function
---corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history); "--cci" also supported
+--corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history)
 --stochastic        :       run {Stochastic Oscillator}; "--stoch" also supported
 --rsi               :       run {Relative Strength Index} (RSI) function for funds
 --ultimate          :       run {Ultimate Oscillator} function for funds; "--ult" also supported
@@ -55,6 +55,7 @@ FUNCTIONS:          :       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --f
 --gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
 --bands             :       run {Bollinger Bands} for funds; "--bollinger_bands" and "--bollinger" also supported
 --candlestick       :       run {Candlesticks} for funds; "--candlesticks" also supported
+--commodity         :       run {Commodity Channel Index} for funds; "--cci" and "--comm" also supported
 --vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
 --syn               :       run {Synopsis} for funds (metrics); "--synopsis" also supported
 --last              :       run {Last Signals} for funds to show latest signals; "--last_signals" also supported

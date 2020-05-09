@@ -412,7 +412,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'head_shoulders', type_='list')
 
-    if ('--corr' in i_keys) or ('--correlation' in i_keys) or ('--cci' in i_keys):
+    if ('--corr' in i_keys) or ('--correlation' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'correlation', type_='list')
         if '--short' in i_keys:
@@ -499,6 +499,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--candlesticks' in i_keys) or ('--candlestick' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'candlestick', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
+    if ('--comm' in i_keys) or ('--commodity' in i_keys) or ('--cci' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'commodity', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--vq' in i_keys) or ('--stop_loss' in i_keys):

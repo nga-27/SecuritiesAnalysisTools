@@ -71,7 +71,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
-    view = kwargs.get('view')
+    view = kwargs.get('view', '')
 
     hull = {
         'short': {},

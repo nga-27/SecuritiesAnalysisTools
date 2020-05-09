@@ -24,6 +24,7 @@ from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
 from libs.tools import candlesticks
+from libs.tools import commodity_channel_index
 
 from libs.nasit import generate_fund_from_ledger
 
@@ -105,6 +106,8 @@ def only_functions_handler(config: dict):
         price_gap_function(config)
     if 'candlestick' in config['run_functions']:
         candlestick_function(config)
+    if 'commodity' in config['run_functions']:
+        commodity_function(config)
     if 'vq' in config['run_functions']:
         vq_function(config)
     if 'nf' in config['run_functions']:
@@ -344,6 +347,16 @@ def candlestick_function(config: dict):
             print(
                 f"Candlestick Analysis of {TICKER}{fund}{NORMAL}...")
             candlesticks(data[fund], name=fund, plot_output=True)
+
+
+def commodity_function(config: dict):
+    print(f"Commodity Channel Index for funds...\r\n")
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Commodity Channel Index of {TICKER}{fund}{NORMAL}...")
+            commodity_channel_index(data[fund], name=fund, plot_output=True)
 
 
 def vq_function(config: dict):

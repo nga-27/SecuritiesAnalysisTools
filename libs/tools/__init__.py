@@ -31,3 +31,4 @@ from .statistics import get_high_level_stats
 from .candlesticks import candlesticks
 
 from .bollinger_bands import bollinger_bands
+from .commodity_channel_index import commodity_channel_index
