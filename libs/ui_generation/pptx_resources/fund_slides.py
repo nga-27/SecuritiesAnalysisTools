@@ -254,8 +254,19 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     slide = slide_title_header(slide, fund, price_details=price_str)
     indexes.append(len(prs.slides)-1)
 
+    # Slide #8 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
+
     content = os.path.join(content_dir, '*.png')
     pics = glob.glob(content)
+
+    content_dir2, _ = os.path.split(content_dir)
+    content2 = os.path.join(content_dir2, '*.png')
+    pics2 = glob.glob(content2)
+    pics.extend(pics2)
+
     fund_analysis = analysis[fund]
     prs = format_plots(prs, indexes, pics,
                        fund_analysis=fund_analysis, views=views)
@@ -287,12 +298,9 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
     views = kwargs.get('views', '')
 
-    header, _ = os.path.split(globs[0])
+    for picture in globs:
 
-    for globber in globs:
-
-        _, part = os.path.split(globber)
-        picture = os.path.join(header, part)
+        _, part = os.path.split(picture)
 
         # Slide 1
         slide_num = 0
@@ -466,6 +474,16 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
         # Slide #6
         slide_num = 5
+        if 'grades' in part:
+            left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                picture, left, top, height=height, width=width)
+
+        # Slide #7
+        slide_num = 6
         if 'resist_support' in part:
             left = Inches(0)
             top = Inches(1.55)
@@ -519,8 +537,8 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
                 table.cell(
                     i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
 
-        # Slide 7
-        slide_num = 6
+        # Slide 8
+        slide_num = 7
         if 'trendline' in part:
             left = Inches(0)
             top = Inches(1.55)

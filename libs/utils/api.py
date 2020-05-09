@@ -15,6 +15,7 @@ import libs.utils.stable_yf as styf
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
 from .constants import STANDARD_COLORS, SP500, PRINT_CONSTANTS
+from .plotting import generic_plotting
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
@@ -52,6 +53,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     pb = kwargs.get('progress_bar', None)
     max_close = kwargs.get('max_close', None)
     dataset = kwargs.get('data')
+    plot_output = kwargs.get('plot_output', False)
 
     fund_ticker_cleansed = SP500.get(fund_ticker, fund_ticker)
     api_print = f"\r\nFetching API metadata for {FUND}{fund_ticker_cleansed}{NORMAL}..."
@@ -85,7 +87,8 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         'recommendations')(ticker, st_tick)
 
     metadata['recommendations']['tabular'] = calculate_recommendation_curve(
-        metadata['recommendations'])
+        metadata['recommendations'], plot_output=plot_output, name=fund_ticker)
+
     # EPS needs some other figures to make it correct, but ok for now.
     metadata['eps'] = calculate_eps(metadata)
     if pb is not None:
@@ -422,7 +425,7 @@ AVAILABLE_KEYS = {
 }
 
 
-def calculate_recommendation_curve(recoms: dict) -> dict:
+def calculate_recommendation_curve(recoms: dict, **kwargs) -> dict:
     """Calculate Recommendation Curve
 
     Arguments:
@@ -431,6 +434,9 @@ def calculate_recommendation_curve(recoms: dict) -> dict:
     Returns:
         dict -- recommendation curve data object
     """
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+
     tabular = dict()
     tabular['dates'] = []
     tabular['grades'] = []
@@ -459,6 +465,19 @@ def calculate_recommendation_curve(recoms: dict) -> dict:
         tabular['grades'] = grades
         tabular['dates'] = dates
 
+        x = [datetime.strptime(date, "%Y-%m-%d")
+             for date in tabular['dates']]
+
+        if plot_output:
+            generic_plotting([tabular['grades']], x=x, title="Ratings by Firms",
+                             ylabel="Ratings (Proportional 0 - 4)")
+
+        else:
+            filename = os.path.join(name, f"grades_{name}.png")
+            generic_plotting([tabular['grades']], x=x, title="Ratings by Firms",
+                             ylabel="Ratings (Proportional 0 - 4)",
+                             saveFig=True, filename=filename)
+
     return tabular
 
 
@@ -472,18 +491,18 @@ def grade_to_number(grades: list) -> list:
         list -- list of grades (floats)
     """
     GRADES = {
-        "Strong Buy": 1.0,
-        "Buy": 2.0,
-        "Overweight": 2.0,
-        "Outperform": 2.0,
-        "Neutral": 3.0,
-        "Hold": 3.0,
-        "Market Perform": 3.0,
-        "Equal-Weight": 3.0,
-        "Sector Perform": 3.0,
-        "Underperform": 4.0,
-        "Underweight": 4.0,
-        "Sell": 5.0
+        "Strong Buy": 4.0,
+        "Buy": 3.0,
+        "Overweight": 3.0,
+        "Outperform": 3.0,
+        "Neutral": 2.0,
+        "Hold": 2.0,
+        "Market Perform": 2.0,
+        "Equal-Weight": 2.0,
+        "Sector Perform": 2.0,
+        "Underperform": 1.0,
+        "Underweight": 1.0,
+        "Sell": 0.0
     }
 
     val_grad = []

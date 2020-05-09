@@ -60,6 +60,7 @@ FUNCTIONS:          :       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --f
 --last              :       run {Last Signals} for funds to show latest signals; "--last_signals" also supported
 --nf                :       run {Nasit Funds} for funds; "--nasit_funds" also supported
 --nf_now            :       run {Nasit Funds} but with current stats (price, % change, etc.)
+--ledger            :       run {Nasit Ledger} for available ledgers in the resources > ledgers directory
 
 AVAILABLE EXPORTS:  :       (current fields for specific tabular metrics exports)
 

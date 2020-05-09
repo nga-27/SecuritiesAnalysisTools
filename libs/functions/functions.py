@@ -7,7 +7,7 @@ import numpy as np
 from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 from libs.utils import generic_plotting
-from libs.utils import get_volatility, vq_status_print
+from libs.utils import get_volatility, vq_status_print, get_api_metadata
 
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
@@ -117,6 +117,8 @@ def only_functions_handler(config: dict):
         synopsis_function(config)
     if 'last_signals' in config['run_functions']:
         assemble_last_signals_function(config)
+    if 'metadata' in config['run_functions']:
+        metadata_function(config)
     if 'pptx' in config['run_functions']:
         pptx_output_function(config)
     if 'pdf' in config['run_functions']:
@@ -335,6 +337,7 @@ def price_gap_function(config: dict):
 
 
 def candlestick_function(config: dict):
+    print(f"Candlestick patterns for funds...\r\n")
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
@@ -462,6 +465,15 @@ def assemble_last_signals_function(config: dict):
                 assemble_last_signals(
                     m_data[fund], standalone=True, print_out=True, name=fund)
                 print("")
+
+
+def metadata_function(config: dict):
+    print(f"Getting Metadata for funds...")
+    print(f"")
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            get_api_metadata(fund, data=data[fund], plot_output=True)
 
 
 def pptx_output_function(config: dict):
