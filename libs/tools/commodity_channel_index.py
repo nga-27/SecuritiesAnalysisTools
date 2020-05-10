@@ -2,15 +2,24 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, SP500
+from libs.utils import dual_plotting, SP500, ProgressBar
 from .moving_average import typical_price_signal, simple_moving_avg
 
 
 def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:
 
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    view = kwargs.get('view', '')
+    p_bar = kwargs.get('progress_bar')
+
     cci = dict()
 
-    cci['tabular'] = generate_commodity_signal(position, **kwargs)
+    cci['tabular'] = generate_commodity_signal(
+        position, plot_output=plot_output, name=name, view=view)
+
+    if p_bar is not None:
+        p_bar.uptick(increment=1.0)
 
     return cci
 
@@ -54,7 +63,6 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     for i in range(len(tps)):
         cci = (tps[i] - sma[i]) / (CONSTANT * mean_dev[i])
         tabular.append(cci)
-        print(f"cci {cci}, mean {mean_dev[i]}, tps {tps[i]}, sma {sma[i]}")
 
     overbought = [100.0 for _ in range(len(tps))]
     oversold = [-100.0 for _ in range(len(tps))]

@@ -28,6 +28,7 @@ from libs.tools import get_high_level_stats
 from libs.tools import bear_bull_power
 from libs.tools import total_power
 from libs.tools import bollinger_bands
+from libs.tools import commodity_channel_index
 from libs.tools import candlesticks
 
 # Imports that support functions doing feature detection
@@ -145,7 +146,8 @@ def run_dev(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['ema_swing_trade'] = moving_average_swing_trade(
-                fund, function='ema', plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, function='ema', plot_output=False,
+                name=fund_name, progress_bar=p, view=period)
 
             fund_data['hull_moving_average'] = hull_moving_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
@@ -160,6 +162,9 @@ def run_dev(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['bollinger_bands'] = bollinger_bands(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['commodity'] = commodity_channel_index(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:
