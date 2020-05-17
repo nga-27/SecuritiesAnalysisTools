@@ -164,7 +164,7 @@ def run_dev(script: list):
             fund_data['bollinger_bands'] = bollinger_bands(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
-            fund_data['commodity'] = commodity_channel_index(
+            fund_data['commodity_channels'] = commodity_channel_index(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:

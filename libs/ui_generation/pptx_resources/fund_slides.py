@@ -406,6 +406,32 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
         # Slide #4
         slide_num = 3
+        if 'grades' in part:
+            left = Inches(0)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                picture, left, top, height=height, width=width)
+
+        if 'commodity_channel' in part:
+            left = Inches(6.5)
+            top = Inches(1.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                picture, left, top, height=height, width=width)
+
+        if 'commodity_metrics' in part:
+            left = Inches(0.0)
+            top = Inches(4.1)
+            height = Inches(3.0)
+            width = Inches(6.5)
+            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+                picture, left, top, height=height, width=width)
+
+        # Slide #5
+        slide_num = 4
         if 'awesome_bar' in part:
             left = Inches(0)
             top = Inches(1.1)
@@ -438,8 +464,8 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 picture, left, top, height=height, width=width)
 
-        # Slide #5
-        slide_num = 4
+        # Slide #6
+        slide_num = 5
         if 'bear_bull_power' in part:
             left = Inches(0)
             top = Inches(1.1)
@@ -467,16 +493,6 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
         if 'ultimate_osc_metrics' in part:
             left = Inches(0.0)
             top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #6
-        slide_num = 5
-        if 'grades' in part:
-            left = Inches(0)
-            top = Inches(1.1)
             height = Inches(3.0)
             width = Inches(6.5)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(

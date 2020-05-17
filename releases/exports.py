@@ -23,4 +23,4 @@ def run_exports(analysis: dict, script: list):
 
     metadata_to_dataset(config=config)
 
-    # remove_temp_dir()
+    remove_temp_dir()

@@ -44,3 +44,24 @@ EXEMPT_METRICS = [
     "metadata",
     "synopsis"
 ]
+
+INDICATOR_NAMES = [
+    "clustered_osc",
+    "full_stochastic",
+    "rsi",
+    "ultimate",
+    "awesome",
+    "momentum_oscillator",
+    "on_balance_volume",
+    "moving_average",
+    "exp_moving_average",
+    "sma_swing_trade",
+    "ema_swing_trade",
+    "hull_moving_average",
+    "macd",
+    "candlesticks",
+    "bear_bull_power",
+    "total_power",
+    "bollinger_bands",
+    "commodity_channels"
+]
