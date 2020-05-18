@@ -38,7 +38,7 @@ from libs.features import analyze_price_gaps
 from libs.utils import date_extractor
 from libs.utils import create_sub_temp_dir
 from libs.utils import get_api_metadata
-from libs.utils import SP500
+from libs.utils import INDEXES
 
 # Imports that drive custom metrics for market analysis
 from libs.metrics import future_returns
@@ -76,7 +76,7 @@ def run_prod(script: list):
 
     for fund_name in funds:
 
-        fund_print = SP500.get(fund_name, fund_name)
+        fund_print = INDEXES.get(fund_name, fund_name)
         print("")
         print(f"~~{fund_print}~~")
         create_sub_temp_dir(fund_name, sub_periods=config['period'])

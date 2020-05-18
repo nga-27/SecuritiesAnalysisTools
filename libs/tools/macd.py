@@ -5,7 +5,7 @@ import numpy as np
 from .moving_average import exponential_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 from libs.features import normalize_signals
-from libs.utils import ProgressBar, SP500
+from libs.utils import ProgressBar, INDEXES
 from libs.utils import TREND_COLORS, STANDARD_COLORS
 
 
@@ -50,7 +50,7 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     macd_sig = macd['tabular']['macd']
     sig_line = macd['tabular']['signal_line']
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
     if plot_output:
         dual_plotting(fund['Close'], [macd_sig, sig_line],
@@ -115,8 +115,9 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     macd['tabular'] = {'macd': macd_val, 'signal_line': macd_sig, 'bar': m_bar}
 
     x = dates_extractor_list(fund)
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
+
     if plotting:
         bar_chart(m_bar, position=fund, x=x, title=name2)
     else:
@@ -195,7 +196,7 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
 
     macd['metrics'] = metrics
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD Metrics'
     if plot_output:
         dual_plotting(position['Close'], metrics,

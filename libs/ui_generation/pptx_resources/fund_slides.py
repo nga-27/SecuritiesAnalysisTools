@@ -8,7 +8,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from libs.utils import fund_list_extractor, SP500
+from libs.utils import fund_list_extractor, INDEXES
 from libs.tools import trend_simple_forecast
 
 from .slide_utils import slide_title_header, color_to_RGB, pptx_ui_errors
@@ -71,7 +71,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     content_dir = os.path.join(TEMP_DIR, fund, views)
 
     # Title slide for a fund
-    fund_name = SP500.get(fund, fund)
+    fund_name = INDEXES.get(fund, fund)
 
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     top = Inches(0.1)

@@ -4,7 +4,7 @@ import numpy as np
 import fpdf  # pylint: disable=F0401
 from fpdf import FPDF  # pylint: disable=F0401
 
-from libs.utils import SP500
+from libs.utils import INDEXES
 
 from .pdf_utils import pdf_set_color_text, horizontal_spacer
 from .pdf_utils import PDF_CONSTS
@@ -37,7 +37,7 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
 
     for fund in analysis:
         if fund != '_METRICS_':
-            name = SP500.get(fund, fund)
+            name = INDEXES.get(fund, fund)
             fund_data = analysis[fund]
 
             pdf.add_page()

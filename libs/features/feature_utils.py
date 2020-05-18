@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from libs.utils import date_extractor, shape_plotting, generic_plotting, SP500
+from libs.utils import date_extractor, shape_plotting, generic_plotting, INDEXES
 
 
 def find_local_extrema(position: list, threshold=0.03, points=False) -> list:
@@ -321,7 +321,7 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
 
-    name2 = SP500.get(name, name)
+    name2 = INDEXES.get(name, name)
     filename = name + f"/{view}" + f'/{feature}_{name}.png'
     title = f'{name2} Feature Detection: '
 

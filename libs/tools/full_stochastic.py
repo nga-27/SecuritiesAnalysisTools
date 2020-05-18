@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import dual_plotting, date_extractor
-from libs.utils import ProgressBar, SP500
+from libs.utils import ProgressBar, INDEXES
 from libs.features import normalize_signals
 from .moving_average import windowed_moving_avg
 
@@ -416,8 +416,9 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
         p_bar.uptick(increment=0.2)
 
     if not out_suppress:
-        name3 = SP500.get(name, name)
+        name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Stochastic'
+
         if plot_output:
             dual_plotting(position['Close'], full_stoch['indicator'],
                           'Position Price', 'Oscillator Signal', title=name2)

@@ -3,7 +3,8 @@ import math
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, specialty_plotting, SP500
+from libs.utils import generic_plotting, specialty_plotting
+from libs.utils import INDEXES
 
 
 def exponential_moving_avg(dataset, interval: int, **kwargs) -> list:
@@ -242,7 +243,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     triple_exp_mov_average(
         fund, config=[9, 21, 50], plot_output=plot_output, name=name, view=view)
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + \
         ' - Simple Moving Averages [{}, {}, {}]'.format(
             config[0], config[1], config[2])
@@ -334,7 +335,7 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
     tema['metrics'] = {'short': mshort, 'medium': mmed, 'long': mlong}
 
     if not out_suppress:
-        name3 = SP500.get(name, name)
+        name3 = INDEXES.get(name, name)
         name2 = name3 + \
             ' - Exp Moving Averages [{}, {}, {}]'.format(
                 config[0], config[1], config[2])
@@ -438,7 +439,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     if progress_bar is not None:
         progress_bar.uptick(increment=0.4)
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Swing Trade SMAs'
     legend = ['Price', 'Short-SMA', 'Medium-SMA', 'Long-SMA', 'Swing Signal']
 

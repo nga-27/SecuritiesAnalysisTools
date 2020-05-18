@@ -13,7 +13,7 @@ TEXT_COLOR_MAP = {
     "purple_bold": "\033[1;35m",
 }
 
-SP500 = {
+INDEXES = {
     "^GSPC": "S&P500"
 }
 

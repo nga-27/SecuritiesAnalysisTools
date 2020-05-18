@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar, SP500
+from libs.utils import ProgressBar, INDEXES
 from libs.utils import generic_plotting, dual_plotting
 from libs.features import normalize_signals
 from .moving_average import weighted_moving_avg, simple_moving_avg
@@ -107,7 +107,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         'long': plots[2]
     }
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Hull Moving Averages'
     legend = ['Price', 'HMA-short', 'HMA-medium', 'HMA-long']
 
@@ -317,7 +317,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     swings['metrics']['medium'] = mmed
     swings['metrics']['long'] = mlong
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Hull Moving Average Metrics'
 
     if plot_output:

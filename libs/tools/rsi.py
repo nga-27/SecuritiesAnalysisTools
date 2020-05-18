@@ -3,7 +3,8 @@ import math
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, generic_plotting, date_extractor, SP500
+from libs.utils import dual_plotting, generic_plotting, date_extractor
+from libs.utils import INDEXES
 from libs.features import normalize_signals
 from .trends import autotrend
 from .moving_average import windowed_moving_avg
@@ -70,7 +71,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
                   over_thresholds['oversold']]
 
     if not out_suppress:
-        name3 = SP500.get(name, name)
+        name3 = INDEXES.get(name, name)
         name2 = name3 + ' - RSI'
 
         if plot_output:

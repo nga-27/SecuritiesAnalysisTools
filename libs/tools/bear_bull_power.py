@@ -4,7 +4,7 @@ from scipy.stats import linregress
 
 from libs.utils import ProgressBar
 from libs.utils import bar_chart, dual_plotting
-from libs.utils import dates_extractor_list, SP500
+from libs.utils import dates_extractor_list, INDEXES
 from libs.tools import exponential_moving_avg, windowed_moving_avg
 from libs.features import normalize_signals
 
@@ -78,7 +78,7 @@ def generate_bear_bull_signal(position: pd.DataFrame, **kwargs) -> dict:
 
     x = dates_extractor_list(position)
     if plot_output:
-        name3 = SP500.get(name, name)
+        name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Bull Power'
         bar_chart(bb_signal['bulls'], position=position, title=name2, x=x)
         name2 = name3 + ' - Bear Power'

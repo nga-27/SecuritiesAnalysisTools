@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import dual_plotting, date_extractor
-from libs.utils import ProgressBar, SP500
+from libs.utils import ProgressBar, INDEXES
 from libs.features import normalize_signals
 from .math_functions import lower_low, higher_high, bull_bear_th
 from .moving_average import windowed_moving_avg
@@ -54,7 +54,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
         view=view)
 
     if not out_suppress:
-        name3 = SP500.get(name, name)
+        name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Ultimate Oscillator'
 
         if plot_output:
@@ -474,7 +474,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     metrics = norm[0]
 
     if not out_suppress:
-        name3 = SP500.get(name, name)
+        name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Ultimate Oscillator Metrics'
 
         if plot_output:

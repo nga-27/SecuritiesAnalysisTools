@@ -181,3 +181,9 @@ def beta_comparison_list(fund: list, benchmark: list) -> list:
     rsqd = beta_figures[2]**2
 
     return beta_figures[0], rsqd
+
+
+def alpha_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame, treasury: pd.DataFrame) -> dict:
+
+    alpha = dict()
+    return alpha

@@ -14,7 +14,7 @@ import libs.utils.stable_yf as styf
 
 from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
-from .constants import STANDARD_COLORS, SP500, PRINT_CONSTANTS
+from .constants import STANDARD_COLORS, INDEXES, PRINT_CONSTANTS
 from .plotting import generic_plotting
 
 """
@@ -55,7 +55,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     dataset = kwargs.get('data')
     plot_output = kwargs.get('plot_output', False)
 
-    fund_ticker_cleansed = SP500.get(fund_ticker, fund_ticker)
+    fund_ticker_cleansed = INDEXES.get(fund_ticker, fund_ticker)
     api_print = f"\r\nFetching API metadata for {FUND}{fund_ticker_cleansed}{NORMAL}..."
     print(api_print)
 

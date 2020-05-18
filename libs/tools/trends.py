@@ -8,7 +8,8 @@ from datetime import datetime
 from scipy.stats import linregress
 
 from .moving_average import simple_moving_avg, windowed_moving_avg
-from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
+from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
+from libs.utils import INDEXES
 from libs.utils import STANDARD_COLORS
 
 from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
@@ -329,7 +330,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     Y.append(fund['Close'])
     C.append('black')
 
-    name2 = SP500.get(name, name)
+    name2 = INDEXES.get(name, name)
 
     if not out_suppress:
         try:

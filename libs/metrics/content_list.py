@@ -1,7 +1,7 @@
 import pprint
 
 from libs.utils import ProgressBar
-from libs.utils import STANDARD_COLORS, TREND_COLORS, SP500
+from libs.utils import STANDARD_COLORS, TREND_COLORS, INDEXES
 from libs.utils import EXEMPT_METRICS, INDICATOR_NAMES
 
 NORMAL = STANDARD_COLORS["normal"]
@@ -42,7 +42,7 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
 
     metadata = []
     meta_keys = []
-    name = SP500.get(name, name)
+    name = INDEXES.get(name, name)
 
     if standalone:
         for key in meta_sub:

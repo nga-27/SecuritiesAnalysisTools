@@ -3,7 +3,7 @@ import datetime
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, SP500, ProgressBar
+from libs.utils import dual_plotting, INDEXES, ProgressBar
 from libs.features import normalize_signals
 from .moving_average import typical_price_signal, simple_moving_avg
 from .moving_average import windowed_moving_avg
@@ -39,15 +39,23 @@ def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:
     cci['tabular'] = generate_commodity_signal(
         position, intervals=periods, plot_output=plot_output, name=name, view=view)
 
+    if p_bar is not None:
+        p_bar.uptick(increment=0.3)
+
     cci['signals'] = cci_feature_detection(position, cci)
+    if p_bar is not None:
+        p_bar.uptick(increment=0.3)
+
     cci['metrics'] = cci_metrics(
         position, cci, plot_output=plot_output, name=name, view=view)
+    if p_bar is not None:
+        p_bar.uptick(increment=0.3)
 
     cci['type'] = 'oscillator'
     cci['length_of_data'] = len(cci['tabular'][str(periods[0])])
 
     if p_bar is not None:
-        p_bar.uptick(increment=1.0)
+        p_bar.uptick(increment=0.1)
 
     return cci
 
@@ -101,7 +109,7 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     plots.append(overbought)
     plots.append(oversold)
 
-    name2 = SP500.get(name, name)
+    name2 = INDEXES.get(name, name)
     period_strs = [str(interval) for interval in intervals]
     period_strs = ', '.join(period_strs)
     title = f'{name2} - Commodity Channel Index ({period_strs} periods)'
@@ -182,7 +190,7 @@ def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
     norm = normalize_signals([metrics])
     metrics = norm[0]
 
-    name2 = SP500.get(name, name)
+    name2 = INDEXES.get(name, name)
     title = f"{name2} - Commodity Channel Index Metrics"
 
     if plot_output:
