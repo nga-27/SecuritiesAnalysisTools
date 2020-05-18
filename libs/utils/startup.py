@@ -506,6 +506,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'commodity', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
+    if ('--alpha' in i_keys) or ('--beta' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'alpha', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
     if ('--vq' in i_keys) or ('--stop_loss' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'vq', type_='list')

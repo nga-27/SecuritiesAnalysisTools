@@ -30,6 +30,7 @@ from libs.tools import total_power
 from libs.tools import bollinger_bands
 from libs.tools import commodity_channel_index
 from libs.tools import candlesticks
+from libs.tools import alpha_comparison
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -186,6 +187,10 @@ def run_dev(script: list):
                 beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])
                 fund_data['statistics']['beta'] = beta
                 fund_data['statistics']['r_squared'] = rsqd
+                p.uptick()
+
+                fund_data['statistics']['alpha'] = alpha_comparison(
+                    fund, dataset[period]['^GSPC'], dataset[period]['^IRX'], beta=beta)
                 p.uptick()
 
             # Support and Resistance Analysis
