@@ -14,8 +14,13 @@ TEXT_COLOR_MAP = {
 }
 
 INDEXES = {
-    "^GSPC": "S&P500"
+    "^GSPC": "S&P500",
+    "^IRX": "3MO-TBILL"
 }
+
+SKIP_INDEXES = [
+    "^IRX"
+]
 
 STANDARD_COLORS = {
     "warning": TEXT_COLOR_MAP["yellow"],

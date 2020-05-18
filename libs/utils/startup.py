@@ -78,7 +78,7 @@ def start_header(**kwargs) -> dict:
         config['tickers'] = default
 
     else:
-        if config['core'] == False:
+        if not config['core']:
             config['tickers'] = ' '.join(list_of_tickers)
             config['tickers'] = config['tickers'].strip()
 
@@ -90,14 +90,14 @@ def start_header(**kwargs) -> dict:
 
     if len(t) < 2:
         if 'no_index' not in config['state']:
-            ticker_print += t[0] + ' and S&P500'
+            ticker_print += t[0] + ', S&P500, and 3mo-TBILL'
         else:
             ticker_print += t[0]
 
     else:
         ticker_print = ', '.join(t)
         if 'no_index' not in config['state']:
-            ticker_print += ', and S&P500'
+            ticker_print += ', S&P500, and 3mo-TBILL'
 
     config['ticker print'] = ticker_print
     print(" ")
