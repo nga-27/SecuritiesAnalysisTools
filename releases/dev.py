@@ -184,13 +184,8 @@ def run_dev(script: list):
                     view=period
                 )
 
-                beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])
-                fund_data['statistics']['beta'] = beta
-                fund_data['statistics']['r_squared'] = rsqd
-                p.uptick()
-
-                fund_data['statistics']['alpha'] = alpha_comparison(
-                    fund, dataset[period]['^GSPC'], dataset[period]['^IRX'], beta=beta)
+                fund_data['statistics']['risk_ratios'] = alpha_comparison(
+                    fund, dataset[period]['^GSPC'], dataset[period]['^IRX'])
                 p.uptick()
 
             # Support and Resistance Analysis

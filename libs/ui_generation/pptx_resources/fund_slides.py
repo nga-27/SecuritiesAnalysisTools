@@ -108,7 +108,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     vq = analysis[fund].get('metadata', {}).get(
         'volatility', {}).get('VQ')
     has_vq = False
-    rows = 5
+    rows = 8
 
     if vq is not None:
         has_vq = True
@@ -136,19 +136,37 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     table.cell(1, 1).text = '$' + \
         str(np.round(analysis[fund][views]
                      ['statistics']['current_price'], 2))
-    table.cell(2, 0).text = 'Beta'
-    table.cell(3, 0).text = 'R-Squared'
 
-    if 'beta' in analysis[fund][views]['statistics'].keys():
+    table.cell(2, 0).text = 'Alpha'
+    table.cell(3, 0).text = 'Beta'
+    table.cell(4, 0).text = 'R-Squared'
+    table.cell(5, 0).text = 'Sharpe Ratio'
+    table.cell(6, 0).text = 'Std. Deviation'
+
+    table.cell(2, 1).text = 'n/a'
+    table.cell(3, 1).text = 'n/a'
+    table.cell(4, 1).text = 'n/a'
+    table.cell(5, 1).text = 'n/a'
+    table.cell(6, 1).text = 'n/a'
+
+    risk_ratios = analysis[fund][views]['statistics'].get('risk_ratios', {})
+    if 'alpha' in risk_ratios:
         table.cell(2, 1).text = str(
-            np.round(analysis[fund][views]['statistics']['beta'], 5))
+            np.round(risk_ratios['alpha'], 5))
+    if 'beta' in risk_ratios:
         table.cell(3, 1).text = str(
-            np.round(analysis[fund][views]['statistics']['r_squared'], 5))
-    else:
-        table.cell(2, 1).text = "n/a"
-        table.cell(3, 1).text = "n/a"
+            np.round(risk_ratios['beta'], 5))
+    if 'r_squared' in risk_ratios:
+        table.cell(4, 1).text = str(
+            np.round(risk_ratios['r_squared'], 5))
+    if 'sharpe' in risk_ratios:
+        table.cell(5, 1).text = str(
+            np.round(risk_ratios['sharpe'], 5))
+    if 'standard_deviation' in risk_ratios:
+        table.cell(6, 1).text = str(
+            np.round(risk_ratios['standard_deviation'], 5))
 
-    table.cell(4, 0).text = 'Altman-Z Score'
+    table.cell(7, 0).text = 'Altman-Z Score'
     alt_z = analysis[fund].get('metadata', {}).get(
         'altman_z', {})
     alt_z_score = alt_z.get('score', "n/a")
@@ -157,11 +175,11 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     if isinstance(alt_z_score, (float, int)):
         alt_z_score = str(np.round(alt_z_score, 5))
 
-    table.cell(4, 1).text = alt_z_score
-    table.cell(4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+    table.cell(7, 1).text = alt_z_score
+    table.cell(7, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
         alt_z_color)
 
-    end = 4
+    end = 7
 
     if has_vq:
         table.cell(end+1, 0).text = 'Volatility Quotient'

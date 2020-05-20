@@ -189,7 +189,22 @@ def alpha_comparison(fund: pd.DataFrame,
                      beta: float = None,
                      rsqd: float = None,
                      **kwargs) -> dict:
+    """Alpha Comparison
 
+    Alpha metric, with Sharpe Ratio, Beta, R-Squared, and Standard Deviation
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        benchmark {pd.DataFrame} -- benchmark dataset (does not have to be SP500)
+        treasury {pd.DataFrame} -- 11-week treasury bill dataset
+
+    Keyword Arguments:
+        beta {float} -- beta figure; will calculate if None (default: {None})
+        rsqd {float} -- r-squared figure; will calculate if None (default: {None})
+
+    Returns:
+        dict -- alpha data object
+    """
     print_out = kwargs.get('print_out', False)
     alpha = dict()
     if beta is None or rsqd is None:
@@ -209,7 +224,7 @@ def alpha_comparison(fund: pd.DataFrame,
 
     fund_stdev = np.round(fund_stdev, 4)
 
-    alpha['value'] = alpha_val
+    alpha['alpha'] = alpha_val
     alpha['beta'] = beta
     alpha['r_squared'] = rsqd
     alpha['sharpe'] = sharpe_ratio
@@ -228,7 +243,17 @@ def alpha_comparison(fund: pd.DataFrame,
 
 
 def get_returns(data: pd.DataFrame, output='annual') -> list:
+    """Get Returns
 
+    Arguments:
+        data {pd.DataFrame} -- fund dataset
+
+    Keyword Arguments:
+        output {str} -- return for a period (default: {'annual'})
+
+    Returns:
+        list -- return, standard deviation
+    """
     # Determine intervals for returns, start with annual
     years = 1
     quarters = 4
