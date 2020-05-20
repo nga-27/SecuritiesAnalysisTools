@@ -370,7 +370,8 @@ def alpha_function(config: dict):
         if fund != '^GSPC' and fund != '^IRX':
             print(
                 f"Alpha and Beta of {TICKER}{fund}{NORMAL}...")
-            alpha_comparison(data[fund], data['^GSPC'], data['^IRX'])
+            alpha_comparison(data[fund], data['^GSPC'],
+                             data['^IRX'], print_out=True)
 
 
 def vq_function(config: dict):

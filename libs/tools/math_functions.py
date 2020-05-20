@@ -186,28 +186,48 @@ def beta_comparison_list(fund: list, benchmark: list) -> list:
 def alpha_comparison(fund: pd.DataFrame,
                      benchmark: pd.DataFrame,
                      treasury: pd.DataFrame,
-                     beta: float = None) -> dict:
+                     beta: float = None,
+                     rsqd: float = None,
+                     **kwargs) -> dict:
 
+    print_out = kwargs.get('print_out', False)
     alpha = dict()
-    if beta is None:
-        beta, _ = beta_comparison(fund, benchmark)
+    if beta is None or rsqd is None:
+        beta, rsqd = beta_comparison(fund, benchmark)
 
-    fund_return = get_returns(fund)
-    bench_return = get_returns(benchmark)
+    beta = np.round(beta, 4)
+    rsqd = np.round(rsqd, 4)
+
+    fund_return, fund_stdev = get_returns(fund)
+    bench_return, _ = get_returns(benchmark)
     treas_return = treasury['Close'][-1]
 
-    alpha_val = fund_return - treas_return - \
-        beta * (bench_return - treas_return)
-    print(f"alpha: {alpha_val}, beta: {beta}")
+    alpha_val = np.round(fund_return - treas_return -
+                         beta * (bench_return - treas_return), 4)
+
+    sharpe_ratio = np.round((fund_return - treas_return) / fund_stdev, 4)
+
+    fund_stdev = np.round(fund_stdev, 4)
 
     alpha['value'] = alpha_val
+    alpha['beta'] = beta
+    alpha['r_squared'] = rsqd
+    alpha['sharpe'] = sharpe_ratio
+    alpha['standard_deviation'] = fund_stdev
     alpha['returns'] = {'fund': fund_return,
                         'benchmark': bench_return, 'treasury': treas_return}
+
+    if print_out:
+        print(f"\r\nAlpha:\t\t{alpha_val}")
+        print(f"Beta:\t\t{beta}")
+        print(f"R-Squared:\t{rsqd}")
+        print(f"Sharpe Ratio:\t{sharpe_ratio}")
+        print(f"Standard Dev:\t{fund_stdev}")
 
     return alpha
 
 
-def get_returns(data: pd.DataFrame, output='annual') -> float:
+def get_returns(data: pd.DataFrame, output='annual') -> list:
 
     # Determine intervals for returns, start with annual
     years = 1
@@ -223,14 +243,19 @@ def get_returns(data: pd.DataFrame, output='annual') -> float:
         quarters = 40
 
     annual_returns = 0.0
+    annual_std = []
     for i in range(years):
-        annual_returns += (data['Adj Close'][(i+1)*250] - data['Adj Close']
-                           [i * 250]) / data['Adj Close'][i * 250] * 100.0
+        ars = (data['Adj Close'][(i+1)*250] - data['Adj Close']
+               [i * 250]) / data['Adj Close'][i * 250] * 100.0
+        annual_returns += ars
+        annual_std.append(ars)
 
     annual_returns /= float(years)
 
     # Determine intervals for returns, next with quarterly
     q_returns = 0.0
+    q_std = []
+    qrs_2 = 0.0
     counter = 0
     for i in range(quarters):
         multiple = 62
@@ -238,14 +263,23 @@ def get_returns(data: pd.DataFrame, output='annual') -> float:
             multiple = 63
         counter += multiple
 
-        q_returns += (data['Adj Close'][counter] - data['Adj Close']
-                      [counter - multiple]) / data['Adj Close'][counter - multiple] * 100.0
+        qrs = (data['Adj Close'][counter] - data['Adj Close']
+               [counter - multiple]) / data['Adj Close'][counter - multiple] * 100.0
+        q_returns += qrs
+        qrs_2 += qrs
+        if i % 4 == 3:
+            q_std.append(qrs_2)
+            qrs_2 = 0.0
 
     q_returns /= float(quarters)
     q_returns *= 4.0
 
+    std_1 = np.std(annual_std)
+    std_2 = np.std(q_std)
+
     returns = np.mean([q_returns, annual_returns])
+    stdevs = np.mean([std_1, std_2])
     if output == 'quarterly':
         returns /= 4.0
 
-    return returns
+    return returns, stdevs
