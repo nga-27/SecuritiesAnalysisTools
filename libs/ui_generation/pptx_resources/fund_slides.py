@@ -287,8 +287,9 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     pics.extend(pics2)
 
     fund_analysis = analysis[fund]
+    current_price = analysis[fund][views]['statistics']['current_price']
     prs = format_plots(prs, indexes, pics,
-                       fund_analysis=fund_analysis, views=views)
+                       fund_analysis=fund_analysis, views=views, current_price=current_price)
 
     return prs
 
@@ -306,6 +307,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
     Optional Args:
         views {str} -- (default: {''})
+        current_price {float} -- (default: {None})
 
     Returns:
         pptx-object -- filled in slides with content
@@ -330,6 +332,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
         c_file.close()
 
     views = kwargs.get('views', '')
+    current_price = kwargs.get('current_price')
 
     locations = slide_content.get('locations', [])
     for picture in globs:
@@ -442,16 +445,16 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             p.font.bold = True
 
             trends = []
-            futures = list(range(0, 91, 15))
+            futures = [0, 10, 20, 40, 60, 80]
             forecasts = []
             for trend in fund_analysis[views]['trendlines']['current']:
                 trends.append(trend)
                 forecast = trend_simple_forecast(
-                    trend, future_periods=futures)
+                    trend, future_periods=futures, current_price=current_price)
                 forecasts.append(forecast)
 
             num_rows = len(trends) + 2
-            num_cols = len(futures)
+            num_cols = len(futures) + 2
             table_height = num_rows * 0.33
             table_width = num_cols * 0.8
             if num_rows * 0.33 > 6.0:
@@ -481,16 +484,36 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             cell_1.text = f"Future Periods of Active Trendlines"
 
             for i, fut in enumerate(futures):
-                table.cell(1, i).text = str(fut)
-                table.cell(1, i).text_frame.paragraphs[0].font.bold = True
+                table.cell(1, i+1).text = str(fut)
+                table.cell(1, i+1).text_frame.paragraphs[0].font.bold = True
+
+            table.cell(1, 0).text = 'Trend'
+            table.cell(1, 0).text_frame.paragraphs[0].font.bold = True
+
+            table.cell(1, i+2).text = 'Price'
+            table.cell(1, i+2).text_frame.paragraphs[0].font.bold = True
 
             for i, trend in enumerate(trends):
                 for j, value in enumerate(forecasts[i]['returns']):
-                    table.cell(i+2, j).text = f"${value}"
+                    table.cell(i+2, j+1).text = f"${value}"
                     table.cell(
-                        i+2, j).text_frame.paragraphs[0].font.size = Pt(12)
+                        i+2, j+1).text_frame.paragraphs[0].font.size = Pt(12)
                     color = color_to_RGB(trend['color'])
                     table.cell(
-                        i+2, j).text_frame.paragraphs[0].font.color.rgb = color
+                        i+2, j+1).text_frame.paragraphs[0].font.color.rgb = color
+
+                table.cell(i+2, 0).text = forecasts[i]['slope']
+                table.cell(
+                    i+2, 0).text_frame.paragraphs[0].font.size = Pt(12)
+                color = color_to_RGB(trend['color'])
+                table.cell(
+                    i+2, 0).text_frame.paragraphs[0].font.color.rgb = color
+
+                table.cell(i+2, j+2).text = forecasts[i]['above_below']
+                table.cell(
+                    i+2, j+2).text_frame.paragraphs[0].font.size = Pt(12)
+                color = color_to_RGB(trend['color'])
+                table.cell(
+                    i+2, j+2).text_frame.paragraphs[0].font.color.rgb = color
 
     return prs

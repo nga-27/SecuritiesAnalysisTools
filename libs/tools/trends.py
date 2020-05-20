@@ -810,7 +810,8 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
 
 def trend_simple_forecast(trend: dict,
                           future_periods: list = [5, 10, 20],
-                          return_type='price') -> dict:
+                          return_type='price',
+                          current_price: float = None) -> dict:
     """Trend Simple Forecast
 
     Arguments:
@@ -821,12 +822,18 @@ def trend_simple_forecast(trend: dict,
                                  ensure that each future period is far enough in the future to be
                                  relevant to the present (default: {[5, 10, 20]})
         return_type {str} -- various return types possible (default: {'price'})
+        current_price {float} -- current fund price in comparison with trend (default: {None})
 
     Returns:
         dict -- forecast data object
     """
-    forecast = {'return_type': return_type,
-                'periods': future_periods, 'returns': []}
+    forecast = {
+        'return_type': return_type,
+        'periods': future_periods,
+        'returns': [],
+        'above_below': 'n/a',
+        'slope': 'n/a'
+    }
 
     if return_type == 'price':
         # Likely will be only return_type
@@ -837,6 +844,17 @@ def trend_simple_forecast(trend: dict,
                   for x in future_periods]
 
         forecast['returns'] = prices
+
+        if current_price is not None:
+            if current_price < prices[0]:
+                forecast['above_below'] = 'Below'
+            else:
+                forecast['above_below'] = 'Above'
+
+        if slope < 0:
+            forecast['slope'] = 'DOWN'
+        elif slope > 0:
+            forecast['slope'] = 'UP'
 
     return forecast
 
