@@ -1,5 +1,6 @@
 import os
 import glob
+import json
 import datetime
 import pandas as pd
 import numpy as np
@@ -314,206 +315,41 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             pptx_ui_errors(prs.slides[ind], "No plot files available.")
         return prs
 
+    content_file = os.path.join(
+        "libs", "ui_generation", "pptx_resources", "fund_content_slides.json")
+
+    if not os.path.exists(content_file):
+        for ind in slide_indices:
+            pptx_ui_errors(
+                prs.slides[ind], "File 'fund_content_slides.json' not found.")
+        return prs
+
+    slide_content = {}
+    with open(content_file, 'r') as c_file:
+        slide_content = json.load(c_file)
+        c_file.close()
+
     views = kwargs.get('views', '')
 
+    locations = slide_content.get('locations', [])
     for picture in globs:
 
         _, part = os.path.split(picture)
+        splits = part.split('_')
+        splits.pop(-1)
+        part = '_'.join(splits)
 
-        # Slide 1
-        slide_num = 0
-        if 'volume' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
+        if part in slide_content:
+            details = slide_content.get(part, {})
+            slide_index = details.get('index')
+            location = details.get('location')
 
-        if 'RSI_standard' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
+            left = eval(locations[location]['left'])
+            top = eval(locations[location]['top'])
+            height = eval(locations[location]['height'])
+            width = eval(locations[location]['width'])
 
-        if 'macd_bar' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'clustered_osc_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #2
-        slide_num = 1
-        if 'relative_strength' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'exp_moving_averages' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'swing_trades' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'simple_moving_averages' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #3
-        slide_num = 2
-        if 'obv_standard' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'obv_diff' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'bollinger_bands' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'bollinger_band_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #4
-        slide_num = 3
-        if 'grades' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'commodity_channel' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'commodity_metrics' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #5
-        slide_num = 4
-        if 'awesome_bar' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'awesome_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'macd_metrics' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'momentum_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #6
-        slide_num = 5
-        if 'bear_bull_power' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'price_gaps' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'total_pwr_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'ultimate_osc_metrics' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+            prs.slides[slide_indices[slide_index]].shapes.add_picture(
                 picture, left, top, height=height, width=width)
 
         # Slide #7
@@ -542,7 +378,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
             left_loc = Inches(8)
             top_loc = Inches(1)
-            table_width = Inches(4)
+            table_width = Inches(4.5)
 
             num_srs = len(fund_analysis[views]
                           ['support_resistance']['major S&R']) + 1
@@ -552,7 +388,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
             table_placeholder = prs.slides[slide_indices[slide_num]].shapes.add_table(
                 num_srs,
-                2,
+                3,
                 left_loc,
                 top_loc,
                 table_width,
@@ -561,15 +397,25 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
             table.cell(0, 0).text = 'Price'
             table.cell(0, 1).text = '% Change'
+            table.cell(0, 2).text = 'Sprt / Res'
 
             for i, maj in enumerate(fund_analysis[views]['support_resistance']['major S&R']):
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
+                table.cell(i+1, 2).text = maj['State']
                 color = color_to_RGB(maj['Color'])
                 table.cell(
                     i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
                 table.cell(
                     i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(
+                    i+1, 2).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(
+                    i+1, 0).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(
+                    i+1, 1).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(
+                    i+1, 2).text_frame.paragraphs[0].font.size = Pt(14)
 
         # Slide 8
         slide_num = 7

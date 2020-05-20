@@ -440,14 +440,16 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
         progress_bar.uptick(increment=0.4)
 
     name3 = INDEXES.get(name, name)
-    name2 = name3 + ' - Swing Trade SMAs'
+    funct_name = function.upper()
+    name2 = name3 + f' - Swing Trade {funct_name}s'
     legend = ['Price', 'Short-SMA', 'Medium-SMA', 'Long-SMA', 'Swing Signal']
 
     if plot_output:
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[
                            4], legend=legend, title=name2)
     else:
-        filename = os.path.join(name, view, f"swing_trades_sma_{name}.png")
+        filename = os.path.join(
+            name, view, f"swing_trades_{function}_{name}.png")
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
                            'Swing Signal'], title=name2, saveFig=True, filename=filename)
 

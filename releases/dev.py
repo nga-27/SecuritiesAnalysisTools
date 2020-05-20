@@ -30,7 +30,7 @@ from libs.tools import total_power
 from libs.tools import bollinger_bands
 from libs.tools import commodity_channel_index
 from libs.tools import candlesticks
-from libs.tools import alpha_comparison
+from libs.tools import risk_comparison
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -184,7 +184,7 @@ def run_dev(script: list):
                     view=period
                 )
 
-                fund_data['statistics']['risk_ratios'] = alpha_comparison(
+                fund_data['statistics']['risk_ratios'] = risk_comparison(
                     fund, dataset[period]['^GSPC'], dataset[period]['^IRX'])
                 p.uptick()
 

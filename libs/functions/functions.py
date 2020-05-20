@@ -25,7 +25,7 @@ from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
 from libs.tools import candlesticks
 from libs.tools import commodity_channel_index
-from libs.tools import alpha_comparison
+from libs.tools import risk_comparison
 
 from libs.nasit import generate_fund_from_ledger
 
@@ -363,15 +363,15 @@ def commodity_function(config: dict):
 
 
 def alpha_function(config: dict):
-    print(f"Alpha & Beta for funds...\r\n")
+    print(f"Risk Factors for funds...\r\n")
     config['tickers'] += ' ^GSPC ^IRX'
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC' and fund != '^IRX':
             print(
-                f"Alpha and Beta of {TICKER}{fund}{NORMAL}...")
-            alpha_comparison(data[fund], data['^GSPC'],
-                             data['^IRX'], print_out=True)
+                f"Risk Factors of {TICKER}{fund}{NORMAL}...")
+            risk_comparison(data[fund], data['^GSPC'],
+                            data['^IRX'], print_out=True)
 
 
 def vq_function(config: dict):

@@ -433,11 +433,17 @@ def get_nearest_lines(ylist: list,
     if support_resistance == 'major':
         for y in range(len(ylist)-1, -1, -1):
             percent = np.round((ylist[y] - cur_price) / cur_price * 100.0, 3)
+            if percent < 0.0:
+                state = 'Support'
+            else:
+                state = 'Resistance'
+
             y_color = 'black'
             if len(color) > 0:
                 y_color = color[y]
+
             keys.append(
-                {'Price': f"{ylist[y]}", 'Change': f"{percent}%", 'Color': y_color})
+                {'Price': f"{ylist[y]}", 'Change': f"{percent}%", 'Color': y_color, 'State': state})
         return keys
 
     elif support_resistance == 'support':
@@ -460,30 +466,46 @@ def get_nearest_lines(ylist: list,
                 for i in range(count, -1, modifier):
                     percent = np.round(
                         (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    if percent < 0.0:
+                        state = 'Support'
+                    else:
+                        state = 'Resistance'
                     keys.append(
-                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%", 'State': state})
 
             else:
                 for i in range(count, count - NUM_NEAREST_LINES, -1):
                     percent = np.round(
                         (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    if percent < 0.0:
+                        state = 'Support'
+                    else:
+                        state = 'Resistance'
                     keys.append(
-                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%", 'State': state})
 
         else:
             if (count + NUM_NEAREST_LINES) >= len(ylist) - 1:
                 for i in range(count, len(ylist), modifier):
                     percent = np.round(
                         (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    if percent < 0.0:
+                        state = 'Support'
+                    else:
+                        state = 'Resistance'
                     keys.append(
-                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%", 'State': state})
 
             else:
                 for i in range(count, count + NUM_NEAREST_LINES, modifier):
                     percent = np.round(
                         (ylist[i] - cur_price) / cur_price * 100.0, 3)
+                    if percent < 0.0:
+                        state = 'Support'
+                    else:
+                        state = 'Resistance'
                     keys.append(
-                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%"})
+                        {'Price': f"{ylist[i]}", 'Change': f"{percent}%", 'State': state})
 
     return keys
 

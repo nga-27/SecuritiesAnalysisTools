@@ -324,7 +324,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
         dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title='Hull Moving Average Metrics')
     else:
-        filename2 = os.path.join(name, view, f"hull_metrics_name.png")
+        filename2 = os.path.join(name, view, f"hull_metrics_{name}.png")
         dual_plotting(position['Close'], swings['metrics']['metrics'],
                       'Price', 'Metrics', title=name2, saveFig=True, filename=filename2)
 

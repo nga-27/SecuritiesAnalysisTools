@@ -183,13 +183,13 @@ def beta_comparison_list(fund: list, benchmark: list) -> list:
     return beta_figures[0], rsqd
 
 
-def alpha_comparison(fund: pd.DataFrame,
-                     benchmark: pd.DataFrame,
-                     treasury: pd.DataFrame,
-                     beta: float = None,
-                     rsqd: float = None,
-                     **kwargs) -> dict:
-    """Alpha Comparison
+def risk_comparison(fund: pd.DataFrame,
+                    benchmark: pd.DataFrame,
+                    treasury: pd.DataFrame,
+                    beta: float = None,
+                    rsqd: float = None,
+                    **kwargs) -> dict:
+    """Risk Comparison
 
     Alpha metric, with Sharpe Ratio, Beta, R-Squared, and Standard Deviation
 
