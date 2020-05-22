@@ -28,7 +28,9 @@ from libs.tools import get_high_level_stats
 from libs.tools import bear_bull_power
 from libs.tools import total_power
 from libs.tools import bollinger_bands
+from libs.tools import commodity_channel_index
 from libs.tools import candlesticks
+from libs.tools import risk_comparison
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -38,7 +40,7 @@ from libs.features import analyze_price_gaps
 from libs.utils import date_extractor
 from libs.utils import create_sub_temp_dir
 from libs.utils import get_api_metadata
-from libs.utils import INDEXES
+from libs.utils import INDEXES, SKIP_INDEXES
 
 # Imports that drive custom metrics for market analysis
 from libs.metrics import future_returns
@@ -75,6 +77,9 @@ def run_prod(script: list):
     clock = start_clock()
 
     for fund_name in funds:
+
+        if fund_name in SKIP_INDEXES:
+            continue
 
         fund_print = INDEXES.get(fund_name, fund_name)
         print("")
@@ -144,7 +149,8 @@ def run_prod(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['ema_swing_trade'] = moving_average_swing_trade(
-                fund, function='ema', plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, function='ema', plot_output=False,
+                name=fund_name, progress_bar=p, view=period)
 
             fund_data['hull_moving_average'] = hull_moving_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
@@ -161,8 +167,11 @@ def run_prod(script: list):
             fund_data['bollinger_bands'] = bollinger_bands(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
+            fund_data['commodity_channels'] = commodity_channel_index(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
             if 'no_index' not in config['state']:
-                fund_data['relative_strength'], _ = relative_strength(
+                strength, match_data = relative_strength(
                     fund_name,
                     full_data_dict=dataset[period],
                     config=config,
@@ -173,10 +182,11 @@ def run_prod(script: list):
                     interval=config['interval'][i],
                     view=period
                 )
+                fund_data['relative_strength'] = strength
 
-                beta, rsqd = beta_comparison(fund, dataset[period]['^GSPC'])
-                fund_data['statistics']['beta'] = beta
-                fund_data['statistics']['r_squared'] = rsqd
+                fund_data['statistics']['risk_ratios'] = risk_comparison(
+                    fund, dataset[period]['^GSPC'], dataset[period]['^IRX'],
+                    sector_data=match_data)
                 p.uptick()
 
             # Support and Resistance Analysis

@@ -183,6 +183,11 @@ def metrics_initializer(m_data: dict, period='2y'):
 
 
 def get_metrics_content() -> dict:
+    """Get Metrics Content
+
+    Returns:
+        dict -- metrics file data
+    """
     metrics_file = os.path.join("resources", "sectors.json")
     if not os.path.exists(metrics_file):
         print(
