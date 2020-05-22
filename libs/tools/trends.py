@@ -987,29 +987,32 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                     line.append(reg[0] * ind + reg[1])
 
                 x_line = indexes.copy()
-                removals = []
-                for j, lin in enumerate(line):
-                    if lin < 0.0:
-                        if lin < ((1.0 + threshold) * signal[j]) or \
-                                lin > ((1.0 - threshold) * signal[j]):
-                            removals.append(j)
-                    else:
-                        if lin > ((1.0 + threshold) * signal[j]) or \
-                                lin < ((1.0 - threshold) * signal[j]):
-                            removals.append(j)
+                # removals = []
+                # for j, lin in enumerate(line):
+                #     if lin < 0.0:
+                #         if lin < ((1.0 + threshold) * signal[j]) or \
+                #                 lin > ((1.0 - threshold) * signal[j]):
+                #             removals.append(j)
+                #     else:
+                #         if lin > ((1.0 + threshold) * signal[j]) or \
+                #                 lin < ((1.0 - threshold) * signal[j]):
+                #             removals.append(j)
 
-                line_corrected = []
-                x_corrected = []
-                for x in x_line:
-                    if x not in removals:
-                        x_corrected.append(x)
+                # line_corrected = []
+                # x_corrected = []
+                # for x in x_line:
+                #     if x not in removals:
+                #         x_corrected.append(x)
+
+                # if len(x_corrected) > 0:
+                #     start = min(x_corrected)
+                #     end = max(x_corrected)
+                #     line_corrected = line[start:end+1].copy()
+                #     x_corrected = list(range(start, end+1))
+                line_corrected, x_corrected = filter_nearest_to_signal(
+                    signal, x_line, line)
 
                 if len(x_corrected) > 0:
-                    start = min(x_corrected)
-                    end = max(x_corrected)
-                    line_corrected = line[start:end+1].copy()
-                    x_corrected = list(range(start, end+1))
-
                     content['length'] = len(x_corrected)
                     content['id'] = line_id
                     line_id += 1
@@ -1047,29 +1050,32 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                     line.append(reg[0] * ind + reg[1])
 
                 x_line = indexes.copy()
-                removals = []
-                for j, lin in enumerate(line):
-                    if lin < 0.0:
-                        if lin < ((1.0 + threshold) * signal[j]) or \
-                                lin > ((1.0 - threshold) * signal[j]):
-                            removals.append(j)
-                    else:
-                        if lin > ((1.0 + threshold) * signal[j]) or \
-                                lin < ((1.0 - threshold) * signal[j]):
-                            removals.append(j)
+                # removals = []
+                # for j, lin in enumerate(line):
+                #     if lin < 0.0:
+                #         if lin < ((1.0 + threshold) * signal[j]) or \
+                #                 lin > ((1.0 - threshold) * signal[j]):
+                #             removals.append(j)
+                #     else:
+                #         if lin > ((1.0 + threshold) * signal[j]) or \
+                #                 lin < ((1.0 - threshold) * signal[j]):
+                #             removals.append(j)
 
-                line_corrected = []
-                x_corrected = []
-                for x in x_line:
-                    if x not in removals:
-                        x_corrected.append(x)
+                # line_corrected = []
+                # x_corrected = []
+                # for x in x_line:
+                #     if x not in removals:
+                #         x_corrected.append(x)
+
+                # if len(x_corrected) > 0:
+                #     start = min(x_corrected)
+                #     end = max(x_corrected)
+                #     line_corrected = line[start:end+1].copy()
+                #     x_corrected = list(range(start, end+1))
+                line_corrected, x_corrected = filter_nearest_to_signal(
+                    signal, x_line, line, threshold=threshold)
 
                 if len(x_corrected) > 0:
-                    start = min(x_corrected)
-                    end = max(x_corrected)
-                    line_corrected = line[start:end+1].copy()
-                    x_corrected = list(range(start, end+1))
-
                     content['length'] = len(x_corrected)
                     content['id'] = line_id
                     line_id += 1
@@ -1082,6 +1088,8 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     # Idea: bucket sort t_line_content by 'slope', within each bucket then consolidate similar
     # intercepts, both by line extension/combination and on slope averaging. Track line 'id' list
     # so that the corrections can be made for plots and x_plots
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal)
 
     plots = []
     x_plots = []
@@ -1094,3 +1102,152 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
     trends = dict()
     return trends
+
+
+def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: list, **kwargs) -> list:
+
+    thresh = kwargs.get('thresh', 0.12)
+
+    nan_free = []
+    for sortie in line_content:
+        if str(sortie['slope']) != 'nan':
+            nan_free.append(sortie)
+
+    print(f"number of lines: {len(nan_free)}\r\n")
+    sort_by_slope = sorted(nan_free, key=lambda x: x['slope'])
+    slopes = [s['slope'] for s in sort_by_slope]
+
+    slope_buckets_vals = []
+    for i in range(20):
+        slope_buckets_vals.append(np.percentile(slopes, 5 + i*5))
+
+    slope_buckets = []
+    for slp_th in slope_buckets_vals:
+        bucket = []
+        while sort_by_slope[0]['slope'] < slp_th:
+            bucket.append(sort_by_slope.pop(0))
+        slope_buckets.append(bucket)
+
+    kept_grouped = []
+    for bucket in slope_buckets:
+        count_base = 0
+        count_comp = 1
+        kept_local = [bucket[count_base]['id']]
+
+        while count_base < len(bucket) and count_comp < len(bucket):
+
+            if bucket[count_base]['slope'] < 0.0:
+                base_lower = (1.0 - thresh) * bucket[count_base]['slope']
+                comp_upper = (1.0 + thresh) * bucket[count_comp]['slope']
+
+                if base_lower > comp_upper:
+                    base_lower = (1.0 - thresh) * \
+                        bucket[count_base]['intercept']
+                    comp_upper = (1.0 + thresh) * \
+                        bucket[count_comp]['intercept']
+
+                    if base_lower > comp_upper:
+                        kept_local.append(bucket[count_comp]['id'])
+                        count_comp += 1
+                        continue
+
+            else:
+                base_upper = (1.0 + thresh) * bucket[count_base]['slope']
+                comp_lower = (1.0 - thresh) * bucket[count_comp]['slope']
+
+                if base_upper > comp_lower:
+                    base_upper = (1.0 + thresh) * \
+                        bucket[count_base]['intercept']
+                    comp_lower = (1.0 - thresh) * \
+                        bucket[count_comp]['intercept']
+
+                    if base_upper > comp_lower:
+                        kept_local.append(bucket[count_comp]['id'])
+                        count_comp += 1
+                        continue
+
+            count_base = count_comp
+            count_comp += 1
+            kept_grouped.append(kept_local.copy())
+            kept_local = [bucket[count_base]['id']]
+
+    print(f"kept_grouped: {len(kept_grouped)}")
+    _, lines, x_lines = reconstruct_lines(
+        kept_grouped, line_content, lines, x_lines, signal)
+
+    print(f"reconstructed: {len(lines)}")
+
+    return line_content, lines, x_lines
+
+
+def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signal: list) -> list:
+
+    new_lines = []
+    new_xs = []
+    for id_list in groups:
+        slope = []
+        intercept = []
+        start = []
+        end = []
+
+        for id_ in id_list:
+            slope.append(content[id_]['slope'])
+            intercept.append(content[id_]['intercept'])
+            start.append(x_s[id_][0])
+            end.append(x_s[id_][-1])
+
+        slope = np.mean(slope)
+        intercept = np.mean(intercept)
+        start = np.min(start)
+        end = np.max(end)
+
+        xs = list(range(start, end+1))
+        line = [slope * x + intercept for x in xs]
+
+        line, xs = filter_nearest_to_signal(
+            signal, xs, line, threshold=0.03, ratio=True)
+
+        if len(xs) > 4:
+            new_lines.append(line)
+            new_xs.append(xs)
+
+    return content, new_lines, new_xs
+
+
+def filter_nearest_to_signal(signal: list,
+                             x_line: list,
+                             line: list,
+                             threshold=0.05,
+                             ratio=False) -> list:
+
+    removals = []
+    for j, lin in enumerate(line):
+        if lin < 0.0:
+            if lin < ((1.0 + threshold) * signal[x_line[j]]) or \
+                    lin > ((1.0 - threshold) * signal[x_line[j]]):
+                removals.append(j)
+        else:
+            if lin > ((1.0 + threshold) * signal[x_line[j]]) or \
+                    lin < ((1.0 - threshold) * signal[x_line[j]]):
+                removals.append(j)
+
+    line_corrected = []
+    x_corrected = []
+    indexes = []
+    for j, x in enumerate(x_line):
+        if j not in removals:
+            x_corrected.append(x)
+            indexes.append(j)
+
+    if len(x_corrected) > 0:
+        start = min(x_corrected)
+        end = max(x_corrected)
+        x_corrected = list(range(start, end+1))
+
+        if ratio:
+            start = min(indexes)
+            end = max(indexes)
+
+        line_corrected = line[start:end+1].copy()
+
+    return line_corrected, x_corrected
