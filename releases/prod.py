@@ -162,7 +162,7 @@ def run_prod(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:
-                fund_data['relative_strength'] = relative_strength(
+                fund_data['relative_strength'], _ = relative_strength(
                     fund_name,
                     full_data_dict=dataset[period],
                     config=config,

@@ -172,7 +172,7 @@ def run_dev(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:
-                fund_data['relative_strength'] = relative_strength(
+                strength, match_data = relative_strength(
                     fund_name,
                     full_data_dict=dataset[period],
                     config=config,
@@ -183,9 +183,11 @@ def run_dev(script: list):
                     interval=config['interval'][i],
                     view=period
                 )
+                fund_data['relative_strength'] = strength
 
                 fund_data['statistics']['risk_ratios'] = risk_comparison(
-                    fund, dataset[period]['^GSPC'], dataset[period]['^IRX'])
+                    fund, dataset[period]['^GSPC'], dataset[period]['^IRX'],
+                    sector_data=match_data)
                 p.uptick()
 
             # Support and Resistance Analysis

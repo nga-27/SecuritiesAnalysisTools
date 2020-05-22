@@ -206,6 +206,8 @@ def risk_comparison(fund: pd.DataFrame,
         dict -- alpha data object
     """
     print_out = kwargs.get('print_out', False)
+    sector_data = kwargs.get('sector_data')
+
     alpha = dict()
     if beta is None or rsqd is None:
         beta, rsqd = beta_comparison(fund, benchmark)
@@ -217,6 +219,18 @@ def risk_comparison(fund: pd.DataFrame,
     bench_return, _ = get_returns(benchmark)
     treas_return = treasury['Close'][-1]
 
+    alpha_sector = "n/a"
+    beta_sector = "n/a"
+    rsqd_sector = "n/a"
+
+    if sector_data is not None:
+        sector_return, _ = get_returns(sector_data)
+        beta_sector, rsqd_sector = beta_comparison(fund, sector_data)
+        beta_sector = np.round(beta_sector, 4)
+        rsqd_sector = np.round(rsqd_sector, 4)
+        alpha_sector = np.round(fund_return - treas_return -
+                                beta_sector * (sector_return - treas_return), 4)
+
     alpha_val = np.round(fund_return - treas_return -
                          beta * (bench_return - treas_return), 4)
 
@@ -224,20 +238,30 @@ def risk_comparison(fund: pd.DataFrame,
 
     fund_stdev = np.round(fund_stdev, 4)
 
-    alpha['alpha'] = alpha_val
-    alpha['beta'] = beta
-    alpha['r_squared'] = rsqd
+    alpha['alpha'] = {"market": alpha_val}
+    alpha['beta'] = {"market": beta}
+    alpha['r_squared'] = {"market": rsqd}
     alpha['sharpe'] = sharpe_ratio
     alpha['standard_deviation'] = fund_stdev
     alpha['returns'] = {'fund': fund_return,
-                        'benchmark': bench_return, 'treasury': treas_return}
+                        'benchmark': bench_return,
+                        'treasury': treas_return}
+
+    if sector_data is not None:
+        alpha['returns']["sector"] = sector_return
+        alpha['alpha']["sector"] = alpha_sector
+        alpha['beta']["sector"] = beta_sector
+        alpha['r_squared']["sector"] = rsqd_sector
 
     if print_out:
-        print(f"\r\nAlpha:\t\t{alpha_val}")
-        print(f"Beta:\t\t{beta}")
-        print(f"R-Squared:\t{rsqd}")
-        print(f"Sharpe Ratio:\t{sharpe_ratio}")
-        print(f"Standard Dev:\t{fund_stdev}")
+        print(f"\r\nAlpha Market:\t\t{alpha_val}")
+        print(f"Alpha Sector:\t\t{alpha_sector}")
+        print(f"Beta Market:\t\t{beta}")
+        print(f"Beta Sector:\t\t{beta_sector}")
+        print(f"R-Squared Market:\t{rsqd}")
+        print(f"R-Squared Sector:\t{rsqd_sector}")
+        print(f"Sharpe Ratio:\t\t{sharpe_ratio}")
+        print(f"Standard Dev:\t\t{fund_stdev}")
 
     return alpha
 

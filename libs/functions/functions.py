@@ -7,7 +7,8 @@ import numpy as np
 from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 from libs.utils import generic_plotting
-from libs.utils import get_volatility, vq_status_print, get_api_metadata
+from libs.utils import get_volatility, vq_status_print
+from libs.utils import get_api_metadata, api_sector_match
 
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
@@ -110,7 +111,7 @@ def only_functions_handler(config: dict):
     if 'commodity' in config['run_functions']:
         commodity_function(config)
     if 'alpha' in config['run_functions']:
-        alpha_function(config)
+        risk_function(config)
     if 'vq' in config['run_functions']:
         vq_function(config)
     if 'nf' in config['run_functions']:
@@ -362,16 +363,22 @@ def commodity_function(config: dict):
             commodity_channel_index(data[fund], name=fund, plot_output=True)
 
 
-def alpha_function(config: dict):
+def risk_function(config: dict):
     print(f"Risk Factors for funds...\r\n")
     config['tickers'] += ' ^GSPC ^IRX'
     data, fund_list = function_data_download(config)
+
     for fund in fund_list:
         if fund != '^GSPC' and fund != '^IRX':
             print(
                 f"Risk Factors of {TICKER}{fund}{NORMAL}...")
+
+            meta_fund = get_api_metadata(fund, function='info')
+            match_fund, match_data = function_sector_match(
+                meta_fund, data[fund], config)
+
             risk_comparison(data[fund], data['^GSPC'],
-                            data['^IRX'], print_out=True)
+                            data['^IRX'], print_out=True, sector_data=match_data[match_fund])
 
 
 def vq_function(config: dict):
@@ -573,6 +580,24 @@ def function_data_download(config: dict) -> list:
     if has_critical_error(data, 'download_data', misc=e_check):
         return [], []
     return data, fund_list
+
+
+def function_sector_match(meta: dict, fund_data: pd.DataFrame, config: dict) -> dict:
+    match = meta.get('info', {}).get('sector')
+    if match is not None:
+        fund_len = {
+            'length': len(fund_data['Close']),
+            'start': fund_data.index[0],
+            'end': fund_data.index[
+                len(fund_data['Close'])-1],
+            'dates': fund_data.index
+        }
+        match_fund, match_data = api_sector_match(
+            match, config, fund_len=fund_len,
+            period=config['period'][0], interval=config['interval'][0])
+
+        return match_fund, match_data
+    return None, None
 
 
 def vq_function_print(vq: dict, fund: str):

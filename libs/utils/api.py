@@ -46,6 +46,8 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         progress_bar {ProgressBar} -- (default: {None})
         max_close {float} -- max close for a period, for VQ (default: {None})
         data {pd.DataFrame} -- dataset, primarily for VQ (default: {None})
+        plot_output {bool} -- 'Ratings by Firms' (default: {False})
+        function {str} -- specific metadata functions (default: {'all'})
 
     Returns:
         dict -- contains all financial metadata available
@@ -54,6 +56,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     max_close = kwargs.get('max_close', None)
     dataset = kwargs.get('data')
     plot_output = kwargs.get('plot_output', False)
+    function = kwargs.get('function', 'all')
 
     fund_ticker_cleansed = INDEXES.get(fund_ticker, fund_ticker)
     api_print = f"\r\nFetching API metadata for {FUND}{fund_ticker_cleansed}{NORMAL}..."
@@ -68,38 +71,52 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     if pb is not None:
         pb.uptick(increment=0.3)
 
-    metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
-    metadata['info'] = AVAILABLE_KEYS.get('info')(
-        ticker, st_tick, force_holdings=False)
+    if function == 'all':
+        metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
+
+    if function == 'all' or function == 'info':
+        metadata['info'] = AVAILABLE_KEYS.get('info')(
+            ticker, st_tick, force_holdings=False)
 
     if pb is not None:
         pb.uptick(increment=0.2)
 
-    metadata['financials'] = AVAILABLE_KEYS.get('financials')(ticker, st_tick)
-    metadata['balance_sheet'] = AVAILABLE_KEYS.get('balance')(ticker, st_tick)
+    if function == 'all' or function == 'financials':
+        metadata['financials'] = AVAILABLE_KEYS.get(
+            'financials')(ticker, st_tick)
+
+    if function == 'all' or function == 'balance':
+        metadata['balance_sheet'] = AVAILABLE_KEYS.get(
+            'balance')(ticker, st_tick)
 
     if pb is not None:
         pb.uptick(increment=0.1)
 
-    metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker, st_tick)
-    metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker, st_tick)
-    metadata['recommendations'] = AVAILABLE_KEYS.get(
-        'recommendations')(ticker, st_tick)
+    if function == 'all':
+        metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker, st_tick)
+        metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker, st_tick)
 
-    metadata['recommendations']['tabular'] = calculate_recommendation_curve(
-        metadata['recommendations'], plot_output=plot_output, name=fund_ticker)
+    if function == 'all' or function == 'recommendations':
+        metadata['recommendations'] = AVAILABLE_KEYS.get(
+            'recommendations')(ticker, st_tick)
 
-    # EPS needs some other figures to make it correct, but ok for now.
-    metadata['eps'] = calculate_eps(metadata)
-    if pb is not None:
-        pb.uptick(increment=0.1)
+        metadata['recommendations']['tabular'] = calculate_recommendation_curve(
+            metadata['recommendations'], plot_output=plot_output, name=fund_ticker)
 
-    metadata['volatility'] = get_volatility(
-        fund_ticker, max_close=max_close, data=dataset)
-    if pb is not None:
-        pb.uptick(increment=0.1)
+    if function == 'all':
+        # EPS needs some other figures to make it correct, but ok for now.
+        metadata['eps'] = calculate_eps(metadata)
+        if pb is not None:
+            pb.uptick(increment=0.1)
 
-    metadata['altman_z'] = AVAILABLE_KEYS.get('altman_z')(metadata)
+    if function == 'all' or function == 'volatility':
+        metadata['volatility'] = get_volatility(
+            fund_ticker, max_close=max_close, data=dataset)
+        if pb is not None:
+            pb.uptick(increment=0.1)
+
+    if function == 'all':
+        metadata['altman_z'] = AVAILABLE_KEYS.get('altman_z')(metadata)
 
     api_print += "  Done."
     print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
@@ -772,7 +789,7 @@ def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
     stop_loss = vq_obj.get('stop_loss', 'n/a')
     max_date = vq_obj.get('last_max', {}).get('Date')
 
-    if (max_date == 'n/a') or (stop_loss == 'n/a'):
+    if (max_date == 'n/a') or (stop_loss == 'n/a') or dataset is None:
         return 'n/a'
 
     max_date = datetime.strptime(max_date, '%m/%d/%Y')
