@@ -952,6 +952,9 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
     lines = []
     x_s = []
+    t_line_content = []
+    line_id = 0
+
     for div in divisors:
         period = int(len(signal) / div)
         for i in range(div):
@@ -977,6 +980,8 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                                         reg[0] * data['x'] + reg[1]]
 
                 reg = linregress(data['x'], data['value'])
+                content = {'slope': reg[0], 'intercept': reg[1]}
+
                 line = []
                 for ind in indexes:
                     line.append(reg[0] * ind + reg[1])
@@ -1005,10 +1010,15 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                     line_corrected = line[start:end+1].copy()
                     x_corrected = list(range(start, end+1))
 
-                lines.append(line_corrected.copy())
-                x_s.append(x_corrected.copy())
-                # lines.append(line)
-                # x_s.append(x_line)
+                    content['length'] = len(x_corrected)
+                    content['id'] = line_id
+                    line_id += 1
+
+                    lines.append(line_corrected.copy())
+                    x_s.append(x_corrected.copy())
+                    t_line_content.append(content)
+                    # lines.append(line)
+                    # x_s.append(x_line)
 
         for i in range(period, len(signal), 2):
             # print(f"range: {i-period} : {i}")
@@ -1030,6 +1040,8 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                                         reg[0] * data['x'] + reg[1]]
 
                 reg = linregress(data['x'], data['value'])
+                content = {'slope': reg[0], 'intercept': reg[1]}
+
                 line = []
                 for ind in indexes:
                     line.append(reg[0] * ind + reg[1])
@@ -1058,10 +1070,18 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                     line_corrected = line[start:end+1].copy()
                     x_corrected = list(range(start, end+1))
 
-                lines.append(line_corrected.copy())
-                x_s.append(x_corrected.copy())
+                    content['length'] = len(x_corrected)
+                    content['id'] = line_id
+                    line_id += 1
+
+                    lines.append(line_corrected.copy())
+                    x_s.append(x_corrected.copy())
+                    t_line_content.append(content)
 
     # handle over load of lines (consolidate)
+    # Idea: bucket sort t_line_content by 'slope', within each bucket then consolidate similar
+    # intercepts, both by line extension/combination and on slope averaging. Track line 'id' list
+    # so that the corrections can be made for plots and x_plots
 
     plots = []
     x_plots = []
