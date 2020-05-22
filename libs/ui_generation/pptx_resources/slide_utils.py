@@ -5,7 +5,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from libs.utils import SP500, STANDARD_COLORS
+from libs.utils import INDEXES, STANDARD_COLORS
 
 # Slide Layouts
 PRES_TITLE_SLIDE = 0
@@ -38,7 +38,7 @@ def slide_title_header(slide, fund: str, include_time=True, price_details=''):
     Returns:
         pptx-slide -- updated slide with title content
     """
-    fund = SP500.get(fund, fund)
+    fund = INDEXES.get(fund, fund)
 
     left = Inches(0)  # Inches(3.86)
     top = Inches(0)

@@ -181,3 +181,170 @@ def beta_comparison_list(fund: list, benchmark: list) -> list:
     rsqd = beta_figures[2]**2
 
     return beta_figures[0], rsqd
+
+
+def risk_comparison(fund: pd.DataFrame,
+                    benchmark: pd.DataFrame,
+                    treasury: pd.DataFrame,
+                    beta: float = None,
+                    rsqd: float = None,
+                    **kwargs) -> dict:
+    """Risk Comparison
+
+    Alpha metric, with Sharpe Ratio, Beta, R-Squared, and Standard Deviation
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        benchmark {pd.DataFrame} -- benchmark dataset (does not have to be SP500)
+        treasury {pd.DataFrame} -- 11-week treasury bill dataset
+
+    Keyword Arguments:
+        beta {float} -- beta figure; will calculate if None (default: {None})
+        rsqd {float} -- r-squared figure; will calculate if None (default: {None})
+
+    Optional Args:
+        print_out {bool} -- prints risk ratios to terminal (default: {False})
+        sector_data {pd.DataFrame} -- data of related sector (default: {None})
+
+    Returns:
+        dict -- alpha data object
+    """
+    print_out = kwargs.get('print_out', False)
+    sector_data = kwargs.get('sector_data')
+
+    alpha = dict()
+    if beta is None or rsqd is None:
+        beta, rsqd = beta_comparison(fund, benchmark)
+
+    beta = np.round(beta, 4)
+    rsqd = np.round(rsqd, 4)
+
+    fund_return, fund_stdev = get_returns(fund)
+    bench_return, _ = get_returns(benchmark)
+    treas_return = treasury['Close'][-1]
+
+    alpha_sector = "n/a"
+    beta_sector = "n/a"
+    rsqd_sector = "n/a"
+    sharpe_ratio = "n/a"
+
+    if sector_data is not None:
+        sector_return, _ = get_returns(sector_data)
+        beta_sector, rsqd_sector = beta_comparison(fund, sector_data)
+        beta_sector = np.round(beta_sector, 4)
+        rsqd_sector = np.round(rsqd_sector, 4)
+        alpha_sector = np.round(fund_return - treas_return -
+                                beta_sector * (sector_return - treas_return), 4)
+
+    alpha_val = np.round(fund_return - treas_return -
+                         beta * (bench_return - treas_return), 4)
+
+    if fund_stdev != 0.0:
+        sharpe_ratio = np.round((fund_return - treas_return) / fund_stdev, 4)
+
+    fund_stdev = np.round(fund_stdev, 4)
+
+    alpha['alpha'] = {"market": alpha_val}
+    alpha['beta'] = {"market": beta}
+    alpha['r_squared'] = {"market": rsqd}
+    alpha['sharpe'] = sharpe_ratio
+    alpha['standard_deviation'] = fund_stdev
+    alpha['returns'] = {'fund': fund_return,
+                        'benchmark': bench_return,
+                        'treasury': treas_return}
+
+    if sector_data is not None:
+        alpha['returns']["sector"] = sector_return
+        alpha['alpha']["sector"] = alpha_sector
+        alpha['beta']["sector"] = beta_sector
+        alpha['r_squared']["sector"] = rsqd_sector
+
+    if print_out:
+        print(f"\r\nAlpha Market:\t\t{alpha_val}")
+        print(f"Alpha Sector:\t\t{alpha_sector}")
+        print(f"Beta Market:\t\t{beta}")
+        print(f"Beta Sector:\t\t{beta_sector}")
+        print(f"R-Squared Market:\t{rsqd}")
+        print(f"R-Squared Sector:\t{rsqd_sector}")
+        print(f"Sharpe Ratio:\t\t{sharpe_ratio}")
+        print(f"Standard Dev:\t\t{fund_stdev}")
+
+    return alpha
+
+
+def get_returns(data: pd.DataFrame, output='annual') -> list:
+    """Get Returns
+
+    Arguments:
+        data {pd.DataFrame} -- fund dataset
+
+    Keyword Arguments:
+        output {str} -- return for a period (default: {'annual'})
+
+    Returns:
+        list -- return, standard deviation
+    """
+    # Determine intervals for returns, start with annual
+    years = 1
+    quarters = 4
+    if len(data['Close']) > 300:
+        years = 2
+        quarters = 8
+    if len(data['Close']) > 550:
+        years = 5
+        quarters = 20
+    if len(data['Close']) > 1500:
+        years = 10
+        quarters = 40
+
+    annual_returns = 0.0
+    annual_std = []
+    for i in range(years):
+        ars = (data['Adj Close'][(i+1)*250] - data['Adj Close']
+               [i * 250]) / data['Adj Close'][i * 250] * 100.0
+        annual_returns += ars
+        annual_std.append(ars)
+
+    annual_returns /= float(years)
+    annual_returns = (data['Adj Close'][-1] - data['Adj Close']
+                      [-250]) / data['Adj Close'][-250] * 100.0
+
+    # Determine intervals for returns, next with quarterly
+    q_returns = 0.0
+    q_std = []
+    qrs_2 = 0.0
+    counter = 0
+    for i in range(quarters):
+        multiple = 62
+        if i % 2 != 0:
+            multiple = 63
+        counter += multiple
+
+        qrs = (data['Adj Close'][counter] - data['Adj Close']
+               [counter - multiple]) / data['Adj Close'][counter - multiple] * 100.0
+        q_returns += qrs
+        qrs_2 += qrs
+        if i % 4 == 3:
+            q_std.append(qrs_2)
+            qrs_2 = 0.0
+
+    q_returns /= float(quarters)
+    q_returns *= 4.0
+
+    q_returns = 0.0
+    for i in range(4):
+        start = -1 + -1 * int(62.5 * float(i))
+        subtract = -1 * int(62.5 * float(i + 1))
+        qrs = (data['Adj Close'][start] - data['Adj Close']
+               [subtract]) / data['Adj Close'][subtract] * 100.0
+        q_returns += qrs
+
+    std_1 = np.std(annual_std)
+    std_2 = np.std(q_std)
+
+    returns = np.mean([q_returns, annual_returns])
+    stdevs = np.mean([std_1, std_2])
+    if output == 'quarterly':
+        returns /= 4.0
+
+    return returns, stdevs

@@ -4,7 +4,7 @@ import numpy as np
 
 from libs.utils import generic_plotting, shape_plotting
 from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list, date_extractor
-from libs.utils import ProgressBar, SP500
+from libs.utils import ProgressBar, INDEXES
 from libs.utils import api_sector_match, api_sector_funds
 
 
@@ -143,7 +143,7 @@ def get_SP500_df(tickers: dict) -> pd.DataFrame:
     return None
 
 
-def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict:
+def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list:
     """Relative Strength
 
     Compare a fund vs. market, sector, and/or other fund
@@ -162,7 +162,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
         view {str} -- Directory of plots (default: {''})
 
     Returns:
-        dict -- contains all relative strength information
+        list -- dict containing all relative strength information, sector match data
     """
     secondary_fund_names = kwargs.get('secondary_fund_names', [])
     config = kwargs.get('config', None)
@@ -176,6 +176,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     period = kwargs.get('period', '2y')
     interval = kwargs.get('interval', '1d')
 
+    sector_bench = None
     comp_funds = []
     comp_data = {}
     if meta is not None:
@@ -201,6 +202,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
                     match_data = full_data_dict
                 sector = match_fund
                 sector_data = match_data
+                sector_bench = match_data[match_fund]
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
@@ -213,7 +215,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     secondary_names = []
     secondary_fund_names.extend(comp_funds)
 
-    for key in comp_data.keys():
+    for key in comp_data:
         if sector_data.get(key) is None:
             sector_data[key] = comp_data[key]
 
@@ -281,8 +283,9 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     for i, out_data in enumerate(output_data):
         r_strength['tabular'][str(legend[i])] = out_data
 
-    primary_name2 = SP500.get(primary_name, primary_name)
+    primary_name2 = INDEXES.get(primary_name, primary_name)
     title = f"Relative Strength of {primary_name2}"
+
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
@@ -304,4 +307,4 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> dict
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    return r_strength
+    return r_strength, sector_bench

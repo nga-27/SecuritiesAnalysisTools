@@ -15,7 +15,7 @@ WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
 
 
-def type_composite_index(**kwargs):
+def type_composite_index(**kwargs) -> list:
     """Type Composite Index (MCI)
 
     Similar to MCI, TCI compares broader market types (sensitive, cyclical, and defensive)
@@ -25,14 +25,18 @@ def type_composite_index(**kwargs):
         plot_output {bool} -- True to render plot in realtime (default: {True})
         period {str / list} -- time period for data (e.g. '2y') (default: {None})
         clock {float} -- time for prog_bar (default: {None})
+        data {pd.DataFrame} -- fund datasets (default: {None})
+        sectors {list} -- list of sectors (default: {None})
 
     returns:
-        dict -- contains all tci information 
+        list -- dict contains all tci information, data, sectors
     """
     config = kwargs.get('config')
     period = kwargs.get('period')
     plot_output = kwargs.get('plot_output', True)
     clock = kwargs.get('clock')
+    data = kwargs.get('data')
+    sectors = kwargs.get('sectors')
 
     if config is not None:
         period = config['period']
@@ -58,7 +62,10 @@ def type_composite_index(**kwargs):
             if 'Type Sector' in props.keys():
                 if props['Type Sector'] == True:
 
-                    data, sectors, m_data = metrics_initializer(period='2y')
+                    m_data = get_metrics_content()
+                    if data is None or sectors is None:
+                        data, sectors = metrics_initializer(
+                            m_data, period='2y')
 
                     if data:
                         p = ProgressBar(
@@ -144,11 +151,11 @@ def type_composite_index(**kwargs):
                             )
 
                         p.end()
-                        return tci
-    return {}
+                        return tci, data, sectors
+    return {}, None, None
 
 
-def metrics_initializer(period='2y'):
+def metrics_initializer(m_data: dict, period='2y'):
     """Metrics Initializer
 
     Keyword Arguments:
@@ -157,18 +164,6 @@ def metrics_initializer(period='2y'):
     Returns:
         list -- downloaded_data, sector_list, index, metrics_file data
     """
-    metrics_file = os.path.join("resources", "sectors.json")
-    if not os.path.exists(metrics_file):
-        print(
-            f"{WARNING}WARNING: '{metrics_file}' not found for " +
-            f"'metrics_initializer'. Failed.{NORMAL}")
-        return None, [], None
-
-    with open(metrics_file) as m_file:
-        m_data = json.load(m_file)
-        m_file.close()
-        m_data = m_data.get("Type_Composite")
-
     sectors = m_data['Components']
     tickers = " ".join(sectors)
     tickers = index_appender(tickers)
@@ -184,7 +179,28 @@ def metrics_initializer(period='2y'):
         indexes=sectors, tickers=all_tickers, period=period, interval='1d')
     print(" ")
 
-    return data, sectors, m_data
+    return data, sectors
+
+
+def get_metrics_content() -> dict:
+    """Get Metrics Content
+
+    Returns:
+        dict -- metrics file data
+    """
+    metrics_file = os.path.join("resources", "sectors.json")
+    if not os.path.exists(metrics_file):
+        print(
+            f"{WARNING}WARNING: '{metrics_file}' not found for " +
+            f"'metrics_initializer'. Failed.{NORMAL}")
+        return None, [], None
+
+    with open(metrics_file) as m_file:
+        m_data = json.load(m_file)
+        m_file.close()
+        m_data = m_data.get("Type_Composite")
+
+    return m_data
 
 
 def type_composites(composite: dict, m_data: dict, type_type='Defensive') -> list:

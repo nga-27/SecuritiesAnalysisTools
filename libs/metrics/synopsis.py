@@ -1,6 +1,6 @@
 import numpy as np
 
-from libs.utils import SP500, TEXT_COLOR_MAP, EXEMPT_METRICS
+from libs.utils import INDEXES, TEXT_COLOR_MAP, EXEMPT_METRICS
 
 DOWN = TEXT_COLOR_MAP.get('red')
 UP = TEXT_COLOR_MAP.get('green')
@@ -186,7 +186,7 @@ def output_to_terminal(synopsis: dict, print_out=False, **kwargs):
         name {str} -- (default: {''})
     """
     name = kwargs.get('name', '')
-    name2 = SP500.get(name, name)
+    name2 = INDEXES.get(name, name)
 
     if print_out:
         for period in synopsis:

@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import dual_plotting, date_extractor
-from libs.utils import ProgressBar, SP500, STANDARD_COLORS
+from libs.utils import ProgressBar, INDEXES, STANDARD_COLORS
 from libs.features import normalize_signals
 
 from .ultimate_oscillator import ultimate_oscillator
@@ -75,7 +75,7 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     cluster_oscs = clustered_metrics(
         position, cluster_oscs, plot_output=plot_output, name=name, view=view)
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Clustering: ' + function
     if plot_output:
         dual_plotting(position['Close'], clusters, 'Position Price',
@@ -377,7 +377,7 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
 
     cluster_oscs['metrics'] = metrics
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + " - Clustered Oscillator Metrics"
     if plot_output:
         dual_plotting(position['Close'], metrics,

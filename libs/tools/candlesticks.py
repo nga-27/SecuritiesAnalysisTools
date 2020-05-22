@@ -4,7 +4,7 @@ from copy import deepcopy
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, INDEXES
 from libs.utils import candlestick_plot
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from .full_stochastic import generate_full_stoch_signal
@@ -55,11 +55,14 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     plot_200 = {"plot": two_hundred_day,
                 "color": "black", "legend": "200-day MA"}
 
+    name2 = INDEXES.get(name, name)
+
     if plot_output:
-        candlestick_plot(fund, title=name, additional_plts=[plot_50, plot_200])
+        candlestick_plot(fund, title=name2, additional_plts=[
+                         plot_50, plot_200])
     else:
         filename = os.path.join(name, view, f"candlestick_{name}.png")
-        candlestick_plot(fund, title=name, filename=filename,
+        candlestick_plot(fund, title=name2, filename=filename,
                          saveFig=True, additional_plts=[plot_50, plot_200])
 
     if pbar is not None:

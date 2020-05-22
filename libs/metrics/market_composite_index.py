@@ -34,14 +34,17 @@ def market_composite_index(**kwargs) -> dict:
         plot_output {bool} -- True to render plot in realtime (default: {True})
         period {str / list} -- time period for data (e.g. '2y') (default: {None})
         clock {uint64_t} -- time for prog_bar (default: {None})
+        data {pd.DataFrame} -- dataset with sector funds (default: {None})
 
     returns:
-        dict -- contains all mci information 
+        list -- dict contains all mci information, dict fund content, sector list
     """
     config = kwargs.get('config')
     period = kwargs.get('period')
     clock = kwargs.get('clock')
     plot_output = kwargs.get('plot_output', True)
+    data = kwargs.get('data')
+    sectors = kwargs.get('sectors')
 
     if config is not None:
         period = config['period']
@@ -68,7 +71,8 @@ def market_composite_index(**kwargs) -> dict:
                 if props['Market Sector'] == True:
 
                     mci = dict()
-                    data, sectors = metrics_initializer(period=period)
+                    if data is None or sectors is None:
+                        data, sectors = metrics_initializer(period=period)
 
                     if data:
                         p = ProgressBar(len(sectors)*2+5,
@@ -84,8 +88,8 @@ def market_composite_index(**kwargs) -> dict:
                         mci['correlations'] = correlations
                         p.end()
 
-                        return mci
-    return {}
+                        return mci, data, sectors
+    return {}, None, None
 
 
 def metrics_initializer(period='5y', name='Market Composite Index'):

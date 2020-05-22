@@ -1,5 +1,6 @@
 from .math_functions import lower_low, higher_high, bull_bear_th
 from .math_functions import beta_comparison, beta_comparison_list
+from .math_functions import risk_comparison
 
 from .moving_average import exponential_moving_avg, simple_moving_avg
 from .moving_average import weighted_moving_avg, windowed_moving_avg
@@ -31,3 +32,4 @@ from .statistics import get_high_level_stats
 from .candlesticks import candlesticks
 
 from .bollinger_bands import bollinger_bands
+from .commodity_channel_index import commodity_channel_index

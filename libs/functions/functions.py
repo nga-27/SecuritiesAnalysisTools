@@ -8,6 +8,7 @@ from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 from libs.utils import generic_plotting
 from libs.utils import get_volatility, vq_status_print
+from libs.utils import get_api_metadata, api_sector_match
 
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
@@ -24,6 +25,8 @@ from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
 from libs.tools import hull_moving_average
 from libs.tools import candlesticks
+from libs.tools import commodity_channel_index
+from libs.tools import risk_comparison
 
 from libs.nasit import generate_fund_from_ledger
 
@@ -105,6 +108,10 @@ def only_functions_handler(config: dict):
         price_gap_function(config)
     if 'candlestick' in config['run_functions']:
         candlestick_function(config)
+    if 'commodity' in config['run_functions']:
+        commodity_function(config)
+    if 'alpha' in config['run_functions']:
+        risk_function(config)
     if 'vq' in config['run_functions']:
         vq_function(config)
     if 'nf' in config['run_functions']:
@@ -117,6 +124,8 @@ def only_functions_handler(config: dict):
         synopsis_function(config)
     if 'last_signals' in config['run_functions']:
         assemble_last_signals_function(config)
+    if 'metadata' in config['run_functions']:
+        metadata_function(config)
     if 'pptx' in config['run_functions']:
         pptx_output_function(config)
     if 'pdf' in config['run_functions']:
@@ -335,12 +344,44 @@ def price_gap_function(config: dict):
 
 
 def candlestick_function(config: dict):
+    print(f"Candlestick patterns for funds...\r\n")
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
             print(
                 f"Candlestick Analysis of {TICKER}{fund}{NORMAL}...")
             candlesticks(data[fund], name=fund, plot_output=True)
+
+
+def commodity_function(config: dict):
+    print(f"Commodity Channel Index for funds...\r\n")
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Commodity Channel Index of {TICKER}{fund}{NORMAL}...")
+            commodity_channel_index(data[fund], name=fund, plot_output=True)
+
+
+def risk_function(config: dict):
+    print(f"Risk Factors for funds...\r\n")
+    config['tickers'] += ' ^GSPC ^IRX'
+    data, fund_list = function_data_download(config)
+
+    for fund in fund_list:
+        if fund != '^GSPC' and fund != '^IRX':
+            print(
+                f"Risk Factors of {TICKER}{fund}{NORMAL}...")
+
+            meta_fund = get_api_metadata(fund, function='info')
+            match_fund, match_data = function_sector_match(
+                meta_fund, data[fund], config)
+
+            if match_fund is not None:
+                match_data = match_data[match_fund]
+
+            risk_comparison(data[fund], data['^GSPC'],
+                            data['^IRX'], print_out=True, sector_data=match_data)
 
 
 def vq_function(config: dict):
@@ -464,6 +505,15 @@ def assemble_last_signals_function(config: dict):
                 print("")
 
 
+def metadata_function(config: dict):
+    print(f"Getting Metadata for funds...")
+    print(f"")
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            get_api_metadata(fund, data=data[fund], plot_output=True)
+
+
 def pptx_output_function(config: dict):
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
@@ -533,6 +583,24 @@ def function_data_download(config: dict) -> list:
     if has_critical_error(data, 'download_data', misc=e_check):
         return [], []
     return data, fund_list
+
+
+def function_sector_match(meta: dict, fund_data: pd.DataFrame, config: dict) -> dict:
+    match = meta.get('info', {}).get('sector')
+    if match is not None:
+        fund_len = {
+            'length': len(fund_data['Close']),
+            'start': fund_data.index[0],
+            'end': fund_data.index[
+                len(fund_data['Close'])-1],
+            'dates': fund_data.index
+        }
+        match_fund, match_data = api_sector_match(
+            match, config, fund_len=fund_len,
+            period=config['period'][0], interval=config['interval'][0])
+
+        return match_fund, match_data
+    return None, None
 
 
 def vq_function_print(vq: dict, fund: str):

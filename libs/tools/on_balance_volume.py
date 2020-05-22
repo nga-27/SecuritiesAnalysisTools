@@ -5,7 +5,7 @@ import numpy as np
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from libs.utils import generic_plotting, dual_plotting, bar_chart
-from libs.utils import dates_extractor_list, ProgressBar, SP500
+from libs.utils import dates_extractor_list, ProgressBar, INDEXES
 from .trends import get_trendlines, get_trendlines_regression
 
 
@@ -139,7 +139,7 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
             volume.append(fund['Volume'][i])
 
     x = dates_extractor_list(fund)
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - On Balance Volume (OBV)'
     name4 = name3 + ' - Significant OBV Changes'
     name5 = name3 + ' - Volume'

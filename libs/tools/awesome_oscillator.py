@@ -7,7 +7,7 @@ from libs.utils import ProgressBar, dual_plotting, generic_plotting, bar_chart
 from libs.utils import dates_extractor_list
 from libs.features import normalize_signals
 from .moving_average import simple_moving_avg, exponential_moving_avg, windowed_moving_avg
-from libs.utils import SP500
+from libs.utils import INDEXES
 
 
 def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
@@ -130,7 +130,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     triggers = ao_signal_trigger(signal, med_term, long_term)
 
     x = dates_extractor_list(position)
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Awesome Oscillator'
 
     if plot_output:
@@ -140,7 +140,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
                       'Awesome', 'Triggers'], 'Price')
         bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
     else:
-        filename = os.path.join(name, view, f"awesome_bar{name}")
+        filename = os.path.join(name, view, f"awesome_bar_{name}")
         bar_chart(signal, position=position, x=x,
                   saveFig=True, filename=filename, title=name2, bar_delta=True)
 

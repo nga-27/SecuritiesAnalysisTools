@@ -1,5 +1,6 @@
 import os
 import glob
+import json
 import datetime
 import pandas as pd
 import numpy as np
@@ -8,7 +9,7 @@ from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from libs.utils import fund_list_extractor, SP500
+from libs.utils import fund_list_extractor, INDEXES
 from libs.tools import trend_simple_forecast
 
 from .slide_utils import slide_title_header, color_to_RGB, pptx_ui_errors
@@ -71,7 +72,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     content_dir = os.path.join(TEMP_DIR, fund, views)
 
     # Title slide for a fund
-    fund_name = SP500.get(fund, fund)
+    fund_name = INDEXES.get(fund, fund)
 
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     top = Inches(0.1)
@@ -101,14 +102,14 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
 
     # Insert a table of fund figures
     left_loc = Inches(0.1)
-    top_loc = Inches(1.1)
+    top_loc = Inches(0.5)
     table_width = Inches(2.4)
     table_height = Inches(1.4)
 
     vq = analysis[fund].get('metadata', {}).get(
         'volatility', {}).get('VQ')
     has_vq = False
-    rows = 5
+    rows = 11
 
     if vq is not None:
         has_vq = True
@@ -136,19 +137,60 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     table.cell(1, 1).text = '$' + \
         str(np.round(analysis[fund][views]
                      ['statistics']['current_price'], 2))
-    table.cell(2, 0).text = 'Beta'
-    table.cell(3, 0).text = 'R-Squared'
 
-    if 'beta' in analysis[fund][views]['statistics'].keys():
+    table.cell(2, 0).text = 'Alpha-Market'
+    table.cell(3, 0).text = 'Alpha-Sector'
+    table.cell(4, 0).text = 'Beta-Market'
+    table.cell(5, 0).text = 'Beta-Sector'
+    table.cell(6, 0).text = 'R-Squared-Market'
+    table.cell(7, 0).text = 'R-Squared-Sector'
+    table.cell(8, 0).text = 'Sharpe Ratio'
+    table.cell(9, 0).text = 'Std. Deviation'
+
+    table.cell(2, 1).text = 'n/a'
+    table.cell(3, 1).text = 'n/a'
+    table.cell(4, 1).text = 'n/a'
+    table.cell(5, 1).text = 'n/a'
+    table.cell(6, 1).text = 'n/a'
+    table.cell(7, 1).text = 'n/a'
+    table.cell(8, 1).text = 'n/a'
+    table.cell(9, 1).text = 'n/a'
+
+    risk_ratios = analysis[fund][views]['statistics'].get('risk_ratios', {})
+
+    if 'market' in risk_ratios.get('alpha', {}):
         table.cell(2, 1).text = str(
-            np.round(analysis[fund][views]['statistics']['beta'], 5))
-        table.cell(3, 1).text = str(
-            np.round(analysis[fund][views]['statistics']['r_squared'], 5))
-    else:
-        table.cell(2, 1).text = "n/a"
-        table.cell(3, 1).text = "n/a"
+            np.round(risk_ratios['alpha']['market'], 5))
 
-    table.cell(4, 0).text = 'Altman-Z Score'
+    if 'sector' in risk_ratios.get('alpha', {}):
+        table.cell(3, 1).text = str(
+            np.round(risk_ratios['alpha']['sector'], 5))
+
+    if 'market' in risk_ratios.get('beta', {}):
+        table.cell(4, 1).text = str(
+            np.round(risk_ratios['beta']['market'], 5))
+
+    if 'sector' in risk_ratios.get('beta', {}):
+        table.cell(5, 1).text = str(
+            np.round(risk_ratios['beta']['sector'], 5))
+
+    if 'market' in risk_ratios.get('r_squared', {}):
+        table.cell(6, 1).text = str(
+            np.round(risk_ratios['r_squared']['market'], 5))
+
+    if 'sector' in risk_ratios.get('r_squared', {}):
+        table.cell(7, 1).text = str(
+            np.round(risk_ratios['r_squared']['sector'], 5))
+
+    if 'sharpe' in risk_ratios:
+        table.cell(8, 1).text = str(
+            np.round(risk_ratios['sharpe'], 5))
+
+    if 'standard_deviation' in risk_ratios:
+        table.cell(9, 1).text = str(
+            np.round(risk_ratios['standard_deviation'], 5))
+
+    table.cell(10, 0).text = 'Altman-Z Score'
     alt_z = analysis[fund].get('metadata', {}).get(
         'altman_z', {})
     alt_z_score = alt_z.get('score', "n/a")
@@ -157,11 +199,11 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     if isinstance(alt_z_score, (float, int)):
         alt_z_score = str(np.round(alt_z_score, 5))
 
-    table.cell(4, 1).text = alt_z_score
-    table.cell(4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+    table.cell(10, 1).text = alt_z_score
+    table.cell(10, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
         alt_z_color)
 
-    end = 4
+    end = 10
 
     if has_vq:
         table.cell(end+1, 0).text = 'Volatility Quotient'
@@ -180,8 +222,8 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
 
     for i in range(1, rows):
-        table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(14)
-        table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(14)
+        table.cell(i, 0).text_frame.paragraphs[0].font.size = Pt(12)
+        table.cell(i, 1).text_frame.paragraphs[0].font.size = Pt(12)
 
     has_beta = True
 
@@ -254,11 +296,23 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     slide = slide_title_header(slide, fund, price_details=price_str)
     indexes.append(len(prs.slides)-1)
 
+    # Slide #8 of content
+    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+    slide = slide_title_header(slide, fund, price_details=price_str)
+    indexes.append(len(prs.slides)-1)
+
     content = os.path.join(content_dir, '*.png')
     pics = glob.glob(content)
+
+    content_dir2, _ = os.path.split(content_dir)
+    content2 = os.path.join(content_dir2, '*.png')
+    pics2 = glob.glob(content2)
+    pics.extend(pics2)
+
     fund_analysis = analysis[fund]
+    current_price = analysis[fund][views]['statistics']['current_price']
     prs = format_plots(prs, indexes, pics,
-                       fund_analysis=fund_analysis, views=views)
+                       fund_analysis=fund_analysis, views=views, current_price=current_price)
 
     return prs
 
@@ -276,6 +330,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
     Optional Args:
         views {str} -- (default: {''})
+        current_price {float} -- (default: {None})
 
     Returns:
         pptx-object -- filled in slides with content
@@ -285,187 +340,46 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             pptx_ui_errors(prs.slides[ind], "No plot files available.")
         return prs
 
+    content_file = os.path.join(
+        "libs", "ui_generation", "pptx_resources", "fund_content_slides.json")
+
+    if not os.path.exists(content_file):
+        for ind in slide_indices:
+            pptx_ui_errors(
+                prs.slides[ind], "File 'fund_content_slides.json' not found.")
+        return prs
+
+    slide_content = {}
+    with open(content_file, 'r') as c_file:
+        slide_content = json.load(c_file)
+        c_file.close()
+
     views = kwargs.get('views', '')
+    current_price = kwargs.get('current_price')
 
-    header, _ = os.path.split(globs[0])
+    locations = slide_content.get('locations', [])
+    for picture in globs:
 
-    for globber in globs:
+        _, part = os.path.split(picture)
+        splits = part.split('_')
+        splits.pop(-1)
+        part = '_'.join(splits)
 
-        _, part = os.path.split(globber)
-        picture = os.path.join(header, part)
+        if part in slide_content:
+            details = slide_content.get(part, {})
+            slide_index = details.get('index')
+            location = details.get('location')
 
-        # Slide 1
-        slide_num = 0
-        if 'volume' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
+            left = eval(locations[location]['left'])
+            top = eval(locations[location]['top'])
+            height = eval(locations[location]['height'])
+            width = eval(locations[location]['width'])
+
+            prs.slides[slide_indices[slide_index]].shapes.add_picture(
                 picture, left, top, height=height, width=width)
 
-        if 'RSI_standard' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'macd_bar' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'clustered_osc_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #2
-        slide_num = 1
-        if 'relative_strength' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'exp_moving_averages' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'swing_trades' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'simple_moving_averages' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #3
-        slide_num = 2
-        if 'obv_standard' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'obv_diff' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'bollinger_bands' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'bollinger_band_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #4
-        slide_num = 3
-        if 'awesome_bar' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'awesome_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'macd_metrics' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'momentum_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #5
-        slide_num = 4
-        if 'bear_bull_power' in part:
-            left = Inches(0)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'price_gaps' in part:
-            left = Inches(6.5)
-            top = Inches(1.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'total_pwr_metrics' in part:
-            left = Inches(6.5)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        if 'ultimate_osc_metrics' in part:
-            left = Inches(0.0)
-            top = Inches(4.1)
-            height = Inches(3.0)
-            width = Inches(6.5)
-            prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #6
-        slide_num = 5
+        # Slide #7
+        slide_num = 6
         if 'resist_support' in part:
             left = Inches(0)
             top = Inches(1.55)
@@ -490,7 +404,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
             left_loc = Inches(8)
             top_loc = Inches(1)
-            table_width = Inches(4)
+            table_width = Inches(4.5)
 
             num_srs = len(fund_analysis[views]
                           ['support_resistance']['major S&R']) + 1
@@ -500,7 +414,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
             table_placeholder = prs.slides[slide_indices[slide_num]].shapes.add_table(
                 num_srs,
-                2,
+                3,
                 left_loc,
                 top_loc,
                 table_width,
@@ -509,18 +423,28 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
             table.cell(0, 0).text = 'Price'
             table.cell(0, 1).text = '% Change'
+            table.cell(0, 2).text = 'Sprt / Res'
 
             for i, maj in enumerate(fund_analysis[views]['support_resistance']['major S&R']):
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
+                table.cell(i+1, 2).text = maj['State']
                 color = color_to_RGB(maj['Color'])
                 table.cell(
                     i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
                 table.cell(
                     i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(
+                    i+1, 2).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(
+                    i+1, 0).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(
+                    i+1, 1).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(
+                    i+1, 2).text_frame.paragraphs[0].font.size = Pt(14)
 
-        # Slide 7
-        slide_num = 6
+        # Slide 8
+        slide_num = 7
         if 'trendline' in part:
             left = Inches(0)
             top = Inches(1.55)
@@ -544,16 +468,16 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             p.font.bold = True
 
             trends = []
-            futures = list(range(0, 91, 15))
+            futures = [0, 10, 20, 40, 60, 80]
             forecasts = []
             for trend in fund_analysis[views]['trendlines']['current']:
                 trends.append(trend)
                 forecast = trend_simple_forecast(
-                    trend, future_periods=futures)
+                    trend, future_periods=futures, current_price=current_price)
                 forecasts.append(forecast)
 
             num_rows = len(trends) + 2
-            num_cols = len(futures)
+            num_cols = len(futures) + 2
             table_height = num_rows * 0.33
             table_width = num_cols * 0.8
             if num_rows * 0.33 > 6.0:
@@ -583,16 +507,36 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             cell_1.text = f"Future Periods of Active Trendlines"
 
             for i, fut in enumerate(futures):
-                table.cell(1, i).text = str(fut)
-                table.cell(1, i).text_frame.paragraphs[0].font.bold = True
+                table.cell(1, i+1).text = str(fut)
+                table.cell(1, i+1).text_frame.paragraphs[0].font.bold = True
+
+            table.cell(1, 0).text = 'Trend'
+            table.cell(1, 0).text_frame.paragraphs[0].font.bold = True
+
+            table.cell(1, i+2).text = 'Price'
+            table.cell(1, i+2).text_frame.paragraphs[0].font.bold = True
 
             for i, trend in enumerate(trends):
                 for j, value in enumerate(forecasts[i]['returns']):
-                    table.cell(i+2, j).text = f"${value}"
+                    table.cell(i+2, j+1).text = f"${value}"
                     table.cell(
-                        i+2, j).text_frame.paragraphs[0].font.size = Pt(12)
+                        i+2, j+1).text_frame.paragraphs[0].font.size = Pt(12)
                     color = color_to_RGB(trend['color'])
                     table.cell(
-                        i+2, j).text_frame.paragraphs[0].font.color.rgb = color
+                        i+2, j+1).text_frame.paragraphs[0].font.color.rgb = color
+
+                table.cell(i+2, 0).text = forecasts[i]['slope']
+                table.cell(
+                    i+2, 0).text_frame.paragraphs[0].font.size = Pt(12)
+                color = color_to_RGB(trend['color'])
+                table.cell(
+                    i+2, 0).text_frame.paragraphs[0].font.color.rgb = color
+
+                table.cell(i+2, j+2).text = forecasts[i]['above_below']
+                table.cell(
+                    i+2, j+2).text_frame.paragraphs[0].font.size = Pt(12)
+                color = color_to_RGB(trend['color'])
+                table.cell(
+                    i+2, j+2).text_frame.paragraphs[0].font.color.rgb = color
 
     return prs

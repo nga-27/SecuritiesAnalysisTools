@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, INDEXES
 from libs.utils import dual_plotting
 from libs.features import find_local_extrema, normalize_signals
 from .moving_average import simple_moving_avg, windowed_moving_avg
@@ -99,9 +99,10 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         cmo = 100.0 * (sum_up - sum_down) / (sum_up + sum_down)
         signal.append(cmo)
 
+    name2 = INDEXES.get(name, name)
     if plot_output:
         dual_plotting(position['Close'], signal, 'Price',
-                      'CMO', title='(Chande) Momentum Oscillator')
+                      'CMO', title=f'{name2} - (Chande) Momentum Oscillator')
     else:
         filename = os.path.join(name, view, f"momentum_oscillator_{name}.png")
         dual_plotting(position['Close'], signal, 'Price',
