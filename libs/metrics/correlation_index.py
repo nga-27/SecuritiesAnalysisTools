@@ -18,12 +18,16 @@ def correlation_composite_index(config: dict, **kwargs) -> dict:
     Optional Args:
         plot_output {bool} -- (default: {True})
         clock {uint64_t} -- time for prog_bar (default: {None})
+        data {pd.DataFrame} -- funds data object (default: {None})
+        sectors {list} -- sectors list (default: {None})
 
     Returns:
-        dict -- contains all correlation items
+        list -- dict contains all correlation items, data, sectors list
     """
     plot_output = kwargs.get('plot_output', True)
     clock = kwargs.get('clock')
+    data = kwargs.get('data')
+    sectors = kwargs.get('sectors')
 
     corr = dict()
     corr_config = config.get('properties', {}).get(
@@ -31,11 +35,14 @@ def correlation_composite_index(config: dict, **kwargs) -> dict:
 
     if corr_config.get('run', False):
         config['duration'] = corr_config.get('type', 'long')
-        data, sectors = metrics_initializer(config['duration'])
+
+        if data is None or sectors is None:
+            data, sectors = metrics_initializer(config['duration'])
         if data:
             corr = get_correlation(
                 data, sectors, plot_output=plot_output, clock=clock)
-    return corr
+
+    return corr, data, sectors
 
 
 def metrics_initializer(duration: str = 'short') -> list:

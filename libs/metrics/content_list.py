@@ -1,7 +1,8 @@
 import pprint
 
 from libs.utils import ProgressBar
-from libs.utils import STANDARD_COLORS, TREND_COLORS, EXEMPT_METRICS, SP500
+from libs.utils import STANDARD_COLORS, TREND_COLORS, INDEXES
+from libs.utils import EXEMPT_METRICS, INDICATOR_NAMES
 
 NORMAL = STANDARD_COLORS["normal"]
 WARNING = STANDARD_COLORS["warning"]
@@ -12,26 +13,6 @@ BEAR = TREND_COLORS["bad"]
 
 SIGNAL_KEY = 'signals'
 SIZE_KEY = 'length_of_data'
-
-INDICATOR_NAMES = [
-    "clustered_osc",
-    "full_stochastic",
-    "rsi",
-    "ultimate",
-    "awesome",
-    "momentum_oscillator",
-    "on_balance_volume",
-    "moving_average",
-    "exp_moving_average",
-    "sma_swing_trade",
-    "ema_swing_trade",
-    "hull_moving_average",
-    "macd",
-    "candlesticks",
-    "bear_bull_power",
-    "total_power",
-    "bollinger_bands"
-]
 
 
 def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
@@ -61,7 +42,7 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
 
     metadata = []
     meta_keys = []
-    name = SP500.get(name, name)
+    name = INDEXES.get(name, name)
 
     if standalone:
         for key in meta_sub:

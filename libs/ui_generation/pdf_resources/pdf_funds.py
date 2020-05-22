@@ -4,7 +4,7 @@ import numpy as np
 import fpdf  # pylint: disable=F0401
 from fpdf import FPDF  # pylint: disable=F0401
 
-from libs.utils import SP500
+from libs.utils import INDEXES
 
 from .pdf_utils import pdf_set_color_text, horizontal_spacer
 from .pdf_utils import PDF_CONSTS
@@ -37,7 +37,7 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
 
     for fund in analysis:
         if fund != '_METRICS_':
-            name = SP500.get(fund, fund)
+            name = INDEXES.get(fund, fund)
             fund_data = analysis[fund]
 
             pdf.add_page()
@@ -228,26 +228,38 @@ def beta_rsq(pdf, fund_data: dict):
         FPDF -- pdf object
     """
     SPAN = pdf.w - 2 * pdf.l_margin
-    key_width = SPAN / 4.0
 
     left_keys = []
     right_keys = []
     left_vals = []
     right_vals = []
+
     for period in fund_data:
         if period != 'synopsis' and period != 'metadata':
             left_keys.append(f"Beta ({period})")
             right_keys.append(f"R-squared ({period})")
+            left_keys.append(f"Alpha ({period})")
+            right_keys.append(f"Sharpe Ratio ({period})")
 
-            if fund_data[period]['statistics'].get('beta') is None:
+            if fund_data[period]['statistics'].get('risk_ratios') is None:
+                left_vals.append('')
+                right_vals.append('')
                 left_vals.append('')
                 right_vals.append('')
 
             else:
+                risk_factors = fund_data[period]['statistics']['risk_ratios']
                 left_vals.append(
-                    str(np.round(fund_data[period]['statistics'].get('beta', ''), 5)))
+                    str(np.round(risk_factors['beta']['market'], 5)))
                 right_vals.append(
-                    str(np.round(fund_data[period]['statistics'].get('r_squared', ''), 5)))
+                    str(np.round(risk_factors['r_squared']['market'], 5)))
+                left_vals.append(
+                    str(np.round(risk_factors['alpha']['market'], 5)))
+                if isinstance(risk_factors['sharpe'], (float, int)):
+                    right_vals.append(
+                        str(np.round(risk_factors['sharpe'], 5)))
+                else:
+                    right_vals.append(risk_factors['sharpe'])
 
     data = []
     for i in range(len(left_keys)):
@@ -259,9 +271,16 @@ def beta_rsq(pdf, fund_data: dict):
     pdf = horizontal_spacer(pdf, 0.3)
     height = pdf.font_size
 
+    quad = SPAN / 4.0
+    quad_name = quad + 0.5
+    quad_val = quad - 0.5
+
     for row in data:
         for i, col in enumerate(row):
-            pdf.cell(key_width, height, str(col), align='L', border=0)
+            if i % 2 == 0:
+                pdf.cell(quad_name, height, str(col), align='L', border=0)
+            else:
+                pdf.cell(quad_val, height, str(col), align='L', border=0)
         pdf.ln(height * 1.3)
     return pdf
 

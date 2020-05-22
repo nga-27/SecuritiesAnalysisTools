@@ -13,9 +13,14 @@ TEXT_COLOR_MAP = {
     "purple_bold": "\033[1;35m",
 }
 
-SP500 = {
-    "^GSPC": "S&P500"
+INDEXES = {
+    "^GSPC": "S&P500",
+    "^IRX": "3MO-TBILL"
 }
+
+SKIP_INDEXES = [
+    "^IRX"
+]
 
 STANDARD_COLORS = {
     "warning": TEXT_COLOR_MAP["yellow"],
@@ -43,4 +48,25 @@ PRINT_CONSTANTS = {
 EXEMPT_METRICS = [
     "metadata",
     "synopsis"
+]
+
+INDICATOR_NAMES = [
+    "clustered_osc",
+    "full_stochastic",
+    "rsi",
+    "ultimate",
+    "awesome",
+    "momentum_oscillator",
+    "on_balance_volume",
+    "moving_average",
+    "exp_moving_average",
+    "sma_swing_trade",
+    "ema_swing_trade",
+    "hull_moving_average",
+    "macd",
+    "candlesticks",
+    "bear_bull_power",
+    "total_power",
+    "bollinger_bands",
+    "commodity_channels"
 ]

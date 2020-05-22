@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import ProgressBar
-from libs.utils import generic_plotting, dual_plotting, SP500
+from libs.utils import generic_plotting, dual_plotting, INDEXES
 from libs.features import normalize_signals
 
 from .moving_average import simple_moving_avg, exponential_moving_avg, windowed_moving_avg
@@ -134,7 +134,7 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
 
     bol_bands['metrics'] = norm_signal
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + f" - Bollinger Band Metrics"
     if plot_output:
         dual_plotting(position['Close'], norm_signal, 'Price',
@@ -297,7 +297,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
 
     signals = {'upper_band': upper, 'lower_band': lower, 'middle_band': ma}
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Bollinger Bands'
     if plot_output:
         generic_plotting([position['Close'], ma, upper, lower],

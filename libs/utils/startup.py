@@ -78,7 +78,7 @@ def start_header(**kwargs) -> dict:
         config['tickers'] = default
 
     else:
-        if config['core'] == False:
+        if not config['core']:
             config['tickers'] = ' '.join(list_of_tickers)
             config['tickers'] = config['tickers'].strip()
 
@@ -90,14 +90,14 @@ def start_header(**kwargs) -> dict:
 
     if len(t) < 2:
         if 'no_index' not in config['state']:
-            ticker_print += t[0] + ' and S&P500'
+            ticker_print += t[0] + ', S&P500, and 3mo-TBILL'
         else:
             ticker_print += t[0]
 
     else:
         ticker_print = ', '.join(t)
         if 'no_index' not in config['state']:
-            ticker_print += ', and S&P500'
+            ticker_print += ', S&P500, and 3mo-TBILL'
 
     config['ticker print'] = ticker_print
     print(" ")
@@ -412,7 +412,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'head_shoulders', type_='list')
 
-    if ('--corr' in i_keys) or ('--correlation' in i_keys) or ('--cci' in i_keys):
+    if ('--corr' in i_keys) or ('--correlation' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'correlation', type_='list')
         if '--short' in i_keys:
@@ -501,6 +501,16 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'candlestick', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
+    if ('--comm' in i_keys) or ('--commodity' in i_keys) or ('--cci' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'commodity', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
+    if ('--alpha' in i_keys) or ('--beta' in i_keys) or ('--risk' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'alpha', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
     if ('--vq' in i_keys) or ('--stop_loss' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'vq', type_='list')
@@ -517,6 +527,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--ledger' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'ledger', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
+    if '--metadata' in i_keys:
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'metadata', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--synopsis' in i_keys) or ('--syn' in i_keys):

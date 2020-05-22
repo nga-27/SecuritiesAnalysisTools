@@ -3,7 +3,8 @@ import math
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, specialty_plotting, SP500
+from libs.utils import generic_plotting, specialty_plotting
+from libs.utils import INDEXES
 
 
 def exponential_moving_avg(dataset, interval: int, **kwargs) -> list:
@@ -171,6 +172,29 @@ def weighted_moving_avg(dataset, interval: int, **kwargs) -> list:
     return wma
 
 
+def typical_price_signal(data: pd.DataFrame) -> list:
+    """Typical Price Signal
+
+    Generate the typical price calculation (close + high + low) / 3
+
+    Arguments:
+        data {pd.DataFrame} -- dataframe dataset
+
+    Returns:
+        list -- typical price signal
+    """
+    tps = []
+    for i, close in enumerate(data['Close']):
+        summed = close + data['Low'][i] + data['High'][i]
+        summed /= 3.0
+        tps.append(summed)
+
+    return tps
+
+
+###################################################################
+
+
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     """Triple Moving Average
 
@@ -219,7 +243,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     triple_exp_mov_average(
         fund, config=[9, 21, 50], plot_output=plot_output, name=name, view=view)
 
-    name3 = SP500.get(name, name)
+    name3 = INDEXES.get(name, name)
     name2 = name3 + \
         ' - Simple Moving Averages [{}, {}, {}]'.format(
             config[0], config[1], config[2])
@@ -311,7 +335,7 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
     tema['metrics'] = {'short': mshort, 'medium': mmed, 'long': mlong}
 
     if not out_suppress:
-        name3 = SP500.get(name, name)
+        name3 = INDEXES.get(name, name)
         name2 = name3 + \
             ' - Exp Moving Averages [{}, {}, {}]'.format(
                 config[0], config[1], config[2])
@@ -415,15 +439,17 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     if progress_bar is not None:
         progress_bar.uptick(increment=0.4)
 
-    name3 = SP500.get(name, name)
-    name2 = name3 + ' - Swing Trade SMAs'
+    name3 = INDEXES.get(name, name)
+    funct_name = function.upper()
+    name2 = name3 + f' - Swing Trade {funct_name}s'
     legend = ['Price', 'Short-SMA', 'Medium-SMA', 'Long-SMA', 'Swing Signal']
 
     if plot_output:
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[
                            4], legend=legend, title=name2)
     else:
-        filename = os.path.join(name, view, f"swing_trades_sma_{name}.png")
+        filename = os.path.join(
+            name, view, f"swing_trades_{function}_{name}.png")
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
                            'Swing Signal'], title=name2, saveFig=True, filename=filename)
 

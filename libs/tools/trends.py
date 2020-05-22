@@ -8,7 +8,8 @@ from datetime import datetime
 from scipy.stats import linregress
 
 from .moving_average import simple_moving_avg, windowed_moving_avg
-from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar, SP500
+from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
+from libs.utils import INDEXES
 from libs.utils import STANDARD_COLORS
 
 from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
@@ -329,7 +330,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     Y.append(fund['Close'])
     C.append('black')
 
-    name2 = SP500.get(name, name)
+    name2 = INDEXES.get(name, name)
 
     if not out_suppress:
         try:
@@ -809,7 +810,8 @@ def attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, content: 
 
 def trend_simple_forecast(trend: dict,
                           future_periods: list = [5, 10, 20],
-                          return_type='price') -> dict:
+                          return_type='price',
+                          current_price: float = None) -> dict:
     """Trend Simple Forecast
 
     Arguments:
@@ -820,12 +822,18 @@ def trend_simple_forecast(trend: dict,
                                  ensure that each future period is far enough in the future to be
                                  relevant to the present (default: {[5, 10, 20]})
         return_type {str} -- various return types possible (default: {'price'})
+        current_price {float} -- current fund price in comparison with trend (default: {None})
 
     Returns:
         dict -- forecast data object
     """
-    forecast = {'return_type': return_type,
-                'periods': future_periods, 'returns': []}
+    forecast = {
+        'return_type': return_type,
+        'periods': future_periods,
+        'returns': [],
+        'above_below': 'n/a',
+        'slope': 'n/a'
+    }
 
     if return_type == 'price':
         # Likely will be only return_type
@@ -836,6 +844,17 @@ def trend_simple_forecast(trend: dict,
                   for x in future_periods]
 
         forecast['returns'] = prices
+
+        if current_price is not None:
+            if current_price < prices[0]:
+                forecast['above_below'] = 'Below'
+            else:
+                forecast['above_below'] = 'Above'
+
+        if slope < 0:
+            forecast['slope'] = 'DOWN'
+        elif slope > 0:
+            forecast['slope'] = 'UP'
 
     return forecast
 

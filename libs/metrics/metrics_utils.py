@@ -6,29 +6,10 @@ import json
 import os
 import pprint
 
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, INDICATOR_NAMES
 
 SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
-ACCEPTED_ATTS = [
-    'statistics',
-    'macd',
-    'rsi',
-    'full_stochastic',
-    'ultimate',
-    'relative_strength',
-    'mci',
-    'correlation',
-    'futures',
-    'moving_average',
-    'swing_trade',
-    'on_balance_volume',
-    'awesome',
-    'momentum_oscillator',
-    'bear_bull_power',
-    'total_power',
-    'hull_moving_average',
-    'candlesticks'
-]
+ACCEPTED_ATTS = INDICATOR_NAMES
 
 """ Utilities for creating data metrics for plotting later """
 
