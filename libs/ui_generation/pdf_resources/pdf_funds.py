@@ -228,7 +228,6 @@ def beta_rsq(pdf, fund_data: dict):
         FPDF -- pdf object
     """
     SPAN = pdf.w - 2 * pdf.l_margin
-    key_width = SPAN / 4.0
 
     left_keys = []
     right_keys = []
@@ -272,9 +271,16 @@ def beta_rsq(pdf, fund_data: dict):
     pdf = horizontal_spacer(pdf, 0.3)
     height = pdf.font_size
 
+    quad = SPAN / 4.0
+    quad_name = quad + 0.5
+    quad_val = quad - 0.5
+
     for row in data:
         for i, col in enumerate(row):
-            pdf.cell(key_width, height, str(col), align='L', border=0)
+            if i % 2 == 0:
+                pdf.cell(quad_name, height, str(col), align='L', border=0)
+            else:
+                pdf.cell(quad_val, height, str(col), align='L', border=0)
         pdf.ln(height * 1.3)
     return pdf
 

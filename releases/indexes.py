@@ -22,15 +22,15 @@ def run_indexes(analysis: dict, script: list, clock=None) -> dict:
     config = script[3]
 
     analysis['_METRICS_'] = {}
-    analysis['_METRICS_']['mci'] = market_composite_index(
+    analysis['_METRICS_']['mci'], data, sectors = market_composite_index(
         config=config, plot_output=False, clock=clock)
 
     bond_composite_index(config=config, plot_output=False, clock=clock)
 
-    analysis['_METRICS_']['correlation'] = correlation_composite_index(
-        config=config, plot_output=False, clock=clock)
+    analysis['_METRICS_']['correlation'], data, sectors = correlation_composite_index(
+        config=config, plot_output=False, clock=clock, data=data, sectors=sectors)
 
-    analysis['_METRICS_']['tci'] = type_composite_index(
-        config=config, plot_output=False, clock=clock)
+    analysis['_METRICS_']['tci'], data, sectors = type_composite_index(
+        config=config, plot_output=False, clock=clock, data=data, sectors=sectors)
 
     return analysis, clock
