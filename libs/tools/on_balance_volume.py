@@ -68,7 +68,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
         progress_bar.uptick(increment=0.125)
 
     obv = obv_dict['obv']
-    if obv[0] != 0.0 and obv[2] != 0.0 and obv[5] != 0.0:
+    if obv[1] != 0.0 and obv[2] != 0.0 and obv[5] != 0.0:
         get_trendlines_regression(obv)
 
     if progress_bar is not None:

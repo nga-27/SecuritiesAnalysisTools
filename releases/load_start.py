@@ -8,8 +8,8 @@ from libs.utils import TEXT_COLOR_MAP
 
 
 ################################
-_DEV_VERSION_ = '0.2.04'
-_DATE_REVISION_DEV_ = '2020-05-21'
+_DEV_VERSION_ = '0.2.05'
+_DATE_REVISION_DEV_ = '2020-05-22'
 ################################
 PROCESS_STEPS_DEV = 25
 PROCESS_STEPS_PROD = 25
