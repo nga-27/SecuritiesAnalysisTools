@@ -1,5 +1,6 @@
 import os
 import warnings
+import json
 import pprint
 import math
 import pandas as pd
@@ -941,8 +942,26 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     Returns:
         dict -- trendline content
     """
+    config_path = os.path.join("resources", "config.json")
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as cpf:
+            c_data = json.load(cpf)
+            cpf.close()
+
+        ranges = c_data.get('trendlines', {}).get(
+            'divisors', {}).get('ranges', [])
+        ranged = 0
+        for rg in ranges:
+            if len(signal) > rg:
+                ranged += 1
+
+        divs = c_data.get('trendlines', {}).get('divisors', {}).get('divisors')
+        if divs is not None:
+            if len(divs) > ranged:
+                DIVISORS = divs[ranged]
+
     iterations = kwargs.get('iterations', len(DIVISORS))
-    threshold = kwargs.get('threshold', 0.05)
+    threshold = kwargs.get('threshold', 0.1)
 
     indexes = list(range(len(signal)))
 
@@ -987,28 +1006,7 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                     line.append(reg[0] * ind + reg[1])
 
                 x_line = indexes.copy()
-                # removals = []
-                # for j, lin in enumerate(line):
-                #     if lin < 0.0:
-                #         if lin < ((1.0 + threshold) * signal[j]) or \
-                #                 lin > ((1.0 - threshold) * signal[j]):
-                #             removals.append(j)
-                #     else:
-                #         if lin > ((1.0 + threshold) * signal[j]) or \
-                #                 lin < ((1.0 - threshold) * signal[j]):
-                #             removals.append(j)
 
-                # line_corrected = []
-                # x_corrected = []
-                # for x in x_line:
-                #     if x not in removals:
-                #         x_corrected.append(x)
-
-                # if len(x_corrected) > 0:
-                #     start = min(x_corrected)
-                #     end = max(x_corrected)
-                #     line_corrected = line[start:end+1].copy()
-                #     x_corrected = list(range(start, end+1))
                 line_corrected, x_corrected = filter_nearest_to_signal(
                     signal, x_line, line)
 
@@ -1050,28 +1048,7 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                     line.append(reg[0] * ind + reg[1])
 
                 x_line = indexes.copy()
-                # removals = []
-                # for j, lin in enumerate(line):
-                #     if lin < 0.0:
-                #         if lin < ((1.0 + threshold) * signal[j]) or \
-                #                 lin > ((1.0 - threshold) * signal[j]):
-                #             removals.append(j)
-                #     else:
-                #         if lin > ((1.0 + threshold) * signal[j]) or \
-                #                 lin < ((1.0 - threshold) * signal[j]):
-                #             removals.append(j)
 
-                # line_corrected = []
-                # x_corrected = []
-                # for x in x_line:
-                #     if x not in removals:
-                #         x_corrected.append(x)
-
-                # if len(x_corrected) > 0:
-                #     start = min(x_corrected)
-                #     end = max(x_corrected)
-                #     line_corrected = line[start:end+1].copy()
-                #     x_corrected = list(range(start, end+1))
                 line_corrected, x_corrected = filter_nearest_to_signal(
                     signal, x_line, line, threshold=threshold)
 
@@ -1090,6 +1067,12 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     # so that the corrections can be made for plots and x_plots
     t_line_content, lines, x_s = consolidate_lines(
         t_line_content, lines, x_s, signal)
+
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal, thresh=0.2)
+
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal, thresh=0.3)
 
     plots = []
     x_plots = []
@@ -1115,75 +1098,65 @@ def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: li
 
     print(f"number of lines: {len(nan_free)}\r\n")
     sort_by_slope = sorted(nan_free, key=lambda x: x['slope'])
-    slopes = [s['slope'] for s in sort_by_slope]
-
-    slope_buckets_vals = []
-    for i in range(20):
-        slope_buckets_vals.append(np.percentile(slopes, 5 + i*5))
-
-    slope_buckets = []
-    for slp_th in slope_buckets_vals:
-        bucket = []
-        while sort_by_slope[0]['slope'] < slp_th:
-            bucket.append(sort_by_slope.pop(0))
-        slope_buckets.append(bucket)
 
     kept_grouped = []
-    for bucket in slope_buckets:
-        count_base = 0
-        count_comp = 1
-        kept_local = [bucket[count_base]['id']]
+    count_base = 0
+    count_comp = 1
+    kept_local = [sort_by_slope[count_base]['id']]
 
-        while count_base < len(bucket) and count_comp < len(bucket):
+    while count_base < len(sort_by_slope) and count_comp < len(sort_by_slope):
 
-            if bucket[count_base]['slope'] < 0.0:
-                base_lower = (1.0 - thresh) * bucket[count_base]['slope']
-                comp_upper = (1.0 + thresh) * bucket[count_comp]['slope']
+        if sort_by_slope[count_base]['slope'] < 0.0:
+            base_lower = (1.0 - thresh) * sort_by_slope[count_base]['slope']
+            comp_upper = (1.0 + thresh) * sort_by_slope[count_comp]['slope']
+
+            if base_lower > comp_upper:
+                base_lower = (1.0 - thresh) * \
+                    sort_by_slope[count_base]['intercept']
+                comp_upper = (1.0 + thresh) * \
+                    sort_by_slope[count_comp]['intercept']
 
                 if base_lower > comp_upper:
-                    base_lower = (1.0 - thresh) * \
-                        bucket[count_base]['intercept']
-                    comp_upper = (1.0 + thresh) * \
-                        bucket[count_comp]['intercept']
+                    kept_local.append(sort_by_slope[count_comp]['id'])
+                    count_comp += 1
+                    continue
 
-                    if base_lower > comp_upper:
-                        kept_local.append(bucket[count_comp]['id'])
-                        count_comp += 1
-                        continue
+        else:
+            base_upper = (1.0 + thresh) * sort_by_slope[count_base]['slope']
+            comp_lower = (1.0 - thresh) * sort_by_slope[count_comp]['slope']
 
-            else:
-                base_upper = (1.0 + thresh) * bucket[count_base]['slope']
-                comp_lower = (1.0 - thresh) * bucket[count_comp]['slope']
+            if base_upper > comp_lower:
+                base_upper = (1.0 + thresh) * \
+                    sort_by_slope[count_base]['intercept']
+                comp_lower = (1.0 - thresh) * \
+                    sort_by_slope[count_comp]['intercept']
 
                 if base_upper > comp_lower:
-                    base_upper = (1.0 + thresh) * \
-                        bucket[count_base]['intercept']
-                    comp_lower = (1.0 - thresh) * \
-                        bucket[count_comp]['intercept']
+                    kept_local.append(sort_by_slope[count_comp]['id'])
+                    count_comp += 1
+                    continue
 
-                    if base_upper > comp_lower:
-                        kept_local.append(bucket[count_comp]['id'])
-                        count_comp += 1
-                        continue
-
-            count_base = count_comp
-            count_comp += 1
-            kept_grouped.append(kept_local.copy())
-            kept_local = [bucket[count_base]['id']]
+        count_base = count_comp
+        count_comp += 1
+        kept_grouped.append(kept_local.copy())
+        kept_local = [sort_by_slope[count_base]['id']]
 
     print(f"kept_grouped: {len(kept_grouped)}")
-    _, lines, x_lines = reconstruct_lines(
+    new_content, lines, x_lines = reconstruct_lines(
         kept_grouped, line_content, lines, x_lines, signal)
 
     print(f"reconstructed: {len(lines)}")
 
-    return line_content, lines, x_lines
+    return new_content, lines, x_lines
 
 
 def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signal: list) -> list:
 
     new_lines = []
     new_xs = []
+    new_content = []
+    new_id = 0
+
     for id_list in groups:
         slope = []
         intercept = []
@@ -1198,6 +1171,8 @@ def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signa
 
         slope = np.mean(slope)
         intercept = np.mean(intercept)
+        item = {'slope': slope, 'intercept': intercept}
+
         start = np.min(start)
         end = np.max(end)
 
@@ -1208,10 +1183,15 @@ def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signa
             signal, xs, line, threshold=0.03, ratio=True)
 
         if len(xs) > 4:
+            item['length'] = len(line)
+            item['id'] = new_id
+            new_content.append(item)
+            new_id += 1
+
             new_lines.append(line)
             new_xs.append(xs)
 
-    return content, new_lines, new_xs
+    return new_content, new_lines, new_xs
 
 
 def filter_nearest_to_signal(signal: list,
