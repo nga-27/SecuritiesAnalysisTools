@@ -234,20 +234,33 @@ def beta_rsq(pdf, fund_data: dict):
     right_keys = []
     left_vals = []
     right_vals = []
+
     for period in fund_data:
         if period != 'synopsis' and period != 'metadata':
             left_keys.append(f"Beta ({period})")
             right_keys.append(f"R-squared ({period})")
+            left_keys.append(f"Alpha ({period})")
+            right_keys.append(f"Sharpe Ratio ({period})")
 
-            if fund_data[period]['statistics'].get('beta') is None:
+            if fund_data[period]['statistics'].get('risk_ratios') is None:
+                left_vals.append('')
+                right_vals.append('')
                 left_vals.append('')
                 right_vals.append('')
 
             else:
+                risk_factors = fund_data[period]['statistics']['risk_ratios']
                 left_vals.append(
-                    str(np.round(fund_data[period]['statistics'].get('beta', ''), 5)))
+                    str(np.round(risk_factors['beta']['market'], 5)))
                 right_vals.append(
-                    str(np.round(fund_data[period]['statistics'].get('r_squared', ''), 5)))
+                    str(np.round(risk_factors['r_squared']['market'], 5)))
+                left_vals.append(
+                    str(np.round(risk_factors['alpha']['market'], 5)))
+                if isinstance(risk_factors['sharpe'], (float, int)):
+                    right_vals.append(
+                        str(np.round(risk_factors['sharpe'], 5)))
+                else:
+                    right_vals.append(risk_factors['sharpe'])
 
     data = []
     for i in range(len(left_keys)):

@@ -202,6 +202,10 @@ def risk_comparison(fund: pd.DataFrame,
         beta {float} -- beta figure; will calculate if None (default: {None})
         rsqd {float} -- r-squared figure; will calculate if None (default: {None})
 
+    Optional Args:
+        print_out {bool} -- prints risk ratios to terminal (default: {False})
+        sector_data {pd.DataFrame} -- data of related sector (default: {None})
+
     Returns:
         dict -- alpha data object
     """
@@ -222,6 +226,7 @@ def risk_comparison(fund: pd.DataFrame,
     alpha_sector = "n/a"
     beta_sector = "n/a"
     rsqd_sector = "n/a"
+    sharpe_ratio = "n/a"
 
     if sector_data is not None:
         sector_return, _ = get_returns(sector_data)
@@ -234,7 +239,8 @@ def risk_comparison(fund: pd.DataFrame,
     alpha_val = np.round(fund_return - treas_return -
                          beta * (bench_return - treas_return), 4)
 
-    sharpe_ratio = np.round((fund_return - treas_return) / fund_stdev, 4)
+    if fund_stdev != 0.0:
+        sharpe_ratio = np.round((fund_return - treas_return) / fund_stdev, 4)
 
     fund_stdev = np.round(fund_stdev, 4)
 
@@ -300,6 +306,8 @@ def get_returns(data: pd.DataFrame, output='annual') -> list:
         annual_std.append(ars)
 
     annual_returns /= float(years)
+    annual_returns = (data['Adj Close'][-1] - data['Adj Close']
+                      [-250]) / data['Adj Close'][-250] * 100.0
 
     # Determine intervals for returns, next with quarterly
     q_returns = 0.0
@@ -322,6 +330,14 @@ def get_returns(data: pd.DataFrame, output='annual') -> list:
 
     q_returns /= float(quarters)
     q_returns *= 4.0
+
+    q_returns = 0.0
+    for i in range(4):
+        start = -1 + -1 * int(62.5 * float(i))
+        subtract = -1 * int(62.5 * float(i + 1))
+        qrs = (data['Adj Close'][start] - data['Adj Close']
+               [subtract]) / data['Adj Close'][subtract] * 100.0
+        q_returns += qrs
 
     std_1 = np.std(annual_std)
     std_2 = np.std(q_std)

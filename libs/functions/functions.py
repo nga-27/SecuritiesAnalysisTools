@@ -377,8 +377,11 @@ def risk_function(config: dict):
             match_fund, match_data = function_sector_match(
                 meta_fund, data[fund], config)
 
+            if match_fund is not None:
+                match_data = match_data[match_fund]
+
             risk_comparison(data[fund], data['^GSPC'],
-                            data['^IRX'], print_out=True, sector_data=match_data[match_fund])
+                            data['^IRX'], print_out=True, sector_data=match_data)
 
 
 def vq_function(config: dict):
