@@ -974,6 +974,10 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     t_line_content = []
     line_id = 0
 
+    y_max = max(signal) - min(signal)
+    x_max = len(signal)
+    scale_change = float(x_max) / float(y_max)
+
     for div in divisors:
         period = int(len(signal) / div)
         for i in range(div):
@@ -989,7 +993,7 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
                 data = pd.DataFrame.from_dict(data)
 
-                while len(data['x']) > 3:
+                while len(data['x']) > 4:
                     reg = linregress(data['x'], data['value'])
                     if k == 0:
                         data = data.loc[data['value'] >
@@ -1000,6 +1004,11 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
                 reg = linregress(data['x'], data['value'])
                 content = {'slope': reg[0], 'intercept': reg[1]}
+                content['angle'] = np.arctan(
+                    reg[0] * scale_change) / np.pi * 180.0
+                if reg[0] < 0.0:
+                    content['angle'] = 180.0 + \
+                        (np.arctan(reg[0] * scale_change) / np.pi * 180.0)
 
                 line = []
                 for ind in indexes:
@@ -1022,7 +1031,6 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                     # x_s.append(x_line)
 
         for i in range(period, len(signal), 2):
-            # print(f"range: {i-period} : {i}")
             for k in range(2):
 
                 data = dict()
@@ -1031,7 +1039,7 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
                 data = pd.DataFrame.from_dict(data)
 
-                while len(data['x']) > 3:
+                while len(data['x']) > 4:
                     reg = linregress(data['x'], data['value'])
                     if k == 0:
                         data = data.loc[data['value'] >
@@ -1042,6 +1050,11 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
                 reg = linregress(data['x'], data['value'])
                 content = {'slope': reg[0], 'intercept': reg[1]}
+                content['angle'] = np.arctan(
+                    reg[0] * scale_change) / np.pi * 180.0
+                if reg[0] < 0.0:
+                    content['angle'] = 180.0 + \
+                        (np.arctan(reg[0] * scale_change) / np.pi * 180.0)
 
                 line = []
                 for ind in indexes:
@@ -1068,11 +1081,11 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     t_line_content, lines, x_s = consolidate_lines(
         t_line_content, lines, x_s, signal)
 
-    t_line_content, lines, x_s = consolidate_lines(
-        t_line_content, lines, x_s, signal, thresh=0.2)
+    # t_line_content, lines, x_s = consolidate_lines(
+    #     t_line_content, lines, x_s, signal, thresh=0.2)
 
-    t_line_content, lines, x_s = consolidate_lines(
-        t_line_content, lines, x_s, signal, thresh=0.3)
+    # t_line_content, lines, x_s = consolidate_lines(
+    #     t_line_content, lines, x_s, signal, thresh=0.3)
 
     plots = []
     x_plots = []
@@ -1089,7 +1102,8 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
 def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: list, **kwargs) -> list:
 
-    thresh = kwargs.get('thresh', 0.12)
+    thresh = kwargs.get('thresh', 2.5)
+    thresh2 = thresh / 20.0
 
     nan_free = []
     for sortie in line_content:
@@ -1097,44 +1111,54 @@ def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: li
             nan_free.append(sortie)
 
     print(f"number of lines: {len(nan_free)}\r\n")
-    sort_by_slope = sorted(nan_free, key=lambda x: x['slope'])
+    sort_by_slope = sorted(nan_free, key=lambda x: x['angle'])
 
     kept_grouped = []
     count_base = 0
     count_comp = 1
     kept_local = [sort_by_slope[count_base]['id']]
 
+    angles = [sbs['angle'] for sbs in sort_by_slope]
+
     while count_base < len(sort_by_slope) and count_comp < len(sort_by_slope):
 
-        if sort_by_slope[count_base]['slope'] < 0.0:
-            base_lower = (1.0 - thresh) * sort_by_slope[count_base]['slope']
-            comp_upper = (1.0 + thresh) * sort_by_slope[count_comp]['slope']
+        # if sort_by_slope[count_base]['slope'] < 0.0:
+        #     # base_lower = (1.0 - thresh) * sort_by_slope[count_base]['angle']
+        #     # comp_upper = (1.0 + thresh) * sort_by_slope[count_comp]['angle']
+        #     base_lower = 180.0 - \
+        #         (sort_by_slope[count_base]['angle'] * 180 / np.pi)
 
-            if base_lower > comp_upper:
-                base_lower = (1.0 - thresh) * \
-                    sort_by_slope[count_base]['intercept']
-                comp_upper = (1.0 + thresh) * \
-                    sort_by_slope[count_comp]['intercept']
+        #     if base_lower > comp_upper:
+        #         base_lower = (1.0 - thresh) * \
+        #             sort_by_slope[count_base]['intercept']
+        #         comp_upper = (1.0 + thresh) * \
+        #             sort_by_slope[count_comp]['intercept']
 
-                if base_lower > comp_upper:
-                    kept_local.append(sort_by_slope[count_comp]['id'])
-                    count_comp += 1
-                    continue
+        #         if base_lower > comp_upper:
+        #             kept_local.append(sort_by_slope[count_comp]['id'])
+        #             count_comp += 1
+        #             continue
 
-        else:
-            base_upper = (1.0 + thresh) * sort_by_slope[count_base]['slope']
-            comp_lower = (1.0 - thresh) * sort_by_slope[count_comp]['slope']
+        # else:
+            # base_upper = (1.0 + thresh) * sort_by_slope[count_base]['angle']
+            # comp_lower = (1.0 - thresh) * sort_by_slope[count_comp]['angle']
+        base_upper = thresh + sort_by_slope[count_base]['angle']
+        comp_lower = sort_by_slope[count_comp]['angle']
 
-            if base_upper > comp_lower:
-                base_upper = (1.0 + thresh) * \
-                    sort_by_slope[count_base]['intercept']
-                comp_lower = (1.0 - thresh) * \
-                    sort_by_slope[count_comp]['intercept']
+        if base_upper > comp_lower:
+            base_upper = (1.0 + thresh2) * \
+                sort_by_slope[count_base]['intercept']
+            comp_lower = (1.0 - thresh2) * \
+                sort_by_slope[count_comp]['intercept']
+            # base_lower = (1.0 - thresh2) * \
+            #     sort_by_slope[count_base]['intercept']
+            # comp_upper = (1.0 + thresh2) * \
+            #     sort_by_slope[count_comp]['intercept']
 
-                if base_upper > comp_lower:
-                    kept_local.append(sort_by_slope[count_comp]['id'])
-                    count_comp += 1
-                    continue
+            if base_upper > comp_lower:  # or base_lower < comp_upper:
+                kept_local.append(sort_by_slope[count_comp]['id'])
+                count_comp += 1
+                continue
 
         count_base = count_comp
         count_comp += 1
@@ -1157,6 +1181,10 @@ def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signa
     new_content = []
     new_id = 0
 
+    y_max = max(signal) - min(signal)
+    x_max = len(signal)
+    scale_change = x_max / y_max
+
     for id_list in groups:
         slope = []
         intercept = []
@@ -1172,6 +1200,10 @@ def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signa
         slope = np.mean(slope)
         intercept = np.mean(intercept)
         item = {'slope': slope, 'intercept': intercept}
+        item['angle'] = np.arctan(slope * scale_change) / np.pi * 180.0
+        if slope < 0.0:
+            item['angle'] = 180.0 + \
+                (np.arctan(slope * scale_change) / np.pi * 180.0)
 
         start = np.min(start)
         end = np.max(end)
