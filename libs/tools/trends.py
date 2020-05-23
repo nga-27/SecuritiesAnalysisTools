@@ -921,7 +921,6 @@ def autotrend(data, **kwargs) -> list:
 
 
 ######################################################
-# [1, 2, 3, 4, 5, 7, 9, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
 DIVISORS = [1, 2, 4, 8]
 
 
@@ -962,6 +961,11 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
     iterations = kwargs.get('iterations', len(DIVISORS))
     threshold = kwargs.get('threshold', 0.1)
+    dates = kwargs.get('dates')
+    indicator = kwargs.get('indicator', '')
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    views = kwargs.get('views', '')
 
     indexes = list(range(len(signal)))
 
@@ -1081,11 +1085,11 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     t_line_content, lines, x_s = consolidate_lines(
         t_line_content, lines, x_s, signal)
 
-    # t_line_content, lines, x_s = consolidate_lines(
-    #     t_line_content, lines, x_s, signal, thresh=0.2)
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal, thresh=0.2)
 
-    # t_line_content, lines, x_s = consolidate_lines(
-    #     t_line_content, lines, x_s, signal, thresh=0.3)
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal, thresh=0.3)
 
     plots = []
     x_plots = []
@@ -1094,14 +1098,39 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     plots.extend(lines)
     x_plots.extend(x_s)
 
-    generic_plotting(plots, x=x_plots)
+    if dates is not None:
+        new_xs = []
+        for xps in x_plots:
+            nxs = [dates[i] for i in xps]
+            new_xs.append(nxs)
+
+        x_plots = new_xs
+
+    title = f"{indicator.capitalize()} Trendlines"
+    if plot_output:
+        generic_plotting(plots, x=x_plots, title=title)
+    else:
+        filename = os.path.join(
+            name, views, f"{indicator}_trendlines_{name}.png")
+        generic_plotting(plots, x=x_plots, title=title,
+                         filename=filename, saveFig=True)
 
     trends = dict()
     return trends
 
 
 def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: list, **kwargs) -> list:
+    """Consolidate Lines
 
+    Arguments:
+        line_content {list} -- list of trendline objects
+        lines {list} -- list of trendlines
+        x_lines {list} -- list of x-values of trendlines
+        signal {list} -- signal of trendlines
+
+    Returns:
+        list -- modified line content, modified lines, modified x lines
+    """
     thresh = kwargs.get('thresh', 2.5)
     thresh2 = thresh / 20.0
 
@@ -1110,7 +1139,6 @@ def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: li
         if str(sortie['slope']) != 'nan':
             nan_free.append(sortie)
 
-    print(f"number of lines: {len(nan_free)}\r\n")
     sort_by_slope = sorted(nan_free, key=lambda x: x['angle'])
 
     kept_grouped = []
@@ -1118,58 +1146,42 @@ def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: li
     count_comp = 1
     kept_local = [sort_by_slope[count_base]['id']]
 
-    angles = [sbs['angle'] for sbs in sort_by_slope]
-
     while count_base < len(sort_by_slope) and count_comp < len(sort_by_slope):
 
-        # if sort_by_slope[count_base]['slope'] < 0.0:
-        #     # base_lower = (1.0 - thresh) * sort_by_slope[count_base]['angle']
-        #     # comp_upper = (1.0 + thresh) * sort_by_slope[count_comp]['angle']
-        #     base_lower = 180.0 - \
-        #         (sort_by_slope[count_base]['angle'] * 180 / np.pi)
-
-        #     if base_lower > comp_upper:
-        #         base_lower = (1.0 - thresh) * \
-        #             sort_by_slope[count_base]['intercept']
-        #         comp_upper = (1.0 + thresh) * \
-        #             sort_by_slope[count_comp]['intercept']
-
-        #         if base_lower > comp_upper:
-        #             kept_local.append(sort_by_slope[count_comp]['id'])
-        #             count_comp += 1
-        #             continue
-
-        # else:
-            # base_upper = (1.0 + thresh) * sort_by_slope[count_base]['angle']
-            # comp_lower = (1.0 - thresh) * sort_by_slope[count_comp]['angle']
         base_upper = thresh + sort_by_slope[count_base]['angle']
         comp_lower = sort_by_slope[count_comp]['angle']
 
         if base_upper > comp_lower:
-            base_upper = (1.0 + thresh2) * \
-                sort_by_slope[count_base]['intercept']
-            comp_lower = (1.0 - thresh2) * \
-                sort_by_slope[count_comp]['intercept']
-            # base_lower = (1.0 - thresh2) * \
-            #     sort_by_slope[count_base]['intercept']
-            # comp_upper = (1.0 + thresh2) * \
-            #     sort_by_slope[count_comp]['intercept']
 
-            if base_upper > comp_lower:  # or base_lower < comp_upper:
-                kept_local.append(sort_by_slope[count_comp]['id'])
-                count_comp += 1
-                continue
+            if sort_by_slope[count_base]['intercept'] < 0.0:
+                base_lower = (1.0 - thresh2) * \
+                    sort_by_slope[count_base]['intercept']
+                comp_upper = (1.0 + thresh2) * \
+                    sort_by_slope[count_comp]['intercept']
+
+                if base_lower > comp_upper:  # or base_lower < comp_upper:
+                    kept_local.append(sort_by_slope[count_comp]['id'])
+                    count_comp += 1
+                    continue
+
+            else:
+                base_upper = (1.0 + thresh2) * \
+                    sort_by_slope[count_base]['intercept']
+                comp_lower = (1.0 - thresh2) * \
+                    sort_by_slope[count_comp]['intercept']
+
+                if base_upper > comp_lower:  # or base_lower < comp_upper:
+                    kept_local.append(sort_by_slope[count_comp]['id'])
+                    count_comp += 1
+                    continue
 
         count_base = count_comp
         count_comp += 1
         kept_grouped.append(kept_local.copy())
         kept_local = [sort_by_slope[count_base]['id']]
 
-    print(f"kept_grouped: {len(kept_grouped)}")
     new_content, lines, x_lines = reconstruct_lines(
         kept_grouped, line_content, lines, x_lines, signal)
-
-    print(f"reconstructed: {len(lines)}")
 
     return new_content, lines, x_lines
 
