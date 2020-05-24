@@ -25,6 +25,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
                                 passed) (default: {5.0})
         progress_bar {ProgressBar} -- (default: {None})
         view {str} -- (default: {''})
+        trendlines {bool} -- run trendline algorithm (default: {False})
 
     Returns:
         obv_dict {dict} -- contains all obv information
@@ -34,6 +35,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     filter_factor = kwargs.get('filter_factor', 5.0)
     progress_bar = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
+    trendlines = kwargs.get('trendlines', False)
 
     obv_dict = generate_obv_content(
         fund,
@@ -69,7 +71,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     end = len(obv_dict['obv'])
     obv = obv_dict['obv'][end-100: end]
-    if obv[1] != 0.0:
+    if obv[1] != 0.0 and trendlines:
         get_trendlines_regression(
             obv, dates=fund.index, plot_output=plot_output, indicator='OBV')
 
@@ -78,7 +80,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     end = len(obv_dict['obv'])
     obv = obv_dict['obv'][end-50: end]
-    if obv[1] != 0.0:
+    if obv[1] != 0.0 and trendlines:
         get_trendlines_regression(
             obv, dates=None, plot_output=plot_output, indicator='OBV')
 

@@ -937,6 +937,11 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                             (default: {15})
         threshold {float} -- acceptable ratio a trendline can be off and still counted in current
                              plot (default: {0.1})
+        dates {list} -- typically DataFrame.index (default: {None})
+        indicator {str} -- for plot name, indicator trend analyzed (default: {''})
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        views {str} -- (default: {''})
 
     Returns:
         dict -- trendline content
@@ -1128,6 +1133,9 @@ def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: li
         x_lines {list} -- list of x-values of trendlines
         signal {list} -- signal of trendlines
 
+    Optional Args:
+        thresh {float} -- percent for angle combination (default: {2.5})
+
     Returns:
         list -- modified line content, modified lines, modified x lines
     """
@@ -1187,7 +1195,20 @@ def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: li
 
 
 def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signal: list) -> list:
+    """Reconstruct Lines
 
+    Join similar lines
+
+    Arguments:
+        groups {list} -- list of IDs
+        content {list} -- content of lines
+        lines {list} -- trendlines
+        x_s {list} -- x's of trendlines
+        signal {list} -- signal of which trendlines are generated
+
+    Returns:
+        list -- new content, new lines, new x lists
+    """
     new_lines = []
     new_xs = []
     new_content = []
@@ -1243,7 +1264,20 @@ def filter_nearest_to_signal(signal: list,
                              line: list,
                              threshold=0.05,
                              ratio=False) -> list:
+    """Filter Nearest to Signal
 
+    Arguments:
+        signal {list} -- signal to find trendlines
+        x_line {list} -- list of xs corresponding to lines
+        line {list} -- trendline y-values
+
+    Keyword Arguments:
+        threshold {float} -- percent within signal (default: {0.05})
+        ratio {bool} -- adjustments of x values (default: {False})
+
+    Returns:
+        list -- corrected lines, corrected xs
+    """
     removals = []
     for j, lin in enumerate(line):
         if lin < 0.0:

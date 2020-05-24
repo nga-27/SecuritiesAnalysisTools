@@ -217,7 +217,8 @@ def rsi_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC':
             print(f"RSI of {TICKER}{fund}{NORMAL}...")
-            RSI(data[fund], name=fund, plot_output=True, out_suppress=False)
+            RSI(data[fund], name=fund, plot_output=True,
+                out_suppress=False, trendlines=True)
 
 
 def stochastic_function(config: dict):
@@ -280,7 +281,8 @@ def obv_function(config: dict):
         if fund != '^GSPC':
             print(
                 f"On Balance Volume of {TICKER}{fund}{NORMAL}...")
-            on_balance_volume(data[fund], name=fund, plot_output=True)
+            on_balance_volume(data[fund], name=fund,
+                              plot_output=True, trendlines=True)
 
 
 def ma_function(config: dict):

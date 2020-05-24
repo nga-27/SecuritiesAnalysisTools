@@ -8,6 +8,7 @@ from libs.utils import INDEXES
 from libs.features import normalize_signals
 from .trends import autotrend
 from .moving_average import windowed_moving_avg
+from .trends import get_trendlines_regression
 
 
 def RSI(position: pd.DataFrame, **kwargs) -> dict:
@@ -26,6 +27,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
         oversold {float} -- threshold to trigger oversold/buy condition (default: {30.0})
         auto_trend {bool} -- True calculates basic trend, applies to thresholds (default: {True})
         view {str} -- (default: {''})
+        trendlines {bool} -- (default: {False})
 
     Returns:
         dict -- contains all rsi information
@@ -39,6 +41,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
     oversold = kwargs.get('oversold', 30.0)
     auto_trend = kwargs.get('auto_trend', True)
     view = kwargs.get('view', '')
+    trendlines = kwargs.get('trendlines', False)
 
     rsi_data = dict()
 
@@ -100,6 +103,11 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
+
+    if trendlines:
+        end = len(rsi)
+        rsi_trend = rsi[end-100: end]
+        get_trendlines_regression(rsi_trend, plot_output=True, indictor='RSI')
 
     rsi_data['type'] = 'oscillator'
     rsi_data['length_of_data'] = len(rsi)
