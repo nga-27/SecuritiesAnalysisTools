@@ -221,7 +221,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
             return None
 
     if len(x) > 0:
-        if type(x[0]) == list:
+        if isinstance(x[0], (list, pd.core.indexes.datetimes.DatetimeIndex)):
             for i, plot in enumerate(list_of_plots):
                 if len(plot) != len(x[i]):
                     print(
@@ -240,7 +240,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
                 plt.plot(x, fig)
 
     else:
-        if type(x[0]) == list:
+        if isinstance(x[0], (list, pd.core.indexes.datetimes.DatetimeIndex)):
             x = x
             for i in range(len(list_of_plots)):
                 if len(colors) > 0:
@@ -702,12 +702,14 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
         for add_plt in additional_plts:
             color = add_plt.get('color')
             label = add_plt.get('legend')
+            x_lines = add_plt.get('x', x)
+
             if color is not None:
-                line, = plt.plot(x, add_plt["plot"],
+                line, = plt.plot(x_lines, add_plt["plot"],
                                  add_plt["color"], label=label,
                                  linewidth=0.5)
             else:
-                line, = plt.plot(x, add_plt["plot"],
+                line, = plt.plot(x_lines, add_plt["plot"],
                                  label=label, linewidth=0.5)
             handles.append(line)
 
