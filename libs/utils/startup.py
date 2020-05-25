@@ -491,6 +491,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'bol_bands', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
+    if ('--roc' in i_keys) or ('--rate_of_change' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'roc', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'gaps', type_='list')

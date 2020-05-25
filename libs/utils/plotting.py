@@ -69,6 +69,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         x_label {str} -- label for x axis (default: {'Trading Days'})
         x {list} -- x-value data (default: {[]}) (length of lists)
         title {str} -- title of plot (default: {''})
+        legend {list} -- y2 signals (default: {[]})
         saveFig {bool} -- True will save as 'filename' (default: {False})
         filename {str} path to save plot (default: {'temp_dual_plot.png'})
 
@@ -80,6 +81,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     x_label = kwargs.get('x_label', 'Trading Days')
     x = kwargs.get('x', [])
     title = kwargs.get('title', '')
+    legend = kwargs.get('legend', [])
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_dual_plot.png')
 
@@ -131,7 +133,9 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
             ax2.tick_params(axis='y')
             ax2.grid()
 
-        if type(y2_label) == list:
+        if len(legend) > 0:
+            plt.legend(legend)
+        elif isinstance(y2_label, list):
             plt.legend(y2_label)
         else:
             plt.legend([y2_label])
@@ -255,6 +259,10 @@ def generic_plotting(list_of_plots: list, **kwargs):
                     plt.plot(x, figy, colors[i])
                 else:
                     plt.plot(x, figy)
+
+    # coords = plt.ginput(10)
+    # print(f"coords: {coords}")
+    # plt.waitforbuttonpress()
 
     plt.title(title)
     if len(legend) > 0:

@@ -20,6 +20,7 @@ from .ultimate_oscillator import ultimate_oscillator
 from .full_stochastic import full_stochastic
 from .awesome_oscillator import awesome_oscillator
 from .momentum_oscillator import momentum_oscillator
+from .rate_of_change import rate_of_change_oscillator
 
 from .clusters import cluster_oscs
 
