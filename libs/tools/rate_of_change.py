@@ -4,6 +4,7 @@ import numpy as np
 
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import INDEXES
+from libs.utils import ProgressBar
 from .moving_average import adjust_signals
 
 
@@ -12,6 +13,7 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
+    p_bar = kwargs.get('progress_bar')
 
     roc = dict()
 
@@ -50,6 +52,9 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
 
     roc = roc_metrics(fund, roc)
 
+    if p_bar is not None:
+        p_bar.uptick(increment=1.0)
+
     return roc
 
 
@@ -79,4 +84,35 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict) -> dict:
     # Oversold, Overbought -> derive thresholds on fly... 5, 95 percentile? +/- 10? for each roc
     # with thresholds, once leaving is signal
     # Signal weighting: 10d (0.65), 20d (1.0), 40d (0.4)
+    MAP_TABULAR = {
+        'short': 0.65,
+        'medium': 1.0,
+        'long': 0.4
+    }
+
+    metrics = [0.0] * len(fund['Close'])
+
+    # Look at zero crossovers first
+    for tab in roc_dict['tabular']:
+        sh_state = 'n'
+        multiple = MAP_TABULAR[tab]
+
+        for i, sig in enumerate(roc_dict['tabular'][tab]):
+            if sh_state == 'n':
+                if sig < 0.0:
+                    sh_state = 'down'
+                elif sig > 0.0:
+                    sh_state = 'up'
+
+            elif sh_state == 'up':
+                if sig < 0.0:
+                    sh_state = 'down'
+                    metrics[i] += -1.0 * multiple
+
+            elif sh_state == 'down':
+                if sig > 0.0:
+                    sh_state = 'up'
+                    metrics[i] += multiple
+
+    roc_dict['metrics'] = metrics
     return roc_dict

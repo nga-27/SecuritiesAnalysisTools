@@ -31,6 +31,7 @@ from libs.tools import bollinger_bands
 from libs.tools import commodity_channel_index
 from libs.tools import candlesticks
 from libs.tools import risk_comparison
+from libs.tools import rate_of_change_oscillator
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -169,6 +170,9 @@ def run_dev(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['commodity_channels'] = commodity_channel_index(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['rate_of_change'] = rate_of_change_oscillator(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:

@@ -68,5 +68,6 @@ INDICATOR_NAMES = [
     "bear_bull_power",
     "total_power",
     "bollinger_bands",
-    "commodity_channels"
+    "commodity_channels",
+    "rate_of_change"
 ]
