@@ -32,6 +32,7 @@ from libs.tools import commodity_channel_index
 from libs.tools import candlesticks
 from libs.tools import risk_comparison
 from libs.tools import rate_of_change_oscillator
+from libs.tools import know_sure_thing
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -173,6 +174,9 @@ def run_dev(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['rate_of_change'] = rate_of_change_oscillator(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['know_sure_thing'] = know_sure_thing(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:

@@ -28,6 +28,7 @@ from libs.tools import candlesticks
 from libs.tools import commodity_channel_index
 from libs.tools import risk_comparison
 from libs.tools import rate_of_change_oscillator
+from libs.tools import know_sure_thing
 
 from libs.nasit import generate_fund_from_ledger
 
@@ -107,6 +108,8 @@ def only_functions_handler(config: dict):
         bollinger_bands_function(config)
     if 'roc' in config['run_functions']:
         roc_function(config)
+    if 'kst' in config['run_functions']:
+        kst_function(config)
     if 'gaps' in config['run_functions']:
         price_gap_function(config)
     if 'candlestick' in config['run_functions']:
@@ -345,6 +348,15 @@ def roc_function(config: dict):
         if fund != '^GSPC':
             print(f"Rate of Change of {TICKER}{fund}{NORMAL}...")
             rate_of_change_oscillator(data[fund], name=fund, plot_output=True)
+
+
+def kst_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Know Sure Thing / Summed Rate of Change of {TICKER}{fund}{NORMAL}...")
+            know_sure_thing(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):
