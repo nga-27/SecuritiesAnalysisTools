@@ -69,5 +69,6 @@ INDICATOR_NAMES = [
     "total_power",
     "bollinger_bands",
     "commodity_channels",
-    "rate_of_change"
+    "rate_of_change",
+    "know_sure_thing"
 ]

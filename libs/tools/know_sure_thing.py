@@ -21,14 +21,39 @@ def know_sure_thing(fund: pd.DataFrame, **kwargs) -> dict:
 
     kst['tabular'] = {'signal': signal, 'signal_line': signal_line}
 
+    kst = kst_indicators(fund, kst)
+
+    kst = kst_metrics(fund, kst, plot_output=plot_output,
+                      name=name, views=views)
+
     if p_bar is not None:
         p_bar.uptick(increment=1.0)
+
+    kst['length_of_data'] = len(kst['tabular']['signal'])
+    kst['type'] = 'oscillator'
 
     return kst
 
 
 def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
+    """Know Sure Thing - Signal
 
+    Also known as the "Summed Rate of Change" Oscillator
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+
+    Optional Args:
+        periods {list} -- ROC periods (default: {[10, 15, 20, 30]})
+        sma_intervals {list} -- sma intervals corresponding to the ROC periods
+                                (default: {[10, 10, 10, 15]})
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        views {str} -- (default: {''})
+
+    Returns:
+        list -- kst signal and its 9d sma signal line
+    """
     periods = kwargs.get('periods', [10, 15, 20, 30])
     sma_intervals = kwargs.get('sma_intervals', [10, 10, 10, 15])
     plot_output = kwargs.get('plot_output', True)
@@ -58,3 +83,77 @@ def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
                       'KST', title=title, saveFig=True, filename=filename)
 
     return signal, signal_line
+
+
+def kst_indicators(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
+    """KST Indicators
+
+    Signal indicators for buy/sell
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        kst_dict {dict} -- kst data object
+
+    Optional Args:
+        upper_thresh {float} -- percentile for overbought (default: {85.0})
+        lower_thresh {float} -- percentile for oversold (default: {15.0})
+
+    Returns:
+        dict -- kst data object
+    """
+    upper_thresh = kwargs.get('upper_thresh', 85.0)
+    lower_thresh = kwargs.get('lower_thresh', 15.0)
+
+    signal = kst_dict['tabular']['signal']
+    line = kst_dict['tabular']['signal_line']
+
+    upper_limit = np.percentile(signal, upper_thresh)
+    lower_limit = np.percentile(signal, lower_thresh)
+
+    state = 'n'
+    signals = []
+    for i, sig in enumerate(signal):
+        date = fund.index[i].strftime("%Y-%m-%d")
+        data = None
+
+        if state == 'n':
+            if sig > upper_limit:
+                state = 'u'
+            elif sig < lower_limit:
+                state = 'l'
+
+        elif state == 'u':
+            if sig < upper_limit:
+                state = 'n'
+            else:
+                if sig < line[i]:
+                    data = {
+                        "type": 'bearish',
+                        "value": 'overbought signal_line crossed',
+                        "index": i,
+                        "date": date
+                    }
+
+        elif state == 'l':
+            if sig > lower_limit:
+                state = 'n'
+            else:
+                if sig > line[i]:
+                    data = {
+                        "type": 'bullish',
+                        "value": 'oversold signal_line crossed',
+                        "index": i,
+                        "date": date
+                    }
+
+        if data is not None:
+            signals.append(data)
+
+    kst_dict['signals'] = signals
+
+    return kst_dict
+
+
+def kst_metrics(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
+
+    return kst_dict
