@@ -10,7 +10,7 @@ from .ultimate_oscillator import ultimate_oscillator
 from .rsi import RSI
 from .full_stochastic import full_stochastic
 
-from .moving_average import windowed_moving_avg
+from .moving_average import exponential_moving_avg
 from .trends import autotrend
 
 WARNING = STANDARD_COLORS["warning"]
@@ -56,7 +56,8 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     cluster_oscs['length_of_data'] = len(clusters)
 
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
-    clusters_wma = windowed_moving_avg(clusters, interval=3, data_type='list')
+    clusters_wma = exponential_moving_avg(
+        clusters, interval=3, data_type='list')
     if prog_bar is not None:
         prog_bar.uptick(increment=0.1)
 
@@ -371,7 +372,7 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
             if ind + 3 < len(ults):
                 state2[ind+3] += s * weights[3]
 
-    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    metrics = exponential_moving_avg(state2, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
 

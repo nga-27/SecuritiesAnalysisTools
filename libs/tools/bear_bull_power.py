@@ -5,7 +5,7 @@ from scipy.stats import linregress
 from libs.utils import ProgressBar
 from libs.utils import bar_chart, dual_plotting
 from libs.utils import dates_extractor_list, INDEXES
-from libs.tools import exponential_moving_avg, windowed_moving_avg
+from libs.tools import exponential_moving_avg
 from libs.features import normalize_signals
 
 
@@ -215,7 +215,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
             if ind + 3 < len(state):
                 state2[ind+3] += s * weights[3]
 
-    state3 = windowed_moving_avg(state2, 7, data_type='list')
+    state3 = exponential_moving_avg(state2, 7, data_type='list')
     norm = normalize_signals([state3])
     state4 = norm[0]
 

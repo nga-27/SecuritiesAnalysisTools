@@ -6,7 +6,7 @@ from libs.utils import dual_plotting, date_extractor
 from libs.utils import ProgressBar, INDEXES
 from libs.features import normalize_signals
 from .math_functions import lower_low, higher_high, bull_bear_th
-from .moving_average import windowed_moving_avg
+from .moving_average import exponential_moving_avg
 
 
 def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kwargs) -> dict:
@@ -466,7 +466,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    metrics = exponential_moving_avg(state2, 7, data_type='list')
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 

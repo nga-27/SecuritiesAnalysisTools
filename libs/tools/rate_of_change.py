@@ -7,7 +7,7 @@ from libs.utils import INDEXES
 from libs.utils import ProgressBar
 from libs.features import normalize_signals
 
-from .moving_average import adjust_signals, windowed_moving_avg
+from .moving_average import adjust_signals, exponential_moving_avg
 
 
 def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], **kwargs) -> dict:
@@ -151,7 +151,7 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    roc_dict['metrics'] = windowed_moving_avg(
+    roc_dict['metrics'] = exponential_moving_avg(
         roc_dict['metrics'], 7, data_type='list')
 
     roc_dict['metrics'] = normalize_signals([roc_dict['metrics']])[0]

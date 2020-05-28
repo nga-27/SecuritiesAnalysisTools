@@ -7,7 +7,7 @@ from libs.utils import dual_plotting, generic_plotting, date_extractor
 from libs.utils import INDEXES
 from libs.features import normalize_signals
 from .trends import autotrend
-from .moving_average import windowed_moving_avg
+from .moving_average import exponential_moving_avg
 from .trends import get_trendlines_regression
 
 
@@ -590,7 +590,7 @@ def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.05)
 
-    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    metrics = exponential_moving_avg(state2, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
 

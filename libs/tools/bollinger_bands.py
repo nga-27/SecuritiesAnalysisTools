@@ -6,7 +6,7 @@ from libs.utils import ProgressBar
 from libs.utils import generic_plotting, dual_plotting, INDEXES
 from libs.features import normalize_signals
 
-from .moving_average import simple_moving_avg, exponential_moving_avg, windowed_moving_avg
+from .moving_average import simple_moving_avg, exponential_moving_avg
 
 
 def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
@@ -129,7 +129,7 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
             c = np.round(c / s_range, 4)
             metrics[i] = c
 
-    metrics = windowed_moving_avg(metrics, 7, data_type='list')
+    metrics = exponential_moving_avg(metrics, 7, data_type='list')
     norm_signal = normalize_signals([metrics])[0]
 
     bol_bands['metrics'] = norm_signal
