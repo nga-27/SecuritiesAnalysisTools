@@ -142,7 +142,7 @@ def run_dev(script: list):
             fund_data['on_balance_volume'] = on_balance_volume(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
-            fund_data['moving_average'] = triple_moving_average(
+            fund_data['simple_moving_average'] = triple_moving_average(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['exp_moving_average'] = triple_exp_mov_average(

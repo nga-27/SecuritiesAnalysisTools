@@ -695,10 +695,10 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
             else:
                 colors = 'red'
 
-        oc = plt.Line2D((x[i], x[i]), (op, close), lw=3,
+        oc = plt.Line2D((x[i], x[i]), (op, close), lw=1.25,
                         ls='-', alpha=1, color=colors)
         plt.gca().add_line(oc)
-        hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75,
+        hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.375,
                         ls='-', alpha=1, color=shadow_color)
         plt.gca().add_line(hl)
 

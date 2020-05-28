@@ -260,32 +260,33 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         name2 = name3 + \
             ' - Simple Moving Averages [{}, {}, {}]'.format(
                 config[0], config[1], config[2])
-        legend = ['Price', f'{config[0]}-SMA',
-                  f'{config[1]}-SMA', f'{config[2]}-SMA']
+        # legend = ['Price', f'{config[0]}-SMA',
+        #           f'{config[1]}-SMA', f'{config[2]}-SMA']
 
-        plots = [fund['Close'], tshort2, tmed2, tlong2]
-        x_vals = [fund.index, tshort_x, tmed_x, tlong_x]
+        # plots = [fund['Close'], tshort2, tmed2, tlong2]
+        # x_vals = [fund.index, tshort_x, tmed_x, tlong_x]
 
         if plot_output:
             candlestick_plot(fund, title=name2, additional_plts=[
                              plot_short, plot_med, plot_long])
-            generic_plotting(plots, x=x_vals,
-                             legend=legend, title=name2)
+            # generic_plotting(plots, x=x_vals,
+            #                  legend=legend, title=name2)
 
         else:
             filename = os.path.join(
                 name, view, f"simple_moving_averages_{name}.png")
             candlestick_plot(fund, title=name2, filename=filename,
                              saveFig=True, additional_plts=[plot_short, plot_med, plot_long])
-            generic_plotting(plots, x=x_vals,
-                             legend=legend, title=name2, saveFig=True, filename=filename)
+            # generic_plotting(plots, x=x_vals,
+            #                  legend=legend, title=name2, saveFig=True, filename=filename)
 
     tma = dict()
     tma['short'] = {'period': config[0]}
     tma['medium'] = {'period': config[1]}
     tma['long'] = {'period': config[2]}
     tma['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
-    tma['metrics'] = {'short': mshort, 'medium': mmed, 'long': mlong}
+    tma['metrics'] = {f'{config[0]}-d': mshort,
+                      f'{config[1]}-d': mmed, f'{config[2]}-d': mlong}
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
@@ -297,7 +298,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     return tma
 
 
-def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> list:
+def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 20, 50], **kwargs) -> list:
     """Triple Exponential Moving Average
 
     Arguments:
@@ -363,32 +364,33 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 13, 50], **kwargs) -> 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
-    tema['metrics'] = {'short': mshort, 'medium': mmed, 'long': mlong}
+    tema['metrics'] = {f'{config[0]}-d': mshort,
+                       f'{config[1]}-d': mmed, f'{config[2]}-d': mlong}
 
     if not out_suppress:
         name3 = INDEXES.get(name, name)
         name2 = name3 + \
             ' - Exp Moving Averages [{}, {}, {}]'.format(
                 config[0], config[1], config[2])
-        legend = ['Price', f'{config[0]}-EMA',
-                  f'{config[1]}-EMA', f'{config[2]}-EMA']
+        # legend = ['Price', f'{config[0]}-EMA',
+        #           f'{config[1]}-EMA', f'{config[2]}-EMA']
 
-        plots = [fund['Close'], tshort2, tmed2, tlong2]
-        x_vals = [fund.index, tshort_x, tmed_x, tlong_x]
+        # plots = [fund['Close'], tshort2, tmed2, tlong2]
+        # x_vals = [fund.index, tshort_x, tmed_x, tlong_x]
 
         if plot_output:
             candlestick_plot(fund, title=name2, additional_plts=[
                              plot_short, plot_med, plot_long])
-            generic_plotting(plots, x=x_vals,
-                             legend=legend, title=name2)
+            # generic_plotting(plots, x=x_vals,
+            #                  legend=legend, title=name2)
 
         else:
             filename = os.path.join(
                 name, view, f"exp_moving_averages_{name}.png")
             candlestick_plot(fund, title=name2, filename=filename,
                              saveFig=True, additional_plts=[plot_short, plot_med, plot_long])
-            generic_plotting(plots, x=x_vals,
-                             legend=legend, title=name2, saveFig=True, filename=filename)
+            # generic_plotting(plots, x=x_vals,
+            #                  legend=legend, title=name2, saveFig=True, filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)

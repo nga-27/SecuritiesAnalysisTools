@@ -58,7 +58,7 @@ INDICATOR_NAMES = [
     "awesome",
     "momentum_oscillator",
     "on_balance_volume",
-    "moving_average",
+    "simple_moving_average",
     "exp_moving_average",
     "sma_swing_trade",
     "ema_swing_trade",
