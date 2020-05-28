@@ -6,7 +6,7 @@ import numpy as np
 from libs.utils import ProgressBar, INDEXES
 from libs.utils import dual_plotting
 from libs.features import find_local_extrema, normalize_signals
-from .moving_average import simple_moving_avg, windowed_moving_avg
+from .moving_average import simple_moving_avg
 
 
 def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:

@@ -25,6 +25,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
                                 passed) (default: {5.0})
         progress_bar {ProgressBar} -- (default: {None})
         view {str} -- (default: {''})
+        trendlines {bool} -- run trendline algorithm (default: {False})
 
     Returns:
         obv_dict {dict} -- contains all obv information
@@ -34,6 +35,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     filter_factor = kwargs.get('filter_factor', 5.0)
     progress_bar = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
+    trendlines = kwargs.get('trendlines', False)
 
     obv_dict = generate_obv_content(
         fund,
@@ -67,20 +69,23 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)
 
-    obv = obv_dict['obv']
-    if obv[0] != 0.0 and obv[2] != 0.0 and obv[5] != 0.0:
-        get_trendlines_regression(obv)
+    end = len(obv_dict['obv'])
+    obv = obv_dict['obv'][end-100: end]
+    if obv[1] != 0.0 and trendlines:
+        get_trendlines_regression(
+            obv, dates=fund.index, plot_output=plot_output, indicator='OBV')
 
     if progress_bar is not None:
-        progress_bar.uptick(increment=0.25)
+        progress_bar.uptick(increment=0.125)
 
-    # obv_dict['trends'] = dict()
-    # sub_name = f"obv_{name}"
-    # obv_dict['trends']['short'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[2,4,7,11])
-    # sub_name = f"obv_{name}_medium"
-    # obv_dict['trends']['long'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[8,14,22,32])
-    # sub_name = f"obv_{name}_long"
-    # obv_dict['trends']['long'] = get_trendlines(data2, name=name, sub_name=sub_name, plot_output=plot_output, interval=[30,48,68,90])
+    end = len(obv_dict['obv'])
+    obv = obv_dict['obv'][end-50: end]
+    if obv[1] != 0.0 and trendlines:
+        get_trendlines_regression(
+            obv, dates=None, plot_output=plot_output, indicator='OBV')
+
+    if progress_bar is not None:
+        progress_bar.uptick(increment=0.125)
 
     obv_dict['type'] = 'trend'
 
@@ -213,29 +218,32 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- list of feature dictionaries
     """
-    sma_interval = kwargs.get('sma_internal', 20)
+    sma_interval = kwargs.get('sma_internal', 10)
     plot_output = kwargs.get('plot_output', True)
     filter_factor = kwargs.get('filter_factor', 2.5)
     progress_bar = kwargs.get('progress_bar')
 
     sma_interval2 = sma_interval * 2
+    sma_interval3 = sma_interval2 * 2
 
     obv_sig = simple_moving_avg(obv, sma_interval, data_type='list')
     obv_sig2 = simple_moving_avg(obv, sma_interval2, data_type='list')
-    obv_diff = [ob - obv_sig[i] for i, ob in enumerate(obv)]
+    obv_sig3 = simple_moving_avg(obv, sma_interval3, data_type='list')
+    obv_diff = [ob - obv_sig2[i] for i, ob in enumerate(obv)]
 
     sma_features = find_obv_sma_trends(
         obv,
-        [obv_sig, obv_sig2],
-        [sma_interval, sma_interval2],
+        [obv_sig, obv_sig2, obv_sig3],
+        [sma_interval, sma_interval2, sma_interval3],
         position
     )
 
     if plot_output:
         generic_plotting(
-            [obv, obv_sig, obv_sig2],
+            [obv, obv_sig, obv_sig2, obv_sig3],
             title='OBV Signal Line',
-            legend=['obv', f'sma-{sma_interval}', f"sma-{sma_interval*2}"]
+            legend=['obv', f'sma-{sma_interval}',
+                    f"sma-{sma_interval2}", f"sma-{sma_interval3}"]
         )
 
     if progress_bar is not None:

@@ -260,46 +260,27 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     slide = slide_title_header(slide, fund, price_details=price_str)
     slide = generate_synopsis_slide(slide, analysis, fund, views=views)
 
-    # Slide #1 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     indexes = []
-    indexes.append(len(prs.slides) - 1)
-    slide = slide_title_header(slide, fund, price_details=price_str)
+    m_file = os.path.join("libs", "ui_generation",
+                          "pptx_resources", "fund_content_slides.json")
+    if os.path.exists(m_file):
+        with open(m_file, 'r') as mfl:
+            m_data = json.load(mfl)
+            mfl.close()
 
-    # Slide #2 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, fund, price_details=price_str)
-    indexes.append(len(prs.slides)-1)
+        # Slides with 4 plots on each
+        num_quad_slides = m_data.get('info', {}).get('quad_slides', 0)
+        for _ in range(num_quad_slides):
+            slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+            slide = slide_title_header(slide, fund, price_details=price_str)
+            indexes.append(len(prs.slides) - 1)
 
-    # Slide #3 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, fund, price_details=price_str)
-    indexes.append(len(prs.slides)-1)
-
-    # Slide #4 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, fund, price_details=price_str)
-    indexes.append(len(prs.slides)-1)
-
-    # Slide #5 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, fund, price_details=price_str)
-    indexes.append(len(prs.slides)-1)
-
-    # Slide #6 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, fund, price_details=price_str)
-    indexes.append(len(prs.slides)-1)
-
-    # Slide #7 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, fund, price_details=price_str)
-    indexes.append(len(prs.slides)-1)
-
-    # Slide #8 of content
-    slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
-    slide = slide_title_header(slide, fund, price_details=price_str)
-    indexes.append(len(prs.slides)-1)
+        # Slides with a single plot (and usually a table)
+        single_slides = m_data.get('info', {}).get('single_slides', 0)
+        for _ in range(single_slides):
+            slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
+            slide = slide_title_header(slide, fund, price_details=price_str)
+            indexes.append(len(prs.slides)-1)
 
     content = os.path.join(content_dir, '*.png')
     pics = glob.glob(content)
@@ -349,15 +330,18 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
                 prs.slides[ind], "File 'fund_content_slides.json' not found.")
         return prs
 
-    slide_content = {}
+    slide_config = {}
     with open(content_file, 'r') as c_file:
-        slide_content = json.load(c_file)
+        slide_config = json.load(c_file)
         c_file.close()
 
     views = kwargs.get('views', '')
     current_price = kwargs.get('current_price')
 
-    locations = slide_content.get('locations', [])
+    locations = slide_config.get('locations', [])
+    tables = slide_config.get('tables', [])
+    slide_content = slide_config.get('plots', {})
+
     for picture in globs:
 
         _, part = os.path.split(picture)
@@ -365,33 +349,25 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
         splits.pop(-1)
         part = '_'.join(splits)
 
-        if part in slide_content:
+        if 'resist_support' in part and part in slide_content:
             details = slide_content.get(part, {})
-            slide_index = details.get('index')
+            slide_num = details.get('index')
             location = details.get('location')
+            table = details.get('table')
 
             left = eval(locations[location]['left'])
             top = eval(locations[location]['top'])
             height = eval(locations[location]['height'])
             width = eval(locations[location]['width'])
 
-            prs.slides[slide_indices[slide_index]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
-
-        # Slide #7
-        slide_num = 6
-        if 'resist_support' in part:
-            left = Inches(0)
-            top = Inches(1.55)
-            height = Inches(4.7)
-            width = Inches(7)
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 picture, left, top, height=height, width=width)
 
-            left = Inches(7)
-            top = Inches(0.25)
-            height = Inches(4.7)
-            width = Inches(4)
+            left = eval(tables[table]['left'])
+            top = eval(tables[table]['top'])
+            height = eval(tables[table]['height'])
+            width = eval(tables[table]['width'])
+
             txbox = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
                 left, top, width, height)
 
@@ -443,20 +419,25 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
                 table.cell(
                     i+1, 2).text_frame.paragraphs[0].font.size = Pt(14)
 
-        # Slide 8
-        slide_num = 7
-        if 'trendline' in part:
-            left = Inches(0)
-            top = Inches(1.55)
-            height = Inches(4.7)
-            width = Inches(7)
+        elif 'trendline' in part and part in slide_content:
+            details = slide_content.get(part, {})
+            slide_num = details.get('index')
+            location = details.get('location')
+            table = details.get('table')
+
+            left = eval(locations[location]['left'])
+            top = eval(locations[location]['top'])
+            height = eval(locations[location]['height'])
+            width = eval(locations[location]['width'])
+
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
                 picture, left, top, height=height, width=width)
 
-            left = Inches(6.5)
-            top = Inches(0.25)
-            height = Inches(4.7)
-            width = Inches(4)
+            left = eval(tables[table]['left'])
+            top = eval(tables[table]['top'])
+            height = eval(tables[table]['height'])
+            width = eval(tables[table]['width'])
+
             txbox = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
                 left, top, width, height)
 
@@ -538,5 +519,18 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
                 color = color_to_RGB(trend['color'])
                 table.cell(
                     i+2, j+2).text_frame.paragraphs[0].font.color.rgb = color
+
+        elif part in slide_content:
+            details = slide_content.get(part, {})
+            slide_index = details.get('index')
+            location = details.get('location')
+
+            left = eval(locations[location]['left'])
+            top = eval(locations[location]['top'])
+            height = eval(locations[location]['height'])
+            width = eval(locations[location]['width'])
+
+            prs.slides[slide_indices[slide_index]].shapes.add_picture(
+                picture, left, top, height=height, width=width)
 
     return prs

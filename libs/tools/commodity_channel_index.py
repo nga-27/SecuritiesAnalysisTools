@@ -6,7 +6,7 @@ import numpy as np
 from libs.utils import dual_plotting, INDEXES, ProgressBar
 from libs.features import normalize_signals
 from .moving_average import typical_price_signal, simple_moving_avg
-from .moving_average import windowed_moving_avg
+from .moving_average import exponential_moving_avg
 
 
 def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:
@@ -186,7 +186,7 @@ def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
             if value < 100.0:
                 metrics[i] -= point
 
-    metrics = windowed_moving_avg(metrics, 7, data_type='list')
+    metrics = exponential_moving_avg(metrics, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
 

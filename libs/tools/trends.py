@@ -1,5 +1,6 @@
 import os
 import warnings
+import json
 import pprint
 import math
 import pandas as pd
@@ -18,163 +19,6 @@ WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
 
 TREND_PTS = [2, 3, 6]
-
-
-def get_trend(position: pd.DataFrame, **kwargs) -> dict:
-    """Get Trend
-
-    Generates a trend of a given position and features of trend
-
-    Styles:
-        'sma' - small moving average (uses 'ma_size')
-        'ema' - exponential moving average (uses 'ma_size')
-    Date_range:
-        list -> [start_date, end_date] -> ['2018-04-18', '2019-01-20']
-
-    Arguments:
-        position {pd.DataFrame}
-
-    Optional Arg:
-        style {str} -- (default: {'sma'})
-        ma_size {int} -- (default: {50})
-        date_range {list} -- (default: {[]})
-
-    Returns:
-        dict -- trends
-    """
-    style = kwargs.get('style', 'sma')
-    ma_size = kwargs.get('ma_size', 50)
-    date_range = kwargs.get('date_range', [])
-
-    trend = {}
-
-    if style == 'sma':
-        trend['tabular'] = simple_moving_avg(
-            position, ma_size, data_type='list')
-
-        trend['difference'] = difference_from_trend(position, trend['tabular'])
-
-        trend['magnitude'] = trend_of_dates(
-            position, trend_difference=trend['difference'], dates=date_range)
-
-        trend['method'] = f'SMA-{ma_size}'
-
-    return trend
-
-
-def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
-    """Difference from Trend
-
-    Simple difference of close from trend values 
-
-    Arguments:
-        position {pd.DataFrame} -- fund dataset
-        trend {list} -- given trend
-
-    Returns:
-        list -- difference, point by point
-    """
-    diff_from_trend = []
-    for i in range(len(trend)):
-        diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
-
-    return diff_from_trend
-
-
-def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) -> float:
-    """Trend of Dates
-
-    Find the average of a fund over or under an existing trend for a period of dates.
-
-    Arguments:
-        position {pd.DataFrame} -- fund dataset
-        trend_difference {list} -- trend difference list (close[i] - trend[i])
-        dates {list} -- list of dates to examine for overall trend
-
-    Returns:
-        float -- mean (close-trend) value over period of time
-    """
-    overall_trend = 0.0
-
-    if len(dates) == 0:
-        # Trend of entire period provided
-        trend = np.round(np.average(trend_difference), 6)
-        overall_trend = trend
-
-    else:
-        i = 0
-        d_start = datetime.strptime(dates[0], '%Y-%m-%d')
-        d_match = datetime.strptime(position['Date'][0], '%Y-%m-%d')
-
-        while ((i < len(position['Date'])) and (d_start > d_match)):
-            i += 1
-            d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
-
-        start = i
-        d_end = datetime.strptime(dates[1], '%Y-%m-%d')
-        d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
-
-        while ((i < len(position['Date'])) and (d_end > d_match)):
-            i += 1
-            if i < len(position['Date']):
-                d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
-
-        end = i
-
-        trend = np.round(np.average(trend_difference[start:end+1]), 6)
-        overall_trend = trend
-
-    return overall_trend
-
-
-def get_trend_analysis(position: pd.DataFrame,
-                       config: list = [50, 25, 12]) -> dict:
-    """Get Trend Analysis
-
-    Determines long, med, and short trend of a position
-
-    Arguments:
-        position {pd.DataFrame} -- fund dataset
-
-    Keyword Arguments:
-        config {list} -- list of moving average lookbacks, longest to shortest
-                         (default: {[50, 25, 12]})
-
-    Returns:
-        dict -- trend notes
-    """
-    tlong = get_trend(position, style='sma', ma_size=config[0])
-    tmed = get_trend(position, style='sma', ma_size=config[1])
-    tshort = get_trend(position, style='sma', ma_size=config[2])
-
-    trend_analysis = {}
-    trend_analysis['long'] = tlong['magnitude']
-    trend_analysis['medium'] = tmed['magnitude']
-    trend_analysis['short'] = tshort['magnitude']
-
-    if trend_analysis['long'] > 0.0:
-        trend_analysis['report'] = 'Overall UPWARD, '
-    else:
-        trend_analysis['report'] = 'Overall DOWNWARD, '
-
-    if np.abs(trend_analysis['short']) > np.abs(trend_analysis['medium']):
-        trend_analysis['report'] += 'accelerating '
-    else:
-        trend_analysis['report'] += 'slowing '
-    if trend_analysis['short'] > trend_analysis['medium']:
-        trend_analysis['report'] += 'UPWARD'
-    else:
-        trend_analysis['report'] += 'DOWNWARD'
-
-    if ((trend_analysis['short'] > 0.0) and (trend_analysis['medium'] > 0.0) and
-            (trend_analysis['long'] < 0.0)):
-        trend_analysis['report'] += ', rebounding from BOTTOM'
-
-    if ((trend_analysis['short'] < 0.0) and (trend_analysis['medium'] < 0.0) and
-            (trend_analysis['long'] > 0.0)):
-        trend_analysis['report'] += ', falling from TOP'
-
-    return trend_analysis
 
 
 def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
@@ -369,6 +213,163 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     trends['type'] = 'trend'
 
     return trends
+
+
+def get_trend(position: pd.DataFrame, **kwargs) -> dict:
+    """Get Trend
+
+    Generates a trend of a given position and features of trend
+
+    Styles:
+        'sma' - small moving average (uses 'ma_size')
+        'ema' - exponential moving average (uses 'ma_size')
+    Date_range:
+        list -> [start_date, end_date] -> ['2018-04-18', '2019-01-20']
+
+    Arguments:
+        position {pd.DataFrame}
+
+    Optional Arg:
+        style {str} -- (default: {'sma'})
+        ma_size {int} -- (default: {50})
+        date_range {list} -- (default: {[]})
+
+    Returns:
+        dict -- trends
+    """
+    style = kwargs.get('style', 'sma')
+    ma_size = kwargs.get('ma_size', 50)
+    date_range = kwargs.get('date_range', [])
+
+    trend = {}
+
+    if style == 'sma':
+        trend['tabular'] = simple_moving_avg(
+            position, ma_size, data_type='list')
+
+        trend['difference'] = difference_from_trend(position, trend['tabular'])
+
+        trend['magnitude'] = trend_of_dates(
+            position, trend_difference=trend['difference'], dates=date_range)
+
+        trend['method'] = f'SMA-{ma_size}'
+
+    return trend
+
+
+def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
+    """Difference from Trend
+
+    Simple difference of close from trend values 
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        trend {list} -- given trend
+
+    Returns:
+        list -- difference, point by point
+    """
+    diff_from_trend = []
+    for i in range(len(trend)):
+        diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
+
+    return diff_from_trend
+
+
+def trend_of_dates(position: pd.DataFrame, trend_difference: list, dates: list) -> float:
+    """Trend of Dates
+
+    Find the average of a fund over or under an existing trend for a period of dates.
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+        trend_difference {list} -- trend difference list (close[i] - trend[i])
+        dates {list} -- list of dates to examine for overall trend
+
+    Returns:
+        float -- mean (close-trend) value over period of time
+    """
+    overall_trend = 0.0
+
+    if len(dates) == 0:
+        # Trend of entire period provided
+        trend = np.round(np.average(trend_difference), 6)
+        overall_trend = trend
+
+    else:
+        i = 0
+        d_start = datetime.strptime(dates[0], '%Y-%m-%d')
+        d_match = datetime.strptime(position['Date'][0], '%Y-%m-%d')
+
+        while ((i < len(position['Date'])) and (d_start > d_match)):
+            i += 1
+            d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
+
+        start = i
+        d_end = datetime.strptime(dates[1], '%Y-%m-%d')
+        d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
+
+        while ((i < len(position['Date'])) and (d_end > d_match)):
+            i += 1
+            if i < len(position['Date']):
+                d_match = datetime.strptime(position['Date'][i], '%Y-%m-%d')
+
+        end = i
+
+        trend = np.round(np.average(trend_difference[start:end+1]), 6)
+        overall_trend = trend
+
+    return overall_trend
+
+
+def get_trend_analysis(position: pd.DataFrame,
+                       config: list = [50, 25, 12]) -> dict:
+    """Get Trend Analysis
+
+    Determines long, med, and short trend of a position
+
+    Arguments:
+        position {pd.DataFrame} -- fund dataset
+
+    Keyword Arguments:
+        config {list} -- list of moving average lookbacks, longest to shortest
+                         (default: {[50, 25, 12]})
+
+    Returns:
+        dict -- trend notes
+    """
+    tlong = get_trend(position, style='sma', ma_size=config[0])
+    tmed = get_trend(position, style='sma', ma_size=config[1])
+    tshort = get_trend(position, style='sma', ma_size=config[2])
+
+    trend_analysis = {}
+    trend_analysis['long'] = tlong['magnitude']
+    trend_analysis['medium'] = tmed['magnitude']
+    trend_analysis['short'] = tshort['magnitude']
+
+    if trend_analysis['long'] > 0.0:
+        trend_analysis['report'] = 'Overall UPWARD, '
+    else:
+        trend_analysis['report'] = 'Overall DOWNWARD, '
+
+    if np.abs(trend_analysis['short']) > np.abs(trend_analysis['medium']):
+        trend_analysis['report'] += 'accelerating '
+    else:
+        trend_analysis['report'] += 'slowing '
+    if trend_analysis['short'] > trend_analysis['medium']:
+        trend_analysis['report'] += 'UPWARD'
+    else:
+        trend_analysis['report'] += 'DOWNWARD'
+
+    if ((trend_analysis['short'] > 0.0) and (trend_analysis['medium'] > 0.0) and
+            (trend_analysis['long'] < 0.0)):
+        trend_analysis['report'] += ', rebounding from BOTTOM'
+
+    if ((trend_analysis['short'] < 0.0) and (trend_analysis['medium'] < 0.0) and
+            (trend_analysis['long'] > 0.0)):
+        trend_analysis['report'] += ', falling from TOP'
+
+    return trend_analysis
 
 
 def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwargs) -> list:
@@ -920,7 +921,7 @@ def autotrend(data, **kwargs) -> list:
 
 
 ######################################################
-DIVISORS = [4, 5, 7, 9, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+DIVISORS = [1, 2, 4, 8]
 
 
 def get_trendlines_regression(signal: list, **kwargs) -> dict:
@@ -936,12 +937,40 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                             (default: {15})
         threshold {float} -- acceptable ratio a trendline can be off and still counted in current
                              plot (default: {0.1})
+        dates {list} -- typically DataFrame.index (default: {None})
+        indicator {str} -- for plot name, indicator trend analyzed (default: {''})
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        views {str} -- (default: {''})
 
     Returns:
         dict -- trendline content
     """
-    iterations = kwargs.get('iterations', 15)
+    config_path = os.path.join("resources", "config.json")
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as cpf:
+            c_data = json.load(cpf)
+            cpf.close()
+
+        ranges = c_data.get('trendlines', {}).get(
+            'divisors', {}).get('ranges', [])
+        ranged = 0
+        for rg in ranges:
+            if len(signal) > rg:
+                ranged += 1
+
+        divs = c_data.get('trendlines', {}).get('divisors', {}).get('divisors')
+        if divs is not None:
+            if len(divs) > ranged:
+                DIVISORS = divs[ranged]
+
+    iterations = kwargs.get('iterations', len(DIVISORS))
     threshold = kwargs.get('threshold', 0.1)
+    dates = kwargs.get('dates')
+    indicator = kwargs.get('indicator', '')
+    plot_output = kwargs.get('plot_output', True)
+    name = kwargs.get('name', '')
+    views = kwargs.get('views', '')
 
     indexes = list(range(len(signal)))
 
@@ -951,10 +980,18 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
     lines = []
     x_s = []
+    t_line_content = []
+    line_id = 0
+
+    y_max = max(signal) - min(signal)
+    x_max = len(signal)
+    scale_change = float(x_max) / float(y_max)
+
     for div in divisors:
         period = int(len(signal) / div)
         for i in range(div):
             for k in range(2):
+
                 data = dict()
                 if i == div-1:
                     data['value'] = signal[period*i: len(signal)].copy()
@@ -965,7 +1002,7 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
 
                 data = pd.DataFrame.from_dict(data)
 
-                while len(data['x']) > 3:
+                while len(data['x']) > 4:
                     reg = linregress(data['x'], data['value'])
                     if k == 0:
                         data = data.loc[data['value'] >
@@ -975,38 +1012,89 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
                                         reg[0] * data['x'] + reg[1]]
 
                 reg = linregress(data['x'], data['value'])
+                content = {'slope': reg[0], 'intercept': reg[1]}
+                content['angle'] = np.arctan(
+                    reg[0] * scale_change) / np.pi * 180.0
+                if reg[0] < 0.0:
+                    content['angle'] = 180.0 + \
+                        (np.arctan(reg[0] * scale_change) / np.pi * 180.0)
+
                 line = []
                 for ind in indexes:
                     line.append(reg[0] * ind + reg[1])
 
                 x_line = indexes.copy()
-                removals = []
-                for j, lin in enumerate(line):
-                    if lin < 0.0:
-                        if lin < ((1.0 + threshold) * signal[j]) or lin > ((1.0 - threshold) * signal[j]):
-                            removals.append(j)
-                    else:
-                        if lin > ((1.0 + threshold) * signal[j]) or lin < ((1.0 - threshold) * signal[j]):
-                            removals.append(j)
 
-                line_corrected = []
-                x_corrected = []
-                for x in x_line:
-                    if x not in removals:
-                        x_corrected.append(x)
+                line_corrected, x_corrected = filter_nearest_to_signal(
+                    signal, x_line, line)
 
                 if len(x_corrected) > 0:
-                    start = min(x_corrected)
-                    end = max(x_corrected)
-                    line_corrected = line[start:end+1].copy()
-                    x_corrected = list(range(start, end+1))
+                    content['length'] = len(x_corrected)
+                    content['id'] = line_id
+                    line_id += 1
 
-                lines.append(line_corrected.copy())
-                x_s.append(x_corrected.copy())
-                # lines.append(line)
-                # x_s.append(x_line)
+                    lines.append(line_corrected.copy())
+                    x_s.append(x_corrected.copy())
+                    t_line_content.append(content)
+                    # lines.append(line)
+                    # x_s.append(x_line)
+
+        for i in range(period, len(signal), 2):
+            for k in range(2):
+
+                data = dict()
+                data['value'] = signal[i-period: i].copy()
+                data['x'] = indexes[i-period: i].copy()
+
+                data = pd.DataFrame.from_dict(data)
+
+                while len(data['x']) > 4:
+                    reg = linregress(data['x'], data['value'])
+                    if k == 0:
+                        data = data.loc[data['value'] >
+                                        reg[0] * data['x'] + reg[1]]
+                    else:
+                        data = data.loc[data['value'] <
+                                        reg[0] * data['x'] + reg[1]]
+
+                reg = linregress(data['x'], data['value'])
+                content = {'slope': reg[0], 'intercept': reg[1]}
+                content['angle'] = np.arctan(
+                    reg[0] * scale_change) / np.pi * 180.0
+                if reg[0] < 0.0:
+                    content['angle'] = 180.0 + \
+                        (np.arctan(reg[0] * scale_change) / np.pi * 180.0)
+
+                line = []
+                for ind in indexes:
+                    line.append(reg[0] * ind + reg[1])
+
+                x_line = indexes.copy()
+
+                line_corrected, x_corrected = filter_nearest_to_signal(
+                    signal, x_line, line, threshold=threshold)
+
+                if len(x_corrected) > 0:
+                    content['length'] = len(x_corrected)
+                    content['id'] = line_id
+                    line_id += 1
+
+                    lines.append(line_corrected.copy())
+                    x_s.append(x_corrected.copy())
+                    t_line_content.append(content)
 
     # handle over load of lines (consolidate)
+    # Idea: bucket sort t_line_content by 'slope', within each bucket then consolidate similar
+    # intercepts, both by line extension/combination and on slope averaging. Track line 'id' list
+    # so that the corrections can be made for plots and x_plots
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal)
+
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal, thresh=0.2)
+
+    t_line_content, lines, x_s = consolidate_lines(
+        t_line_content, lines, x_s, signal, thresh=0.3)
 
     plots = []
     x_plots = []
@@ -1015,7 +1103,209 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
     plots.extend(lines)
     x_plots.extend(x_s)
 
-    generic_plotting(plots, x=x_plots)
+    if dates is not None:
+        new_xs = []
+        for xps in x_plots:
+            nxs = [dates[i] for i in xps]
+            new_xs.append(nxs)
+
+        x_plots = new_xs
+
+    title = f"{indicator.capitalize()} Trendlines"
+    if plot_output:
+        generic_plotting(plots, x=x_plots, title=title)
+    else:
+        filename = os.path.join(
+            name, views, f"{indicator}_trendlines_{name}.png")
+        generic_plotting(plots, x=x_plots, title=title,
+                         filename=filename, saveFig=True)
 
     trends = dict()
     return trends
+
+
+def consolidate_lines(line_content: list, lines: list, x_lines: list, signal: list, **kwargs) -> list:
+    """Consolidate Lines
+
+    Arguments:
+        line_content {list} -- list of trendline objects
+        lines {list} -- list of trendlines
+        x_lines {list} -- list of x-values of trendlines
+        signal {list} -- signal of trendlines
+
+    Optional Args:
+        thresh {float} -- percent for angle combination (default: {2.5})
+
+    Returns:
+        list -- modified line content, modified lines, modified x lines
+    """
+    thresh = kwargs.get('thresh', 2.5)
+    thresh2 = thresh / 20.0
+
+    nan_free = []
+    for sortie in line_content:
+        if str(sortie['slope']) != 'nan':
+            nan_free.append(sortie)
+
+    sort_by_slope = sorted(nan_free, key=lambda x: x['angle'])
+
+    kept_grouped = []
+    count_base = 0
+    count_comp = 1
+    kept_local = [sort_by_slope[count_base]['id']]
+
+    while count_base < len(sort_by_slope) and count_comp < len(sort_by_slope):
+
+        base_upper = thresh + sort_by_slope[count_base]['angle']
+        comp_lower = sort_by_slope[count_comp]['angle']
+
+        if base_upper > comp_lower:
+
+            if sort_by_slope[count_base]['intercept'] < 0.0:
+                base_lower = (1.0 - thresh2) * \
+                    sort_by_slope[count_base]['intercept']
+                comp_upper = (1.0 + thresh2) * \
+                    sort_by_slope[count_comp]['intercept']
+
+                if base_lower > comp_upper:  # or base_lower < comp_upper:
+                    kept_local.append(sort_by_slope[count_comp]['id'])
+                    count_comp += 1
+                    continue
+
+            else:
+                base_upper = (1.0 + thresh2) * \
+                    sort_by_slope[count_base]['intercept']
+                comp_lower = (1.0 - thresh2) * \
+                    sort_by_slope[count_comp]['intercept']
+
+                if base_upper > comp_lower:  # or base_lower < comp_upper:
+                    kept_local.append(sort_by_slope[count_comp]['id'])
+                    count_comp += 1
+                    continue
+
+        count_base = count_comp
+        count_comp += 1
+        kept_grouped.append(kept_local.copy())
+        kept_local = [sort_by_slope[count_base]['id']]
+
+    new_content, lines, x_lines = reconstruct_lines(
+        kept_grouped, line_content, lines, x_lines, signal)
+
+    return new_content, lines, x_lines
+
+
+def reconstruct_lines(groups: list, content: list, lines: list, x_s: list, signal: list) -> list:
+    """Reconstruct Lines
+
+    Join similar lines
+
+    Arguments:
+        groups {list} -- list of IDs
+        content {list} -- content of lines
+        lines {list} -- trendlines
+        x_s {list} -- x's of trendlines
+        signal {list} -- signal of which trendlines are generated
+
+    Returns:
+        list -- new content, new lines, new x lists
+    """
+    new_lines = []
+    new_xs = []
+    new_content = []
+    new_id = 0
+
+    y_max = max(signal) - min(signal)
+    x_max = len(signal)
+    scale_change = x_max / y_max
+
+    for id_list in groups:
+        slope = []
+        intercept = []
+        start = []
+        end = []
+
+        for id_ in id_list:
+            slope.append(content[id_]['slope'])
+            intercept.append(content[id_]['intercept'])
+            start.append(x_s[id_][0])
+            end.append(x_s[id_][-1])
+
+        slope = np.mean(slope)
+        intercept = np.mean(intercept)
+        item = {'slope': slope, 'intercept': intercept}
+        item['angle'] = np.arctan(slope * scale_change) / np.pi * 180.0
+        if slope < 0.0:
+            item['angle'] = 180.0 + \
+                (np.arctan(slope * scale_change) / np.pi * 180.0)
+
+        start = np.min(start)
+        end = np.max(end)
+
+        xs = list(range(start, end+1))
+        line = [slope * x + intercept for x in xs]
+
+        line, xs = filter_nearest_to_signal(
+            signal, xs, line, threshold=0.03, ratio=True)
+
+        if len(xs) > 4:
+            item['length'] = len(line)
+            item['id'] = new_id
+            new_content.append(item)
+            new_id += 1
+
+            new_lines.append(line)
+            new_xs.append(xs)
+
+    return new_content, new_lines, new_xs
+
+
+def filter_nearest_to_signal(signal: list,
+                             x_line: list,
+                             line: list,
+                             threshold=0.05,
+                             ratio=False) -> list:
+    """Filter Nearest to Signal
+
+    Arguments:
+        signal {list} -- signal to find trendlines
+        x_line {list} -- list of xs corresponding to lines
+        line {list} -- trendline y-values
+
+    Keyword Arguments:
+        threshold {float} -- percent within signal (default: {0.05})
+        ratio {bool} -- adjustments of x values (default: {False})
+
+    Returns:
+        list -- corrected lines, corrected xs
+    """
+    removals = []
+    for j, lin in enumerate(line):
+        if lin < 0.0:
+            if lin < ((1.0 + threshold) * signal[x_line[j]]) or \
+                    lin > ((1.0 - threshold) * signal[x_line[j]]):
+                removals.append(j)
+        else:
+            if lin > ((1.0 + threshold) * signal[x_line[j]]) or \
+                    lin < ((1.0 - threshold) * signal[x_line[j]]):
+                removals.append(j)
+
+    line_corrected = []
+    x_corrected = []
+    indexes = []
+    for j, x in enumerate(x_line):
+        if j not in removals:
+            x_corrected.append(x)
+            indexes.append(j)
+
+    if len(x_corrected) > 0:
+        start = min(x_corrected)
+        end = max(x_corrected)
+        x_corrected = list(range(start, end+1))
+
+        if ratio:
+            start = min(indexes)
+            end = max(indexes)
+
+        line_corrected = line[start:end+1].copy()
+
+    return line_corrected, x_corrected

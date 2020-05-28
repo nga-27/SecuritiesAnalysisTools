@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.tools import exponential_moving_avg, windowed_moving_avg
+from libs.tools import exponential_moving_avg
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import INDEXES
 from libs.features import normalize_signals
@@ -313,7 +313,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
             if ind + 3 < len(metrics):
                 state2[ind+3] += s * weights[3]
 
-    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    metrics = exponential_moving_avg(state2, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
 

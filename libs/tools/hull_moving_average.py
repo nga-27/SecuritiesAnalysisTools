@@ -313,9 +313,13 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
         mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
         mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
 
-    swings['metrics']['short'] = mshort
-    swings['metrics']['medium'] = mmed
-    swings['metrics']['long'] = mlong
+    shp = swings['short']['period']
+    mdp = swings['medium']['period']
+    lgp = swings['long']['period']
+
+    swings['metrics'][f'{shp}-d'] = mshort
+    swings['metrics'][f'{mdp}-d'] = mmed
+    swings['metrics'][f'{lgp}-d'] = mlong
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Hull Moving Average Metrics'

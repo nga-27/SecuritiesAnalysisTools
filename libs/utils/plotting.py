@@ -69,6 +69,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         x_label {str} -- label for x axis (default: {'Trading Days'})
         x {list} -- x-value data (default: {[]}) (length of lists)
         title {str} -- title of plot (default: {''})
+        legend {list} -- y2 signals (default: {[]})
         saveFig {bool} -- True will save as 'filename' (default: {False})
         filename {str} path to save plot (default: {'temp_dual_plot.png'})
 
@@ -80,6 +81,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     x_label = kwargs.get('x_label', 'Trading Days')
     x = kwargs.get('x', [])
     title = kwargs.get('title', '')
+    legend = kwargs.get('legend', [])
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_dual_plot.png')
 
@@ -131,7 +133,9 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
             ax2.tick_params(axis='y')
             ax2.grid()
 
-        if type(y2_label) == list:
+        if len(legend) > 0:
+            plt.legend(legend)
+        elif isinstance(y2_label, list):
             plt.legend(y2_label)
         else:
             plt.legend([y2_label])
@@ -221,7 +225,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
             return None
 
     if len(x) > 0:
-        if type(x[0]) == list:
+        if isinstance(x[0], (list, pd.core.indexes.datetimes.DatetimeIndex)):
             for i, plot in enumerate(list_of_plots):
                 if len(plot) != len(x[i]):
                     print(
@@ -240,7 +244,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
                 plt.plot(x, fig)
 
     else:
-        if type(x[0]) == list:
+        if isinstance(x[0], (list, pd.core.indexes.datetimes.DatetimeIndex)):
             x = x
             for i in range(len(list_of_plots)):
                 if len(colors) > 0:
@@ -255,6 +259,10 @@ def generic_plotting(list_of_plots: list, **kwargs):
                     plt.plot(x, figy, colors[i])
                 else:
                     plt.plot(x, figy)
+
+    # coords = plt.ginput(10)
+    # print(f"coords: {coords}")
+    # plt.waitforbuttonpress()
 
     plt.title(title)
     if len(legend) > 0:
@@ -687,10 +695,10 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
             else:
                 colors = 'red'
 
-        oc = plt.Line2D((x[i], x[i]), (op, close), lw=3,
+        oc = plt.Line2D((x[i], x[i]), (op, close), lw=1.25,
                         ls='-', alpha=1, color=colors)
         plt.gca().add_line(oc)
-        hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.75,
+        hl = plt.Line2D((x[i], x[i]), (high, low), lw=0.375,
                         ls='-', alpha=1, color=shadow_color)
         plt.gca().add_line(hl)
 
@@ -702,12 +710,14 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
         for add_plt in additional_plts:
             color = add_plt.get('color')
             label = add_plt.get('legend')
+            x_lines = add_plt.get('x', x)
+
             if color is not None:
-                line, = plt.plot(x, add_plt["plot"],
+                line, = plt.plot(x_lines, add_plt["plot"],
                                  add_plt["color"], label=label,
                                  linewidth=0.5)
             else:
-                line, = plt.plot(x, add_plt["plot"],
+                line, = plt.plot(x_lines, add_plt["plot"],
                                  label=label, linewidth=0.5)
             handles.append(line)
 

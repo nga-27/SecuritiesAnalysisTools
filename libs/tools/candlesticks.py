@@ -7,6 +7,7 @@ import numpy as np
 from libs.utils import ProgressBar, INDEXES
 from libs.utils import candlestick_plot
 from .moving_average import simple_moving_avg, exponential_moving_avg
+from .moving_average import adjust_signals
 from .full_stochastic import generate_full_stoch_signal
 
 
@@ -50,10 +51,16 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     candle['length_of_data'] = len(fund.index)
 
     fifty_day = simple_moving_avg(fund, 50)
+    fifty_day_x, fifty_day = adjust_signals(fund, fifty_day, offset=50)
+
     two_hundred_day = simple_moving_avg(fund, 200)
-    plot_50 = {"plot": fifty_day, "color": "blue", "legend": "50-day MA"}
+    two_hundred_day_x, two_hundred_day = adjust_signals(
+        fund, two_hundred_day, offset=200)
+
+    plot_50 = {"plot": fifty_day, "color": "blue",
+               "legend": "50-day MA", "x": fifty_day_x}
     plot_200 = {"plot": two_hundred_day,
-                "color": "black", "legend": "200-day MA"}
+                "color": "black", "legend": "200-day MA", "x": two_hundred_day_x}
 
     name2 = INDEXES.get(name, name)
 

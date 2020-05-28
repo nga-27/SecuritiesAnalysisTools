@@ -2,11 +2,12 @@ import os
 import pandas as pd
 import numpy as np
 
-from .moving_average import exponential_moving_avg, windowed_moving_avg
 from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
 from libs.features import normalize_signals
 from libs.utils import ProgressBar, INDEXES
 from libs.utils import TREND_COLORS, STANDARD_COLORS
+
+from .moving_average import exponential_moving_avg
 
 
 RED = TREND_COLORS.get('bad')
@@ -187,7 +188,7 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    metrics = windowed_moving_avg(m_bar, 7, data_type='list')
+    metrics = exponential_moving_avg(m_bar, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
 

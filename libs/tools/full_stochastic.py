@@ -5,7 +5,7 @@ import numpy as np
 from libs.utils import dual_plotting, date_extractor
 from libs.utils import ProgressBar, INDEXES
 from libs.features import normalize_signals
-from .moving_average import windowed_moving_avg
+from .moving_average import exponential_moving_avg
 
 
 def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs) -> dict:
@@ -475,7 +475,7 @@ def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dic
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    metrics = windowed_moving_avg(state2, 7, data_type='list')
+    metrics = exponential_moving_avg(state2, 7, data_type='list')
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 

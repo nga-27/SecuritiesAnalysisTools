@@ -1,95 +1,119 @@
 {
-    "volume": {
-        "index": 0,
-        "location": 0
-    },
-    "RSI_standard": {
-        "index": 0,
-        "location": 1
-    },
-    "macd_bar": {
-        "index": 0,
-        "location": 2
-    },
-    "clustered_osc_metrics": {
-        "index": 0,
-        "location": 3
-    },
-    "relative_strength": {
-        "index": 1,
-        "location": 0
-    },
-    "exp_moving_averages": {
-        "index": 1,
-        "location": 1
-    },
-    "swing_trades_sma": {
-        "index": 1,
-        "location": 2
-    },
-    "simple_moving_averages": {
-        "index": 1,
-        "location": 3
-    },
-    "obv_standard": {
-        "index": 2,
-        "location": 0
-    },
-    "obv_diff": {
-        "index": 2,
-        "location": 1
-    },
-    "bollinger_bands": {
-        "index": 2,
-        "location": 2
-    },
-    "bollinger_band_metrics": {
-        "index": 2,
-        "location": 3
-    },
-    "grades": {
-        "index": 3,
-        "location": 0
-    },
-    "commodity_channel": {
-        "index": 3,
-        "location": 1
-    },
-    "commodity_metrics": {
-        "index": 3,
-        "location": 2
-    },
-    "awesome_bar": {
-        "index": 4,
-        "location": 0
-    },
-    "awesome_metrics": {
-        "index": 4,
-        "location": 1
-    },
-    "macd_metrics": {
-        "index": 4,
-        "location": 2
-    },
-    "momentum_metrics": {
-        "index": 4,
-        "location": 3
-    },
-    "bear_bull_power": {
-        "index": 5,
-        "location": 0
-    },
-    "price_gaps": {
-        "index": 5,
-        "location": 1
-    },
-    "total_pwr_metrics": {
-        "index": 5,
-        "location": 2
-    },
-    "ultimate_osc_metrics": {
-        "index": 5,
-        "location": 3
+    "plots": {
+        "volume": {
+            "index": 7,
+            "location": 0
+        },
+        "RSI_standard": {
+            "index": 7,
+            "location": 1
+        },
+        "macd_bar": {
+            "index": 2,
+            "location": 2
+        },
+        "clustered_osc_metrics": {
+            "index": 2,
+            "location": 3
+        },
+        "relative_strength": {
+            "index": 3,
+            "location": 0
+        },
+        "exp_moving_averages": {
+            "index": 1,
+            "location": 5
+        },
+        "swing_trades_sma": {
+            "index": 4,
+            "location": 1
+        },
+        "simple_moving_averages": {
+            "index": 0,
+            "location": 5
+        },
+        "obv_standard": {
+            "index": 2,
+            "location": 0
+        },
+        "obv_diff": {
+            "index": 2,
+            "location": 1
+        },
+        "bollinger_bands": {
+            "index": 7,
+            "location": 2
+        },
+        "bollinger_band_metrics": {
+            "index": 7,
+            "location": 3
+        },
+        "grades": {
+            "index": 3,
+            "location": 1
+        },
+        "commodity_channel": {
+            "index": 3,
+            "location": 2
+        },
+        "commodity_metrics": {
+            "index": 3,
+            "location": 3
+        },
+        "awesome_bar": {
+            "index": 5,
+            "location": 3
+        },
+        "awesome_metrics": {
+            "index": 5,
+            "location": 1
+        },
+        "macd_metrics": {
+            "index": 4,
+            "location": 2
+        },
+        "momentum_metrics": {
+            "index": 4,
+            "location": 3
+        },
+        "bear_bull_power": {
+            "index": 5,
+            "location": 0
+        },
+        "total_pwr_metrics": {
+            "index": 5,
+            "location": 2
+        },
+        "ultimate_osc_metrics": {
+            "index": 4,
+            "location": 0
+        },
+        "rate_of_change": {
+            "index": 6,
+            "location": 0
+        },
+        "roc_metrics": {
+            "index": 6,
+            "location": 1
+        },
+        "kst_oscillator": {
+            "index": 6,
+            "location": 2
+        },
+        "kst_metrics": {
+            "index": 6,
+            "location": 3
+        },
+        "resist_support": {
+            "index": 8,
+            "location": 4,
+            "table": 0
+        },
+        "trendline": {
+            "index": 9,
+            "location": 4,
+            "table": 1
+        }
     },
     "locations": [
         {
@@ -115,6 +139,36 @@
             "top": "Inches(4.1)",
             "height": "Inches(3.0)",
             "width": "Inches(6.5)"
+        },
+        {
+            "left": "Inches(0.0)",
+            "top": "Inches(1.55)",
+            "height": "Inches(4.7)",
+            "width": "Inches(7)"
+        },
+        {
+            "left": "Inches(0.92)",
+            "top": "Inches(1.08)",
+            "height": "Inches(6)",
+            "width": "Inches(11.5)"
         }
-    ]
+    ],
+    "tables": [
+        {
+            "left": "Inches(7.0)",
+            "top": "Inches(0.25)",
+            "height": "Inches(4.7)",
+            "width": "Inches(4.0)"
+        },
+        {
+            "left": "Inches(6.5)",
+            "top": "Inches(0.25)",
+            "height": "Inches(4.7)",
+            "width": "Inches(4.0)"
+        }
+    ],
+    "info": {
+        "quad_slides": 8,
+        "single_slides": 2
+    }
 }
