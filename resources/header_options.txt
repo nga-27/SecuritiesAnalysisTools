@@ -57,6 +57,7 @@ FUNCTIONS:          :       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --f
 --candlestick       :       run {Candlesticks} for funds; "--candlesticks" also supported
 --commodity         :       run {Commodity Channel Index} for funds; "--cci" and "--comm" also supported
 --roc               :       run {Rate of Change Oscillator} for funds; "--rate_of_change" also supported
+--kst               :       run {Know Sure Thing Oscillator} for funds; "--know_sure_thing" also supported
 --alpha             :       run {Alpha/Beta} for funds; "--beta" also supported
 --vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
 --syn               :       run {Synopsis} for funds (metrics); "--synopsis" also supported
