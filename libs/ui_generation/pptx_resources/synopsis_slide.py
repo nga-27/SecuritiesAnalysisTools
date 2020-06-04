@@ -6,6 +6,12 @@ from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
 from .slide_utils import pptx_ui_errors, color_to_RGB
 
+ORDER_RANK = {
+    "hull_moving_average": 1,
+    "exponential_moving_average": 10,
+    "simple_moving_average": 100
+}
+
 
 def generate_synopsis_slide(slide, analysis: dict, fund: str, **kwargs):
     """Generate Synopsis Slide
@@ -91,6 +97,8 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
     if type_ == 'metrics':
 
         if category == 'trend':
+
+            listed = reorder_trends(listed)
 
             # Trend Metrics Table
             top = Inches(1.5)
@@ -317,3 +325,22 @@ def pretty_up_key(key: str, parser='_') -> str:
     keys = [new_key.capitalize() for new_key in keys]
     output = ' '.join(keys)
     return output
+
+
+def reorder_trends(listed: list) -> list:
+
+    new_list = []
+    content = []
+    for item in listed:
+        split = item.split('(')
+        period = split[1].split('-')[0]
+        data = {"period": int(period), "type": split[0]}
+        content.append(data)
+
+    content.sort(key=lambda x: x['period'])
+    for item in content:
+        val = '('.join([item['type'], str(item['period'])])
+        val += '-d)'
+        new_list.append(val)
+
+    return new_list
