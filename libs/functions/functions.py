@@ -29,6 +29,7 @@ from libs.tools import commodity_channel_index
 from libs.tools import risk_comparison
 from libs.tools import rate_of_change_oscillator
 from libs.tools import know_sure_thing
+from libs.tools import average_true_range
 
 from libs.nasit import generate_fund_from_ledger
 
@@ -116,6 +117,8 @@ def only_functions_handler(config: dict):
         candlestick_function(config)
     if 'commodity' in config['run_functions']:
         commodity_function(config)
+    if 'atr' in config['run_functions']:
+        atr_function(config)
     if 'alpha' in config['run_functions']:
         risk_function(config)
     if 'vq' in config['run_functions']:
@@ -357,6 +360,15 @@ def kst_function(config: dict):
             print(
                 f"Know Sure Thing / Summed Rate of Change of {TICKER}{fund}{NORMAL}...")
             know_sure_thing(data[fund], name=fund, plot_output=True)
+
+
+def atr_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Average True Range (ATR) of {TICKER}{fund}{NORMAL}...")
+            average_true_range(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):

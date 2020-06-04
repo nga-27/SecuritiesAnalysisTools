@@ -36,3 +36,4 @@ from .candlesticks import candlesticks
 
 from .bollinger_bands import bollinger_bands
 from .commodity_channel_index import commodity_channel_index
+from .average_true_range import average_true_range
