@@ -50,6 +50,7 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
                          name=name, progress_bar=progress_bar, view=view)
 
     ao['length_of_data'] = len(ao['tabular'])
+    ao['type'] = 'oscillator'
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
