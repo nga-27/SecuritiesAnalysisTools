@@ -36,7 +36,7 @@
             "index": 2,
             "location": 0
         },
-        "obv_diff": {
+        "overall_metrics": {
             "index": 2,
             "location": 1
         },
@@ -104,13 +104,21 @@
             "index": 6,
             "location": 3
         },
-        "resist_support": {
+        "atr": {
             "index": 8,
+            "location": 0
+        },
+        "obv_diff": {
+            "index": 8,
+            "location": 1
+        },
+        "resist_support": {
+            "index": 9,
             "location": 4,
             "table": 0
         },
         "trendline": {
-            "index": 9,
+            "index": 10,
             "location": 4,
             "table": 1
         }
@@ -168,7 +176,7 @@
         }
     ],
     "info": {
-        "quad_slides": 8,
+        "quad_slides": 9,
         "single_slides": 2
     }
 }

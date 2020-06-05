@@ -1,6 +1,7 @@
 import os
 import pprint
 import pandas as pd
+import numpy as np
 
 from libs.utils import ProgressBar, dual_plotting
 from libs.utils import STANDARD_COLORS, TREND_COLORS, INDEXES
@@ -55,6 +56,9 @@ def assemble_last_signals(meta_sub: dict,
     meta_keys = []
     name2 = INDEXES.get(name, name)
 
+    if fund is not None:
+        fund = fund['Close']
+
     if standalone:
         for key in meta_sub:
             if key not in EXEMPT_METRICS:
@@ -87,14 +91,25 @@ def assemble_last_signals(meta_sub: dict,
                             }
                             content["signals"].append(data)
 
-                if METRICS_KEY in sub[key] and \
-                    TYPE_KEY in sub[key] and \
-                        sub[key][TYPE_KEY] == 'oscillator':
-                    if len(content["metrics"]) == 0:
-                        content["metrics"] = sub[key][METRICS_KEY]
+                if METRICS_KEY in sub[key] and TYPE_KEY in sub[key]:
+                    if sub[key][TYPE_KEY] == 'oscillator':
+                        if len(content["metrics"]) == 0:
+                            content["metrics"] = sub[key][METRICS_KEY]
+                        else:
+                            for i, met in enumerate(sub[key][METRICS_KEY]):
+                                content["metrics"][i] += met
+
                     else:
-                        for i, met in enumerate(sub[key][METRICS_KEY]):
-                            content["metrics"][i] += met
+                        for trend in sub[key][METRICS_KEY]:
+                            if trend != 'metrics':
+
+                                if len(content["metrics"]) == 0:
+                                    content["metrics"] = [
+                                        x / 10.0 for x in sub[key][METRICS_KEY][trend]]
+
+                                else:
+                                    for i, met in enumerate(sub[key][METRICS_KEY][trend]):
+                                        content["metrics"][i] += met / 10.0
 
         content["signals"].sort(key=lambda x: x['days_ago'])
 
@@ -108,15 +123,21 @@ def assemble_last_signals(meta_sub: dict,
             content_printer(content, meta_keys[a], name=name2)
 
         if fund is not None:
-            title = f"Combined Oscillator Metrics - {name2}"
+            title = f"NATA Metrics - {name2}"
+            upper = 0.3 * max(content["metrics"])
+            upper = [upper] * len(content["metrics"])
+            lower = 0.3 * min(content["metrics"])
+            lower = [lower] * len(content["metrics"])
+
             if plot_output:
                 dual_plotting(
-                    fund, content["metrics"], 'Price', 'Metrics', title=title)
+                    fund, [content["metrics"], upper, lower], 'Price', 'Metrics', title=title)
             else:
                 filename = os.path.join(
                     name, meta_keys[a], f"overall_metrics_{name}.png")
                 dual_plotting(
-                    fund, content["metrics"], 'Price', 'Metrics',
+                    fund, [content["metrics"], upper,
+                           lower], 'Price', 'Metrics',
                     title=title, saveFig=True, filename=filename)
 
     return content

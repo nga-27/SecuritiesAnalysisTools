@@ -1,14 +1,29 @@
 import os
+import datetime
 import pandas as pd
 import numpy as np
 
 from libs.utils import dual_plotting, INDEXES
 from libs.utils import ProgressBar
+from libs.features import normalize_signals
 from .moving_average import exponential_moving_avg
 
 
 def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
+    """Average True Range
 
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        views {str} -- (default: {''})
+        progress_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- atr data object
+    """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
@@ -19,6 +34,9 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
         fund, plot_output=plot_output, name=name, views=views)
 
     atr = atr_indicators(fund, atr, plot_output=plot_output, name=name)
+
+    atr['length_of_signal'] = len(atr['tabular'])
+    atr['type'] = 'oscillator'
 
     if p_bar is not None:
         p_bar.uptick(increment=1.0)
@@ -99,6 +117,68 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
         atr_dict['tabular'], periods[0], data_type='list')
     ema_2 = exponential_moving_avg(
         atr_dict['tabular'], periods[1], data_type='list')
+
+    states = []
+    for i, tab in enumerate(atr_dict['tabular']):
+        if tab > ema_1[i] and ema_1[i] > ema_2[i]:
+            states.append('u3')
+        elif tab > ema_1[i] and tab > ema_2[i]:
+            states.append('u2')
+        elif tab < ema_1[i] and tab > ema_2[i]:
+            states.append('u1')
+        elif tab > ema_1[i] and tab < ema_2[i]:
+            states.append('e1')
+        elif tab < ema_1[i] and ema_1[i] < ema_2[i]:
+            states.append('e3')
+        elif tab < ema_1[i] and tab < ema_2[i]:
+            states.append('e2')
+        else:
+            states.append('n')
+
+    metrics = [0.0] * len(ema_1)
+    signals = []
+    for i in range(1, len(ema_1)):
+        date = fund.index[i].strftime("%Y-%m-%d")
+        data = None
+
+        if states[i] == 'u3' and states[i-1] != 'u3':
+            metrics[i] += -1.0
+            data = {
+                "type": 'bearish',
+                "value": f'volatility crossover: signal-{periods[0]}-{periods[1]}',
+                "date": date,
+                "index": i
+            }
+
+        elif states[i] == 'e3' and states[i-1] != 'e3':
+            metrics[i] += 1.0
+            data = {
+                "type": 'bullish',
+                "value": f'volatility crossover: {periods[1]}-{periods[0]}-signal',
+                "date": date,
+                "index": i
+            }
+
+        elif states[i] == 'u2' and states[i-1] == 'e1':
+            metrics[i] += -0.6
+
+        elif states[i] == 'e2' and states[i-1] == 'u1':
+            metrics[i] += 0.6
+
+        elif states[i] == 'u1' and states[i-1] == 'u3':
+            metrics[i] += 0.2
+
+        elif states[i] == 'e1' and states[i-1] == 'e3':
+            metrics[i] += -0.2
+
+        if data is not None:
+            signals.append(data)
+
+    metrics = exponential_moving_avg(metrics, 7, data_type='list')
+    metrics = normalize_signals([metrics])[0]
+
+    atr_dict['metrics'] = metrics
+    atr_dict['signals'] = signals
 
     if plot_output:
         name2 = INDEXES.get(name, name)

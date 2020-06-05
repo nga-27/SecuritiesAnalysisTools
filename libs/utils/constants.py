@@ -70,5 +70,6 @@ INDICATOR_NAMES = [
     "bollinger_bands",
     "commodity_channels",
     "rate_of_change",
-    "know_sure_thing"
+    "know_sure_thing",
+    "average_true_range"
 ]

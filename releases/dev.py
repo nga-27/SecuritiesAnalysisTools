@@ -231,7 +231,8 @@ def run_dev(script: list):
 
             # Parse through indicators and pull out latest signals (must be last)
             fund_data['last_signals'] = assemble_last_signals(
-                fund_data, fund=fund, progress_bar=p, plot_output=False)
+                fund_data, fund=fund, name=fund_name, view=period,
+                progress_bar=p, plot_output=False)
 
             p.end()
 
