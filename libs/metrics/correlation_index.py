@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from libs.utils import download_data_indexes, index_appender, ProgressBar
 from libs.utils import dual_plotting
-from libs.tools import beta_comparison_list
+from libs.tools import beta_comparison_list, simple_moving_avg
 
 
 def correlation_composite_index(config: dict, **kwargs) -> dict:
@@ -103,6 +103,7 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
     clock = kwargs.get('clock')
 
     PERIOD_LENGTH = [100, 50, 25]
+    WEIGHTS = [1.5, 1.25, 1.0]
     corr_data = dict()
 
     if '^GSPC' in data.keys():
@@ -175,6 +176,42 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
             corr_data['tabular'][legend[i]] = nc_period.copy()
 
         corr_data['tabular']['date'] = str_dates.copy()
+
+        overall_signal = [0.0] * len(corr_data['tabular']['date'])
+        for i, period in enumerate(PERIOD_LENGTH):
+            string = f"Corr-{period}"
+            corr_signal = corr_data['tabular'].get(string, [])
+            if len(corr_signal) > 0:
+                weight = WEIGHTS[i]
+                for j, csl in enumerate(corr_signal):
+                    overall_signal[j] += csl * weight
+
+        signal_line = simple_moving_avg(overall_signal, 20, data_type='list')
+
+        dual_plotting(data['^GSPC']['Close'][start_pt:tot_len],
+                      [overall_signal, signal_line],
+                      x=dates,
+                      y1_label='S&P500',
+                      y2_label=['Overall Signal', '20d-SMA'],
+                      title='Overall Correlation Signal',
+                      saveFig=(not plot_output),
+                      filename='CCI_overall_correlation.png')
+
+        diff_signal = [x - signal_line[i]
+                       for i, x in enumerate(overall_signal)]
+        dual_plotting(data['^GSPC']['Close'][start_pt:tot_len],
+                      diff_signal,
+                      x=dates,
+                      y1_label='S&P500',
+                      y2_label='Corr - Signal Line',
+                      title='Diff Correlation Signal',
+                      saveFig=(not plot_output),
+                      filename='CCI_diff_correlation.png')
+
+        corr_data['tabular']['overall'] = overall_signal
+        corr_data['tabular']['signal_line'] = signal_line
+        corr_data['tabular']['diff_signal'] = diff_signal
+
         progress_bar.end()
 
     return corr_data
