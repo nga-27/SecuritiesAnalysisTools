@@ -71,7 +71,8 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         title {str} -- title of plot (default: {''})
         legend {list} -- y2 signals (default: {[]})
         saveFig {bool} -- True will save as 'filename' (default: {False})
-        filename {str} path to save plot (default: {'temp_dual_plot.png'})
+        filename {str} -- path to save plot (default: {'temp_dual_plot.png'})
+        subplot {bool} -- plots on top of eachother (default: {False})
 
     Returns:
         None
@@ -84,6 +85,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     legend = kwargs.get('legend', [])
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_dual_plot.png')
+    subplot = kwargs.get('subplot', False)
 
     if len(x) < 1:
         if is_data_list(y1):
@@ -93,65 +95,93 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
 
     fig, ax1 = plt.subplots()
 
-    if is_data_list(y2):
-        color = 'k'
-    else:
-        color = 'tab:orange'
-    ax1.set_xlabel(x_label)
+    if subplot:
 
-    list_setting = False
-    if is_data_list(y1):
-        list_setting = True
-        ax1.set_ylabel(y1_label[0])
-
-        for y in y1:
-            ax1.plot(x, y)
-            ax1.tick_params(axis='y')
-            ax1.grid(linestyle=':')
-
-        plt.legend(y1_label)
-
-    else:
-        ax1.set_ylabel(y1_label, color=color)
-        ax1.plot(x, y1, color=color)
-        ax1.tick_params(axis='y', labelcolor=color)
-        ax1.grid(linestyle=':')
-        plt.legend([y1_label])
-
-    ax2 = ax1.twinx()
-
-    if list_setting:
-        color = 'k'
-    else:
-        color = 'tab:blue'
-
-    if is_data_list(y2):
-        ax2.set_ylabel(y2_label)
-
-        for y in y2:
-            ax2.plot(x, y)
-            ax2.tick_params(axis='y')
-            ax2.grid()
-
-        if len(legend) > 0:
-            plt.legend(legend)
-        elif isinstance(y2_label, list):
-            plt.legend(y2_label)
+        num_plots = 2
+        plots = [y1]
+        ylabels = [y1_label]
+        if is_data_list(y1):
+            num_plots += len(y1) - 1
+        if is_data_list(y2):
+            num_plots += len(y2) - 1
+            plots.extend(y2)
+            ylabels.extend(y2_label)
         else:
+            plots.append(y2)
+            ylabels.append(y2_label)
+
+        sp_index = num_plots * 100 + 11
+        for plot in range(num_plots):
+            plt.subplot(sp_index)
+            plt.plot(x, plots[plot])
+            plt.ylabel(ylabels[plot])
+
+            if plot == 0:
+                if len(title) > 0:
+                    plt.title(title)
+
+            sp_index += 1
+
+    else:
+        if is_data_list(y2):
+            color = 'k'
+        else:
+            color = 'tab:orange'
+        ax1.set_xlabel(x_label)
+
+        list_setting = False
+        if is_data_list(y1):
+            list_setting = True
+            ax1.set_ylabel(y1_label[0])
+
+            for y in y1:
+                ax1.plot(x, y)
+                ax1.tick_params(axis='y')
+                ax1.grid(linestyle=':')
+
+            plt.legend(y1_label)
+
+        else:
+            ax1.set_ylabel(y1_label, color=color)
+            ax1.plot(x, y1, color=color)
+            ax1.tick_params(axis='y', labelcolor=color)
+            ax1.grid(linestyle=':')
+            plt.legend([y1_label])
+
+        ax2 = ax1.twinx()
+
+        if list_setting:
+            color = 'k'
+        else:
+            color = 'tab:blue'
+
+        if is_data_list(y2):
+            ax2.set_ylabel(y2_label)
+
+            for y in y2:
+                ax2.plot(x, y)
+                ax2.tick_params(axis='y')
+                ax2.grid()
+
+            if len(legend) > 0:
+                plt.legend(legend)
+            elif isinstance(y2_label, list):
+                plt.legend(y2_label)
+            else:
+                plt.legend([y2_label])
+
+        else:
+            ax2.set_ylabel(y2_label, color=color)
+            ax2.plot(x, y2, color=color)
+            ax2.tick_params(axis='y', labelcolor=color)
+            ax2.grid()
             plt.legend([y2_label])
 
-    else:
-        ax2.set_ylabel(y2_label, color=color)
-        ax2.plot(x, y2, color=color)
-        ax2.tick_params(axis='y', labelcolor=color)
-        ax2.grid()
-        plt.legend([y2_label])
+        if len(title) > 0:
+            plt.title(title)
 
     plt.tight_layout()
     plot_xaxis_disperse(ax1)
-
-    if len(title) > 0:
-        plt.title(title)
 
     try:
         if saveFig:
