@@ -71,5 +71,6 @@ INDICATOR_NAMES = [
     "commodity_channels",
     "rate_of_change",
     "know_sure_thing",
-    "average_true_range"
+    "average_true_range",
+    "futures"
 ]
