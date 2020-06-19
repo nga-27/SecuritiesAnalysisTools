@@ -20,6 +20,7 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
         name {str} -- (default: {''})
         views {str} -- (default: {''})
         progress_bar {ProgressBar} -- (default: {None})
+        out_suppress {bool} -- prevents any plotting operations (default: {False})
 
     Returns:
         dict -- atr data object
@@ -28,12 +29,14 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
     p_bar = kwargs.get('progress_bar')
+    out_suppress = kwargs.get('out_suppress', False)
 
     atr = dict()
     atr['tabular'] = get_atr_signal(
-        fund, plot_output=plot_output, name=name, views=views)
+        fund, plot_output=plot_output, name=name, views=views, out_suppress=out_suppress)
 
-    atr = atr_indicators(fund, atr, plot_output=plot_output, name=name)
+    atr = atr_indicators(fund, atr, plot_output=plot_output,
+                         name=name, out_suppress=out_suppress)
 
     atr['length_of_signal'] = len(atr['tabular'])
     atr['type'] = 'oscillator'
@@ -55,6 +58,7 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
         views {str} -- (default: {''})
+        out_suppress {bool} -- (default: {False})
 
     Returns:
         list -- atr signal
@@ -63,6 +67,7 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
+    out_suppress = kwargs.get('out_suppress', False)
 
     signal = [0.0] * len(fund['Close'])
 
@@ -80,14 +85,15 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
         atr_val = sum(atr[i-(period-1):i+1]) / float(period)
         signal[i] = atr_val
 
-    name2 = INDEXES.get(name, name)
-    title = f"{name2} - Average True Range"
-    if plot_output:
-        dual_plotting(fund['Close'], signal, 'Price', 'ATR', title=title)
-    else:
-        filename = os.path.join(name, views, f"atr_{name}.png")
-        dual_plotting(fund['Close'], signal, 'Price', 'ATR',
-                      title=title, saveFig=True, filename=filename)
+    if not out_suppress:
+        name2 = INDEXES.get(name, name)
+        title = f"{name2} - Average True Range"
+        if plot_output:
+            dual_plotting(fund['Close'], signal, 'Price', 'ATR', title=title)
+        else:
+            filename = os.path.join(name, views, f"atr_{name}.png")
+            dual_plotting(fund['Close'], signal, 'Price', 'ATR',
+                          title=title, saveFig=True, filename=filename)
 
     return signal
 
@@ -105,6 +111,7 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
         periods {list} -- list of ema lookback periods (default: {[20, 40]})
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
+        out_suppress {bool} -- (default: {False})
 
     Returns:
         dict: [description]
@@ -112,6 +119,7 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
     periods = kwargs.get('periods', [50, 200])
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
+    out_suppress = kwargs.get('out_suppress', False)
 
     ema_1 = exponential_moving_avg(
         atr_dict['tabular'], periods[0], data_type='list')
@@ -180,7 +188,7 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
     atr_dict['metrics'] = metrics
     atr_dict['signals'] = signals
 
-    if plot_output:
+    if plot_output and not out_suppress:
         name2 = INDEXES.get(name, name)
         title = f"{name2} - ATR Moving Averages"
         dual_plotting(fund['Close'], [atr_dict['tabular'],

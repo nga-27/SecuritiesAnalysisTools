@@ -380,9 +380,7 @@ def adx_function(config: dict):
         if fund != '^GSPC':
             print(
                 f"Average Directional Index (ADX) of {TICKER}{fund}{NORMAL}...")
-            atr = average_true_range(data[fund], name=fund, plot_output=False)
-            average_directional_index(
-                data[fund], atr=atr['tabular'], name=fund, plot_output=True)
+            average_directional_index(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):

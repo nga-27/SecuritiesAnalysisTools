@@ -228,3 +228,18 @@ def pptx_ui_errors(slide, message: str):
     p.font.name = 'Arial'
 
     return slide
+
+
+def space_injector(space_sep_str: str, desired_str_len: int, sep=' ') -> str:
+
+    sep_str = space_sep_str.split(sep)
+    sum_len = 0
+    for sstr in sep_str:
+        sum_len += len(sstr)
+
+    diff = desired_str_len - sum_len
+    diff_adj = int(float(diff) / float((len(sep_str) - 1)))
+    new_sep = ' ' * diff_adj
+    new_str = new_sep.join(sep_str)
+
+    return new_str
