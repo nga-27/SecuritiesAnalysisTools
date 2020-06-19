@@ -72,5 +72,7 @@ INDICATOR_NAMES = [
     "rate_of_change",
     "know_sure_thing",
     "average_true_range",
-    "futures"
+    "futures",
+    "parabolic_sar",
+    "adx"
 ]

@@ -34,6 +34,7 @@ from libs.tools import risk_comparison
 from libs.tools import rate_of_change_oscillator
 from libs.tools import know_sure_thing
 from libs.tools import average_true_range
+from libs.tools import parabolic_sar, average_directional_index
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -181,6 +182,13 @@ def run_dev(script: list):
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             fund_data['average_true_range'] = average_true_range(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['adx'] = average_directional_index(
+                fund, atr=fund_data['average_true_range']['tabular'], plot_output=False,
+                name=fund_name, progress_bar=p, view=period)
+
+            fund_data['parabolic_sar'] = parabolic_sar(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:

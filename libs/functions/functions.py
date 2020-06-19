@@ -30,6 +30,7 @@ from libs.tools import risk_comparison
 from libs.tools import rate_of_change_oscillator
 from libs.tools import know_sure_thing
 from libs.tools import average_true_range
+from libs.tools import average_directional_index, parabolic_sar
 
 from libs.nasit import generate_fund_from_ledger
 
@@ -119,6 +120,8 @@ def only_functions_handler(config: dict):
         commodity_function(config)
     if 'atr' in config['run_functions']:
         atr_function(config)
+    if 'adx' in config['run_functions']:
+        adx_function(config)
     if 'alpha' in config['run_functions']:
         risk_function(config)
     if 'vq' in config['run_functions']:
@@ -369,6 +372,17 @@ def atr_function(config: dict):
             print(
                 f"Average True Range (ATR) of {TICKER}{fund}{NORMAL}...")
             average_true_range(data[fund], name=fund, plot_output=True)
+
+
+def adx_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Average Directional Index (ADX) of {TICKER}{fund}{NORMAL}...")
+            atr = average_true_range(data[fund], name=fund, plot_output=False)
+            average_directional_index(
+                data[fund], atr=atr['tabular'], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):
