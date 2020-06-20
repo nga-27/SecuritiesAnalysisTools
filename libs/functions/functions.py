@@ -122,6 +122,8 @@ def only_functions_handler(config: dict):
         atr_function(config)
     if 'adx' in config['run_functions']:
         adx_function(config)
+    if 'sar' in config['run_functions']:
+        sar_function(config)
     if 'alpha' in config['run_functions']:
         risk_function(config)
     if 'vq' in config['run_functions']:
@@ -381,6 +383,15 @@ def adx_function(config: dict):
             print(
                 f"Average Directional Index (ADX) of {TICKER}{fund}{NORMAL}...")
             average_directional_index(data[fund], name=fund, plot_output=True)
+
+
+def sar_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Parabolic 'Stop And Reverse' (SAR) of {TICKER}{fund}{NORMAL}...")
+            parabolic_sar(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):

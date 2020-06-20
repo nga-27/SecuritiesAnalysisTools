@@ -22,7 +22,7 @@ def average_directional_index(fund: pd.DataFrame, atr: list = [], **kwargs) -> d
     Optional Args:
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
-        views {str} -- (default: {''})
+        view {str} -- (default: {''})
         progress_bar {ProgressBar} -- (default: {None})
 
     Returns:

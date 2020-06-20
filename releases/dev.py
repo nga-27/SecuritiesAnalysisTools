@@ -189,7 +189,8 @@ def run_dev(script: list):
                 name=fund_name, progress_bar=p, view=period)
 
             fund_data['parabolic_sar'] = parabolic_sar(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, adx_tabular=fund_data['adx']['tabular'], plot_output=False,
+                name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:
                 strength, match_data = relative_strength(

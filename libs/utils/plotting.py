@@ -655,7 +655,14 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
         filename {str} -- path to save plot (default: {'temp_candlestick.png'})
         progress_bar {ProgressBar} -- (default: {None})
         threshold_candles {dict} -- candlestick thresholds for days (default: {None})
-        additional_plts {list} -- plot_objects "plot", "color", "legend" (default: {[]})
+        additional_plts {list} -- plot_objects "plot", "color", "legend", "style" (default: {[]})
+
+    additional_plts:
+        plot {list} - "y" vector
+        x {list} (optional) - "x" vector (default: {None})
+        color {str} (optional) - color of line or scatter mark (default: {None})
+        legend {str} (optional) - label for the plot (default: {''})
+        style {str} (optional) - 'line' plotted or a 'scatter' (default: {'line'})
 
     Returns:
         None
@@ -736,24 +743,39 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
             p_bar.uptick(increment=increment)
 
     handles = []
+    has_legend = False
     if len(additional_plts) > 0:
         for add_plt in additional_plts:
             color = add_plt.get('color')
-            label = add_plt.get('legend')
+            label = add_plt.get('legend', '')
             x_lines = add_plt.get('x', x)
+            style = add_plt.get('style', 'line')
 
-            if color is not None:
-                line, = plt.plot(x_lines, add_plt["plot"],
-                                 add_plt["color"], label=label,
-                                 linewidth=0.5)
-            else:
-                line, = plt.plot(x_lines, add_plt["plot"],
-                                 label=label, linewidth=0.5)
-            handles.append(line)
+            if style == 'line':
+                if color is not None:
+                    line, = plt.plot(x_lines, add_plt["plot"],
+                                     color, label=label,
+                                     linewidth=0.5)
+                else:
+                    line, = plt.plot(x_lines, add_plt["plot"],
+                                     label=label, linewidth=0.5)
+
+                handles.append(line)
+
+            if style == 'scatter':
+                has_legend = True
+                if color is not None:
+                    plt.scatter(
+                        x_lines, add_plt["plot"], c=color, s=3, label=label)
+                else:
+                    plt.scatter(x_lines, add_plt["plot"],
+                                label=label, s=3)
 
     plt.title(title)
     if len(handles) > 0:
         plt.legend(handles=handles)
+    elif has_legend:
+        plt.legend()
 
     plot_xaxis_disperse(ax)
 
