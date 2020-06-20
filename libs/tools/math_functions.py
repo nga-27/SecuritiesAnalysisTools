@@ -285,29 +285,27 @@ def get_returns(data: pd.DataFrame, output='annual') -> list:
         list -- return, standard deviation
     """
     # Determine intervals for returns, start with annual
-    years = 1
-    quarters = 4
-    if len(data['Close']) > 300:
-        years = 2
-        quarters = 8
-    if len(data['Close']) > 550:
-        years = 5
-        quarters = 20
-    if len(data['Close']) > 1500:
-        years = 10
-        quarters = 40
+    INTERVAL = 250
+
+    years = int(len(data['Close']) / INTERVAL)
+    if years == 0:
+        years = 1
+    quarters = 4 * years
+
+    if len(data['Close']) <= INTERVAL:
+        INTERVAL = 200
 
     annual_returns = 0.0
     annual_std = []
     for i in range(years):
-        ars = (data['Adj Close'][(i+1)*250] - data['Adj Close']
-               [i * 250]) / data['Adj Close'][i * 250] * 100.0
+        ars = (data['Adj Close'][(i+1) * INTERVAL] - data['Adj Close']
+               [i * INTERVAL]) / data['Adj Close'][i * INTERVAL] * 100.0
         annual_returns += ars
         annual_std.append(ars)
 
     annual_returns /= float(years)
     annual_returns = (data['Adj Close'][-1] - data['Adj Close']
-                      [-250]) / data['Adj Close'][-250] * 100.0
+                      [-INTERVAL]) / data['Adj Close'][-INTERVAL] * 100.0
 
     # Determine intervals for returns, next with quarterly
     q_returns = 0.0

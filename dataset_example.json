@@ -16,7 +16,8 @@
                 "run": true,
                 "type": "short"
             }
-        }
+        },
+        "Plots": []
     },
     "Views": {
         "pptx": "2y"

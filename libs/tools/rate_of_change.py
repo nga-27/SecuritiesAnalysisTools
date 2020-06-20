@@ -85,6 +85,7 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
                       name=name, views=views, p_bar=p_bar)
 
     roc['length_of_data'] = len(roc['tabular']['short'])
+    roc['type'] = 'oscillator'
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)

@@ -443,7 +443,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
             tf = txbox.text_frame
             p = tf.paragraphs[0]
-            p.text = f"Long, Intermediate, Short, and Near Term Trendlines"
+            p.text = f"Long, Intermediate, Short, and Near Term Trend Lines"
             p.font.size = Pt(18)
             p.font.name = 'Arial'
             p.font.bold = True
@@ -485,7 +485,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             cell_1 = table.cell(0, 0)
             cell_2 = table.cell(0, num_cols-1)
             cell_1.merge(cell_2)
-            cell_1.text = f"Future Periods of Active Trendlines"
+            cell_1.text = f"Future Periods of Active Trend Lines"
 
             for i, fut in enumerate(futures):
                 table.cell(1, i+1).text = str(fut)

@@ -151,9 +151,11 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
 
     if plot_output:
         dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price',
-                      y2_label='On Balance Volume', x_label='Trading Days', title=name2)
+                      y2_label='On Balance Volume', x_label='Trading Days', title=name2,
+                      subplot=True)
         dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price',
-                      y2_label='OBV-DIFF', x_label='Trading Days', title=name4)
+                      y2_label='OBV-DIFF', x_label='Trading Days', title=name4,
+                      subplot=True)
         bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
 
     else:

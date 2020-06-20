@@ -8,11 +8,11 @@ from libs.utils import TEXT_COLOR_MAP
 
 
 ################################
-_DEV_VERSION_ = '0.2.05'
-_DATE_REVISION_DEV_ = '2020-05-27'
+_DEV_VERSION_ = '0.2.06'
+_DATE_REVISION_DEV_ = '2020-06-19'
 ################################
-PROCESS_STEPS_DEV = 27
-PROCESS_STEPS_PROD = 27
+PROCESS_STEPS_DEV = 29
+PROCESS_STEPS_PROD = 29
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 PROD_COLOR = TEXT_COLOR_MAP["green"]

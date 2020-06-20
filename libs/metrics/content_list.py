@@ -1,6 +1,9 @@
+import os
 import pprint
+import pandas as pd
+import numpy as np
 
-from libs.utils import ProgressBar
+from libs.utils import ProgressBar, dual_plotting
 from libs.utils import STANDARD_COLORS, TREND_COLORS, INDEXES
 from libs.utils import EXEMPT_METRICS, INDICATOR_NAMES
 
@@ -13,9 +16,16 @@ BEAR = TREND_COLORS["bad"]
 
 SIGNAL_KEY = 'signals'
 SIZE_KEY = 'length_of_data'
+TYPE_KEY = 'type'
+
+METRICS_KEY = 'metrics'
+STATS_KEY = 'statistics'
 
 
-def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
+def assemble_last_signals(meta_sub: dict,
+                          fund: pd.DataFrame = None,
+                          lookback: int = 10,
+                          **kwargs) -> dict:
     """assemble_last signals
 
     Look through all indicators of lookback time and list them
@@ -25,6 +35,7 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
 
     Keyword Arguments:
         lookback {int} -- number of trading periods into past to find signals (default: {5})
+        fund {pd.DataFrame} -- fund dataset
 
     Optional Args:
         standalone {bool} -- if run as a function, fetch all metadata info (default: {False})
@@ -39,10 +50,14 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
     print_out = kwargs.get('print_out', False)
     name = kwargs.get('name', '')
     pbar = kwargs.get('progress_bar')
+    plot_output = kwargs.get('plot_output', True)
 
     metadata = []
     meta_keys = []
-    name = INDEXES.get(name, name)
+    name2 = INDEXES.get(name, name)
+
+    if fund is not None:
+        fund = fund['Close']
 
     if standalone:
         for key in meta_sub:
@@ -55,7 +70,7 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
 
     increment = 1.0 / float(len(metadata))
 
-    content = {"signals": []}
+    content = {"signals": [], "metrics": []}
     for a, sub in enumerate(metadata):
         content['signals'] = []
 
@@ -76,13 +91,54 @@ def assemble_last_signals(meta_sub: dict, lookback: int = 10, **kwargs) -> dict:
                             }
                             content["signals"].append(data)
 
+                if METRICS_KEY in sub[key] and TYPE_KEY in sub[key]:
+                    if sub[key][TYPE_KEY] == 'oscillator':
+                        if len(content["metrics"]) == 0:
+                            content["metrics"] = sub[key][METRICS_KEY]
+                        else:
+                            for i, met in enumerate(sub[key][METRICS_KEY]):
+                                content["metrics"][i] += met
+
+                    else:
+                        for trend in sub[key][METRICS_KEY]:
+                            if trend != 'metrics':
+
+                                if len(content["metrics"]) == 0:
+                                    content["metrics"] = [
+                                        x / 10.0 for x in sub[key][METRICS_KEY][trend]]
+
+                                else:
+                                    for i, met in enumerate(sub[key][METRICS_KEY][trend]):
+                                        content["metrics"][i] += met / 10.0
+
         content["signals"].sort(key=lambda x: x['days_ago'])
 
         if pbar is not None:
             pbar.uptick(increment=increment)
 
+        if fund is None:
+            fund = sub.get(STATS_KEY, {}).get('tabular')
+
         if print_out:
-            content_printer(content, meta_keys[a], name=name)
+            content_printer(content, meta_keys[a], name=name2)
+
+        if fund is not None:
+            title = f"NATA Metrics - {name2}"
+            upper = 0.3 * max(content["metrics"])
+            upper = [upper] * len(content["metrics"])
+            lower = 0.3 * min(content["metrics"])
+            lower = [lower] * len(content["metrics"])
+
+            if plot_output:
+                dual_plotting(
+                    fund, [content["metrics"], upper, lower], 'Price', 'Metrics', title=title)
+            else:
+                filename = os.path.join(
+                    name, meta_keys[a], f"overall_metrics_{name}.png")
+                dual_plotting(
+                    fund, [content["metrics"], upper,
+                           lower], 'Price', 'Metrics',
+                    title=title, saveFig=True, filename=filename)
 
     return content
 

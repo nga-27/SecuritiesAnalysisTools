@@ -228,3 +228,32 @@ def pptx_ui_errors(slide, message: str):
     p.font.name = 'Arial'
 
     return slide
+
+
+def space_injector(space_sep_str: str, desired_str_len: int, sep=' ') -> str:
+    """Space Injector
+
+    Inject spaces or 'sep' between space-separated strings so that the end string length
+    matches a specific size (used for printing and UI).
+
+    Arguments:
+        space_sep_str {str} -- string that is space separated of which to fix to a length
+        desired_str_len {int} -- desired string length after adjustment
+
+    Keyword Arguments
+        sep {str} -- separator between strings (default: {' '})
+
+    Returns:
+        str -- newly spaced string
+    """
+    sep_str = space_sep_str.split(sep)
+    sum_len = 0
+    for sstr in sep_str:
+        sum_len += len(sstr)
+
+    diff = desired_str_len - sum_len
+    diff_adj = int(float(diff) / float((len(sep_str) - 1)))
+    new_sep = ' ' * diff_adj
+    new_str = new_sep.join(sep_str)
+
+    return new_str

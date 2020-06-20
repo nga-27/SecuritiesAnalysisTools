@@ -47,7 +47,8 @@ PRINT_CONSTANTS = {
 
 EXEMPT_METRICS = [
     "metadata",
-    "synopsis"
+    "synopsis",
+    "last_signals"
 ]
 
 INDICATOR_NAMES = [
@@ -70,5 +71,10 @@ INDICATOR_NAMES = [
     "bollinger_bands",
     "commodity_channels",
     "rate_of_change",
-    "know_sure_thing"
+    "know_sure_thing",
+    "average_true_range",
+    "futures",
+    "parabolic_sar",
+    "adx",
+    "last_signals"
 ]

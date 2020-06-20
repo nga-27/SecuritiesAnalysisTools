@@ -871,7 +871,7 @@ def autotrend(data, **kwargs) -> list:
 
     Optional Args:
         periods {list} -- look-back periods for trend analysis (default: {[]})
-        weights {list -- weighting for look-back periods (default: {[]})
+        weights {list} -- weighting for look-back periods (default: {[]})
         return_type {str} -- type of item to return in list (default: {'slope'})
         normalize {bool} -- True normalizes to max/min slopes (default: {False})
 
@@ -883,9 +883,7 @@ def autotrend(data, **kwargs) -> list:
     return_type = kwargs.get('return_type', 'slope')
     normalize = kwargs.get('normalize', False)
 
-    trend = []
-    for _ in range(len(data)):
-        trend.append(0.0)
+    trend = [0.0] * len(data)
 
     periods = [int(period) for period in periods]
     for j, period in enumerate(periods):

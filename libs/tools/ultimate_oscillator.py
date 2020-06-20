@@ -59,7 +59,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
 
         if plot_output:
             dual_plotting(position['Close'], ult_osc, 'Position Price',
-                          'Ultimate Oscillator', title=name2)
+                          'Ultimate Oscillator', title=name2, subplot=True)
             dual_plotting(position['Close'], ultimate['plots'],
                           'Position Price', 'Buy-Sell Signal', title=name2)
 

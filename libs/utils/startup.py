@@ -323,6 +323,9 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--suppress' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'suppress_pptx')
 
+    if '--debug' in i_keys:
+        config = add_str_to_dict_key(config, 'state', 'debug')
+
     # Exporting of data from metadata.json to dataframe-like file
     if '--export' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'function run')
@@ -499,6 +502,21 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--kst' in i_keys) or ('--know_sure_thing' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'kst', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
+    if ('--atr' in i_keys) or ('--average_true_range' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'atr', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
+    if ('--adx' in i_keys) or ('--average_directional_index' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'adx', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
+    if ('--sar' in i_keys) or ('--parabolic_sar' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'sar', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):

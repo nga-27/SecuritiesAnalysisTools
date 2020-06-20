@@ -260,25 +260,16 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         name2 = name3 + \
             ' - Simple Moving Averages [{}, {}, {}]'.format(
                 config[0], config[1], config[2])
-        # legend = ['Price', f'{config[0]}-SMA',
-        #           f'{config[1]}-SMA', f'{config[2]}-SMA']
-
-        # plots = [fund['Close'], tshort2, tmed2, tlong2]
-        # x_vals = [fund.index, tshort_x, tmed_x, tlong_x]
 
         if plot_output:
             candlestick_plot(fund, title=name2, additional_plts=[
                              plot_short, plot_med, plot_long])
-            # generic_plotting(plots, x=x_vals,
-            #                  legend=legend, title=name2)
 
         else:
             filename = os.path.join(
                 name, view, f"simple_moving_averages_{name}.png")
             candlestick_plot(fund, title=name2, filename=filename,
                              saveFig=True, additional_plts=[plot_short, plot_med, plot_long])
-            # generic_plotting(plots, x=x_vals,
-            #                  legend=legend, title=name2, saveFig=True, filename=filename)
 
     tma = dict()
     tma['short'] = {'period': config[0]}
