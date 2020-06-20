@@ -9,7 +9,24 @@ from .trends import autotrend
 
 
 def parabolic_sar(fund: pd.DataFrame, adx_tabular: dict = None, **kwargs) -> dict:
+    """Parabolic Stop and Reverse (SAR)
 
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+
+    Keyword Arguments:
+        adx_tabular {dict} -- ADX signal for trend filtering, currently unimplemented
+                                (default: {None})
+
+    Optional Args:
+        plot_output {bool} -- (default: {True})
+        name {str} -- (default: {''})
+        view {str} -- (default: {''})
+        progress_bar {ProgressBar} -- (default: {None})
+
+    Returns:
+        dict -- SAR data object
+    """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -209,7 +226,17 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def sar_metrics(fund: pd.DataFrame, sar: dict, **kwargs) -> dict:
+    """SAR Metrics
 
+    Primarily percent away from a given SAR trend
+
+    Arguments:
+        fund {pd.DataFrame} -- fund dataset
+        sar {dict} -- SAR data object
+
+    Returns:
+        dict -- SAR data object
+    """
     metrics = {"fast_0.02": [], "slow_0.01": []}
     tab = sar['tabular']
     for i, close in enumerate(fund['Close']):
