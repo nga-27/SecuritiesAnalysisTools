@@ -33,6 +33,8 @@ from libs.tools import candlesticks
 from libs.tools import risk_comparison
 from libs.tools import rate_of_change_oscillator
 from libs.tools import know_sure_thing
+from libs.tools import average_true_range
+from libs.tools import parabolic_sar, average_directional_index
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -178,6 +180,17 @@ def run_prod(script: list):
             fund_data['know_sure_thing'] = know_sure_thing(
                 fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
+            fund_data['average_true_range'] = average_true_range(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+
+            fund_data['adx'] = average_directional_index(
+                fund, atr=fund_data['average_true_range']['tabular'], plot_output=False,
+                name=fund_name, progress_bar=p, view=period)
+
+            fund_data['parabolic_sar'] = parabolic_sar(
+                fund, adx_tabular=fund_data['adx']['tabular'], plot_output=False,
+                name=fund_name, progress_bar=p, view=period)
+
             if 'no_index' not in config['state']:
                 strength, match_data = relative_strength(
                     fund_name,
@@ -226,7 +239,8 @@ def run_prod(script: list):
 
             # Parse through indicators and pull out latest signals (must be last)
             fund_data['last_signals'] = assemble_last_signals(
-                fund_data, fund=fund, progress_bar=p, plot_output=False)
+                fund_data, fund=fund, name=fund_name, view=period,
+                progress_bar=p, plot_output=False)
 
             p.end()
 

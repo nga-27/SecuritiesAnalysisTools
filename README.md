@@ -15,6 +15,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * **0.2.0, 2020-03-22** - Release 2: Reorganization of `dev` and `prod` as functions, stable base
 * 0.2.02, 2020-05-04 - Improved Windows compatibility, PDF having latest signals
 * 0.2.03, 2020-05-08 - NASIT 'ledger' simulator (more info below) introduced
+* 0.2.06, 2020-06-19 - .pptx design completely dictated by json; `--debug` introduced to surface errors instead of try/except
 
 ## To Use
 1. Pull repository, start local, virtual, and/or global python environment.
@@ -29,6 +30,8 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
         * Functionality offers an update on a user's porfolio w/o requiring entering it in all of the time
     * "Test": starting version 0.1.16, entering `--test` when prompted for tickers will run `test.json` user funds and settings.
         * Functionality is the same as "core", but provides another means of configurability, especially for development.
+    * "Dataset": starting version 0.2.02, entering `--dataset` when prompted for tickers will run `dataset.json` user funds and settings.
+        * Functionality is the same as "core", but provides another means of configurability, especially for generating correlations.
     * "Options": starting version 0.1.13, entering `--options` will halt operation and print available input tags. (see _"Options"_ below)
     * "Functions": starting version 0.1.17, entering `--f` will allow a *function* to be run without the main service. (see *"Functions"* below)
 1. All default behavior (non-core) is `2 year period, 1 day interval`. (View `yfinance` api for other settings).
@@ -103,11 +106,12 @@ To run this new functionality, simply run the functions below:
 Ensure that all ledgers are in the directory specified by the path above and in the format of the template above.
 
 ## Python Libraries / Issues
-Software is designed and run on **Python 3.6+**.
+Software is designed and run on **Python 3.7+**.
 
-### Other Library Installations 
+### Other Library Installations
+Much of this section is no longer needed, as `pip install -r requirements.txt` should handle all installs appropriately.
+
 Run `pip install yfinance --upgrade --no-cache-dir` (note: 'upgrade' and 'no-cache...' might be omitted)
-
 Run `pip install python-pptx`
 
 ### Matplotlib & OSX errors
@@ -134,3 +138,4 @@ Note: this issue may have been resolved with `matplotlib 3.0.2`. As of v0.2.0, t
 * _"X" Bond Composite Index (BCI)_ - similar to MCI except where *"X"* is *Treasury*, *Corporate*, or *International*. All three supported.
 * _Correlation Composite Index (CCI)_ - mapping of various lookback periods of correlations of 11 sectors with S&P500.
 * _Type Composite Index (TCI)_ - weighted indexes representing *Sensitive*, *Defensive*, and *Cyclical* stock sectors
+* _NATA Metric_ - summation of all metrics of all technical analysis tools available.
