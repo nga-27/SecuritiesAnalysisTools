@@ -345,16 +345,24 @@ def reorder_trends(listed: list) -> list:
     """
     new_list = []
     content = []
+    non_timing = []
     for item in listed:
         split = item.split('(')
-        period = split[1].split('-')[0]
-        data = {"period": int(period), "type": split[0]}
-        content.append(data)
+
+        if '-d' in split[1]:
+            period = split[1].split('-')[0]
+            data = {"period": int(period), "type": split[0]}
+            content.append(data)
+        else:
+            non_timing.append(item)
 
     content.sort(key=lambda x: x['period'])
     for item in content:
         val = '('.join([item['type'], str(item['period'])])
         val += '-d)'
         new_list.append(val)
+
+    for item in non_timing:
+        new_list.append(item)
 
     return new_list

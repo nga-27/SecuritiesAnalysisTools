@@ -323,6 +323,9 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--suppress' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'suppress_pptx')
 
+    if '--debug' in i_keys:
+        config = add_str_to_dict_key(config, 'state', 'debug')
+
     # Exporting of data from metadata.json to dataframe-like file
     if '--export' in i_keys:
         config = add_str_to_dict_key(config, 'state', 'function run')

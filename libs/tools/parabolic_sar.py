@@ -1,4 +1,5 @@
 import os
+import pprint
 import pandas as pd
 import numpy as np
 
@@ -15,11 +16,41 @@ def parabolic_sar(fund: pd.DataFrame, adx_tabular: dict = None, **kwargs) -> dic
     p_bar = kwargs.get('progress_bar')
 
     sar = dict()
-    sar['tabular'] = generate_sar(
+    sar = generate_sar(
         fund, plot_output=plot_output, name=name, view=view, p_bar=p_bar)
 
+    sar = sar_metrics(fund, sar)
+
     if p_bar is not None:
-        p_bar.uptick(increment=0.6)
+        p_bar.uptick(increment=0.3)
+
+    sar['type'] = 'trend'
+    sar['length_of_data'] = len(sar['tabular']['fast'])
+    sar['current'] = {
+        "fast type": '',
+        "slow type": '',
+        "fast price": 0.0,
+        "slow price": 0.0,
+        "current price": 0.0
+    }
+
+    sar['current']['fast_price'] = sar['tabular']['fast'][-1]
+    sar['current']['slow_price'] = sar['tabular']['slow'][-1]
+    sar['current']['curr_price'] = fund['Close'][-1]
+
+    sar['current']['fast_type'] = 'Stop Loss'
+    sar['current']['slow_type'] = 'Stop Loss'
+    if sar['current']['fast_price'] > sar['current']['curr_price']:
+        sar['current']['fast_type'] = 'Entry Point'
+    if sar['current']['slow_price'] > sar['current']['curr_price']:
+        sar['current']['slow_type'] = 'Entry Point'
+
+    if plot_output:
+        print(f"\r\nParabolic SAR Status:\r\n")
+        pprint.pprint(sar['current'])
+
+    if p_bar is not None:
+        p_bar.uptick(increment=0.1)
 
     return sar
 
@@ -41,7 +72,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
         p_bar {ProgressBar} -- (default: {None})
 
     Returns:
-        dict -- sar signals (different AFs)
+        dict -- sar data object; signals (different AFs)
     """
     # Note, higher/faster AF should be first of 2
     ACC_FACTOR = kwargs.get('af', [0.02, 0.01])
@@ -53,9 +84,12 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view', '')
     p_bar = kwargs.get('pbar')
 
+    sar_dict = dict()
+
     signals = {"fast": [], "slow": []}
     sig_names = ["fast", "slow"]
     colors = ["blue", "black"]
+    indicators = []
 
     signal = [0.0] * len(fund['Close'])
     auto = autotrend(fund['Close'], periods=[4])
@@ -92,6 +126,8 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
         a_f = afx
 
         for i in range(period_offset, len(signal)):
+            data = None
+            date = fund.index[i].strftime("%Y-%m-%d")
 
             if trend == 'down':
                 sar_i = signal[i-1] - a_f * (signal[i-1] - e_p)
@@ -101,6 +137,12 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
                     sar_i = e_p
                     e_p = fund['High'][i]
                     trend = 'up'
+                    data = {
+                        "type": 'bullish',
+                        "value": f'downtrend broken-{sig_names[k]}',
+                        "index": i,
+                        "date": date
+                    }
 
                 else:
                     if fund['Low'][i] < e_p:
@@ -117,6 +159,12 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
                     sar_i = e_p
                     e_p = fund['Low'][i]
                     trend = 'down'
+                    data = {
+                        "type": 'bearish',
+                        "value": f'upward broken-{sig_names[k]}',
+                        "index": i,
+                        "date": date
+                    }
 
                 else:
                     if fund['High'][i] > e_p:
@@ -127,6 +175,9 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
 
             signal[i] = sar_i
 
+            if data is not None:
+                indicators.append(data)
+
         signals[sig_names[k]] = signal.copy()
         add_plts.append({
             "plot": signals[sig_names[k]],
@@ -136,7 +187,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
         })
 
         if p_bar is not None:
-            p_bar.uptick(increment=0.1)
+            p_bar.uptick(increment=0.2)
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Parabolic SAR"
@@ -151,4 +202,22 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    return signals
+    sar_dict['tabular'] = signals
+    sar_dict['signals'] = indicators
+
+    return sar_dict
+
+
+def sar_metrics(fund: pd.DataFrame, sar: dict, **kwargs) -> dict:
+
+    metrics = {"fast_0.02": [], "slow_0.01": []}
+    tab = sar['tabular']
+    for i, close in enumerate(fund['Close']):
+        metrics['fast_0.02'].append(
+            np.round((close - tab['fast'][i]) / tab['fast'][i] * 100.0, 3))
+        metrics['slow_0.01'].append(
+            np.round((close - tab['slow'][i]) / tab['slow'][i] * 100.0, 3))
+
+    sar['metrics'] = metrics
+
+    return sar
