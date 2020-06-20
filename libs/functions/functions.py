@@ -19,7 +19,8 @@ from libs.metrics import assemble_last_signals
 from libs.tools import get_trendlines, find_resistance_support_lines
 from libs.tools import cluster_oscs, RSI, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
-from libs.tools import mov_avg_convergence_divergence, relative_strength, on_balance_volume
+from libs.tools import mov_avg_convergence_divergence, relative_strength
+from libs.tools import on_balance_volume, demand_index
 from libs.tools import triple_moving_average, moving_average_swing_trade
 from libs.tools import bear_bull_power, total_power
 from libs.tools import bollinger_bands
@@ -124,6 +125,8 @@ def only_functions_handler(config: dict):
         adx_function(config)
     if 'sar' in config['run_functions']:
         sar_function(config)
+    if 'demand' in config['run_functions']:
+        demand_function(config)
     if 'alpha' in config['run_functions']:
         risk_function(config)
     if 'vq' in config['run_functions']:
@@ -392,6 +395,15 @@ def sar_function(config: dict):
             print(
                 f"Parabolic 'Stop And Reverse' (SAR) of {TICKER}{fund}{NORMAL}...")
             parabolic_sar(data[fund], name=fund, plot_output=True)
+
+
+def demand_function(config: dict):
+    data, fund_list = function_data_download(config)
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(
+                f"Demand Index of {TICKER}{fund}{NORMAL}...")
+            demand_index(data[fund], name=fund, plot_output=True)
 
 
 def price_gap_function(config: dict):

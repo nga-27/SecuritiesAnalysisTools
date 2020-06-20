@@ -519,6 +519,11 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'sar', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
+    if ('--demand' in i_keys) or ('--demand_index' in i_keys):
+        config = add_str_to_dict_key(
+            config, 'run_functions', 'demand', type_='list')
+        config['tickers'] = ' '.join(ticker_keys)
+
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'gaps', type_='list')

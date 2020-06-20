@@ -62,6 +62,7 @@ FUNCTIONS:          :       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --f
 --atr               :       run {Average True Range} for funds; "--average_true_range" also supported
 --adx               :       run {Average Directional Index (ADX)} for funds; "--average_directional_index" also supported
 --sar               :       run {Parabolic Stop and Reverse (SAR)} for funds; "--parabolic_sar" also supported
+--demand            :       run {Demand Index} for funds; "--demand_index" also supported
 --alpha             :       run {Alpha/Beta} for funds; "--beta" also supported
 --vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
 --syn               :       run {Synopsis} for funds (metrics); "--synopsis" also supported
