@@ -107,7 +107,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
     if trendlines:
         end = len(rsi)
         rsi_trend = rsi[end-100: end]
-        get_trendlines_regression(rsi_trend, plot_output=True, indictor='RSI')
+        get_trendlines_regression(rsi_trend, plot_output=True, indicator='RSI')
 
     rsi_data['type'] = 'oscillator'
     rsi_data['length_of_data'] = len(rsi)
