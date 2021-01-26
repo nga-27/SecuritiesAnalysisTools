@@ -94,6 +94,8 @@ An example input to generate an output of an RSI, EMA, and Hull Moving Average f
 
 `--f --rsi --ema --hull --5y --1w aapl mmm vwinx`
 
+`--f --pptx --pdf`
+
 All plots created during the process are rendered in real time. Note: **nothing is saved in "functions" mode**. To have saved plots or data, one must run the full program and `--export`.  Any function added without the `--f` flag will not be registered as a function and could give undesired behavior.
 
 ### NASIT "Ledger" Simulator

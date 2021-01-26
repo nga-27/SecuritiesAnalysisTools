@@ -65,6 +65,7 @@ def start_header(**kwargs) -> dict:
     config['tickers'] = ''
     config['exports'] = {"run": False, "fields": []}
     config['views'] = {"pptx": '2y'}
+    config['year'] = datetime.now().strftime('%Y')
 
     config, list_of_tickers = header_options_parse(input_str, config)
 
