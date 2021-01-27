@@ -726,6 +726,11 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
 
             if is_SP500 and max_close is not None:
                 max_close = np.round(max_close, 2)
+                if vq.get('last_max', {}).get('Price') is not None:
+                    # Adjust for converting back from SPY to ^GSPC
+                    multiplier = max_close / vq['last_max']['Price']
+                    vq['latest_price'] = vq['latest_price'] * multiplier
+
                 vq['last_max'] = {"Date": "n/a", "Price": max_close}
                 ratio = (100.0 - vq['VQ']) / 100.0
                 vq['stop_loss'] = np.round(ratio * vq['last_max']['Price'], 2)

@@ -461,9 +461,9 @@ def vq_function(config: dict):
     print(f"")
     data, fund_list = function_data_download(config)
     for fund in fund_list:
-        if fund != '^GSPC':
-            vq = get_volatility(fund, data=data[fund])
-            vq_function_print(vq, fund)
+        max_close = max(data[fund]['Close'])
+        vq = get_volatility(fund, data=data[fund], max_close=max_close)
+        vq_function_print(vq, fund)
 
 
 def nasit_generation_function(config: dict, print_only=False):

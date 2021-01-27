@@ -264,6 +264,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
     config['state'] = ''
     config['run_functions'] = []
     i_keys, ticker_keys = key_parser(input_str)
+    export_now = False
 
     if '--options' in i_keys:
         options_file = os.path.join("resources", "header_options.txt")
@@ -335,15 +336,23 @@ def header_options_parse(input_str: str, config: dict) -> list:
         # No functions run, so no tickers should be present. Only metadata keys
         config['exports'] = {"run": True,
                              "fields": ' '.join(ticker_keys)}
+        export_now = True
 
     # Only creating a pptx from existing metadata file
     if ('--pptx' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'pptx', type_='list')
+        config = add_str_to_dict_key(config, 'state', 'function run')
+        export_now = True
 
     if ('--pdf' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'pdf', type_='list')
+        config = add_str_to_dict_key(config, 'state', 'function run')
+        export_now = True
+
+    if export_now:
+        return config, ticker_keys
 
     # Settings for 'intervals' and 'periods'
     if ('--10y' in i_keys) or ('--5y' in i_keys) or \

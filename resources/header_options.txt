@@ -1,75 +1,88 @@
 OPTIONS:
 
+--f                 :       triggers only designated functions (below); "--function" also supported
 --q                 :       exits program without running any functionality; "--quit" also supported
+--ni                :       does not include S&P500 index, omits comparison operations; "--noindex" also supported
+
+OPERATION FILES:
+
 --core              :       normal operation run with parameters found in core.json
 --test              :       similar to '--core' but with test.json (for testing only)
 --dataset           :       similar to '--core' but with dataset.json (alternative to core, used for data exportation)
---ni                :       does not include S&P500 index, omits comparison operations; "--noindex" also supported
---f                 :       triggers only designated functions (below); "--function" also supported
 
-EXPORTS:
+EXPORTS:            :       (do NOT need any additional flags or content. Use existing data in metadata.json)
 
 --export            :       run metadata parser and organizer; any metadata keys desired should be listed "rsi macd vnq"; default is all keys
---pptx              :       regenerate powerpoint from metadata.json; (note, plots typically unavailable)
 --pdf               :       regenerate pdf of metrics from metadata.json
+--pptx              :       regenerate powerpoint from metadata.json; (note, plots typically unavailable)
+
+TAGS:               :       (modifiers of a particular run)
+
 --debug             :       disables try/except blocks where applicable to surface error logs
 --suppress          :       do not generate pptx
 
 TIME WINDOWS:
 
+--1d                :       1 day interval (default)
+--1w                :       1 week interval
+--1m                :       1 month interval
 --1y                :       1 year period
 --2y                :       2 year period (default)
 --5y                :       5 year period
---10y               :       10 year period
-
---1d                :       1 day interval (default)
---1w                :       1 week interval
---1m                :       1 month interval       
+--10y               :       10 year period     
 
 VERSIONS:           :       (flags for versioning)
 
 --dev               :       most recent updates, pushed frequently, possibly unstable
 --prod              :       default behavior; more updated than release, less than dev, but more stable
 
-FUNCTIONS:          :       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --function flag
+COMPOSITE FUNCTIONS::       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --function flag
 
---mci               :       run {Market Composite Index} (MCI)
 --bci               :       run {Bond Composite Index} (BCI)
+--corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history, "--long")
+--mci               :       run {Market Composite Index} (MCI)
 --tci               :       run {Type Composite Index} (TCI); type -> "defensive", "sensitive", "cyclical"
---trend             :       run {Trendline} analysis for a fund
---sr                :       run {Support/Resistance Line} analysis; "--support_resistance" and "--rs" also supported
---clustered         :       run {Clustered Oscillators} for 'all'; "--clustered_osc" and "--clusters" also supported
---head_shoulders    :       run feature detection of {Head and Shoulders} function
---corr              :       run {Correlation Index}; use "--short" for 2y period (vs. entire history)
---stochastic        :       run {Stochastic Oscillator}; "--stoch" also supported
---rsi               :       run {Relative Strength Index} (RSI) function for funds
---ultimate          :       run {Ultimate Oscillator} function for funds; "--ult" also supported
---macd              :       run {Moving Average Convergence Divergence} (MACD) function for funds
---relative_strength :       run {'True' Strength} (vs. S&P500) function for funds 
---awesome           :       run {'Awesome Oscillator'} function for funds
---momentum          :       run {Chande Momentum Oscillator} function for funds
---obv               :       run {On Balance Volume} (OBV) function for funds; "--on_balance_volume" also supported 
---moving_average    :       run {Moving Average} (MA) function for funds; "--ma" also supported
---hull              :       run {Hull Moving Average} function for funds; "--hull_moving_average" also supported
---swings            :       run {Swing Trading} (moving averages) for funds; "--swing_trade" also supported
---bear_bull         :       run {Bear / Bull Power Indicator} function for funds; "--bull_bear" also supported
---gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
---bands             :       run {Bollinger Bands} for funds; "--bollinger_bands" and "--bollinger" also supported
---candlestick       :       run {Candlesticks} for funds; "--candlesticks" also supported
---commodity         :       run {Commodity Channel Index} for funds; "--cci" and "--comm" also supported
---roc               :       run {Rate of Change Oscillator} for funds; "--rate_of_change" also supported
---kst               :       run {Know Sure Thing Oscillator} for funds; "--know_sure_thing" also supported
---atr               :       run {Average True Range} for funds; "--average_true_range" also supported
+
+TOOL FUNCTIONS:     :       (e.g. '--f --trend --corr --rsi vti AAPL amzn' ) REQUIRES --function flag
+
 --adx               :       run {Average Directional Index (ADX)} for funds; "--average_directional_index" also supported
---sar               :       run {Parabolic Stop and Reverse (SAR)} for funds; "--parabolic_sar" also supported
---demand            :       run {Demand Index} for funds; "--demand_index" also supported
 --alpha             :       run {Alpha/Beta} for funds; "--beta" also supported
---vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
---syn               :       run {Synopsis} for funds (metrics); "--synopsis" also supported
+--atr               :       run {Average True Range} for funds; "--average_true_range" also supported
+--awesome           :       run {'Awesome Oscillator'} function for funds
+--bands             :       run {Bollinger Bands} for funds; "--bollinger_bands" and "--bollinger" also supported
+--bear_bull         :       run {Bear / Bull Power Indicator} function for funds; "--bull_bear" also supported
+--candlestick       :       run {Candlesticks} for funds; "--candlesticks" also supported
+--clustered         :       run {Clustered Oscillators} for 'all'; "--clustered_osc" and "--clusters" also supported
+--commodity         :       run {Commodity Channel Index} for funds; "--cci" and "--comm" also supported
+--demand            :       run {Demand Index} for funds; "--demand_index" also supported
+--gaps              :       run {Price Gap} analysis for funds; "--price_gaps" also supported
+--head_shoulders    :       run feature detection of {Head and Shoulders} function
+--hull              :       run {Hull Moving Average} function for funds; "--hull_moving_average" also supported
+--kst               :       run {Know Sure Thing Oscillator} for funds; "--know_sure_thing" also supported
 --last              :       run {Last Signals} for funds to show latest signals; "--last_signals" also supported
+--macd              :       run {Moving Average Convergence Divergence} (MACD) function for funds
+--metadata          :       run {Metadata} for funds to fetch scraped info
+--momentum          :       run {Chande Momentum Oscillator} function for funds
+--moving_average    :       run {Moving Average} (MA) function for funds; "--ma" also supported
+--obv               :       run {On Balance Volume} (OBV) function for funds; "--on_balance_volume" also supported 
+--relative_strength :       run {'True' Strength} (vs. S&P500) function for funds 
+--risk              :       run {Risk Factors} for funds (alpha, beta, sharpe, etc.)
+--roc               :       run {Rate of Change Oscillator} for funds; "--rate_of_change" also supported
+--rsi               :       run {Relative Strength Index} (RSI) function for funds
+--sar               :       run {Parabolic Stop and Reverse (SAR)} for funds; "--parabolic_sar" also supported
+--sr                :       run {Support/Resistance Line} analysis; "--support_resistance" and "--rs" also supported
+--stochastic        :       run {Stochastic Oscillator}; "--stoch" also supported
+--swings            :       run {Swing Trading} (moving averages) for funds; "--swing_trade" also supported
+--syn               :       run {Synopsis} for funds (metrics); "--synopsis" also supported
+--trend             :       run {Trendline} analysis for a fund
+--ultimate          :       run {Ultimate Oscillator} function for funds; "--ult" also supported
+--vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
+
+CUSTOM FUNCTIONS:   :       (e.g. '--f --nasit) REQUIRES --function flag
+
+--ledger            :       run {Nasit Ledger} for available ledgers in the resources > ledgers directory
 --nf                :       run {Nasit Funds} for funds; "--nasit_funds" also supported
 --nf_now            :       run {Nasit Funds} but with current stats (price, % change, etc.)
---ledger            :       run {Nasit Ledger} for available ledgers in the resources > ledgers directory
 
 AVAILABLE EXPORTS:  :       (current fields for specific tabular metrics exports)
 

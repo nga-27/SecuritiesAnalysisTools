@@ -68,6 +68,10 @@ def init_script(config: dict, **kwargs) -> list:
         config['tickers'] = index_appender(config['tickers'])
         config['process_steps'] = config['process_steps'] + 2
 
+    if 'debug' in config['state']:
+        print(
+            f"{HEADER_COLOR}~~~~ DEBUG MODE ENABLED ~~~~ {NORMAL_COLOR}")
+
     # Temporary directories to save graphs as images, etc.
     remove_temp_dir()
     configure_temp_dir()

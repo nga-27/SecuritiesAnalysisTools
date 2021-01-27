@@ -150,7 +150,7 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
     if plot_output:
         dual_plotting(fund['Close'], metrics, 'Price', 'Demand Index Metrics')
     else:
-        filename = os.path.join(name, view, f"demand_index_metrics_{name}")
+        filename = os.path.join(name, view, f"di_metrics_{name}")
         dual_plotting(fund['Close'], metrics, 'Price', 'Demand Index Metrics',
                       title=title, saveFig=True, filename=filename)
 
