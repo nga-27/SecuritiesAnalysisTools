@@ -76,5 +76,6 @@ INDICATOR_NAMES = [
     "futures",
     "parabolic_sar",
     "adx",
-    "last_signals"
+    "last_signals",
+    "demand_index"
 ]

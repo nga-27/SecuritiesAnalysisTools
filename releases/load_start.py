@@ -8,11 +8,11 @@ from libs.utils import TEXT_COLOR_MAP
 
 
 ################################
-_DEV_VERSION_ = '0.2.06'
-_DATE_REVISION_DEV_ = '2020-06-19'
+_DEV_VERSION_ = '0.2.07'
+_DATE_REVISION_DEV_ = '2021-01-27'
 ################################
-PROCESS_STEPS_DEV = 29
-PROCESS_STEPS_PROD = 29
+PROCESS_STEPS_DEV = 30
+PROCESS_STEPS_PROD = 30
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 PROD_COLOR = TEXT_COLOR_MAP["green"]
@@ -67,6 +67,10 @@ def init_script(config: dict, **kwargs) -> list:
     if 'no_index' not in config['state']:
         config['tickers'] = index_appender(config['tickers'])
         config['process_steps'] = config['process_steps'] + 2
+
+    if 'debug' in config['state']:
+        print(
+            f"{HEADER_COLOR}~~~~ DEBUG MODE ENABLED ~~~~ {NORMAL_COLOR}")
 
     # Temporary directories to save graphs as images, etc.
     remove_temp_dir()

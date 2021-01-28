@@ -20,7 +20,7 @@ from libs.tools import relative_strength, moving_average_swing_trade
 from libs.tools import triple_moving_average, triple_exp_mov_average
 from libs.tools import hull_moving_average
 from libs.tools import mov_avg_convergence_divergence
-from libs.tools import on_balance_volume
+from libs.tools import on_balance_volume, demand_index
 from libs.tools import beta_comparison
 from libs.tools import find_resistance_support_lines
 from libs.tools import get_trendlines, get_trend_analysis
@@ -190,6 +190,9 @@ def run_prod(script: list):
             fund_data['parabolic_sar'] = parabolic_sar(
                 fund, adx_tabular=fund_data['adx']['tabular'], plot_output=False,
                 name=fund_name, progress_bar=p, view=period)
+
+            fund_data['demand_index'] = demand_index(
+                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
 
             if 'no_index' not in config['state']:
                 strength, match_data = relative_strength(

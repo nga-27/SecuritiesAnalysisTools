@@ -34,7 +34,6 @@ def slide_creator(analysis: dict, debug: bool = False, **kwargs):
         config {dict} -- main control obj (default: {None})
     """
 
-    year = kwargs.get('year')
     version = kwargs.get('version', "0.2.02")
     config = kwargs.get('config')
 
@@ -42,14 +41,12 @@ def slide_creator(analysis: dict, debug: bool = False, **kwargs):
         if 'debug' in config.get('state', ''):
             debug = True
 
-    if year is None:
-        year = datetime.datetime.now().strftime("%Y")
+    year = datetime.datetime.now().strftime("%Y")
 
     if 'suppress_pptx' not in config['state']:
         print("")
         print("Starting presentation creation.")
         if config is not None:
-            year = config.get('date_release', '').split('-')[0]
             version = config.get('version')
             views = config.get('views', {}).get('pptx', '2y')
 
