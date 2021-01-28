@@ -34,6 +34,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
         * Functionality is the same as "core", but provides another means of configurability, especially for generating correlations.
     * "Options": starting version 0.1.13, entering `--options` will halt operation and print available input tags. (see _"Options"_ below)
     * "Functions": starting version 0.1.17, entering `--f` will allow a *function* to be run without the main service. (see *"Functions"* below)
+    * "Exports": starting version 0.2.02, entering `--pptx`, `--pdf`, or `--export` will generate respective outputs using `metadata.json`
 1. All default behavior (non-core) is `2 year period, 1 day interval`. (View `yfinance` api for other settings).
 
 
@@ -94,8 +95,6 @@ An example input to generate an output of an RSI, EMA, and Hull Moving Average f
 
 `--f --rsi --ema --hull --5y --1w aapl mmm vwinx`
 
-`--f --pptx --pdf`
-
 All plots created during the process are rendered in real time. Note: **nothing is saved in "functions" mode**. To have saved plots or data, one must run the full program and `--export`.  Any function added without the `--f` flag will not be registered as a function and could give undesired behavior.
 
 ### NASIT "Ledger" Simulator
@@ -122,7 +121,7 @@ If matplotlib.backend has issues with OSX, try running `conda install matplotlib
 If that does not solve issue, see [StackOverFlow Solution](https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python) for other ways of solving issue.
 Other solutions, employed on all plotting functions, is the `register_matplotlib_converters()` function call preceding all plotting code at the beginning of each function.
 
-Note: this issue may have been resolved with `matplotlib 3.0.2`. As of v0.2.0, this software requires `matplotlib>=3.2.0`.
+Note: this issue may have been resolved with `matplotlib 3.0.2`. As of v0.2.0, this software requires `matplotlib==3.2.0`.
 
 ### Notable links:
 [Yahoo Finance Python](https://pypi.org/project/yfinance/)
