@@ -11,7 +11,7 @@ WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
 
 
-def PDF_creator(analysis: dict, **kwargs):
+def PDF_creator(analysis: dict, debug: bool = False, **kwargs):
     """PDF Creator
 
     Creates a subset of metrics, items into a pdf report.
@@ -31,6 +31,10 @@ def PDF_creator(analysis: dict, **kwargs):
     if year is None:
         year = datetime.datetime.now().strftime("%Y")
 
+    if not debug and config is not None:
+        if 'debug' in config.get('state', ''):
+            debug = True
+
     OUTFILE_NAME = os.path.join("output", f"Financial_Analysis_{year}.pdf")
 
     print("")
@@ -45,12 +49,20 @@ def PDF_creator(analysis: dict, **kwargs):
         version = version
         views = '2y'
 
-    try:
+    if debug:
         pdf = FPDF(unit='in', format='letter')
         pdf = pdf_top_level_title_page(pdf, version=version)
         pdf = fund_pdf_pages(pdf, analysis, views=views)
 
         pdf.output(OUTFILE_NAME)
 
-    except:
-        print(f"{WARNING}PDF failed to be created.{NORMAL}")
+    else:
+        try:
+            pdf = FPDF(unit='in', format='letter')
+            pdf = pdf_top_level_title_page(pdf, version=version)
+            pdf = fund_pdf_pages(pdf, analysis, views=views)
+
+            pdf.output(OUTFILE_NAME)
+
+        except:
+            print(f"{WARNING}PDF failed to be created.{NORMAL}")

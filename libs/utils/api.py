@@ -794,7 +794,7 @@ def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
     stop_loss = vq_obj.get('stop_loss', 'n/a')
     max_date = vq_obj.get('last_max', {}).get('Date')
 
-    if (max_date == 'n/a') or (stop_loss == 'n/a') or dataset is None:
+    if (max_date == 'n/a') or (stop_loss == 'n/a') or (dataset is None) or (stop_loss is None):
         return 'n/a'
 
     max_date = datetime.strptime(max_date, '%m/%d/%Y')
@@ -817,12 +817,15 @@ def vq_status_print(vq: dict, fund: str) -> list:
         list -- status message, status color, and % away from highest close
     """
     if not vq:
-        return
+        return 'n/a', 'red', 0.0
 
     last_max = vq.get('last_max', {}).get('Price')
     stop_loss = vq.get('stop_loss')
     latest = vq.get('latest_price')
     stop_status = vq.get('stopped_out')
+
+    if (last_max == 'n/a') or (stop_loss == 'n/a') or (stop_loss is None):
+        return 'n/a', 'red', 0.0
 
     mid_pt = (last_max + stop_loss) / 2.0
     amt_latest = latest - stop_loss

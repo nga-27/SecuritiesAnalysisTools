@@ -31,13 +31,14 @@ def exponential_moving_avg(dataset, interval: int, **kwargs) -> list:
         data = dataset
 
     ema = []
-    k = 2.0 / (float(interval) + 1.0)
-    for i in range(interval-1):
-        ema.append(data[i])
-    for i in range(interval-1, len(data)):
-        ema.append(np.mean(data[i-(interval-1):i+1]))
-        if i != interval-1:
-            ema[i] = ema[i-1] * (1.0 - k) + data[i] * k
+    if interval < len(data) - 3:
+        k = 2.0 / (float(interval) + 1.0)
+        for i in range(interval-1):
+            ema.append(data[i])
+        for i in range(interval-1, len(data)):
+            ema.append(np.mean(data[i-(interval-1):i+1]))
+            if i != interval-1:
+                ema[i] = ema[i-1] * (1.0 - k) + data[i] * k
 
     return ema
 
@@ -70,33 +71,34 @@ def windowed_moving_avg(dataset, interval: int, **kwargs) -> list:
 
     wma = []
 
-    if filter_type == 'simple':
-        left = int(np.floor(float(interval) / 2))
-        if left == 0:
-            return data
-        for i in range(left):
-            wma.append(data[i])
-        for i in range(left, len(data)-left):
-            wma.append(np.mean(data[i-(left):i+(left)]))
-        for i in range(len(data)-left, len(data)):
-            wma.append(data[i])
+    if interval < len(data) - 3:
+        if filter_type == 'simple':
+            left = int(np.floor(float(interval) / 2))
+            if left == 0:
+                return data
+            for i in range(left):
+                wma.append(data[i])
+            for i in range(left, len(data)-left):
+                wma.append(np.mean(data[i-(left):i+(left)]))
+            for i in range(len(data)-left, len(data)):
+                wma.append(data[i])
 
-    elif filter_type == 'exponential':
-        left = int(np.floor(float(interval) / 2))
-        weight = weight_strength / (float(interval) + 1.0)
-        if weight > 1.0:
-            weight = 1.0
-        for i in range(left):
-            wma.append(data[i])
-        for i in range(left, len(data)-left):
-            sum_len = len(data[i-(left):i+(left)]) - 1
-            sum_vals = np.sum(data[i-(left):i+(left)])
-            sum_vals -= data[i]
-            sum_vals = sum_vals / float(sum_len)
-            sum_vals = data[i] * weight + sum_vals * (1.0 - weight)
-            wma.append(sum_vals)
-        for i in range(len(data)-left, len(data)):
-            wma.append(data[i])
+        elif filter_type == 'exponential':
+            left = int(np.floor(float(interval) / 2))
+            weight = weight_strength / (float(interval) + 1.0)
+            if weight > 1.0:
+                weight = 1.0
+            for i in range(left):
+                wma.append(data[i])
+            for i in range(left, len(data)-left):
+                sum_len = len(data[i-(left):i+(left)]) - 1
+                sum_vals = np.sum(data[i-(left):i+(left)])
+                sum_vals -= data[i]
+                sum_vals = sum_vals / float(sum_len)
+                sum_vals = data[i] * weight + sum_vals * (1.0 - weight)
+                wma.append(sum_vals)
+            for i in range(len(data)-left, len(data)):
+                wma.append(data[i])
 
     return wma
 
@@ -124,11 +126,12 @@ def simple_moving_avg(dataset, interval: int, **kwargs) -> list:
         data = dataset
 
     ma = []
-    for i in range(interval-1):
-        ma.append(data[i])
-    for i in range(interval-1, len(data)):
-        av = np.mean(data[i-(interval-1):i+1])
-        ma.append(av)
+    if interval < len(data) - 3:
+        for i in range(interval-1):
+            ma.append(data[i])
+        for i in range(interval-1, len(data)):
+            av = np.mean(data[i-(interval-1):i+1])
+            ma.append(av)
 
     return ma
 
@@ -233,20 +236,33 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    mshort = []
-    mmed = []
-    mlong = []
-    for i, close in enumerate(fund['Close']):
-        mshort.append(np.round((close - tshort[i]) / tshort[i] * 100.0, 3))
-        mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
-        mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
-
     triple_exp_mov_average(
         fund, config=[9, 21, 50], plot_output=plot_output, name=name, view=view)
 
-    tshort_x, tshort2 = adjust_signals(fund, tshort, offset=config[0])
-    tmed_x, tmed2 = adjust_signals(fund, tmed, offset=config[1])
-    tlong_x, tlong2 = adjust_signals(fund, tlong, offset=config[2])
+    mshort = []
+    mmed = []
+    mlong = []
+    tshort_x = []
+    tmed_x = []
+    tlong_x = []
+    tshort2 = []
+    tmed2 = []
+    tlong2 = []
+
+    if len(tshort) > 0:
+        for i, close in enumerate(fund['Close']):
+            mshort.append(np.round((close - tshort[i]) / tshort[i] * 100.0, 3))
+        tshort_x, tshort2 = adjust_signals(fund, tshort, offset=config[0])
+
+    if len(tmed) > 0:
+        for i, close in enumerate(fund['Close']):
+            mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
+        tmed_x, tmed2 = adjust_signals(fund, tmed, offset=config[1])
+
+    if len(tlong) > 0:
+        for i, close in enumerate(fund['Close']):
+            mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
+        tlong_x, tlong2 = adjust_signals(fund, tlong, offset=config[2])
 
     plot_short = {"plot": tshort2, "color": "blue",
                   "legend": f"{config[0]}-day MA", "x": tshort_x}
@@ -697,6 +713,10 @@ def find_crossovers(mov_avg: dict, position: pd.DataFrame) -> list:
     ln_period = mov_avg['long']['period']
 
     features = []
+
+    if len(tshort) == 0 or len(tmed) == 0 or len(tlong) == 0:
+        return features
+
     state = 'at'
     for i, sh in enumerate(tshort):
         data = None

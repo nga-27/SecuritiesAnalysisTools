@@ -885,35 +885,39 @@ def autotrend(data, **kwargs) -> list:
 
     trend = [0.0] * len(data)
 
-    periods = [int(period) for period in periods]
-    for j, period in enumerate(periods):
-        trends = []
-        for _ in range(period):
-            trends.append(0.0)
+    try:
+        periods = [int(period) for period in periods]
+        for j, period in enumerate(periods):
+            trends = []
+            for _ in range(period):
+                trends.append(0.0)
 
-        # X range will always be the same for any given period
-        x = list(range(period))
-        for i in range(period, len(data)):
-            y = data[i-period:i].copy()
-            reg = linregress(x, y)
+            # X range will always be the same for any given period
+            x = list(range(period))
+            for i in range(period, len(data)):
+                y = data[i-period:i].copy()
+                reg = linregress(x, y)
 
-            if return_type == 'slope':
-                trends.append(reg[0])
+                if return_type == 'slope':
+                    trends.append(reg[0])
 
-        wt = 1.0
-        if j < len(weights):
-            wt = weights[j]
-        for k, t in enumerate(trends):
-            trend[k] = trend[k] + (wt * t)
+            wt = 1.0
+            if j < len(weights):
+                wt = weights[j]
+            for k, t in enumerate(trends):
+                trend[k] = trend[k] + (wt * t)
 
-    if normalize:
-        max_factor = max(trend)
-        min_factor = min(trend)
-        for i in range(len(trend)):
-            if trend[i] < 0.0:
-                trend[i] = (trend[i] / min_factor) * -0.35
-            else:
-                trend[i] = (trend[i] / max_factor) * 0.35
+        if normalize:
+            max_factor = max(trend)
+            min_factor = min(trend)
+            for i in range(len(trend)):
+                if trend[i] < 0.0:
+                    trend[i] = (trend[i] / min_factor) * -0.35
+                else:
+                    trend[i] = (trend[i] / max_factor) * 0.35
+
+    except:
+        print(f"Trend for trends.py failed.")
 
     return trend
 

@@ -97,9 +97,15 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
     synopsis = fund_data['synopsis'][views]
 
     osc_keys = [osc for osc in synopsis['metrics_categories']['oscillator']]
-    osc_values = [np.round(synopsis['metrics'][osc], 5) for osc in osc_keys]
-    osc_deltas = [np.round(synopsis['metrics_delta'][osc], 5)
-                  for osc in osc_keys]
+    osc_values = []
+    osc_deltas = []
+    for osc in osc_keys:
+        if synopsis['metrics'].get(osc) is not None:
+            osc_values.append(np.round(synopsis['metrics'][osc], 5))
+            osc_deltas.append(np.round(synopsis['metrics_delta'][osc], 5))
+        else:
+            osc_values.append('')
+            osc_deltas.append('')
 
     trend_keys = [
         f"{trend} %" for trend in synopsis['metrics_categories']['trend']]
@@ -125,10 +131,11 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
             elif trend_values[i] > 0.0:
                 colo[0] = "green"
 
-        if osc_values[i] < 0.0:
-            colo[1] = "red"
-        elif osc_values[i] > 0.0:
-            colo[1] = "green"
+        if not isinstance(osc_values[i], (str)):
+            if osc_values[i] < 0.0:
+                colo[1] = "red"
+            elif osc_values[i] > 0.0:
+                colo[1] = "green"
 
         data.append(val)
         colors.append(colo)
