@@ -48,6 +48,8 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                         if isinstance(mets, (dict)):
                             for met in mets:
                                 met_str = f"{metric} ({met})"
+                                if len(mets[met]) == 0:
+                                    continue
                                 synopsis[period]['metrics'][met_str] = mets[met][-1]
                                 cat = analysis[name][period][metric].get(
                                     'type')
@@ -83,6 +85,9 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                                     synopsis[period]['metrics_categories'][cat].append(
                                         met_str)
 
+                                if len(mets) == 0:
+                                    continue
+                                
                                 synopsis[period]['metrics'][met_str] = mets[-1]
                                 diff = mets[-2]
                                 synopsis[period]['metrics_delta'][met_str] = np.round(
@@ -94,6 +99,8 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
                         if isinstance(mets, (dict)):
                             for met in mets:
                                 met_str = f"{metric} ({met})"
+                                if len(mets[met]) == 0:
+                                    continue
                                 synopsis[period]['tabular'][met_str] = mets[met][-1]
                                 cat = analysis[name][period][metric].get(
                                     'type')

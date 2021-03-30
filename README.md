@@ -16,6 +16,7 @@ Technical analysis tools for securities (funds, stocks, bonds, equities).
 * 0.2.02, 2020-05-04 - Improved Windows compatibility, PDF having latest signals
 * 0.2.03, 2020-05-08 - NASIT 'ledger' simulator (more info below) introduced
 * 0.2.06, 2020-06-19 - .pptx design completely dictated by json; `--debug` introduced to surface errors instead of try/except
+* 0.2.08, 2021-03-30 - Improved handling of short-living (<1yr) datasets; .pdf with `--debug`; locking of dependencies
 
 ## To Use
 1. Pull repository, start local, virtual, and/or global python environment.
@@ -107,21 +108,24 @@ To run this new functionality, simply run the functions below:
 Ensure that all ledgers are in the directory specified by the path above and in the format of the template above.
 
 ## Python Libraries / Issues
-Software is designed and run on **Python 3.7+**.
+Software is designed and run on **Python 3.7 or 3.8**.
 
 ### Other Library Installations
 Much of this section is no longer needed, as `pip install -r requirements.txt` should handle all installs appropriately.
+
+#### If Issues in Installing Above
+You can alternatively install certain packages as below, though the `requirements.txt` file should take care of it.
 
 Run `pip install yfinance --upgrade --no-cache-dir` (note: 'upgrade' and 'no-cache...' might be omitted)
 Run `pip install python-pptx`
 
 ### Matplotlib & OSX errors
+Note: this **issue has been resolved** with `matplotlib 3.0.2`. As of v0.2.0, this software requires `matplotlib==3.2.0` accordingly.
+
 If matplotlib.backend has issues with OSX, try running `conda install matplotlib` to solve issue.
 
 If that does not solve issue, see [StackOverFlow Solution](https://stackoverflow.com/questions/21784641/installation-issue-with-matplotlib-python) for other ways of solving issue.
 Other solutions, employed on all plotting functions, is the `register_matplotlib_converters()` function call preceding all plotting code at the beginning of each function.
-
-Note: this issue may have been resolved with `matplotlib 3.0.2`. As of v0.2.0, this software requires `matplotlib==3.2.0`.
 
 ### Notable links:
 [Yahoo Finance Python](https://pypi.org/project/yfinance/)

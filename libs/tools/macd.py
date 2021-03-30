@@ -579,12 +579,14 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                     group_size += 1
                 else:
                     state = 0
+
             m_ema = exponential_moving_avg(
                 macd[i:len(macd)], interval=3, data_type='list')
-            if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
-                return 'rising'
-            else:
-                return 'falling'
+            if len(m_ema) > 0:
+                if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
+                    return 'rising'
+                else:
+                    return 'falling'
 
         else:
             i = len(macd)-2
@@ -595,12 +597,14 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
                     group_size += 1
                 else:
                     state = 0
+
             m_ema = exponential_moving_avg(
                 macd[i:len(macd)], interval=3, data_type='list')
-            if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
-                return 'rising'
-            else:
-                return 'falling'
+            if len(m_ema) > 0:
+                if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
+                    return 'rising'
+                else:
+                    return 'falling'
 
     else:
         print(

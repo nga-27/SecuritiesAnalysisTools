@@ -126,6 +126,11 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
     ema_2 = exponential_moving_avg(
         atr_dict['tabular'], periods[1], data_type='list')
 
+    if len(ema_1) == 0 or len(ema_2) == 0:
+        atr_dict['metrics'] = []
+        atr_dict['signals'] = []
+        return atr_dict
+
     states = []
     for i, tab in enumerate(atr_dict['tabular']):
         if tab > ema_1[i] and ema_1[i] > ema_2[i]:
