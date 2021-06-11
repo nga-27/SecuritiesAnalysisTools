@@ -1,11 +1,11 @@
 import os
-from datetime import datetime
+
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar, INDEXES
-from libs.utils import dual_plotting
+from libs.utils import INDEXES, dual_plotting
 from libs.features import find_local_extrema, normalize_signals
+
 from .moving_average import simple_moving_avg
 
 

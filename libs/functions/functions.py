@@ -1,13 +1,12 @@
 import os
 import json
-import pprint
 import pandas as pd
 import numpy as np
 
 from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 from libs.utils import generic_plotting
-from libs.utils import get_volatility, vq_status_print
+from libs.utils import get_volatility
 from libs.utils import get_api_metadata, api_sector_match
 
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index

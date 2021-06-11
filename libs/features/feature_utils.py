@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 
-from libs.utils import date_extractor, shape_plotting, generic_plotting, INDEXES
+from libs.utils import date_extractor, shape_plotting, INDEXES
 
 
 def find_local_extrema(position: list, threshold=0.03, points=False) -> list:

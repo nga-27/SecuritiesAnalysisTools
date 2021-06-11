@@ -1,6 +1,5 @@
 import os
 import shutil
-import glob
 
 
 def configure_temp_dir():

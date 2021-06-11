@@ -3,8 +3,9 @@ import datetime
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, INDEXES, ProgressBar
+from libs.utils import dual_plotting, INDEXES
 from libs.features import normalize_signals
+
 from .moving_average import typical_price_signal, simple_moving_avg
 from .moving_average import exponential_moving_avg
 

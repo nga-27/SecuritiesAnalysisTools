@@ -2,10 +2,10 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, bar_chart, dual_plotting, dates_extractor_list
+from libs.utils import (
+    bar_chart, dual_plotting, dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS
+)
 from libs.features import normalize_signals
-from libs.utils import ProgressBar, INDEXES
-from libs.utils import TREND_COLORS, STANDARD_COLORS
 
 from .moving_average import exponential_moving_avg
 

@@ -1,10 +1,9 @@
 import os
 import pandas as pd
-import numpy as np
 
-from libs.utils import INDEXES, ProgressBar
-from libs.utils import dual_plotting, generic_plotting
+from libs.utils import INDEXES, dual_plotting
 from libs.features import normalize_signals
+
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from .trends import get_trendlines_regression
 

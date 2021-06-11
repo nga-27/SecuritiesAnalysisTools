@@ -3,9 +3,9 @@ import math
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, generic_plotting, date_extractor
-from libs.utils import INDEXES
+from libs.utils import dual_plotting, date_extractor, INDEXES
 from libs.features import normalize_signals
+
 from .trends import autotrend
 from .moving_average import exponential_moving_avg
 from .trends import get_trendlines_regression

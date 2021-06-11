@@ -2,10 +2,10 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, shape_plotting
-from libs.utils import index_extractor, fund_list_extractor, dates_extractor_list, date_extractor
-from libs.utils import ProgressBar, INDEXES
-from libs.utils import api_sector_match, api_sector_funds
+from libs.utils import (
+    generic_plotting, dates_extractor_list, date_extractor, 
+    INDEXES, api_sector_match, api_sector_funds
+)
 
 
 def normalized_ratio(fundA, fundB, data_type: str = 'dataframe', key: str = 'Adj Close') -> list:

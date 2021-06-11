@@ -392,7 +392,7 @@ def bar_chart(data: list, **kwargs):
     if all_positive:
         data = positive
 
-    _, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots()
     if bar_delta:
         barlist = ax1.bar(x, data, width=1, color=bar_awesome)
     else:
@@ -472,7 +472,7 @@ def specialty_plotting(list_of_plots: list, **kwargs):
     x = x
     if len(x) < 1:
         x = dates_extractor_list(list_of_plots[0])
-    _, ax = plt.subplots()
+    fig, ax = plt.subplots()
 
     for i in range(len(list_of_plots)):
         if i not in alt_ax_index:
@@ -546,7 +546,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     saveFig = kwargs.get('saveFig', False)
     filename = kwargs.get('filename', 'temp_shape_plot.png')
 
-    _, ax = plt.subplots()
+    fig, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 
     x = [datetime.strptime(d, '%Y-%m-%d').date()
@@ -676,7 +676,7 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
     additional_plts = kwargs.get('additional_plts', [])
     threshold_candles = kwargs.get('threshold_candles', None)
 
-    _, ax = plt.subplots()
+    fig, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 
     x = [datetime.strptime(d, '%Y-%m-%d').date()

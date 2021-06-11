@@ -1,10 +1,7 @@
 import os
-import pprint
 import pandas as pd
-import numpy as np
 
-from libs.utils import ProgressBar, dual_plotting, generic_plotting, bar_chart
-from libs.utils import dates_extractor_list
+from libs.utils import dual_plotting, bar_chart, dates_extractor_list
 from libs.features import normalize_signals
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from libs.utils import INDEXES

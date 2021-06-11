@@ -1,11 +1,9 @@
 import os
-import pprint
-from copy import deepcopy
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar, INDEXES
-from libs.utils import candlestick_plot
+from libs.utils import INDEXES, candlestick_plot
+
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from .moving_average import adjust_signals
 from .full_stochastic import generate_full_stoch_signal

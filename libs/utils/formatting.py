@@ -1,11 +1,5 @@
-import os
-import shutil
-import glob
-import time
-import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import pandas as pd
-from dateutil.relativedelta import relativedelta
 
 
 def index_extractor(tickers) -> str:

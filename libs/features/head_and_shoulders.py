@@ -1,10 +1,11 @@
 import pandas as pd
 import numpy as np
 
-from libs.utils import shape_plotting, generic_plotting, ProgressBar
-from libs.tools import exponential_moving_avg, windowed_moving_avg
+from libs.tools import windowed_moving_avg
 
-from .feature_utils import add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
+from .feature_utils import (
+    add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
+)
 from .feature_utils import find_filtered_local_extrema, feature_plotter, cleanse_to_json
 
 

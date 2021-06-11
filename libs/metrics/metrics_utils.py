@@ -1,12 +1,10 @@
+import json
+import os
+
 import pandas as pd
 import numpy as np
 
-from datetime import datetime
-import json
-import os
-import pprint
-
-from libs.utils import ProgressBar, INDICATOR_NAMES
+from libs.utils import INDICATOR_NAMES
 
 SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
 ACCEPTED_ATTS = INDICATOR_NAMES

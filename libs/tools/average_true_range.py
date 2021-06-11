@@ -1,10 +1,7 @@
 import os
-import datetime
 import pandas as pd
-import numpy as np
 
 from libs.utils import dual_plotting, INDEXES
-from libs.utils import ProgressBar
 from libs.features import normalize_signals
 from .moving_average import exponential_moving_avg
 

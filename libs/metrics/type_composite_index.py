@@ -1,7 +1,5 @@
 import os
 import json
-import pandas as pd
-import numpy as np
 
 from libs.tools import cluster_oscs
 from libs.tools import windowed_moving_avg

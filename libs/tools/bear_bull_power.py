@@ -2,9 +2,7 @@ import os
 import pandas as pd
 from scipy.stats import linregress
 
-from libs.utils import ProgressBar
-from libs.utils import bar_chart, dual_plotting
-from libs.utils import dates_extractor_list, INDEXES
+from libs.utils import bar_chart, dual_plotting, dates_extractor_list, INDEXES
 from libs.tools import exponential_moving_avg
 from libs.features import normalize_signals
 

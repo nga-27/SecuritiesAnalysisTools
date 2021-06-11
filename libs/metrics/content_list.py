@@ -1,9 +1,7 @@
 import os
-import pprint
 import pandas as pd
-import numpy as np
 
-from libs.utils import ProgressBar, dual_plotting
+from libs.utils import dual_plotting
 from libs.utils import STANDARD_COLORS, TREND_COLORS, INDEXES
 from libs.utils import EXEMPT_METRICS, INDICATOR_NAMES
 

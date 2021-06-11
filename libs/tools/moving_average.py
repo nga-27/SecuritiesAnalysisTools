@@ -1,11 +1,9 @@
 import os
-import math
+
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, specialty_plotting
-from libs.utils import candlestick_plot
-from libs.utils import INDEXES
+from libs.utils import specialty_plotting, candlestick_plot, INDEXES
 
 
 def exponential_moving_avg(dataset, interval: int, **kwargs) -> list:

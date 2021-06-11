@@ -3,8 +3,8 @@ import pprint
 import pandas as pd
 import numpy as np
 
-from libs.utils import candlestick_plot
-from libs.utils import ProgressBar, INDEXES
+from libs.utils import candlestick_plot, INDEXES
+
 from .trends import autotrend
 
 
