@@ -2,9 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, ProgressBar
-from libs.utils import INDEXES
+from libs.utils import dual_plotting, INDEXES
 from libs.features import normalize_signals
+
 from .rate_of_change import roc_signal
 from .moving_average import simple_moving_avg, exponential_moving_avg
 

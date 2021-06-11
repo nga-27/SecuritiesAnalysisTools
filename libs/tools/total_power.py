@@ -3,8 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.tools import exponential_moving_avg
-from libs.utils import dual_plotting, generic_plotting
-from libs.utils import INDEXES
+from libs.utils import dual_plotting, INDEXES
 from libs.features import normalize_signals
 
 

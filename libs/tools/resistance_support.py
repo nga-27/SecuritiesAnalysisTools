@@ -1,9 +1,7 @@
-import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, dates_convert_from_index
-from libs.utils import ProgressBar, INDEXES
+from libs.utils import generic_plotting, dates_convert_from_index, INDEXES
 
 """
     1. Combine points backward (i.e. for time=34 combine 34's and 21's)

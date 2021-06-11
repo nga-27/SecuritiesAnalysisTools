@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar
 from libs.utils import generic_plotting, dual_plotting, INDEXES
 from libs.features import normalize_signals
 

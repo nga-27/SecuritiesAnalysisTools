@@ -1,19 +1,16 @@
 import os
 import warnings
 import json
-import pprint
 import math
 import pandas as pd
 import numpy as np
 from datetime import datetime
 from scipy.stats import linregress
 
-from .moving_average import simple_moving_avg, windowed_moving_avg
-from libs.utils import generic_plotting, dates_convert_from_index, ProgressBar
-from libs.utils import INDEXES
-from libs.utils import STANDARD_COLORS
-
+from libs.utils import generic_plotting, dates_convert_from_index, INDEXES, STANDARD_COLORS
 from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
+
+from .moving_average import simple_moving_avg, windowed_moving_avg
 
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]

@@ -1,12 +1,7 @@
 import os
-import shutil
-import glob
 import time
 import json
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
+from datetime import datetime
 
 from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS
 

@@ -2,9 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar, INDEXES
-from libs.utils import generic_plotting, dual_plotting
+from libs.utils import INDEXES, generic_plotting, dual_plotting
 from libs.features import normalize_signals
+
 from .moving_average import weighted_moving_avg, simple_moving_avg
 
 

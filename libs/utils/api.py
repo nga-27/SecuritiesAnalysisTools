@@ -1,6 +1,5 @@
 import os
 import json
-import pprint
 import requests
 
 import yfinance as yf

@@ -1,11 +1,11 @@
 import os
-from datetime import datetime
+
 import pandas as pd
 import numpy as np
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
-from libs.utils import generic_plotting, dual_plotting, bar_chart
-from libs.utils import dates_extractor_list, ProgressBar, INDEXES
+from libs.utils import generic_plotting, dual_plotting, bar_chart, dates_extractor_list, INDEXES
+
+from .moving_average import simple_moving_avg
 from .trends import get_trendlines, get_trendlines_regression
 
 

@@ -2,8 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, date_extractor
-from libs.utils import ProgressBar, INDEXES, STANDARD_COLORS
+from libs.utils import dual_plotting, date_extractor, INDEXES, STANDARD_COLORS
 from libs.features import normalize_signals
 
 from .ultimate_oscillator import ultimate_oscillator

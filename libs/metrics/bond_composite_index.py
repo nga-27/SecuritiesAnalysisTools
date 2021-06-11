@@ -13,7 +13,7 @@ import numpy as np
 
 from libs.tools import cluster_oscs, windowed_moving_avg
 from libs.utils import dual_plotting, generic_plotting
-from libs.utils import ProgressBar, index_appender, dates_extractor_list
+from libs.utils import ProgressBar, dates_extractor_list
 from libs.utils import download_data_indexes
 from libs.utils import STANDARD_COLORS
 

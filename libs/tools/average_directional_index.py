@@ -2,9 +2,9 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import ProgressBar, INDEXES
-from libs.utils import dual_plotting
+from libs.utils import INDEXES, dual_plotting
 from libs.features import normalize_signals
+
 from .trends import autotrend
 from .moving_average import exponential_moving_avg
 from .average_true_range import average_true_range
