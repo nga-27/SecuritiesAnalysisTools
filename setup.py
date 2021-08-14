@@ -13,10 +13,7 @@ pip install '.[test]' # install for MAC OS / zsh
 ```
 See: https://packaging.python.org/tutorials/installing-packages/#installing-setuptools-extras
 """
-import platform
-import re
-import subprocess
-from setuptools import find_packages, setup, Command
+from setuptools import find_packages, setup
 
 # Package meta-data.
 NAME = 'SecuritiesAnalysisTools'
