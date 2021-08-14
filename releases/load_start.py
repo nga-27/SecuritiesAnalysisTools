@@ -8,8 +8,8 @@ from libs.utils import TEXT_COLOR_MAP
 
 
 ################################
-_DEV_VERSION_ = '0.2.09'
-_DATE_REVISION_DEV_ = '2021-06-11'
+_DEV_VERSION_ = '0.2.10'
+_DATE_REVISION_DEV_ = '2021-08-14'
 ################################
 PROCESS_STEPS_DEV = 30
 PROCESS_STEPS_PROD = 30
@@ -43,8 +43,9 @@ def init_script(config: dict, **kwargs) -> list:
         print(" ")
 
         if release == 'dev':
-            print(
-                f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ [latest functionality, 'unclean' version]{NORMAL_COLOR}")
+            message = f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ "
+            message += f"[latest functionality, 'unclean' version]{NORMAL_COLOR}"
+            print(message)
 
             config = start_header(update_release=_DATE_REVISION_DEV_,
                                   version=_DEV_VERSION_, options=True)
