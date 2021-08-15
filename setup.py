@@ -5,10 +5,10 @@ Setup tools
 Use setuptools to install package dependencies. Instead of a requirements file you
 can install directly from this file.
 `pip install .`
-You can install test dependencies by targetting the appropriate key in extras_require
+You can install dev dependencies by targetting the appropriate key in extras_require
 ```
-pip install .[test] # install requires and test requires
-pip install '.[test]' # install for MAC OS / zsh
+pip install .[dev] # install requires and test requires
+pip install '.[dev]' # install for MAC OS / zsh
 
 ```
 See: https://packaging.python.org/tutorials/installing-packages/#installing-setuptools-extras
@@ -17,7 +17,7 @@ from setuptools import find_packages, setup
 
 # Package meta-data.
 NAME = 'SecuritiesAnalysisTools'
-DESCRIPTION = 'Technical analysis tools for securities (funds, stocks, bonds, equities).'
+DESCRIPTION = 'Technical analysis tools app for analyzing securities (funds, stocks, bonds, equities).'
 URL = 'https://github.mmm.com/nga-27/SecuritiesAnalysisTools'
 EMAIL = 'namell91@gmail.com'
 AUTHOR = 'Nick Amell'
