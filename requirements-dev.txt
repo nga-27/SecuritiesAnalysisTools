@@ -1,5 +1,0 @@
-# Requirements for development
--r requirements.txt
-pylint
-pylint-exit
-pycodestyle
