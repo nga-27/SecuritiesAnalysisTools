@@ -6,6 +6,12 @@
         "Interval": [
             "1d"
         ],
+        "Jobs": {
+            "2y": {
+                "Interval": "1d",
+                "Functions": "default"
+            }
+        },
         "Indexes": {
             "Market Sector": false,
             "Type Sector": true,
