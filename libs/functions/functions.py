@@ -461,7 +461,10 @@ def vq_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         max_close = max(data[fund]['Close'])
-        vq = get_volatility(fund, data=data[fund], max_close=max_close)
+        vq, errors = get_volatility(fund, data=data[fund], max_close=max_close)
+        if errors:
+            print(f"Errors found in Volatility: {errors}")
+            return
         vq_function_print(vq, fund)
 
 

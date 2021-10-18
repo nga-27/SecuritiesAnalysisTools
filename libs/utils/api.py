@@ -109,7 +109,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
             pb.uptick(increment=0.1)
 
     if function == 'all' or function == 'volatility':
-        metadata['volatility'] = get_volatility(
+        metadata['volatility'], _ = get_volatility(
             fund_ticker, max_close=max_close, data=dataset)
         if pb is not None:
             pb.uptick(increment=0.1)
@@ -744,7 +744,8 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
                 return vq
 
             r = response.json()
-            if response.status_code == 200:
+            errors = r.get('ErrorMessage')
+            if response.status_code == 200 and r.get('Success'):
                 val = None
                 for tick in r.get('Symbols', []):
                     if tick['Symbol'] == ticker_str:
@@ -775,9 +776,9 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
                     status, color, _ = vq_status_print(vq, ticker_str)
                     vq['status'] = {'status': status, 'color': color}
 
-            return vq
+            return vq, errors
 
-    return vq
+    return vq, "No valid json file"
 
 
 def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
