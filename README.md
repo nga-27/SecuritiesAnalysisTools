@@ -60,7 +60,7 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 * `0.2.06`, `2020-06-19` - .pptx design completely dictated by json; `--debug` introduced to surface errors instead of try/except
 * `0.2.08`, `2021-03-30` - Improved handling of short-living (<1yr) datasets; .pdf with `--debug`; locking of dependencies
 * `0.2.10`, `2021-08-14` - Upped `yfinance` (bugfix) & `matplotlib` versions; switched to `setup.py` for installation.
-* `0.2.11`, `2021-11-13` - Risk factor bug handling + modified metrics for low interest rates
+* `0.2.11`, `2021-11-23` - Risk factor bug handling + modified metrics for low interest rates
 
 
 ---
