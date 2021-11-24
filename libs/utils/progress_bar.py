@@ -110,7 +110,7 @@ class ProgressBar(object):
             seconds = int(self.clock % 60)
 
             if minutes > 0:
-                stopwatch += f"{minutes}m {seconds}s"
+                stopwatch += f"{minutes}m {seconds:02d}s"
             else:
                 stopwatch += f"{self.clock}s"
 

@@ -442,17 +442,18 @@ def risk_function(config: dict):
     for fund in fund_list:
         if fund != '^GSPC' and fund != '^IRX':
             print(
-                f"Risk Factors of {TICKER}{fund}{NORMAL}...")
+                f"\r\nRisk Factors of {TICKER}{fund}{NORMAL}...")
 
             meta_fund = get_api_metadata(fund, function='info')
             match_fund, match_data = function_sector_match(
                 meta_fund, data[fund], config)
 
             if match_fund is not None:
-                match_data = match_data[match_fund]
+                match_data = match_data.get(match_fund, data.get(match_fund))
 
             risk_comparison(data[fund], data['^GSPC'],
                             data['^IRX'], print_out=True, sector_data=match_data)
+            print("------")
 
 
 def vq_function(config: dict):
@@ -461,7 +462,10 @@ def vq_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         max_close = max(data[fund]['Close'])
-        vq = get_volatility(fund, data=data[fund], max_close=max_close)
+        vq, errors = get_volatility(fund, data=data[fund], max_close=max_close)
+        if errors:
+            print(f"Errors found in Volatility: {errors}")
+            return
         vq_function_print(vq, fund)
 
 

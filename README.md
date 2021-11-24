@@ -44,22 +44,23 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 
 ---
 # <a name="versions"></a>Notable Versioning / Releases
-* **`0.1.0, 2019-06-04`** - Release 1: outputting to pptx and json files; basic analysis; primarily plot based
-* `0.1.06, 2019-07-13` - Wide 16:9 ratio for pptx output
-* `0.1.11, 2019-08-13` - Upgraded requirements, some better documentation, and mutual fund time frame issue resolved
-* `0.1.13, 2019-08-18` - Architecture overhaul (now `app.py`), terminal input options, error handling, robust backward compatibility to release 1
-* `0.1.16, 2019-08-23` - Data download / formatting overhaul (a `dict()` of `pd.DataFrames`); fixes `NaN` fields
-* `0.1.19, 2019-11-10` - Dataset exportation to csv, expanded `functions` capability
-* `0.1.21, 2019-12-01` - API expansion, metadata from `yfinance`
-* `0.1.25, 2020-02-08` - Start of a normalized metric across all items (oscillators covered here)
-* `0.1.27, 2020-03-09` - Multi-period data analysis ('10y', '5y', '2y', '1y'; '1d', '1w', '1m')
-* `0.1.28, 2020-03-20` - PDF export of metrics, numerical details
-* **`0.2.0, 2020-03-22`** - Release 2: Reorganization of `dev` and `prod` as functions, stable base
-* `0.2.02, 2020-05-04` - Improved Windows compatibility, PDF having latest signals
-* `0.2.03, 2020-05-08` - NASIT 'ledger' simulator (more info below) introduced
-* `0.2.06, 2020-06-19` - .pptx design completely dictated by json; `--debug` introduced to surface errors instead of try/except
-* `0.2.08, 2021-03-30` - Improved handling of short-living (<1yr) datasets; .pdf with `--debug`; locking of dependencies
-* `0.2.10, 2021-08-14` - Upped `yfinance` (bugfix) & `matplotlib` versions; switched to `setup.py` for installation. 
+* **`0.1.0`, `2019-06-04`** - Release 1: outputting to pptx and json files; basic analysis; primarily plot based
+* `0.1.06`, `2019-07-13` - Wide 16:9 ratio for pptx output
+* `0.1.11`, `2019-08-13` - Upgraded requirements, some better documentation, and mutual fund time frame issue resolved
+* `0.1.13`, `2019-08-18` - Architecture overhaul (now `app.py`), terminal input options, error handling, robust backward compatibility to release 1
+* `0.1.16`, `2019-08-23` - Data download / formatting overhaul (a `dict()` of `pd.DataFrames`); fixes `NaN` fields
+* `0.1.19`, `2019-11-10` - Dataset exportation to csv, expanded `functions` capability
+* `0.1.21`, `2019-12-01` - API expansion, metadata from `yfinance`
+* `0.1.25`, `2020-02-08` - Start of a normalized metric across all items (oscillators covered here)
+* `0.1.27`, `2020-03-09` - Multi-period data analysis ('10y', '5y', '2y', '1y'; '1d', '1w', '1m')
+* `0.1.28`, `2020-03-20` - PDF export of metrics, numerical details
+* **`0.2.0`, `2020-03-22`** - Release 2: Reorganization of `dev` and `prod` as functions, stable base
+* `0.2.02`, `2020-05-04` - Improved Windows compatibility, PDF having latest signals
+* `0.2.03`, `2020-05-08` - NASIT 'ledger' simulator (more info below) introduced
+* `0.2.06`, `2020-06-19` - .pptx design completely dictated by json; `--debug` introduced to surface errors instead of try/except
+* `0.2.08`, `2021-03-30` - Improved handling of short-living (<1yr) datasets; .pdf with `--debug`; locking of dependencies
+* `0.2.10`, `2021-08-14` - Upped `yfinance` (bugfix) & `matplotlib` versions; switched to `setup.py` for installation.
+* `0.2.11`, `2021-11-13` - Risk factor bug handling + modified metrics for low interest rates
 
 
 ---
