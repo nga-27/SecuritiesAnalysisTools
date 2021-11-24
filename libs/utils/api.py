@@ -606,7 +606,7 @@ def api_sector_match(sector: str, config: dict, fund_len=None, **kwargs) -> list
         # To save downloads, if the matched items are already in the ticker list, simply use them
         tickers = config.get('tickers', '').split(' ')
         if matched in tickers:
-            return matched, None
+            return matched, {}
 
         fund_data = download_single_fund(
             matched, config, period=period, interval=interval, fund_len=fund_len)

@@ -200,6 +200,8 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
 
                 if match_data is None:
                     match_data = full_data_dict
+                elif match_data == {}:
+                    match_data = full_data_dict[match_fund]
                 sector = match_fund
                 sector_data = match_data
                 sector_bench = match_data[match_fund]

@@ -1,5 +1,8 @@
+from typing import Tuple
+
 import pandas as pd
 import numpy as np
+
 from scipy.stats import linregress
 
 
@@ -220,13 +223,14 @@ def risk_comparison(fund: pd.DataFrame,
     rsqd = np.round(rsqd, 4)
 
     fund_return, fund_stdev = get_returns(fund)
-    bench_return, _ = get_returns(benchmark)
+    bench_return, bench_stdev = get_returns(benchmark)
     treas_return = treasury['Close'][-1]
 
     alpha_sector = "n/a"
     beta_sector = "n/a"
     rsqd_sector = "n/a"
     sharpe_ratio = "n/a"
+    market_sharpe = "n/a"
 
     if sector_data is not None:
         sector_return, _ = get_returns(sector_data)
@@ -241,6 +245,9 @@ def risk_comparison(fund: pd.DataFrame,
 
     if fund_stdev != 0.0:
         sharpe_ratio = np.round((fund_return - treas_return) / fund_stdev, 4)
+        if bench_stdev != 0.0:
+            bench_sharpe = np.round((bench_return - treas_return) / bench_stdev, 4)
+            market_sharpe = np.round(sharpe_ratio / bench_sharpe, 4)
 
     fund_stdev = np.round(fund_stdev, 4)
 
@@ -248,10 +255,18 @@ def risk_comparison(fund: pd.DataFrame,
     alpha['beta'] = {"market": beta}
     alpha['r_squared'] = {"market": rsqd}
     alpha['sharpe'] = sharpe_ratio
+    alpha['market_sharpe'] = market_sharpe
     alpha['standard_deviation'] = fund_stdev
-    alpha['returns'] = {'fund': fund_return,
-                        'benchmark': bench_return,
-                        'treasury': treas_return}
+    alpha['returns'] = {
+        'fund': fund_return,
+        'benchmark': bench_return,
+        'treasury': treas_return
+    }
+
+    _, _, fund_interval_std = get_interval_standard_dev(fund)
+    _, _, bench_interval_std = get_interval_standard_dev(benchmark)
+
+    alpha['standard_dev_ratio'] = np.round(fund_interval_std/bench_interval_std, 4)
 
     if sector_data is not None:
         alpha['returns']["sector"] = sector_return
@@ -267,7 +282,9 @@ def risk_comparison(fund: pd.DataFrame,
         print(f"R-Squared Market:\t{rsqd}")
         print(f"R-Squared Sector:\t{rsqd_sector}")
         print(f"Sharpe Ratio:\t\t{sharpe_ratio}")
+        print(f"Market Sharpe:\t\t{market_sharpe}")
         print(f"Standard Dev:\t\t{fund_stdev}")
+        print(f"Market Ratio SD:\t{alpha['standard_dev_ratio']}")
 
     return alpha
 
@@ -346,3 +363,23 @@ def get_returns(data: pd.DataFrame, output='annual') -> list:
         returns /= 4.0
 
     return returns, stdevs
+
+
+def get_interval_standard_dev(data: pd.DataFrame, interval: int=250) -> Tuple[float, float, float]:
+    """get_return_standard_dev
+
+    Mean, Median, Std of return rates from day-to-day
+
+    Args:
+        data (pd.DataFrame): fund dataset
+        interval (int, optional): trading periods. Defaults to 250.
+
+    Returns:
+        Tuple[float, float, float]: mean, median, std
+    """
+    data_slice = data['Adj Close'][-interval:]
+    returns = [0.0] * len(data_slice)
+    for i in range(1, len(data_slice)):
+        returns[i] = (data_slice[i] - data_slice[i-1]) / data_slice[i-1]
+
+    return np.mean(returns), np.median(returns), np.std(returns)
