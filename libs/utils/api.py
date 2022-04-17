@@ -698,10 +698,10 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
             try:
                 response = requests.get(url, timeout=TIMEOUT)
             except:
-                print(
-                    f"{WARNING}Exception: VQ Server failed to respond on initial VQ inquiry. " +
-                    f"No data returned.{NORMAL}\r\n")
-                return vq
+                errors = f"{WARNING}Exception: VQ Server failed to respond on initial VQ inquiry. " + \
+                    f"No data returned.{NORMAL}\r\n"
+                print(errors)
+                return vq, errors
 
             try:
                 r = response.json()
@@ -713,7 +713,8 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
                 print(f"{WARNING}Volatility Quotient failed on {ticker_str} request: " +
                       f"'{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}\r\n")
                 print("")
-                return vq
+                errors = r.get('ErrorMessage', 'Failure on pulling VQ. Check valid key.')
+                return vq, errors
 
             r = response.json()
 
@@ -738,10 +739,9 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
             try:
                 response = requests.get(url, timeout=TIMEOUT)
             except:
-                print(
-                    f"{WARNING}Exception: VQ Server failed to respond for ticker lookup. " +
-                    f"No data returned.{NORMAL}\r\n")
-                return vq
+                errors = f"{WARNING}Exception: VQ Server failed to respond for ticker lookup. " + \
+                    f"No data returned.{NORMAL}\r\n"
+                return vq, errors
 
             r = response.json()
             errors = r.get('ErrorMessage')
