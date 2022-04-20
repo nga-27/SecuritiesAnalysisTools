@@ -13,6 +13,8 @@ pip install '.[dev]' # install for MAC OS / zsh
 ```
 See: https://packaging.python.org/tutorials/installing-packages/#installing-setuptools-extras
 """
+import re
+import subprocess
 from setuptools import find_packages, setup
 
 # Package meta-data.
@@ -38,6 +40,7 @@ REQUIRES = [
     "XlsxWriter==1.2.6",
     "python-pptx==0.6.18",
     "yfinance==0.1.63",
+    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@7bd332cddf122a09d96774dbde8f5bd578d08b0c"
 ]
 
 REQUIRES_DEV = [
@@ -49,6 +52,21 @@ REQUIRES_DEV = [
     'pytest-cov==2.11.1',
     'pylint-fail-under==0.3.0',
 ]
+
+def has_ssh() -> bool:
+    result = None
+    which_ssh = subprocess.run(['which', 'ssh'])
+    if which_ssh.returncode == 0:
+        result = subprocess.Popen(['ssh', '-Tq', 'git@github.com', '&>', '/dev/null'])
+        result.communicate()
+    if not result or result.returncode == 255:
+        return False
+    return True
+
+def flip_ssh(requires: list) -> list:
+    if not has_ssh():
+        requires = list(map(lambda x: re.sub(r'ssh://git@', 'https://', x), requires))
+    return requires
 
 setup(
     name=NAME,
@@ -66,9 +84,9 @@ setup(
             "tests"
         ]
     ),
-    install_requires=REQUIRES,
+    install_requires=flip_ssh(REQUIRES),
     extras_require={
-        'dev': REQUIRES_DEV,
+        'dev': flip_ssh(REQUIRES_DEV),
     },
     include_package_data=True,
     license='UNLICENSED',
