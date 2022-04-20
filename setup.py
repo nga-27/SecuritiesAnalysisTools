@@ -40,7 +40,7 @@ REQUIRES = [
     "XlsxWriter==1.2.6",
     "python-pptx==0.6.18",
     "yfinance==0.1.63",
-    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@7bd332cddf122a09d96774dbde8f5bd578d08b0c"
+    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@main"
 ]
 
 REQUIRES_DEV = [
