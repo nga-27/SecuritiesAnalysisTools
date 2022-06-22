@@ -30,7 +30,7 @@ REQUIRES = [
     "fpdf==1.7.2",
     "matplotlib==3.3.3",
     "multitasking==0.0.7",
-    "numpy==1.20.2",
+    "numpy==1.22.0",
     "pandas==1.2.4",
     "requests==2.25",
     "scipy==1.6.2",
