@@ -13,6 +13,8 @@ pip install '.[dev]' # install for MAC OS / zsh
 ```
 See: https://packaging.python.org/tutorials/installing-packages/#installing-setuptools-extras
 """
+import re
+import subprocess
 from setuptools import find_packages, setup
 
 # Package meta-data.
@@ -22,7 +24,7 @@ URL = 'https://github.mmm.com/nga-27/SecuritiesAnalysisTools'
 EMAIL = 'namell91@gmail.com'
 AUTHOR = 'Nick Amell'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '0.2.10'
+VERSION = '0.2.13'
 
 # What packages are required for this module to be executed?
 REQUIRES = [
@@ -30,14 +32,14 @@ REQUIRES = [
     "fpdf==1.7.2",
     "matplotlib==3.3.3",
     "multitasking==0.0.7",
-    "numpy==1.20.2",
-    "pandas==1.2.4",
-    "requests==2.25",
-    "scipy==1.6.2",
+    "numpy==1.24.1",
+    "pandas==1.5.2",
+    "scipy==1.9.3",
     "xlrd==1.2.0",
     "XlsxWriter==1.2.6",
     "python-pptx==0.6.18",
-    "yfinance==0.1.63",
+    "yfinance==0.2.3",
+    # "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@main"
 ]
 
 REQUIRES_DEV = [
@@ -49,6 +51,21 @@ REQUIRES_DEV = [
     'pytest-cov==2.11.1',
     'pylint-fail-under==0.3.0',
 ]
+
+def has_ssh() -> bool:
+    result = None
+    which_ssh = subprocess.run(['which', 'ssh'])
+    if which_ssh.returncode == 0:
+        result = subprocess.Popen(['ssh', '-Tq', 'git@github.com', '&>', '/dev/null'])
+        result.communicate()
+    if not result or result.returncode == 255:
+        return False
+    return True
+
+def flip_ssh(requires: list) -> list:
+    if not has_ssh():
+        requires = list(map(lambda x: re.sub(r'ssh://git@', 'https://', x), requires))
+    return requires
 
 setup(
     name=NAME,
@@ -66,9 +83,9 @@ setup(
             "tests"
         ]
     ),
-    install_requires=REQUIRES,
+    install_requires=flip_ssh(REQUIRES),
     extras_require={
-        'dev': REQUIRES_DEV,
+        'dev': flip_ssh(REQUIRES_DEV),
     },
     include_package_data=True,
     license='UNLICENSED',

@@ -21,13 +21,6 @@ from .plotting import generic_plotting
     Obtains "Volatility Quotient" (VQ) from Tradestops.com
 """
 
-VQ_API_BASE_URL = "https://sts.tradesmith.com/api/StsApiService/"
-VQ_VALUES_PARAM = "get-sts-values/"
-VQ_LOOKUP_PARAM = "search-symbol/"
-VQ_DEEP_ANALYSIS_PARAM = "get-tmc-data/"
-
-TRADESTOPS_URL = "https://tradestops.com/investment-calculator/"
-
 WARNING = STANDARD_COLORS["warning"]
 FUND = STANDARD_COLORS["ticker"]
 NORMAL = STANDARD_COLORS["normal"]
@@ -51,9 +44,10 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     Returns:
         dict -- contains all financial metadata available
     """
+    if fund_ticker in INDEXES:
+        return {}
+
     pb = kwargs.get('progress_bar', None)
-    max_close = kwargs.get('max_close', None)
-    dataset = kwargs.get('data')
     plot_output = kwargs.get('plot_output', False)
     function = kwargs.get('function', 'all')
 
@@ -76,6 +70,11 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     if function == 'all' or function == 'info':
         metadata['info'] = AVAILABLE_KEYS.get('info')(
             ticker, st_tick, force_holdings=False)
+
+    if ticker.info.get('holdings'):
+        # ETFs, Mutual Funds, and other indexes will have these but will output an ugly print
+        # on financial data below, so let's just return what we have now.
+        return metadata
 
     if pb is not None:
         pb.uptick(increment=0.2)
@@ -105,12 +104,6 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     if function == 'all':
         # EPS needs some other figures to make it correct, but ok for now.
         metadata['eps'] = calculate_eps(metadata)
-        if pb is not None:
-            pb.uptick(increment=0.1)
-
-    if function == 'all' or function == 'volatility':
-        metadata['volatility'], _ = get_volatility(
-            fund_ticker, max_close=max_close, data=dataset)
         if pb is not None:
             pb.uptick(increment=0.1)
 
@@ -191,17 +184,12 @@ def get_financials(ticker, st):
         dict -- finance data object
     """
     try:
-        t = ticker.financials
+        t = ticker.income_stmt
         fin = {index: list(row) for index, row in t.iterrows()}
         fin['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
 
     except:
-        try:
-            t = st.financials
-            fin = {index: list(row) for index, row in t.iterrows()}
-            fin['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
-        except:
-            fin = dict()
+        fin = {}
 
     return fin
 
@@ -222,12 +210,7 @@ def get_balance_sheet(ticker, st):
         bal['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
 
     except:
-        try:
-            t = st.balance_sheet
-            bal = {index: list(row) for index, row in t.iterrows()}
-            bal['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
-        except:
-            bal = dict()
+        bal = {}
 
     return bal
 
@@ -248,12 +231,7 @@ def get_cashflow(ticker, st):
         cash['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
 
     except:
-        try:
-            t = st.balance_sheet
-            cash = {index: list(row) for index, row in t.iterrows()}
-            cash['dates'] = [col.strftime('%Y-%m-%d') for col in t.columns]
-        except:
-            cash = dict()
+        cash = {}
 
     return cash
 
@@ -268,39 +246,25 @@ def get_earnings(ticker, st):
     Returns:
         dict -- Earnings data object
     """
-    earn = dict()
+    earn = {}
 
     try:
         t = ticker.earnings
-        ey = dict()
+        ey = {}
         ey['period'] = list(t.index)
         ey['revenue'] = [r for r in t['Revenue']]
         ey['earnings'] = [e for e in t['Earnings']]
         earn['yearly'] = ey
         q = ticker.quarterly_earnings
-        eq = dict()
+        eq = {}
         eq['period'] = list(q.index)
         eq['revenue'] = [r for r in q['Revenue']]
         eq['earnings'] = [e for e in t['Earnings']]
         earn['quarterly'] = eq
 
     except:
-        try:
-            t = st.earnings
-            ey = dict()
-            ey['period'] = list(t.index)
-            ey['revenue'] = [r for r in t['Revenue']]
-            ey['earnings'] = [e for e in t['Earnings']]
-            earn['yearly'] = ey
-            q = st.quarterly_earnings
-            eq = dict()
-            eq['period'] = list(q.index)
-            eq['revenue'] = [r for r in q['Revenue']]
-            eq['earnings'] = [e for e in t['Earnings']]
-            earn['quarterly'] = eq
-        except:
-            earn['yearly'] = {}
-            earn['quarterly'] = {}
+        earn['yearly'] = {}
+        earn['quarterly'] = {}
 
     return earn
 

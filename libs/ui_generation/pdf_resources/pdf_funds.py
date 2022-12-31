@@ -43,7 +43,7 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
             pdf.add_page()
             pdf = fund_title(pdf, name)
             pdf = fund_statistics(pdf, fund_data, sample_view=views)
-            pdf = fund_volatility(pdf, fund_data)
+            # pdf = fund_volatility(pdf, fund_data)
             pdf = beta_rsq(pdf, fund_data)
 
             for period in fund_data['synopsis']:

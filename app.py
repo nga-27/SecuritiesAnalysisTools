@@ -16,8 +16,8 @@ from libs.utils import start_header, logo_renderer
 from releases.technical_analysis import technical_analysis, clock_management
 
 ################################
-_VERSION_ = '0.2.12'
-_DATE_REVISION_ = '2022-04-17'
+_VERSION_ = '0.2.13'
+_DATE_REVISION_ = '2022-12-31'
 ################################
 
 
