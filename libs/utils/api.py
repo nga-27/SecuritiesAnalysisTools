@@ -1,17 +1,18 @@
 import os
 import json
-import requests
+from typing import Tuple
+
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 import yfinance as yf
 import pandas as pd
 import numpy as np
 
-from datetime import datetime
-from dateutil.relativedelta import relativedelta
+from intellistop import IntelliStop
 
 import libs.utils.stable_yf as styf
 
-from .progress_bar import ProgressBar
 from .data import download_single_fund, download_data_indexes
 from .constants import STANDARD_COLORS, INDEXES, PRINT_CONSTANTS
 from .plotting import generic_plotting
@@ -44,9 +45,6 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     Returns:
         dict -- contains all financial metadata available
     """
-    if fund_ticker in INDEXES:
-        return {}
-
     pb = kwargs.get('progress_bar', None)
     plot_output = kwargs.get('plot_output', False)
     function = kwargs.get('function', 'all')
@@ -68,14 +66,18 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
 
     if function == 'all' or function == 'info':
-        metadata['info'] = AVAILABLE_KEYS.get('info')(
-            ticker, st_tick, force_holdings=False)
+        metadata['info'] = AVAILABLE_KEYS.get('info')(ticker, st_tick, force_holdings=False)
 
-    if ticker.info.get('holdings'):
+    if function == 'all' or function == 'volatility':
+        metadata['volatility'] = get_volatility(fund_ticker)
+        if pb is not None:
+            pb.uptick(increment=0.1)
+
+    if ticker.info.get('holdings') or fund_ticker in INDEXES:
         # ETFs, Mutual Funds, and other indexes will have these but will output an ugly print
         # on financial data below, so let's just return what we have now.
-        api_print += "  Canceled. (Fund is a mutual fund or ETF)"
-        print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
+        api_print += "  Canceled. (Fund is a mutual fund, ETF, or index.)"
+        print(f"{REVERSE_LINE}{REVERSE_LINE}{REVERSE_LINE}{api_print}")
         return metadata
 
     if pb is not None:
@@ -113,7 +115,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         metadata['altman_z'] = AVAILABLE_KEYS.get('altman_z')(metadata)
 
     api_print += "  Done."
-    print(f"{REVERSE_LINE}{REVERSE_LINE}{api_print}")
+    print(f"{REVERSE_LINE}{REVERSE_LINE}{REVERSE_LINE}{api_print}")
 
     return metadata
 
@@ -623,192 +625,60 @@ def api_sector_funds(sector_fund: str, config: dict, fund_len=None, **kwargs) ->
 #####################################################
 
 
-def get_volatility(ticker_str: str, **kwargs) -> dict:
+def get_volatility(ticker_str: str) -> dict:
     """Get Volatility
 
     Arguments:
         ticker_str {str} -- ticker of fund
 
-    Optional Args:
-        max_close {float} -- highest close of a fund recently (default: {None})
-        data {pd.DataFrame} -- fund dataset (default: {None})
-
     Returns:
         dict -- volatility quotient data object
     """
-    max_close = kwargs.get('max_close', None)
-    dataset = kwargs.get('data')
+    volatility_factor = {}
+    ticker_str = ticker_str.upper()
 
-    TIMEOUT = 5
-    is_SP500 = False
-    vq = {}
+    stops = IntelliStop()
+    vf_data = stops.run_analysis_for_ticker(ticker_str)
+    close = stops.return_data(ticker_str)
 
-    json_path = ''
-    if os.path.exists('core.json'):
-        json_path = 'core.json'
-    elif os.path.exists('test.json'):
-        json_path = 'test.json'
+    volatility_factor = {
+        "VF": np.round(vf_data.vf.curated, 3),
+        "stop_loss": np.round(vf_data.stop_loss.curated, 2),
+        "latest_price": close[-1],
+        "last_max": {
+            "Date": vf_data.current_status.max_price_date,
+            "Price": np.round(vf_data.current_status.max_price, 2)
+        },
+        "stopped_out": "OK" if vf_data.current_status.status.value != "stopped_out" else "stopped_out"
+    }
 
-    if os.path.exists(json_path):
-        with open(json_path) as json_file:
-            core = json.load(json_file)
-            key = core.get("Keys", {}).get("Volatility_Quotient", "")
-            ticker_str = ticker_str.upper()
+    if vf_data.current_status.status.value == "stopped_out":
+        volatility_factor['stop_loss'] = 0.0
+    
+    status, color = volatility_factor_status_print(vf_data.current_status.status.value)
+    volatility_factor['status'] = {'status': status, 'color': color}
 
-            if ticker_str == '^GSPC':
-                ticker_str = 'SPY'
-                is_SP500 = True
-
-            url = f"{VQ_API_BASE_URL}{VQ_VALUES_PARAM}{key}/{ticker_str}"
-
-            try:
-                response = requests.get(url, timeout=TIMEOUT)
-            except:
-                errors = f"{WARNING}Exception: VQ Server failed to respond on initial VQ inquiry. " + \
-                    f"No data returned.{NORMAL}\r\n"
-                print(errors)
-                return vq, errors
-
-            try:
-                r = response.json()
-            except:
-                r = {}
-
-            if response.status_code != 200:
-                print("")
-                print(f"{WARNING}Volatility Quotient failed on {ticker_str} request: " +
-                      f"'{r.get('ErrorMessage', 'Failure.')}'. Check valid key.{NORMAL}\r\n")
-                print("")
-                errors = r.get('ErrorMessage', 'Failure on pulling VQ. Check valid key.')
-                return vq, errors
-
-            r = response.json()
-
-            vq = {"VQ": r.get("StsPercentValue", ""), "stop_loss": r.get(
-                "StopPriceLong", ""), "latest_price": r.get("LatestClose")}
-            vq['last_max'] = r.get('LastMax')
-            if vq['last_max'] is None:
-                vq['last_max'] = {"Date": "n/a", "Price": "n/a"}
-
-            if is_SP500 and max_close is not None:
-                max_close = np.round(max_close, 2)
-                if vq.get('last_max', {}).get('Price') is not None:
-                    # Adjust for converting back from SPY to ^GSPC
-                    multiplier = max_close / vq['last_max']['Price']
-                    vq['latest_price'] = vq['latest_price'] * multiplier
-
-                vq['last_max'] = {"Date": "n/a", "Price": max_close}
-                ratio = (100.0 - vq['VQ']) / 100.0
-                vq['stop_loss'] = np.round(ratio * vq['last_max']['Price'], 2)
-
-            url = f"{VQ_API_BASE_URL}{VQ_LOOKUP_PARAM}{key}/{ticker_str}/20"
-            try:
-                response = requests.get(url, timeout=TIMEOUT)
-            except:
-                errors = f"{WARNING}Exception: VQ Server failed to respond for ticker lookup. " + \
-                    f"No data returned.{NORMAL}\r\n"
-                return vq, errors
-
-            r = response.json()
-            errors = r.get('ErrorMessage')
-            if response.status_code == 200 and r.get('Success'):
-                val = None
-                for tick in r.get('Symbols', []):
-                    if tick['Symbol'] == ticker_str:
-                        val = tick["SymbolId"]
-                        break
-
-                if val is not None:
-                    now = datetime.now()
-                    start = now - relativedelta(years=10)
-                    start_str = start.strftime('%Y-%m-%d')
-                    now_str = now.strftime('%Y-%m-%d')
-
-                    url = \
-                        f"{VQ_API_BASE_URL}{VQ_DEEP_ANALYSIS_PARAM}{key}/{val}/{start_str}/{now_str}"
-                    try:
-                        response = requests.get(url, timeout=TIMEOUT)
-                    except:
-                        print(
-                            f"{WARNING}Exception: VQ Server failed to respond for deep analysis. " +
-                            f"No data returned.{NORMAL}\r\n")
-                        return vq
-
-                    r = response.json()
-                    if response.status_code == 200:
-                        vq['analysis'] = r
-
-                    vq['stopped_out'] = vq_stop_out_check(dataset, vq)
-                    status, color, _ = vq_status_print(vq, ticker_str)
-                    vq['status'] = {'status': status, 'color': color}
-
-            return vq, errors
-
-    return vq, "No valid json file"
+    return volatility_factor
 
 
-def vq_stop_out_check(dataset: pd.DataFrame, vq_obj: dict) -> str:
-    """VQ Stop Out Check
+def volatility_factor_status_print(vf_data_status: str) -> Tuple[str, str]:
+    """VF Status Print
 
     Arguments:
-        dataset {pd.DataFrame} -- fund dataset
-        vq_obj {dict} -- volatility quotient object
-
-    Returns:
-        str -- 'OK' or 'Stopped Out' (or 'n/a') status
-    """
-    stop_loss = vq_obj.get('stop_loss', 'n/a')
-    max_date = vq_obj.get('last_max', {}).get('Date')
-
-    if (max_date == 'n/a') or (stop_loss == 'n/a') or (dataset is None) or (stop_loss is None):
-        return 'n/a'
-
-    max_date = datetime.strptime(max_date, '%m/%d/%Y')
-    for i in range(len(dataset['Close'])-1, -1, -1):
-        if dataset.index[i] < max_date:
-            return 'OK'
-        if dataset['Close'][i] < stop_loss:
-            return 'Stopped Out'
-    return 'OK'
-
-
-def vq_status_print(vq: dict, fund: str) -> list:
-    """VQ Status Print
-
-    Arguments:
-        vq {dict} -- volatility quotient data object
+        vf_data_status {dict} -- volatility quotient data object
         fund {str} -- fund name
 
     Returns:
-        list -- status message, status color, and % away from highest close
+        Tuple[str, str] -- status message, status color
     """
-    if not vq:
-        return 'n/a', 'red', 0.0
-
-    last_max = vq.get('last_max', {}).get('Price')
-    stop_loss = vq.get('stop_loss')
-    latest = vq.get('latest_price')
-    stop_status = vq.get('stopped_out')
-
-    if (last_max == 'n/a') or (stop_loss == 'n/a') or (stop_loss is None):
-        return 'n/a', 'red', 0.0
-
-    mid_pt = (last_max + stop_loss) / 2.0
-    amt_latest = latest - stop_loss
-    amt_max = last_max - stop_loss
-    percent = np.round(amt_latest / amt_max * 100.0, 2)
-
-    if stop_status == 'Stopped Out':
+    if vf_data_status == "stopped_out":
         status_color = 'red'
         status_message = "AVOID - Stopped Out"
-    elif latest < stop_loss:
-        status_color = 'red'
-        status_message = "AVOID - Stopped Out"
-    elif latest < mid_pt:
+    elif vf_data_status == "caution_zone":
         status_color = 'yellow'
         status_message = "CAUTION - Hold"
     else:
         status_color = 'green'
         status_message = "GOOD - Buy / Maintain"
 
-    return status_message, status_color, percent
+    return status_message, status_color
