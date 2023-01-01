@@ -128,8 +128,8 @@ def only_functions_handler(config: dict):
         demand_function(config)
     if 'alpha' in config['run_functions']:
         risk_function(config)
-    if 'vq' in config['run_functions']:
-        vq_function(config)
+    if 'vf' in config['run_functions']:
+        vf_function(config)
     if 'nf' in config['run_functions']:
         nasit_generation_function(config)
     if 'nfnow' in config['run_functions']:
@@ -456,17 +456,13 @@ def risk_function(config: dict):
             print("------")
 
 
-def vq_function(config: dict):
+def vf_function(config: dict):
     print(f"Volatility & Stop Losses for funds...")
     print(f"")
     data, fund_list = function_data_download(config)
     for fund in fund_list:
-        max_close = max(data[fund]['Close'])
-        vq, errors = get_volatility(fund, data=data[fund], max_close=max_close)
-        if errors:
-            print(f"Errors found in Volatility: {errors}")
-            return
-        vq_function_print(vq, fund)
+        vf = get_volatility(fund)
+        vf_function_print(vf, fund)
 
 
 def nasit_generation_function(config: dict, print_only=False):
@@ -678,39 +674,31 @@ def function_sector_match(meta: dict, fund_data: pd.DataFrame, config: dict) -> 
     return None, None
 
 
-def vq_function_print(vq: dict, fund: str):
-    if not vq:
+def vf_function_print(volatility_factor: dict, fund: str):
+    if not volatility_factor:
         return
-    last_max = vq.get('last_max', {}).get('Price')
-    stop_loss = vq.get('stop_loss')
-    latest = vq.get('latest_price')
-    stop_status = vq.get('stopped_out')
+    last_max = volatility_factor.get('last_max', {}).get('Price')
+    stop_loss = volatility_factor.get('stop_loss')
+    latest = volatility_factor.get('latest_price')
+    real_status = volatility_factor.get('real_status', '')
 
-    mid_pt = (last_max + stop_loss) / 2.0
-    amt_latest = latest - stop_loss
-    amt_max = last_max - stop_loss
-    percent = np.round(amt_latest / amt_max * 100.0, 2)
-
-    if stop_status == 'Stopped Out':
+    if real_status == 'stopped_out':
         status_color = DOWN_COLOR
         status_message = "AVOID - Stopped Out"
-    elif latest < stop_loss:
-        status_color = DOWN_COLOR
-        status_message = "AVOID - Stopped Out"
-    elif latest < mid_pt:
+    elif real_status == 'caution_zone':
         status_color = SIDEWAYS_COLOR
         status_message = "CAUTION - Hold"
     else:
         status_color = UP_COLOR
         status_message = "GOOD - Buy / Maintain"
 
-    print(
-        f"{TICKER}{fund}{NORMAL} Volatility Quotient (VQ): {vq.get('VQ')}")
-    print(f"Current Price: ${latest}")
+    print("\r\n")
+    print(f"{TICKER}{fund}{NORMAL} Volatility Factor (VF): {volatility_factor.get('VF')}")
+    print(f"Current Price: ${np.round(latest, 2)}")
     print(f"Stop Loss price: ${stop_loss}")
     print(
-        f"Most recent high: ${last_max} on {vq.get('last_max', {}).get('Date')}")
-    print(f"Status:  {status_color}{status_message}{NORMAL} ({percent}%)")
+        f"Most recent high: ${last_max} on {volatility_factor.get('last_max', {}).get('Date')}")
+    print(f"Status:  {status_color}{status_message}{NORMAL}")
     print("")
 
 

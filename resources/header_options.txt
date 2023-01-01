@@ -76,7 +76,7 @@ TOOL FUNCTIONS:     :       (e.g. '--f --trend --corr --rsi vti AAPL amzn' ) REQ
 --syn               :       run {Synopsis} for funds (metrics); "--synopsis" also supported
 --trend             :       run {Trendline} analysis for a fund
 --ultimate          :       run {Ultimate Oscillator} function for funds; "--ult" also supported
---vq                :       run {Volatility Quotient} for funds; "--stop_loss" also supported
+--vf                :       run {Volatility Factor} for funds; "--stop_loss" also supported
 
 CUSTOM FUNCTIONS:   :       (e.g. '--f --nasit) REQUIRES --function flag
 

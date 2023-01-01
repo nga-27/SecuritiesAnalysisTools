@@ -62,6 +62,7 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 * `0.2.10`, `2021-08-14` - Upped `yfinance` (bugfix) & `matplotlib` versions; switched to `setup.py` for installation.
 * `0.2.11`, `2021-11-23` - Risk factor bug handling + modified metrics for low interest rates
 * `0.2.12`, `2022-04-17` - Better error handling of VQ failures, notably since API is no longer available.
+* `0.2.14`, `2023-01-01` - Integration of `Intellistop` (replacement for VQ)
 
 
 ---

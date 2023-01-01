@@ -203,13 +203,13 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     end = 10
 
     if has_vf:
-        table.cell(end+1, 0).text = 'Volatility Quotient'
+        table.cell(end+1, 0).text = 'Volatility Factor'
         table.cell(end+1, 1).text = str(volatility_factor)
         table.cell(end+2, 0).text = 'Stop Loss'
         table.cell(end+2, 1).text = str(stop_loss)
         table.cell(end+3, 0).text = 'Last High Close'
         table.cell(end+3, 1).text = str(high_close)
-        table.cell(end+4, 0).text = 'VQ Status'
+        table.cell(end+4, 0).text = 'VF Status'
         table.cell(end+4, 1).text = str(status)
 
         table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(vf_color)

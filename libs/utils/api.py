@@ -19,7 +19,7 @@ from .plotting import generic_plotting
 
 """
     Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
-    Obtains "Volatility Quotient" (VQ) from Tradestops.com
+    Obtains "Volatility Factor" (VF) from Intellistop
 """
 
 WARNING = STANDARD_COLORS["warning"]
@@ -37,8 +37,6 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
 
     Optional Args:
         progress_bar {ProgressBar} -- (default: {None})
-        max_close {float} -- max close for a period, for VQ (default: {None})
-        data {pd.DataFrame} -- dataset, primarily for VQ (default: {None})
         plot_output {bool} -- 'Ratings by Firms' (default: {False})
         function {str} -- specific metadata functions (default: {'all'})
 
@@ -649,7 +647,8 @@ def get_volatility(ticker_str: str) -> dict:
             "Date": vf_data.current_status.max_price_date,
             "Price": np.round(vf_data.current_status.max_price, 2)
         },
-        "stopped_out": "OK" if vf_data.current_status.status.value != "stopped_out" else "stopped_out"
+        "stopped_out": "OK" if vf_data.current_status.status.value != "stopped_out" else "stopped_out",
+        "real_status": vf_data.current_status.status.value
     }
 
     if vf_data.current_status.status.value == "stopped_out":
