@@ -24,32 +24,25 @@ URL = 'https://github.mmm.com/nga-27/SecuritiesAnalysisTools'
 EMAIL = 'namell91@gmail.com'
 AUTHOR = 'Nick Amell'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '0.2.13'
+VERSION = '0.2.14'
 
 # What packages are required for this module to be executed?
 REQUIRES = [
-    "decorator>=4.3.0",
     "fpdf==1.7.2",
-    "matplotlib==3.3.3",
-    "multitasking==0.0.7",
+    "matplotlib==3.5.1",
     "numpy==1.24.1",
     "pandas==1.5.2",
     "scipy==1.9.3",
     "xlrd==1.2.0",
     "XlsxWriter==1.2.6",
     "python-pptx==0.6.18",
+    'colorama==0.4.3',
     "yfinance==0.2.3",
-    # "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@main"
+    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@88b156dd76fcc473d8cd9caa1f53a12508d2bb1f"
 ]
 
 REQUIRES_DEV = [
-    'colorama==0.4.3',
-    'pylint==2.7.4',
-    'pycodestyle==2.6.0',
-    'pytest==6.2.3',
-    'pytest-env==0.6.2',
-    'pytest-cov==2.11.1',
-    'pylint-fail-under==0.3.0',
+    'pylint==2.9.6',
 ]
 
 def has_ssh() -> bool:
@@ -88,7 +81,7 @@ setup(
         'dev': flip_ssh(REQUIRES_DEV),
     },
     include_package_data=True,
-    license='UNLICENSED',
+    license='MIT',
     classifiers=[
         # Trove classifiers
         # Full list: https://pypi.python.org/pypi?%3Aaction=list_classifiers

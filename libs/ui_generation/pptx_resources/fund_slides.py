@@ -106,21 +106,19 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     table_width = Inches(2.4)
     table_height = Inches(1.4)
 
-    vq = analysis[fund].get('metadata', {}).get(
-        'volatility', {}).get('VQ')
-    has_vq = False
+    volatility_factor = analysis[fund].get('metadata', {}).get('volatility', {}).get('VF')
+    has_vf = False
     rows = 11
 
-    if vq is not None:
-        has_vq = True
+    if volatility_factor is not None:
+        has_vf = True
         rows = rows + 4
-        stop_loss = analysis[fund].get('metadata', {}).get(
-            'volatility', {}).get('stop_loss')
+        stop_loss = analysis[fund].get('metadata', {}).get('volatility', {}).get('stop_loss')
         high_close = analysis[fund].get('metadata', {}).get(
             'volatility', {}).get('last_max', {}).get('Price', 'n/a')
         status = analysis[fund].get('metadata', {}).get(
             'volatility', {}).get('status', {}).get('status', 'n/a')
-        vq_color = analysis[fund].get('metadata', {}).get(
+        vf_color = analysis[fund].get('metadata', {}).get(
             'volatility', {}).get('status', {}).get('color', 'n/a')
 
     table_placeholder = slide.shapes.add_table(rows,
@@ -191,8 +189,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
             np.round(risk_ratios['standard_deviation'], 5))
 
     table.cell(10, 0).text = 'Altman-Z Score'
-    alt_z = analysis[fund].get('metadata', {}).get(
-        'altman_z', {})
+    alt_z = analysis[fund].get('metadata', {}).get('altman_z', {})
     alt_z_score = alt_z.get('score', "n/a")
     alt_z_color = alt_z.get('color', "black")
 
@@ -205,18 +202,17 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
 
     end = 10
 
-    if has_vq:
-        table.cell(end+1, 0).text = 'Volatility Quotient'
-        table.cell(end+1, 1).text = str(vq)
+    if has_vf:
+        table.cell(end+1, 0).text = 'Volatility Factor'
+        table.cell(end+1, 1).text = str(volatility_factor)
         table.cell(end+2, 0).text = 'Stop Loss'
         table.cell(end+2, 1).text = str(stop_loss)
         table.cell(end+3, 0).text = 'Last High Close'
         table.cell(end+3, 1).text = str(high_close)
-        table.cell(end+4, 0).text = 'VQ Status'
+        table.cell(end+4, 0).text = 'VF Status'
         table.cell(end+4, 1).text = str(status)
 
-        table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
-            vq_color)
+        table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(vf_color)
 
     table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
     table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)

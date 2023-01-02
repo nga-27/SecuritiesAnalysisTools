@@ -59,11 +59,11 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     maxes_x = []
     all_x = []
 
-    vq = 0.06
+    vf = 0.06
     if meta is not None:
-        vol = meta.get('volatility', {}).get('VQ')
+        vol = meta.get('volatility', {}).get('VF')
         if vol is not None:
-            vq = vol / 100.0
+            vf = vol / 100.0
 
     increment = 0.7 / (float(len(interval)) * 3)
 
@@ -116,13 +116,13 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
     near_term = trend_window[3]
 
     X0, Y0 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term, vq=vq)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term, vf=vf)
     X1, Y1 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term, vq=vq)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term, vf=vf)
     X2, Y2 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term, vq=vq)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term, vf=vf)
     X3, Y3 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term, vq=vq)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term, vf=vf)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=increment*4.0)
@@ -378,13 +378,13 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
         interval {int} -- period of time for a lookback of a trend
 
     Optional Args:
-        vq {dict} -- volatility quotient, used to determine if a trendline is still valid at the
+        vf {dict} -- volatility quotient, used to determine if a trendline is still valid at the
                      end of the period by providing a volatility threshold (default: {0.06})
 
     Returns:
         list -- list of trendlines given the period
     """
-    vq = kwargs.get('vq', 0.06)
+    vf = kwargs.get('vf', 0.06)
 
     EXTENSION = interval
     BREAK_LOOP = 50
@@ -484,7 +484,7 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
                 max_range[1] = len(fund['Close'])
 
             max_range[1] = line_reducer(
-                fund, max_range[1], reg, threshold=vq)
+                fund, max_range[1], reg, threshold=vf)
 
             datax = list(range(max_range[0], max_range[1]))
             datay = [reg[0] * float(x) + reg[1] for x in datax]

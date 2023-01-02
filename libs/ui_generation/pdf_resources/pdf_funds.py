@@ -43,7 +43,7 @@ def fund_pdf_pages(pdf, analysis: dict, **kwargs):
             pdf.add_page()
             pdf = fund_title(pdf, name)
             pdf = fund_statistics(pdf, fund_data, sample_view=views)
-            # pdf = fund_volatility(pdf, fund_data)
+            pdf = fund_volatility(pdf, fund_data)
             pdf = beta_rsq(pdf, fund_data)
 
             for period in fund_data['synopsis']:
@@ -295,7 +295,7 @@ def beta_rsq(pdf, fund_data: dict):
 def fund_volatility(pdf, fund_data: dict):
     """Fund Volatility
 
-    If Volatility Quotient is present
+    If Volatility Factor is present
 
     Arguments:
         pdf {FPDF} -- pdf object
@@ -306,19 +306,19 @@ def fund_volatility(pdf, fund_data: dict):
     """
     SPAN = pdf.w - 2 * pdf.l_margin
 
-    vq = fund_data['metadata'].get('volatility', {})
-    status = vq.get('status', {}).get('status', '')
-    color = vq.get('status', {}).get('color', "black")
+    vf_data = fund_data['metadata'].get('volatility', {})
+    status = vf_data.get('status', {}).get('status', '')
+    color = vf_data.get('status', {}).get('color', "black")
     vol_str = f"Stop Loss Status: {status}"
 
     pdf = pdf_set_color_text(pdf, color)
     pdf.set_font('Arial', style='B', size=16.0)
     pdf.cell(SPAN, 0.4, txt=vol_str, align='C', ln=1)
 
-    vol = vq.get("VQ", "")
-    vq_str = f"Current Volatility:"
-    vq_str2 = f"{vol}%"
-    max_price = vq.get("last_max", {}).get("Price", "")
+    vol = vf_data.get("VF", "")
+    vf_str = f"Current Volatility:"
+    vf_str2 = f"{vol}%"
+    max_price = vf_data.get("last_max", {}).get("Price", "")
     mp_str = f"Last relative max price:"
     mp_str2 = f"${max_price}"
 
@@ -330,15 +330,16 @@ def fund_volatility(pdf, fund_data: dict):
 
     pdf = pdf_set_color_text(pdf, "blue")
     pdf.set_font('Arial', style='B', size=12.0)
-    pdf.cell(quad_name, 0.2, txt=vq_str, align='L')
-    pdf.cell(quad_val, 0.2, txt=vq_str2, align='L')
+    pdf.cell(quad_name, 0.2, txt=vf_str, align='L')
+    pdf.cell(quad_val, 0.2, txt=vf_str2, align='L')
     pdf.cell(quad_name, 0.2, txt=mp_str, align='L')
     pdf.cell(quad_val, 0.2, txt=mp_str2, align='L', ln=1)
 
-    stop_loss = vq.get("stop_loss", "")
+    stop_loss = vf_data.get("stop_loss", "")
     sl_str = f"Current Stop Loss:"
     sl_str2 = f"${stop_loss}"
-    max_date = vq.get("last_max", {}).get("Date", "")
+
+    max_date = vf_data.get("last_max", {}).get("Date", "")
     md_str = f"Date of last relative max:"
     md_str2 = f"{max_date}"
 
@@ -350,14 +351,15 @@ def fund_volatility(pdf, fund_data: dict):
     altman_z = fund_data['metadata'].get('altman_z', {})
     altman_z_score = altman_z.get('score')
 
-    if isinstance(altman_z_score, (int, float)):
-        altman_z_score = str(np.round(altman_z_score, 5))
+    if altman_z_score:
+        if isinstance(altman_z_score, (int, float)):
+            altman_z_score = str(np.round(altman_z_score, 5))
 
-    az_str = f"Altman-Z Score:"
-    az_str2 = altman_z_score
+        az_str = f"Altman-Z Score:"
+        az_str2 = altman_z_score
 
-    pdf.cell(quad_name, 0.2, txt=az_str, align='L')
-    pdf.cell(quad_val, 0.2, txt=az_str2, align='L')
+        pdf.cell(quad_name, 0.2, txt=az_str, align='L')
+        pdf.cell(quad_val, 0.2, txt=az_str2, align='L')
 
     return pdf
 
