@@ -6,7 +6,6 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 import yfinance as yf
-import pandas as pd
 import numpy as np
 
 from intellistop import IntelliStop
@@ -18,7 +17,6 @@ from .constants import STANDARD_COLORS, INDEXES, PRINT_CONSTANTS
 from .plotting import generic_plotting
 
 """
-    Utilizes advanced api calls of 'yfinance==0.1.50' as of 2019-11-21
     Obtains "Volatility Factor" (VF) from Intellistop
 """
 
@@ -64,7 +62,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
 
     if function == 'all' or function == 'info':
-        metadata['info'] = AVAILABLE_KEYS.get('info')(ticker, st_tick, force_holdings=False)
+        metadata['info'] = AVAILABLE_KEYS.get('info')(ticker)
 
     if function == 'all' or function == 'volatility':
         metadata['volatility'] = get_volatility(fund_ticker)
@@ -82,23 +80,20 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         pb.uptick(increment=0.2)
 
     if function == 'all' or function == 'financials':
-        metadata['financials'] = AVAILABLE_KEYS.get(
-            'financials')(ticker, st_tick)
+        metadata['financials'] = AVAILABLE_KEYS.get('financials')(ticker)
 
     if function == 'all' or function == 'balance':
-        metadata['balance_sheet'] = AVAILABLE_KEYS.get(
-            'balance')(ticker, st_tick)
+        metadata['balance_sheet'] = AVAILABLE_KEYS.get('balance')(ticker)
 
     if pb is not None:
         pb.uptick(increment=0.1)
 
     if function == 'all':
-        metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker, st_tick)
-        metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker, st_tick)
+        metadata['cashflow'] = AVAILABLE_KEYS.get('cashflow')(ticker)
+        metadata['earnings'] = AVAILABLE_KEYS.get('earnings')(ticker)
 
     if function == 'all' or function == 'recommendations':
-        metadata['recommendations'] = AVAILABLE_KEYS.get(
-            'recommendations')(ticker, st_tick)
+        metadata['recommendations'] = AVAILABLE_KEYS.get('recommendations')(ticker)
 
         metadata['recommendations']['tabular'] = calculate_recommendation_curve(
             metadata['recommendations'], plot_output=plot_output, name=fund_ticker)
@@ -118,7 +113,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     return metadata
 
 
-def get_dividends(ticker, symbol=None):
+def get_dividends(ticker: yf.Ticker, symbol=None):
     """Get Dividends
 
     Will run yfinance API if ticker is None and symbol is not None 
@@ -132,7 +127,7 @@ def get_dividends(ticker, symbol=None):
     Returns:
         dict -- dividend data object
     """
-    div = dict()
+    div = {}
     if ticker is None and symbol is not None:
         ticker = yf.Ticker(symbol)
 
@@ -146,36 +141,23 @@ def get_dividends(ticker, symbol=None):
     return div
 
 
-def get_info(ticker, st, force_holdings=False):
+def get_info(ticker: yf.Ticker):
     """Get Info
 
     Arguments:
         ticker {yf-object} -- ticker object from yfinance
-        st {yf-object} -- ticker object from yfinance (0.1.50)
-
-    Keyword Arguments:
-        force_holdings {bool} -- only try old version (default: {False})
 
     Returns:
         dict -- fund info data object
     """
-    if force_holdings:
-        try:
-            info = st.info
-        except:
-            info = dict()
-    else:
-        try:
-            info = ticker.info
-        except:
-            try:
-                info = st.info
-            except:
-                info = dict()
+    try:
+        info = ticker.info
+    except:
+        info = {}
     return info
 
 
-def get_financials(ticker, st):
+def get_financials(ticker: yf.Ticker):
     """Get Financials
 
     Arguments:
@@ -196,12 +178,11 @@ def get_financials(ticker, st):
     return fin
 
 
-def get_balance_sheet(ticker, st):
+def get_balance_sheet(ticker: yf.Ticker):
     """Get Balance Sheet
 
     Arguments:
         ticker {yf-object} -- yfinance data object
-        st {yf-object} -- ticker object from yfinance (0.1.50)
 
     Returns:
         dict -- Balance Sheet data object
@@ -217,12 +198,11 @@ def get_balance_sheet(ticker, st):
     return bal
 
 
-def get_cashflow(ticker, st):
+def get_cashflow(ticker: yf.Ticker):
     """Get Cashflow
 
     Arguments:
         ticker {yf-object} -- yfinance data object
-        st {yf-object} -- ticker object from yfinance (0.1.50)
 
     Returns:
         dict -- Cashflow data object
@@ -238,40 +218,40 @@ def get_cashflow(ticker, st):
     return cash
 
 
-def get_earnings(ticker, st):
+def get_earnings(ticker: yf.Ticker):
     """Get Earnings
 
     Arguments:
         ticker {yf-object} -- yfinance data object
-        st {yf-object} -- ticker object from yfinance (0.1.50)
 
     Returns:
         dict -- Earnings data object
     """
-    earn = {}
+    earnings = {}
 
     try:
-        t = ticker.earnings
-        ey = {}
-        ey['period'] = list(t.index)
-        ey['revenue'] = [r for r in t['Revenue']]
-        ey['earnings'] = [e for e in t['Earnings']]
-        earn['yearly'] = ey
-        q = ticker.quarterly_earnings
-        eq = {}
-        eq['period'] = list(q.index)
-        eq['revenue'] = [r for r in q['Revenue']]
-        eq['earnings'] = [e for e in t['Earnings']]
-        earn['quarterly'] = eq
+        year_earnings = ticker.earnings
+        e_year = {}
+        e_year['period'] = list(year_earnings.index)
+        e_year['revenue'] = [rev for rev in year_earnings['Revenue']]
+        e_year['earnings'] = [earn for earn in year_earnings['Earnings']]
+        earnings['yearly'] = e_year
+
+        quarter_earnings = ticker.quarterly_earnings
+        e_quarter = {}
+        e_quarter['period'] = list(quarter_earnings.index)
+        e_quarter['revenue'] = [rev for rev in quarter_earnings['Revenue']]
+        e_quarter['earnings'] = [earn for earn in quarter_earnings['Earnings']]
+        earnings['quarterly'] = e_quarter
 
     except:
-        earn['yearly'] = {}
-        earn['quarterly'] = {}
+        earnings['yearly'] = {}
+        earnings['quarterly'] = {}
 
-    return earn
+    return earnings
 
 
-def get_recommendations(ticker, st) -> dict:
+def get_recommendations(ticker: yf.Ticker) -> dict:
     """Get Recommendations
 
     Arguments:
@@ -281,26 +261,18 @@ def get_recommendations(ticker, st) -> dict:
     Returns:
         dict -- Recommendations data object
     """
-    recom = dict()
+    recommendations = {}
 
     try:
-        t = ticker.recommendations
-        recom['dates'] = [date.strftime('%Y-%m-%d') for date in t.index]
-        recom['firms'] = [f for f in t['Firm']]
-        recom['grades'] = [g for g in t['To Grade']]
-        recom['actions'] = [a for a in t['Action']]
-
+        t_recommend = ticker.recommendations
+        recommendations['dates'] = [date.strftime('%Y-%m-%d') for date in t_recommend.index]
+        recommendations['firms'] = [firm for firm in t_recommend['Firm']]
+        recommendations['grades'] = [grade for grade in t_recommend['To Grade']]
+        recommendations['actions'] = [action for action in t_recommend['Action']]
     except:
-        try:
-            t = st.recommendations
-            recom['dates'] = [date.strftime('%Y-%m-%d') for date in t.index]
-            recom['firms'] = [f for f in t['Firm']]
-            recom['grades'] = [g for g in t['To Grade']]
-            recom['actions'] = [a for a in t['Action']]
-        except:
-            recom = {'dates': [], 'firms': [], 'grades': [], 'actions': []}
+        recommendations = {'dates': [], 'firms': [], 'grades': [], 'actions': []}
 
-    return recom
+    return recommendations
 
 
 def get_altman_z_score(meta: dict) -> dict:
@@ -335,11 +307,11 @@ def get_altman_z_score(meta: dict) -> dict:
     if total_assets is None:
         return {"score": "n/a", "values": {}}
 
-    current_assets = balance_sheet.get("Total Current Assets")
+    current_assets = balance_sheet.get("Current Assets")
     if current_assets is None:
         return {"score": "n/a", "values": {}}
 
-    current_liabilities = balance_sheet.get("Total Current Liabilities")
+    current_liabilities = balance_sheet.get("Current Liabilities")
     if current_liabilities is None:
         return {"score": "n/a", "values": {}}
 
@@ -349,18 +321,20 @@ def get_altman_z_score(meta: dict) -> dict:
     retained_earnings = balance_sheet.get("Retained Earnings")
     if retained_earnings is None:
         return {"score": "n/a", "values": {}}
+
     altman_b = 1.4 * (retained_earnings[0] / total_assets[0])
 
-    ebit = financials.get("Ebit")
-    if ebit is None:
+    e_bit = financials.get("EBIT")
+    if e_bit is None:
         return {"score": "n/a", "values": {}}
-    altman_c = 3.3 * (ebit[0] / total_assets[0])
+
+    altman_c = 3.3 * (e_bit[0] / total_assets[0])
 
     market_cap = info.get("marketCap")
     if market_cap is None:
         return {"score": "n/a", "values": {}}
 
-    total_liabilities = balance_sheet.get("Total Liab")
+    total_liabilities = balance_sheet.get("Current Liabilities")
     if total_liabilities is None:
         return {"score": "n/a", "values": {}}
     altman_d = 0.6 * market_cap / total_liabilities[0]

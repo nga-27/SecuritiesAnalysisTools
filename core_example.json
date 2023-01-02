@@ -26,9 +26,7 @@
         "run": true,
         "fields": ""
     },
-    "Keys": {
-        "Volatility_Quotient": ""
-    },
+    "Keys": {},
     "Ticker Symbols": [
         "AAPL",
         "GLD"
