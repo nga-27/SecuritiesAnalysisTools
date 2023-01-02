@@ -10,8 +10,6 @@ import numpy as np
 
 from intellistop import IntelliStop
 
-import libs.utils.stable_yf as styf
-
 from .data import download_single_fund, download_data_indexes
 from .constants import STANDARD_COLORS, INDEXES, PRINT_CONSTANTS
 from .plotting import generic_plotting
@@ -53,10 +51,6 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
     ticker = yf.Ticker(fund_ticker)
     if pb is not None:
         pb.uptick(increment=0.2)
-
-    st_tick = styf.Ticker(fund_ticker)
-    if pb is not None:
-        pb.uptick(increment=0.3)
 
     if function == 'all':
         metadata['dividends'] = AVAILABLE_KEYS.get('dividends')(ticker)
