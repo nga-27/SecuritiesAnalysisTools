@@ -1,14 +1,16 @@
 import os
 from datetime import datetime
+from typing import Union
+
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
 from pandas.plotting import register_matplotlib_converters
 
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib.patches import Rectangle
+
 from .formatting import dates_extractor_list
-from .progress_bar import ProgressBar
 from .constants import STANDARD_COLORS
 
 WARNING = STANDARD_COLORS["warning"]
@@ -806,3 +808,125 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
 
     if p_bar is not None:
         p_bar.uptick(increment=0.5)
+
+
+# pylint: disable=too-many-arguments
+def app_plot(prices: list, dates: list, stop_loss_objects: List[VFTimeSeriesType],
+             green_zone_x_values: List[list], red_zone_x_values: List[list],
+             yellow_zone_x_values: List[list], y_range: float, minimum: float,
+             config: Union[dict, None] = None, text_str: str = "", str_color: str = ""):
+    """app_plot
+
+    Primary plotting function that generates the standalone app's visual output. The default is
+    that this plot is rendered live as well as stored in output/.
+
+    Args:
+        prices (list): close/adjusted close prices
+        dates (list): dates of the prices
+        stop_loss_objects (List[VFTimeSeriesType]): objects that contain stop losses, caution lines,
+            etc.
+        green_zone_x_values (List[list]): list of lists of the green / buy zone
+        red_zone_x_values (List[list]): list of lists of the red / stopped-out zones
+        yellow_zone_x_values (List[list]): list of lists of the yellow / caution zone
+        y_range (float): range of max value and min value of data set (includes VFTimeSeriesType)
+        minimum (float): minimum of the value of data set (includes VFTimeSeriesType)
+
+        config (dict, optional): plot config options. Defaults to {}.
+        text_str (str, optional): text box for notes displayed
+        str_color (str, optional): color for notes displayed
+    """
+    # pylint: disable=too-many-locals
+    if not config:
+        config = {}
+    plot_config = PlotConfig(config)
+    fig, ax_handle = plt.subplots()
+
+    date_indexes = [datetime.datetime.strptime(date, '%Y-%m-%d').date() for date in dates]
+    ax_handle.plot(date_indexes, prices, color='black')
+
+    y_start = minimum - (y_range * 0.05)
+    height = y_range * 0.02
+
+    for stop in stop_loss_objects:
+        sub_dates = [date_indexes[index] for index in stop.time_index_list]
+        ax_handle.plot(sub_dates, stop.caution_line, color='gold')
+        ax_handle.plot(sub_dates, stop.stop_loss_line, color='red')
+
+    for green_zone in green_zone_x_values:
+        start = mdates.date2num(date_indexes[green_zone[0]])
+        end = mdates.date2num(date_indexes[green_zone[-1]])
+        width = end - start
+        ax_handle.add_patch(
+            Rectangle(
+                (start, y_start),
+                width,
+                height,
+                edgecolor='green',
+                facecolor='green',
+                fill=True
+            )
+        )
+
+    for red_zone in red_zone_x_values:
+        start = mdates.date2num(date_indexes[red_zone[0]])
+        end = mdates.date2num(date_indexes[red_zone[-1]])
+        width = end - start
+        ax_handle.add_patch(
+            Rectangle(
+                (start, y_start),
+                width,
+                height,
+                edgecolor='red',
+                facecolor='red',
+                fill=True
+            )
+        )
+
+    for yellow_zone in yellow_zone_x_values:
+        start = mdates.date2num(date_indexes[yellow_zone[0]])
+        end = mdates.date2num(date_indexes[yellow_zone[-1]])
+        width = end - start
+        ax_handle.add_patch(
+            Rectangle(
+                (start, y_start),
+                width,
+                height,
+                edgecolor='yellow',
+                facecolor='yellow',
+                fill=True
+            )
+        )
+
+    ax_handle.set_title(plot_config.title)
+
+    if len(text_str) > 0 and len(str_color) > 0:
+        new_start = minimum - (y_range * 0.2)
+        new_end = minimum + (y_range * 1.02)
+        ax_handle.set_ylim(new_start, new_end)
+        props = dict(boxstyle='round', facecolor='white', alpha=0.25)
+        ax_handle.text(
+            0.02,
+            0.02,
+            text_str,
+            color=str_color,
+            transform=ax_handle.transAxes,
+            bbox=props
+        )
+
+    if len(plot_config.vf_sl_box_str) > 0:
+        props = dict(boxstyle='round', facecolor='white', alpha=0.25)
+        ax_handle.text(
+            0.02,
+            0.90,
+            plot_config.vf_sl_box_str,
+            transform=ax_handle.transAxes,
+            bbox=props
+        )
+
+    if plot_config.save_plot:
+        plt.savefig(plot_config.save_path)
+    if plot_config.has_output:
+        plt.show()
+
+    plt.close('all')
+    plt.clf()
