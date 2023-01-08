@@ -34,6 +34,7 @@ from libs.tools import rate_of_change_oscillator
 from libs.tools import know_sure_thing
 from libs.tools import average_true_range
 from libs.tools import parabolic_sar, average_directional_index
+from libs.tools import get_api_metadata
 
 # Imports that support functions doing feature detection
 from libs.features import feature_detection_head_and_shoulders
@@ -42,7 +43,6 @@ from libs.features import analyze_price_gaps
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import date_extractor
 from libs.utils import create_sub_temp_dir
-from libs.utils import get_api_metadata
 from libs.utils import INDEXES, SKIP_INDEXES
 
 # Imports that drive custom metrics for market analysis

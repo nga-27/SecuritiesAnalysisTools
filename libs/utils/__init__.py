@@ -3,9 +3,7 @@ from .file_io import configure_temp_dir, remove_temp_dir, create_sub_temp_dir
 
 from .data import download_data, download_data_indexes, download_single_fund, download_data_all
 
-from .api import get_api_metadata, api_sector_match, api_sector_funds
-from .api import get_volatility, volatility_factor_status_print
-from .api import get_dividends
+from .api import api_sector_match, api_sector_funds
 
 from .error_handler import has_critical_error
 

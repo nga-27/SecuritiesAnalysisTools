@@ -4,8 +4,8 @@ import glob
 import pandas as pd
 import numpy as np
 
-from libs.utils import download_data, get_dividends
-from libs.utils import generic_plotting
+from libs.utils import download_data, generic_plotting
+from libs.tools.metadata_tools.dividends import get_dividends
 
 
 def generate_fund_from_ledger(ledger_name: str):
@@ -50,7 +50,7 @@ def generate_fund_from_ledger(ledger_name: str):
     export_funds(ledgers)
 
 
-def extract_from_format(ledger: pd.DataFrame, index=0) -> dict:
+def extract_from_format(ledger: pd.DataFrame, index: int = 0) -> dict:
     """Extract from Format
 
     Arguments:

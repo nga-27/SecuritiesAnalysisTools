@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 import numpy as np
 import yfinance as yf
 
-from utils.plotting import generic_plotting
+from libs.utils.plotting import generic_plotting
 
 
 def get_recommendations(ticker: yf.Ticker) -> dict:

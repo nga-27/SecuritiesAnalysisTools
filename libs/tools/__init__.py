@@ -41,3 +41,6 @@ from .average_true_range import average_true_range
 from .parabolic_sar import parabolic_sar
 from .average_directional_index import average_directional_index
 from .demand_index import demand_index
+
+from .metadata import get_api_metadata
+from .metadata_tools.volatility import get_volatility

@@ -1,6 +1,6 @@
 import yfinance as yf
 
-from utils.constants import STANDARD_COLORS, INDEXES, PRINT_CONSTANTS
+from libs.utils import STANDARD_COLORS, INDEXES, PRINT_CONSTANTS
 
 from .metadata_tools import ( 
     dividends, fund_info, volatility, financials, balance_sheet, cashflow, earnings,

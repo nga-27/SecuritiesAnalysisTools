@@ -6,8 +6,7 @@ import numpy as np
 from libs.utils import download_data, has_critical_error
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 from libs.utils import generic_plotting
-from libs.utils import get_volatility
-from libs.utils import get_api_metadata, api_sector_match
+from libs.utils import api_sector_match
 
 from libs.metrics import market_composite_index, bond_composite_index, correlation_composite_index
 from libs.metrics import type_composite_index
@@ -31,6 +30,8 @@ from libs.tools import rate_of_change_oscillator
 from libs.tools import know_sure_thing
 from libs.tools import average_true_range
 from libs.tools import average_directional_index, parabolic_sar
+from libs.tools import get_api_metadata
+from libs.tools import get_volatility
 
 from libs.nasit import generate_fund_from_ledger
 
