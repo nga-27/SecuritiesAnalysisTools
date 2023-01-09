@@ -1,3 +1,4 @@
+""" Find Price Gaps """
 import pandas as pd
 
 from libs.tools import trends
@@ -11,7 +12,7 @@ NEXT_STATE = {
 
 
 def analyze_price_gaps(fund: pd.DataFrame, **kwargs) -> dict:
-    """Analyze Price Gaps 
+    """Analyze Price Gaps
 
     Determine state, if any, of price gaps for funds
 
@@ -37,7 +38,7 @@ def analyze_price_gaps(fund: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.25)
 
-    gaps = determine_gap_types(fund, gaps, name=name)
+    gaps = determine_gap_types(fund, gaps)
     if progress_bar is not None:
         progress_bar.uptick(increment=0.25)
 
@@ -51,7 +52,7 @@ def analyze_price_gaps(fund: pd.DataFrame, **kwargs) -> dict:
     return gaps
 
 
-def get_gaps(fund: pd.DataFrame, threshold=0.0) -> list:
+def get_gaps(fund: pd.DataFrame, threshold: float = 0.0) -> dict:
     """Get Gaps
 
     Arguments:
@@ -70,26 +71,30 @@ def get_gaps(fund: pd.DataFrame, threshold=0.0) -> list:
 
     for i in range(1, len(fund['Close'])):
 
-        if (fund['High'][i-1] < fund['Low'][i] * (1.0 - threshold)):
+        if fund['High'][i-1] < fund['Low'][i] * (1.0 - threshold):
             # Positive price gap
             gap_index.append(i)
             gap_date.append(fund.index[i].strftime("%Y-%m-%d"))
             gap_direction.append("up")
             diff.append(fund['High'][i] - fund['High'][i-1])
 
-        elif (fund['High'][i] < fund['Low'][i-1] * (1.0 - threshold)):
+        elif fund['High'][i] < fund['Low'][i-1] * (1.0 - threshold):
             # Negative price gap
             gap_index.append(i)
             gap_date.append(fund.index[i].strftime("%Y-%m-%d"))
             gap_direction.append("down")
             diff.append(fund['Low'][i] - fund['Low'][i-1])
 
-    gaps = {"indexes": gap_index, "dates": gap_date,
-            "direction": gap_direction, "difference": diff}
+    gaps = {
+        "indexes": gap_index,
+        "dates": gap_date,
+        "direction": gap_direction,
+        "difference": diff
+    }
     return gaps
 
 
-def determine_gap_types(fund: pd.DataFrame, gaps: dict, name: str = '') -> dict:
+def determine_gap_types(fund: pd.DataFrame, gaps: dict) -> dict:
     """Determine Gap Types
 
     Arguments:
@@ -107,10 +112,10 @@ def determine_gap_types(fund: pd.DataFrame, gaps: dict, name: str = '') -> dict:
     trend_long = trends.autotrend(fund['Close'], periods=[28], normalize=True)
 
     # TODO: Trends w/ gaps might provide insights...
-    gaps['trend_short'] = list()
-    gaps['trend_med'] = list()
-    gaps['trend_long'] = list()
-    gaps['plot'] = list()
+    gaps['trend_short'] = []
+    gaps['trend_med'] = []
+    gaps['trend_long'] = []
+    gaps['plot'] = []
 
     for i, index in enumerate(gaps['indexes']):
         gaps['trend_short'].append(trend_short[index])
@@ -121,6 +126,7 @@ def determine_gap_types(fund: pd.DataFrame, gaps: dict, name: str = '') -> dict:
             y_diff = float(gaps['difference'][i]) / 2.0 + fund['High'][index-1]
         else:
             y_diff = float(gaps['difference'][i]) / 2.0 + fund['Low'][index-1]
+
         gaps['plot'].append({"type": gaps['direction'][i],
                              "x": index, "y": y_diff, "rad": gaps['difference'][i]})
 

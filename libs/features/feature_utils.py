@@ -78,7 +78,7 @@ def find_local_extrema(position: list, threshold: float = 0.03, points: bool = F
     return features
 
 
-def find_filtered_local_extrema(filtered: list, raw=False) -> dict:
+def find_filtered_local_extrema(filtered: list, raw: bool = False) -> dict:
     """Find Filtered Local Extrema
 
     Assuming a filtered list input, finds local minima and maxima
@@ -356,23 +356,22 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
                    filename=filename)
 
 
-def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
+def raw_signal_extrema(signal: list) -> dict:
     """Raw Signal Extrema
 
     Arguments:
         signal {list} -- signal to find extrema (unfiltered)
 
-    Keyword Arguments:
-        threshold_start {float} -- value to start threshold searching in list (default: {0.01})
-
     Returns:
         dict -- extrema data object
     """
+    # pylint: disable=too-many-branches
     extrema = {}
     extrema['max'] = []
     extrema['min'] = []
     sig_len = len(signal)
 
+    # pylint: disable=too-many-nested-blocks
     for threshold in [0.01, 0.015, 0.02, 0.025, 0.03, 0.035]:
         i = 0
         temp = [{"index": i, "value": signal[i], "type": 0}]
@@ -458,33 +457,28 @@ def cleanse_to_json(content: dict) -> dict:
             vol = content['content']['features'][i]['indexes'][j][2]
             vol = float(vol)/1000
             content['content']['features'][i]['indexes'][j][2] = vol
-
     return content
 
 
-def normalize_signals(signals: list) -> list:
+def normalize_signals(signals: List[List[float]]) -> List[List[float]]:
     """Normalize Signals
 
     General function for normalizing all values to np.abs() maximum
 
     Arguments:
-        signals {list} -- signal to normalize
+        signal {list} -- signal to normalize
 
     Returns:
         list -- normalized signal
     """
     max_ = 0.0
     for sig in signals:
-        m = np.max(np.abs(sig))
-        if m > max_:
-            max_ = m
+        max_of_sig = np.max(np.abs(sig))
+        max_ = max(max_, max_of_sig)
 
     if max_ != 0.0:
-        for i in range(len(signals)):
-            new_sig = []
-            for pt in signals[i]:
-                pt2 = pt / max_
-                new_sig.append(pt2)
+        for i, old_sig in enumerate(signals):
+            new_sig = [point / max_ for point in old_sig]
             signals[i] = new_sig.copy()
 
     return signals
