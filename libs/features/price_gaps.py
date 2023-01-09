@@ -127,7 +127,13 @@ def determine_gap_types(fund: pd.DataFrame, gaps: dict) -> dict:
         else:
             y_diff = float(gaps['difference'][i]) / 2.0 + fund['Low'][index-1]
 
-        gaps['plot'].append({"type": gaps['direction'][i],
-                             "x": index, "y": y_diff, "rad": gaps['difference'][i]})
+        gaps['plot'].append(
+            {
+                "type": gaps['direction'][i],
+                "x": index,
+                "y": y_diff,
+                "rad": gaps['difference'][i]
+            }
+        )
 
     return gaps
