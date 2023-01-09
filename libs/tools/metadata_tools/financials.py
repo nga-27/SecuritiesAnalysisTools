@@ -4,9 +4,10 @@ import yfinance as yf
 def get_financials(ticker: yf.Ticker) -> dict:
     """Get Financials
 
+    Essentially JSON-serializes financial data from yfinance.
+
     Arguments:
         ticker {yf-object} -- yfinance data object
-        st {yf-object} -- ticker object from yfinance (0.1.50)
 
     Returns:
         dict -- finance data object

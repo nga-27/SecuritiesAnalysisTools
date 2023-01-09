@@ -7,8 +7,6 @@ in saved form. Can be used later with more complex ML or analytical tools.
 
 import json
 import os
-import pandas as pd
-import numpy as np
 
 
 def metadata_copy(data: dict) -> dict:
@@ -27,12 +25,6 @@ def metadata_copy(data: dict) -> dict:
         if 'clustered_osc' in meta[key]:
             meta[key].pop('clustered_osc')
             #  Additional grooming / popping follows
-
-            # if 'features' in meta[key].keys():
-            #     for feature in meta[key]['features']:
-            #         for feat in range(len(meta[key]['features'][feature]['features'])):
-            # Array of 'feature' features
-            # meta[key]['features'][feature]['features'][feat].pop('indexes')
 
     return meta
 

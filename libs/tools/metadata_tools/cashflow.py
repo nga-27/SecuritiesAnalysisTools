@@ -4,6 +4,8 @@ import yfinance as yf
 def get_cashflow(ticker: yf.Ticker) -> dict:
     """Get Cashflow
 
+    Essentially JSON-serializes cash flow data from yfinance.
+
     Arguments:
         ticker {yf-object} -- yfinance data object
 
