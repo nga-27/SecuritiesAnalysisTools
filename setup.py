@@ -35,14 +35,14 @@ REQUIRES = [
     "scipy==1.9.3",
     "xlrd==1.2.0",
     "XlsxWriter==1.2.6",
-    "python-pptx==0.6.18",
+    "python-pptx==0.6.21",
     'colorama==0.4.3',
     "yfinance==0.2.3",
     "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@v1.0.1"
 ]
 
 REQUIRES_DEV = [
-    'pylint==2.9.6',
+    'pylint==2.15.0',
 ]
 
 def has_ssh() -> bool:
