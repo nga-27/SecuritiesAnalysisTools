@@ -110,7 +110,7 @@ def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
     else:
         filename = os.path.join(name, views, f"kst_oscillator_{name}")
         dual_plotting(fund['Close'], [signal, signal_line], 'Price',
-                      'KST', title=title, saveFig=True, filename=filename)
+                      'KST', title=title, save_fig=True, filename=filename)
 
     return signal, signal_line
 
@@ -267,6 +267,6 @@ def kst_metrics(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
     else:
         filename = os.path.join(name, views, f"kst_metrics_{name}")
         dual_plotting(fund['Close'], kst_dict['metrics'], 'Price',
-                      'Metrics', title=title, saveFig=True, filename=filename)
+                      'Metrics', title=title, save_fig=True, filename=filename)
 
     return kst_dict

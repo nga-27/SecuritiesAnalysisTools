@@ -171,7 +171,7 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
                       ['No Trend', 'Over Trend',
                        'Strong Trend', 'ADX'],
                       title=title,
-                      saveFig=True,
+                      save_fig=True,
                       filename=filename)
 
     if pbar is not None:
@@ -296,7 +296,7 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"adx_metrics_{name}.png")
         dual_plotting(fund['Close'], adx['metrics'], 'Price',
-                      'Metrics', title=title, saveFig=True, filename=filename)
+                      'Metrics', title=title, save_fig=True, filename=filename)
 
     if pbar is not None:
         pbar.uptick(increment=0.2)

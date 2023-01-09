@@ -143,7 +143,7 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
             name, view, f"bollinger_band_metrics_{name}.png")
         # filename = name + f"/{view}" + f"/bollinger_band_metrics_{name}.png"
         dual_plotting(position['Close'], norm_signal, 'Price',
-                      'Metrics', title=name2, saveFig=True, filename=filename)
+                      'Metrics', title=name2, save_fig=True, filename=filename)
 
     return bol_bands
 
@@ -309,7 +309,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
                          title=name2, x=position.index,
                          legend=['Price', 'Moving Avg',
                                  'Upper Band', 'Lower Band'],
-                         saveFig=True, filename=filename)
+                         save_fig=True, filename=filename)
 
     return signals
 

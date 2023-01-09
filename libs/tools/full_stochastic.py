@@ -426,7 +426,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
         else:
             filename = os.path.join(name, view, f"stochastic_{name}.png")
             dual_plotting(position['Close'], full_stoch['indicator'], 'Position Price', 'Stochastic Oscillator',
-                          x_label='Trading Days', title=name2, saveFig=True, filename=filename)
+                          x_label='Trading Days', title=name2, save_fig=True, filename=filename)
 
     return full_stoch
 

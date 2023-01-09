@@ -61,7 +61,7 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"macd_{name}.png")
         dual_plotting(fund['Close'], [macd_sig, sig_line], 'Position Price',
-                      ['MACD', 'Signal Line'], title=name2, saveFig=True, filename=filename)
+                      ['MACD', 'Signal Line'], title=name2, save_fig=True, filename=filename)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
@@ -124,7 +124,7 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"macd_bar_{name}.png")
         bar_chart(m_bar, position=fund, x=x, title=name2,
-                  saveFig=True, filename=filename)
+                  save_fig=True, filename=filename)
 
     return macd
 
@@ -205,7 +205,7 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"macd_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=name2, saveFig=True, filename=filename)
+                      'Metrics', title=name2, save_fig=True, filename=filename)
 
     return macd
 

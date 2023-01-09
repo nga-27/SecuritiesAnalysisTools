@@ -136,7 +136,7 @@ def assemble_last_signals(meta_sub: dict,
                 dual_plotting(
                     fund, [content["metrics"], upper,
                            lower], 'Price', 'Metrics',
-                    title=title, saveFig=True, filename=filename)
+                    title=title, save_fig=True, filename=filename)
 
     return content
 

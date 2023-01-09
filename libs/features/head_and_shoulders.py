@@ -4,7 +4,7 @@ import numpy as np
 from libs.tools import windowed_moving_avg
 
 from .feature_utils import (
-    add_daterange, remove_duplicates, reconstruct_extrema, remove_empty_keys
+    add_date_range, remove_duplicates, reconstruct_extrema, remove_empty_keys
 )
 from .feature_utils import find_filtered_local_extrema, feature_plotter, cleanse_to_json
 
@@ -258,7 +258,7 @@ def feature_head_and_shoulders(fund: pd.DataFrame,
     hs = find_head_shoulders(r, fund)
 
     # Cleanse data dictionary [again] and add dates for plotting features.
-    hs = add_daterange(fund, hs, 5)
+    hs = add_date_range(fund, hs, 5)
     hs = remove_empty_keys(hs)
 
     if sanitize_dict:

@@ -164,14 +164,14 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
         filename3 = os.path.join(name, view, f"volume_{name}.png")
 
         bar_chart(volume, x=x, position=fund, title=name5,
-                  saveFig=True, filename=filename3, all_positive=True)
+                  save_fig=True, filename=filename3, all_positive=True)
         bar_chart(ofilter, x=x, position=fund, title=name4,
-                  saveFig=True, filename=filename)
+                  save_fig=True, filename=filename)
         dual_plotting(fund['Close'], obv, x=x,
                       y1_label='Position Price',
                       y2_label='On Balance Volume',
                       x_label='Trading Days', title=name2,
-                      saveFig=True, filename=filename2)
+                      save_fig=True, filename=filename2)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)

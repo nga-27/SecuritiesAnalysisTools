@@ -74,7 +74,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         x {list} -- x-value data (default: {[]}) (length of lists)
         title {str} -- title of plot (default: {''})
         legend {list} -- y2 signals (default: {[]})
-        saveFig {bool} -- True will save as 'filename' (default: {False})
+        save_fig {bool} -- True will save as 'filename' (default: {False})
         filename {str} -- path to save plot (default: {'temp_dual_plot.png'})
         subplot {bool} -- plots on top of eachother (default: {False})
 
@@ -87,7 +87,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     x = kwargs.get('x', [])
     title = kwargs.get('title', '')
     legend = kwargs.get('legend', [])
-    saveFig = kwargs.get('saveFig', False)
+    save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_dual_plot.png')
     subplot = kwargs.get('subplot', False)
 
@@ -188,7 +188,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
     plot_xaxis_disperse(ax1)
 
     try:
-        if saveFig:
+        if save_fig:
             temp_path = os.path.join("output", "temp")
             filename = os.path.join(temp_path, filename)
 
@@ -234,7 +234,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
         colors {list} -- color data for each plot (default: {[]})
         title {str} -- title of plot (default: {''})
         legend {list} -- list of plot labels in legend (default: {[]})
-        saveFig {bool} -- True will save as 'filename' (default: {False})
+        save_fig {bool} -- True will save as 'filename' (default: {False})
         filename {str} -- path to save plot (default: {'temp_generic_plot.png'})
         ylabel {str} -- label for y axis (default: {''})
 
@@ -247,7 +247,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
     colors = kwargs.get('colors', [])
     title = kwargs.get('title', '')
     legend = kwargs.get('legend', [])
-    saveFig = kwargs.get('saveFig', False)
+    save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_generic_plot')
     ylabel = kwargs.get('ylabel', '')
 
@@ -307,7 +307,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
     plot_xaxis_disperse(ax)
 
     try:
-        if saveFig:
+        if save_fig:
             temp_path = os.path.join("output", "temp")
             if not os.path.exists(temp_path):
                 # For functions, this directory may not exist.
@@ -345,7 +345,7 @@ def bar_chart(data: list, **kwargs):
         x {list} -- x-value data (default: {[]}) (length of lists)
         position {pd.DataFrame} -- fund data, plotted as normal plot (default: {[]})
         title {str} -- title of plot (default: {''})
-        saveFig {bool} -- True will save as 'filename' (default: {False})
+        save_fig {bool} -- True will save as 'filename' (default: {False})
         filename {str} -- path to save plot (default: {'temp_bar_chart.png'})
         positive {bool} -- True plots all color bars positively (default: {False})
         bar_delta {bool} -- True: y[i] > y[i-1] -> green, else red (default: {False})
@@ -358,7 +358,7 @@ def bar_chart(data: list, **kwargs):
     x = kwargs.get('x', [])
     position = kwargs.get('position', [])
     title = kwargs.get('title', '')
-    saveFig = kwargs.get('saveFig', False)
+    save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_bar_chart.png')
     all_positive = kwargs.get('all_positive', False)
     bar_delta = kwargs.get('bar_delta', False)
@@ -420,7 +420,7 @@ def bar_chart(data: list, **kwargs):
     plot_xaxis_disperse(ax1)
 
     try:
-        if saveFig:
+        if save_fig:
             temp_path = os.path.join("output", "temp")
             if not os.path.exists(temp_path):
                 # For functions, this directory may not exist.
@@ -458,7 +458,7 @@ def specialty_plotting(list_of_plots: list, **kwargs):
                                 (default: {[]})
         title {str} -- title of plot (default: {''})
         legend {list} -- list of plot labels in legend (default: {[]})
-        saveFig {bool} -- True will save as 'filename' (default: {False})
+        save_fig {bool} -- True will save as 'filename' (default: {False})
         filename {str} -- path to save plot (default: {'temp_specialty_plot.png'})
 
     Returns:
@@ -470,7 +470,7 @@ def specialty_plotting(list_of_plots: list, **kwargs):
     alt_ax_index = kwargs.get('alt_ax_index', [])
     title = kwargs.get('title', '')
     legend = kwargs.get('legend', [])
-    saveFig = kwargs.get('saveFig', False)
+    save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_specialty_plot.png')
 
     x = x
@@ -495,7 +495,7 @@ def specialty_plotting(list_of_plots: list, **kwargs):
     plot_xaxis_disperse(ax)
 
     try:
-        if saveFig:
+        if save_fig:
             temp_path = os.path.join("output", "temp")
             if not os.path.exists(temp_path):
                 # For functions, this directory may not exist.
@@ -535,7 +535,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
         feature {str} -- type of shape (default: {'default'}) (others: 'head_and_shoulders')
         title {str} -- title of plot (default: {''})
         legend {list} -- list of plot labels in legend (default: {[]})
-        saveFig {bool} -- True will save as 'filename' (default: {False})
+        save_fig {bool} -- True will save as 'filename' (default: {False})
         filename {str} -- path to save plot (default: {'temp_shape_plot.png'})
 
     Returns:
@@ -547,7 +547,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     feature = kwargs.get('feature', 'default')
     title = kwargs.get('title', '')
     legend = kwargs.get('legend', [])
-    saveFig = kwargs.get('saveFig', False)
+    save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_shape_plot.png')
 
     fig, ax = plt.subplots()
@@ -618,7 +618,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     plot_xaxis_disperse(ax)
 
     try:
-        if saveFig:
+        if save_fig:
             temp_path = os.path.join("output", "temp")
             if not os.path.exists(temp_path):
                 # For functions, this directory may not exist.
@@ -655,7 +655,7 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
     Optional Args:
         title {str} -- title of plot (default: {''})
         legend {list} -- list of plot labels in legend (default: {[]})
-        saveFig {bool} -- True will save as 'filename' (default: {False})
+        save_fig {bool} -- True will save as 'filename' (default: {False})
         filename {str} -- path to save plot (default: {'temp_candlestick.png'})
         progress_bar {ProgressBar} -- (default: {None})
         threshold_candles {dict} -- candlestick thresholds for days (default: {None})
@@ -674,7 +674,7 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
     register_matplotlib_converters()
 
     title = kwargs.get('title', '')
-    saveFig = kwargs.get('saveFig', False)
+    save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_candlestick.png')
     p_bar = kwargs.get('progress_bar', None)
     additional_plts = kwargs.get('additional_plts', [])
@@ -784,7 +784,7 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
     plot_xaxis_disperse(ax)
 
     try:
-        if saveFig:
+        if save_fig:
             temp_path = os.path.join("output", "temp")
             if not os.path.exists(temp_path):
                 # For functions, this directory may not exist.
@@ -843,7 +843,7 @@ def volatility_factor_plot(prices: list, dates: list, vf_data: VFStopsResultType
     register_matplotlib_converters()
 
     title = kwargs.get('title', '')
-    saveFig = kwargs.get('saveFig', False)
+    save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_candlestick.png')
     p_bar = kwargs.get('progress_bar', None)
 
@@ -947,7 +947,7 @@ def volatility_factor_plot(prices: list, dates: list, vf_data: VFStopsResultType
         )
 
     try:
-        if saveFig:
+        if save_fig:
             temp_path = os.path.join("output", "temp")
             if not os.path.exists(temp_path):
                 # For functions, this directory may not exist.

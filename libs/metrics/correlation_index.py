@@ -160,7 +160,7 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
                       y1_label=legend,
                       y2_label='S&P500',
                       title='CCI Net Correlation',
-                      saveFig=(not plot_output),
+                      save_fig=(not plot_output),
                       filename='CCI_net_correlation.png')
 
         str_dates = []
@@ -193,7 +193,7 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
                       y1_label='S&P500',
                       y2_label=['Overall Signal', '20d-SMA'],
                       title='Overall Correlation Signal',
-                      saveFig=(not plot_output),
+                      save_fig=(not plot_output),
                       filename='CCI_overall_correlation.png')
 
         diff_signal = [x - signal_line[i]
@@ -204,7 +204,7 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
                       y1_label='S&P500',
                       y2_label='Corr - Signal Line',
                       title='Diff Correlation Signal',
-                      saveFig=(not plot_output),
+                      save_fig=(not plot_output),
                       filename='CCI_diff_correlation.png')
 
         corr_data['tabular']['overall'] = overall_signal

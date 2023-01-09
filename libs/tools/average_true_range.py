@@ -90,7 +90,7 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
         else:
             filename = os.path.join(name, views, f"atr_{name}.png")
             dual_plotting(fund['Close'], signal, 'Price', 'ATR',
-                          title=title, saveFig=True, filename=filename)
+                          title=title, save_fig=True, filename=filename)
 
     return signal
 

@@ -71,7 +71,7 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
 
         volatility_factor_plot(close, dates, vf_data, green_zone, red_zone, yellow_zone,
             range_value, min_value, text_str=status_string, str_color=status_color, title=title,
-            filename=filename, saveFig=(not plot_output))
+            filename=filename, save_fig=(not plot_output))
 
     return volatility_factor
 

@@ -184,7 +184,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
                 filename = os.path.join(name, view, f"{sub_name}.png")
                 generic_plotting(Y, x=X, colors=C,
                                  title=title,
-                                 saveFig=True, filename=filename)
+                                 save_fig=True, filename=filename)
 
         except:
             print(
@@ -1117,7 +1117,7 @@ def get_trendlines_regression(signal: list, **kwargs) -> dict:
         filename = os.path.join(
             name, views, f"{indicator}_trendlines_{name}.png")
         generic_plotting(plots, x=x_plots, title=title,
-                         filename=filename, saveFig=True)
+                         filename=filename, save_fig=True)
 
     trends = dict()
     return trends

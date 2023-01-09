@@ -123,7 +123,7 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
         filename = os.path.join(name, view, f"commodity_channel_{name}.png")
         dual_plotting(position['Close'], plots,
                       'Price', 'CCI', title=title,
-                      saveFig=True, filename=filename)
+                      save_fig=True, filename=filename)
 
     return tabular
 
@@ -202,7 +202,7 @@ def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
         filename = filename = os.path.join(
             name, view, f"commodity_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=title, saveFig=True, filename=filename)
+                      'Metrics', title=title, save_fig=True, filename=filename)
 
     return metrics
 

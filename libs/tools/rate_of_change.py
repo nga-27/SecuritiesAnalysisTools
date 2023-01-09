@@ -74,7 +74,7 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
                       'Price', 'Rate of Change', title=title,
                       legend=[f'ROC-{periods[0]}',
                               f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
-                      saveFig=True, filename=filename)
+                      save_fig=True, filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -166,7 +166,7 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
     else:
         filename = os.path.join(name, views, f"roc_metrics_{name}")
         dual_plotting(fund['Close'], roc_dict['metrics'],
-                      'Price', 'ROC Metrics', title=title, saveFig=True, filename=filename)
+                      'Price', 'ROC Metrics', title=title, save_fig=True, filename=filename)
 
     return roc_dict
 

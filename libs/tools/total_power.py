@@ -152,7 +152,7 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
                       'Price',
                       ['Bear', 'Bull', 'Total'],
                       title=title,
-                      saveFig=True,
+                      save_fig=True,
                       filename=filename)
 
     if p_bar is not None:
@@ -326,7 +326,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
     else:
         filename = os.path.join(name, view, f"total_pwr_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=title, saveFig=True, filename=filename)
+                      'Metrics', title=title, save_fig=True, filename=filename)
 
     tp['metrics'] = metrics
     tp['signals'] = features

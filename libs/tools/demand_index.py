@@ -151,7 +151,7 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
     else:
         filename = os.path.join(name, view, f"di_metrics_{name}")
         dual_plotting(fund['Close'], metrics, 'Price', 'Demand Index Metrics',
-                      title=title, saveFig=True, filename=filename)
+                      title=title, save_fig=True, filename=filename)
 
     return metrics
 
@@ -252,7 +252,7 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
     else:
         filename = os.path.join(name, view, f"demand_index_{name}")
         dual_plotting(fund['Close'], signal, 'Price', 'Demand Index',
-                      title=title, saveFig=True, filename=filename)
+                      title=title, save_fig=True, filename=filename)
 
     if pbar is not None:
         pbar.uptick(increment=0.1)

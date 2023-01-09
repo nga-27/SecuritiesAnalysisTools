@@ -224,7 +224,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     else:
         filename = os.path.join(name, view, f"bear_bull_power_{name}.png")
         dual_plotting(position['Close'], state4, 'Price', 'Metrics', title=title,
-                      saveFig=True, filename=filename)
+                      save_fig=True, filename=filename)
 
     bear_bull['metrics'] = state4
 

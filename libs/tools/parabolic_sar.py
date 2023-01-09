@@ -214,7 +214,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"parabolic_sar_{name}")
         candlestick_plot(fund, additional_plts=add_plts, title=title,
-                         saveFig=True, filename=filename)
+                         save_fig=True, filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)

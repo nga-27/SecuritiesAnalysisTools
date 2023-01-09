@@ -143,7 +143,7 @@ def type_composite_index(**kwargs) -> list:
                                 legend=['Defensive', 'Sensitive', 'Cyclical'],
                                 title='Type Indexes',
                                 x=dates,
-                                saveFig=True,
+                                save_fig=True,
                                 ylabel='Normalized "Price"',
                                 filename='tci.png'
                             )

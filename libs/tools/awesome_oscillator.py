@@ -140,7 +140,7 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     else:
         filename = os.path.join(name, view, f"awesome_bar_{name}")
         bar_chart(signal, position=position, x=x,
-                  saveFig=True, filename=filename, title=name2, bar_delta=True)
+                  save_fig=True, filename=filename, title=name2, bar_delta=True)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -511,7 +511,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"awesome_metrics_{name}.png")
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
-                      saveFig=True, filename=filename)
+                      save_fig=True, filename=filename)
 
     ao_dict.pop('pm')
 

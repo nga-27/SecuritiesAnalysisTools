@@ -107,7 +107,7 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         filename = os.path.join(name, view, f"momentum_oscillator_{name}.png")
         dual_plotting(position['Close'], signal, 'Price',
                       'CMO', title='(Chande) Momentum Oscillator',
-                      filename=filename, saveFig=True)
+                      filename=filename, save_fig=True)
 
     return signal
 
@@ -300,6 +300,6 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"momentum_metrics_{name}.png")
         dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
-                      saveFig=True, filename=filename)
+                      save_fig=True, filename=filename)
 
     return mo_dict

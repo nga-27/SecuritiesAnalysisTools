@@ -68,7 +68,7 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     else:
         filename = os.path.join(name, view, f"candlestick_{name}.png")
         candlestick_plot(fund, title=name2, filename=filename,
-                         saveFig=True, additional_plts=[plot_50, plot_200])
+                         save_fig=True, additional_plts=[plot_50, plot_200])
 
     if pbar is not None:
         pbar.uptick(increment=0.1)

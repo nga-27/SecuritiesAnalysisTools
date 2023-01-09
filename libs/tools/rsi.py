@@ -91,14 +91,14 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
                           'Position Price',
                           'RSI',
                           title=name2,
-                          saveFig=True,
+                          save_fig=True,
                           filename=filename1)
             dual_plotting(position['Close'],
                           rsi_data['metrics'],
                           'Position Price',
                           'RSI Metrics',
                           title=name2,
-                          saveFig=True,
+                          save_fig=True,
                           filename=filename2)
 
     if progress_bar is not None:

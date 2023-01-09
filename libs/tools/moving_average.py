@@ -281,7 +281,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         else:
             filename = os.path.join(name, view, f"simple_moving_averages_{name}.png")
             candlestick_plot(fund, title=name2, filename=filename,
-                             saveFig=True, additional_plts=[plot_short, plot_med, plot_long])
+                             save_fig=True, additional_plts=[plot_short, plot_med, plot_long])
 
     tma = dict()
     tma['short'] = {'period': config[0]}
@@ -391,9 +391,9 @@ def triple_exp_mov_average(fund: pd.DataFrame, config=[9, 20, 50], **kwargs) -> 
             filename = os.path.join(
                 name, view, f"exp_moving_averages_{name}.png")
             candlestick_plot(fund, title=name2, filename=filename,
-                             saveFig=True, additional_plts=[plot_short, plot_med, plot_long])
+                             save_fig=True, additional_plts=[plot_short, plot_med, plot_long])
             # generic_plotting(plots, x=x_vals,
-            #                  legend=legend, title=name2, saveFig=True, filename=filename)
+            #                  legend=legend, title=name2, save_fig=True, filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
@@ -495,7 +495,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
         filename = os.path.join(
             name, view, f"swing_trades_{function}_{name}.png")
         specialty_plotting([fund['Close'], sh, me, ln, swings], alt_ax_index=[4], legend=[
-                           'Swing Signal'], title=name2, saveFig=True, filename=filename)
+                           'Swing Signal'], title=name2, save_fig=True, filename=filename)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)

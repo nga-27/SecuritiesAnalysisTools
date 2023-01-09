@@ -117,7 +117,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     else:
         filename = os.path.join(name, view, f"hull_moving_average_{name}.png")
         generic_plotting([position['Close'], plots[0], plots[1],
-                          plots[2]], legend=legend, title=name2, saveFig=True, filename=filename)
+                          plots[2]], legend=legend, title=name2, save_fig=True, filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
@@ -330,7 +330,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     else:
         filename2 = os.path.join(name, view, f"hull_metrics_{name}.png")
         dual_plotting(position['Close'], swings['metrics']['metrics'],
-                      'Price', 'Metrics', title=name2, saveFig=True, filename=filename2)
+                      'Price', 'Metrics', title=name2, save_fig=True, filename=filename2)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)

@@ -68,9 +68,9 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
             filename2 = os.path.join(
                 name, view, f"ultimate_osc_raw_{name}.png")
             dual_plotting(position['Close'], ult_osc, 'Position Price',
-                          'Ultimate Oscillator', title=name2, saveFig=True, filename=filename2)
+                          'Ultimate Oscillator', title=name2, save_fig=True, filename=filename2)
             dual_plotting(position['Close'], ultimate['plots'], 'Position Price',
-                          'Buy-Sell Signal', title=name2, saveFig=True, filename=filename)
+                          'Buy-Sell Signal', title=name2, save_fig=True, filename=filename)
 
     ultimate['type'] = 'oscillator'
     ultimate['length_of_data'] = len(ultimate['tabular'])
@@ -485,7 +485,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
             filename = os.path.join(
                 name, view, f"ultimate_osc_metrics_{name}.png")
             dual_plotting(position['Close'], metrics, 'Price',
-                          'Metrics', title=name2, filename=filename, saveFig=True)
+                          'Metrics', title=name2, filename=filename, save_fig=True)
 
     ultimate['metrics'] = metrics
 

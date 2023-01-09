@@ -86,7 +86,7 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
         dual_plotting(y1=position['Close'], y2=clusters, y1_label='Price',
                       y2_label='Clustered Oscillator',
                       x_label='Trading Days', title=name2,
-                      saveFig=True, filename=filename)
+                      save_fig=True, filename=filename)
 
     if prog_bar is not None:
         prog_bar.uptick(increment=0.2)
@@ -386,7 +386,7 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
         filename = os.path.join(
             name, view, f"clustered_osc_metrics_{name}.png")
         dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=name2, filename=filename, saveFig=True)
+                      'Metrics', title=name2, filename=filename, save_fig=True)
 
     return cluster_oscs
 

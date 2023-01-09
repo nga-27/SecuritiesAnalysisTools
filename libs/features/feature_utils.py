@@ -1,14 +1,17 @@
+""" Utility functions for Feature Detection """
+from typing import List
+
 import pandas as pd
 import numpy as np
 
 from libs.utils import date_extractor, shape_plotting, INDEXES
 
 
-def find_local_extrema(position: list, threshold=0.03, points=False) -> list:
+def find_local_extrema(position: list, threshold: float = 0.03, points: bool = False) -> List[dict]:
     """Find Local Extrema
 
     Differs from 'filtered_local_extrema' in that it will find local min/max given a threshold
-    or point differential regardless of data. 'filtered_local_extrema' is more specific to a 
+    or point differential regardless of data. 'filtered_local_extrema' is more specific to a
     filtered/averaged dataset.
 
     Arguments:
@@ -21,8 +24,9 @@ def find_local_extrema(position: list, threshold=0.03, points=False) -> list:
                             to determine correctness (default: {False})
 
     Returns:
-        list -- list of objects detailing extrema info (index, value, min/max)
+        List[dict] -- list of objects detailing extrema info (index, value, min/max)
     """
+    # pylint: disable=too-many-branches
     features = []
     max_val = 0.0
     max_ind = 0
@@ -118,11 +122,11 @@ def find_filtered_local_extrema(filtered: list, raw=False) -> dict:
 def reconstruct_extrema(original: pd.DataFrame,
                         extrema: dict,
                         ma_size: int,
-                        ma_type='simple') -> dict:
+                        ma_type: str ='simple') -> dict:
     """Reconstruct Extrema
 
     Function to find true extrema on 'original', especially when 'extrema' is generated
-    from a filtered / averaged signal (moving averages introduce time shifting). Uses 
+    from a filtered / averaged signal (moving averages introduce time shifting). Uses
 
     Arguments:
         original {pd.DataFrame} -- fund dataset
@@ -136,28 +140,35 @@ def reconstruct_extrema(original: pd.DataFrame,
         dict -- keys: 'min', 'max'; each key has a list of format:
                     [index_of_min_or_max, value]
     """
-
     recon = {}
     recon['max'] = []
     recon['min'] = []
-    olist = list(original['Close'])
+    original_list = list(original['Close'])
 
     if ma_type == 'simple':
         for _max in extrema['max']:
             start = _max - ma_size
-            if start < 0:
-                start = 0
+            start = max(start, 0)
+
             # Search for the maximum on the original signal between 'start' and '_max'.
-            recon['max'].append([olist.index(
-                np.max(olist[start:_max]), start, _max), np.max(olist[start:_max+1])])
+            recon['max'].append(
+                [
+                    original_list.index(np.max(original_list[start:_max]), start, _max),
+                    np.max(original_list[start:_max+1])
+                ]
+            )
 
         for _min in extrema['min']:
             start = _min - ma_size
-            if start < 0:
-                start = 0
+            start = max(start, 0)
+
             # Search for the maximum on the original signal between 'start' and '_min'.
-            recon['min'].append([olist.index(
-                np.min(olist[start:_min]), start, _min), np.min(olist[start:_min+1])])
+            recon['min'].append(
+                [
+                    original_list.index(np.min(original_list[start:_min]), start, _min),
+                    np.min(original_list[start:_min+1])
+                ]
+            )
 
     if ma_type == 'windowed':
         ma_size_adj = int(np.floor(float(ma_size)/2.0))
@@ -166,26 +177,32 @@ def reconstruct_extrema(original: pd.DataFrame,
             end = _max + ma_size_adj
             if start == end:
                 end += 1
-            if start < 0:
-                start = 0
-            if end > len(olist):
-                end = len(olist)
+            start = max(start, 0)
+            end = min(end, len(original_list))
+
             # Search for the maximum on the original signal between 'start' and 'end'.
             recon['max'].append(
-                [olist.index(np.max(olist[start:end]), start, end), np.max(olist[start:end])])
+                [
+                    original_list.index(np.max(original_list[start:end]), start, end),
+                    np.max(original_list[start:end])
+                ]
+            )
 
         for _min in extrema['min']:
             start = _min - ma_size_adj
             end = _min + ma_size_adj
             if start == end:
                 end += 1
-            if start < 0:
-                start = 0
-            if end > len(olist):
-                end = len(olist)
+            start = max(start, 0)
+            end = min(end, len(original_list))
+
             # Search for the maximum on the original signal between 'start' and 'end'.
             recon['min'].append(
-                [olist.index(np.min(olist[start:end]), start, end), np.min(olist[start:end])])
+                [
+                    original_list.index(np.min(original_list[start:end]), start, end),
+                    np.min(original_list[start:end])
+                ]
+            )
 
     return recon
 
@@ -253,7 +270,7 @@ def remove_duplicates(recon: dict, method='threshold', threshold=0.01) -> dict:
     return recon
 
 
-def add_daterange(original: pd.DataFrame, extrema: dict, num_feature_points: int) -> dict:
+def add_date_range(original: pd.DataFrame, extrema: dict, num_feature_points: int) -> dict:
     """ Add Date Range
 
     Looks at index ranges of 'extrema' and adds actual dates from 'original' to 'extrema'
@@ -329,12 +346,12 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
     elif feature == 'price_gaps':
         title += 'Price Gaps'
 
-    saveFig = not plot_output
+    save_fig = not plot_output
 
     shape_plotting(fund['Close'],
                    shapeXY=shapes,
                    feature=feature,
-                   saveFig=saveFig,
+                   save_fig=save_fig,
                    title=title,
                    filename=filename)
 
@@ -369,7 +386,7 @@ def raw_signal_extrema(signal: list, threshold_start=0.01) -> dict:
         i = 2
         need_to_pop = False
         was_max = False
-        while (i < sig_len):
+        while i < sig_len:
             if len(temp) > 0:
                 if temp[0]['type'] == -1:
                     # We have a potential local max

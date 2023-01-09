@@ -91,7 +91,7 @@ def bond_composite_index(config: dict, **kwargs):
                     filename = f"combined_BCI.png"
                     generic_plotting(
                         plots, x=dates, title='Bond Composite Indexes',
-                        legend=legend, saveFig=True, filename=filename,
+                        legend=legend, save_fig=True, filename=filename,
                         ylabel='Normalized Price')
 
 
@@ -249,7 +249,7 @@ def composite_index(data: dict,
         dual_plotting(data_to_plot, composite2,
                       y1_label=index_type, y2_label='BCI',
                       title=f'{bond_type} Bond Composite Index', x=dates,
-                      saveFig=True, filename=f'{bond_type}_BCI.png')
+                      save_fig=True, filename=f'{bond_type}_BCI.png')
     p.uptick()
 
     return composite2, data_to_plot, dates

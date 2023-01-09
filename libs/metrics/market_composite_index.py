@@ -210,7 +210,7 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
                       y2_label='MCI', title='Market Composite Index')
     else:
         dual_plotting(data['^GSPC']['Close'], composite2, y1_label='S&P500', y2_label='MCI',
-                      title='Market Composite Index', saveFig=True, filename='MCI.png')
+                      title='Market Composite Index', save_fig=True, filename='MCI.png')
 
     progress_bar.uptick()
     return composite2
@@ -276,7 +276,7 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         plots = [corrs[x] for x in corrs.keys()]
         legend = [x for x in corrs.keys()]
 
-        generic_plotting(plots, x=dates, title='MCI Correlations', legend=legend, saveFig=(
+        generic_plotting(plots, x=dates, title='MCI Correlations', legend=legend, save_fig=(
             not plot_output), filename='MCI_correlations.png')
 
         progress_bar.uptick()
@@ -291,7 +291,7 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
                       y1_label=legend[0],
                       y2_label=legend[1],
                       title='MCI Net Correlation',
-                      saveFig=(not plot_output),
+                      save_fig=(not plot_output),
                       filename='MCI_net_correlation.png')
 
         progress_bar.uptick()

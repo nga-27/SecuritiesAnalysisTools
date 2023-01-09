@@ -83,7 +83,7 @@ def calculate_recommendation_curve(recoms: dict, **kwargs) -> dict:
             filename = os.path.join(name, f"grades_{name}.png")
             generic_plotting([tabular['grades']], x=x, title="Ratings by Firms",
                              ylabel="Ratings (Proportional 0 - 4)",
-                             saveFig=True, filename=filename)
+                             save_fig=True, filename=filename)
 
     return tabular
 

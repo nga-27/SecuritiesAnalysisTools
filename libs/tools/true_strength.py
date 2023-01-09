@@ -301,7 +301,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
         generic_plotting(output_data,
                          x=dates,
                          title=title,
-                         saveFig=True,
+                         save_fig=True,
                          filename=filename,
                          legend=legend,
                          ylabel='Difference Ratio')
