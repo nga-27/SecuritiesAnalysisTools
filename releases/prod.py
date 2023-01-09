@@ -4,14 +4,15 @@
 #   by: nga-27
 #
 #   A program that outputs a graphical and a numerical analysis of
-#   securities (stocks, bonds, equities, and the like). Analysis 
-#   includes use of oscillators (Stochastic, RSI, and Ultimate), 
-#   momentum charting (Moving Average Convergence Divergence, 
-#   Simple and Exponential Moving Averages), trend analysis (Bands, 
-#   Support and Resistance, Channels), and some basic feature 
+#   securities (stocks, bonds, equities, and the like). Analysis
+#   includes use of oscillators (Stochastic, RSI, and Ultimate),
+#   momentum charting (Moving Average Convergence Divergence,
+#   Simple and Exponential Moving Averages), trend analysis (Bands,
+#   Support and Resistance, Channels), and some basic feature
 #   detection (Head and Shoulders, Pennants).
-#   
+#
 """
+from typing import Tuple
 
 # Imports that are custom tools that are the crux of this program
 from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
@@ -57,7 +58,7 @@ from libs.utils import ProgressBar, start_clock
 ####################################################################
 
 
-def run_prod(script: list):
+def run_prod(script: list) -> Tuple[dict, float]:
     """Run Production Script
 
     Script that has stabilized functions
@@ -66,8 +67,9 @@ def run_prod(script: list):
         script {list} -- dataset, funds, periods, config
 
     Returns:
-        dict -- analysis object of fund data
+        Tuple[dict, float] -- analysis object of fund data, clock time
     """
+    # pylint: disable=too-many-locals,too-many-statements
     dataset = script[0]
     funds = script[1]
     periods = script[2]
@@ -106,9 +108,8 @@ def run_prod(script: list):
             fund_data['name'] = fund_name
 
             fund_print2 = fund_print + f" ({period}) "
-            p = ProgressBar(config['process_steps'],
-                            name=fund_print2, offset=clock)
-            p.start()
+            prog_bar = ProgressBar(config['process_steps'], name=fund_print2, offset=clock)
+            prog_bar.start()
 
             fund_data['statistics'] = get_high_level_stats(fund)
 
@@ -118,77 +119,80 @@ def run_prod(script: list):
                 filter_thresh=3,
                 name=fund_name,
                 plot_output=False,
-                progress_bar=p,
+                progress_bar=prog_bar,
                 view=period)
 
             fund_data['full_stochastic'] = full_stochastic(
-                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False,
+                out_suppress=False, progress_bar=prog_bar, view=period)
 
             fund_data['rsi'] = RSI(
-                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False,
+                out_suppress=False, progress_bar=prog_bar, view=period)
 
             fund_data['ultimate'] = ultimate_oscillator(
-                fund, name=fund_name, plot_output=False, out_suppress=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False,
+                out_suppress=False, progress_bar=prog_bar, view=period)
 
             fund_data['awesome'] = awesome_oscillator(
-                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             fund_data['momentum_oscillator'] = momentum_oscillator(
-                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             fund_data['on_balance_volume'] = on_balance_volume(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['simple_moving_average'] = triple_moving_average(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['exp_moving_average'] = triple_exp_mov_average(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['sma_swing_trade'] = moving_average_swing_trade(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['ema_swing_trade'] = moving_average_swing_trade(
                 fund, function='ema', plot_output=False,
-                name=fund_name, progress_bar=p, view=period)
+                name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['hull_moving_average'] = hull_moving_average(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['macd'] = mov_avg_convergence_divergence(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['bear_bull_power'] = bear_bull_power(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['total_power'] = total_power(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['bollinger_bands'] = bollinger_bands(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['commodity_channels'] = commodity_channel_index(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['rate_of_change'] = rate_of_change_oscillator(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['know_sure_thing'] = know_sure_thing(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['average_true_range'] = average_true_range(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['adx'] = average_directional_index(
                 fund, atr=fund_data['average_true_range']['tabular'], plot_output=False,
-                name=fund_name, progress_bar=p, view=period)
+                name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['parabolic_sar'] = parabolic_sar(
                 fund, adx_tabular=fund_data['adx']['tabular'], plot_output=False,
-                name=fund_name, progress_bar=p, view=period)
+                name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['demand_index'] = demand_index(
-                fund, plot_output=False, name=fund_name, progress_bar=p, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             if 'no_index' not in config['state']:
                 strength, match_data = relative_strength(
@@ -197,7 +201,7 @@ def run_prod(script: list):
                     config=config,
                     plot_output=False,
                     meta=analysis[fund_name]['metadata'],
-                    progress_bar=p,
+                    progress_bar=prog_bar,
                     period=period,
                     interval=config['interval'][i],
                     view=period
@@ -207,41 +211,41 @@ def run_prod(script: list):
                 fund_data['statistics']['risk_ratios'] = risk_comparison(
                     fund, dataset[period]['^GSPC'], dataset[period]['^IRX'],
                     sector_data=match_data)
-                p.uptick()
+                prog_bar.uptick()
 
             # Support and Resistance Analysis
             fund_data['support_resistance'] = find_resistance_support_lines(
-                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             # Feature Detection Block
             fund_data['features'] = {}
             fund_data['features']['head_shoulders'] = feature_detection_head_and_shoulders(
-                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             fund_data['candlesticks'] = candlesticks(
-                fund, name=fund_name, plot_output=False, view=period, progress_bar=p)
+                fund, name=fund_name, plot_output=False, view=period, progress_bar=prog_bar)
 
             fund_data['price_gaps'] = analyze_price_gaps(
-                fund, name=fund_name, plot_output=False, progress_bar=p, view=period)
+                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             # Get Trendlines
             fund_data['trendlines'] = get_trendlines(
                 fund,
                 name=fund_name,
                 plot_output=False,
-                progress_bar=p,
+                progress_bar=prog_bar,
                 view=period,
                 meta=analysis[fund_name]['metadata'])
 
             # Various Fund-specific Metrics
-            fund_data['futures'] = future_returns(fund, progress_bar=p)
+            fund_data['futures'] = future_returns(fund, progress_bar=prog_bar)
 
             # Parse through indicators and pull out latest signals (must be last)
             fund_data['last_signals'] = assemble_last_signals(
                 fund_data, fund=fund, name=fund_name, view=period,
-                progress_bar=p, plot_output=False)
+                progress_bar=prog_bar, plot_output=False)
 
-            p.end()
+            prog_bar.end()
 
             analysis[fund_name][period] = fund_data
 

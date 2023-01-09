@@ -4,14 +4,15 @@
 #   by: nga-27
 #
 #   A program that outputs a graphical and a numerical analysis of
-#   securities (stocks, bonds, equities, and the like). Analysis 
-#   includes use of oscillators (Stochastic, RSI, and Ultimate), 
-#   momentum charting (Moving Average Convergence Divergence, 
-#   Simple and Exponential Moving Averages), trend analysis (Bands, 
-#   Support and Resistance, Channels), and some basic feature 
+#   securities (stocks, bonds, equities, and the like). Analysis
+#   includes use of oscillators (Stochastic, RSI, and Ultimate),
+#   momentum charting (Moving Average Convergence Divergence,
+#   Simple and Exponential Moving Averages), trend analysis (Bands,
+#   Support and Resistance, Channels), and some basic feature
 #   detection (Head and Shoulders, Pennants).
-#   
+#
 """
+from typing import Union
 
 # Imports from libraries
 from libs.utils import start_clock
@@ -27,7 +28,7 @@ from .exports import run_exports
 ####################################################################
 
 
-def technical_analysis(config: dict, release='prod'):
+def technical_analysis(config: dict, release='prod') -> Union[float, None]:
     """Technical Analysis
 
     Runs application program, funneling to either 'dev' or 'prod', metrics, etc.
@@ -37,11 +38,14 @@ def technical_analysis(config: dict, release='prod'):
 
     Keyword Arguments:
         release {str} -- either 'dev' or 'prod' (default: {'prod'})
+
+    Returns:
+        float -- clock time
     """
     script = init_script(config, release=release)
 
-    if script is None:
-        return
+    if script[0] is None:
+        return None
 
     # Start of automated process
     clock = None
@@ -56,8 +60,15 @@ def technical_analysis(config: dict, release='prod'):
     return clock
 
 
-def clock_management(start_time: float):
-    """ Clock management to handle elapsed time to higher levels """
+def clock_management(start_time: float) -> str:
+    """ Clock management to handle elapsed time to higher levels
+
+    Arguments:
+        start_time {float} -- time of the clock
+
+    Returns:
+        str -- print out of the clock
+    """
     if start_time is None:
         return 0
     elapsed = round(start_clock() - start_time)

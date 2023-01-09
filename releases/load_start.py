@@ -1,3 +1,6 @@
+""" load_start - The initial function that builds the start screen """
+from typing import Tuple, Union, List
+
 from libs.utils import start_header
 from libs.utils import download_data_all
 from libs.utils import has_critical_error
@@ -8,7 +11,7 @@ from libs.utils import TEXT_COLOR_MAP
 
 
 ################################
-_DEV_VERSION_ = '0.2.14'
+_DEV_VERSION_ = '1.0.0'
 _DATE_REVISION_DEV_ = '2023-01-08'
 ################################
 PROCESS_STEPS_DEV = 30
@@ -19,7 +22,8 @@ PROD_COLOR = TEXT_COLOR_MAP["green"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
-def init_script(config: dict, **kwargs) -> list:
+def init_script(config: dict, **kwargs) -> Tuple[
+    Union[dict, None], Union[List[str], None], Union[List[str], None], Union[dict, None]]:
     """Init Script
 
     Arguments:
@@ -38,7 +42,7 @@ def init_script(config: dict, **kwargs) -> list:
     elif release == 'prod':
         config['process_steps'] = PROCESS_STEPS_PROD
 
-    if config['release'] == True:
+    if config['release'] is True:
         # Use only after release!
         print(" ")
 
@@ -52,12 +56,12 @@ def init_script(config: dict, **kwargs) -> list:
             config['process_steps'] = PROCESS_STEPS_DEV
 
     if config['state'] == 'halt':
-        return
+        return None, None, None, None
 
     if 'function' in config['state']:
         # If only simple functions are desired, they go into this handler
         only_functions_handler(config)
-        return
+        return None, None, None, None
 
     if 'no_index' not in config['state']:
         config['tickers'] = index_appender(config['tickers'])
@@ -73,9 +77,9 @@ def init_script(config: dict, **kwargs) -> list:
 
     dataset, funds, periods, config = download_data_all(config=config)
 
-    for period in dataset:
+    for _, data in dataset.items():
         e_check = {'tickers': config['tickers']}
-        if has_critical_error(dataset[period], 'download_data', misc=e_check):
-            return None
+        if has_critical_error(data, 'download_data', misc=e_check):
+            return None, None, None, None
 
     return dataset, funds, periods, config

@@ -17,12 +17,10 @@ class ProgressBar(object):
     """ProgressBar
 
     Useful class to track progress of a function or analysis set
-
-    Arguments:
-        object {} -- n/a
     """
 
-    def __init__(self, total_items: int, name: str = '', stopwatch: bool = True, offset=None):
+    def __init__(self, total_items: int, name: str = '',
+                 stopwatch: bool = True, offset: float = None):
         self.total = float(total_items)
         self.name = name
         self.iteration = 0.0
@@ -47,7 +45,7 @@ class ProgressBar(object):
         self.iteration += increment
         self.printProgressBar(self.iteration, self.total, obj=self.name)
 
-    def end(self):
+    def end(self) -> float:
         """ Sets all progress to 100% and returns time of completion """
         self.printProgressBar(self.total, self.total, obj=self.name)
         return time.time()
@@ -125,6 +123,6 @@ class ProgressBar(object):
             print('')
 
 
-def start_clock():
+def start_clock() -> float:
     """ Wrapper function for time keeping """
     return time.time()

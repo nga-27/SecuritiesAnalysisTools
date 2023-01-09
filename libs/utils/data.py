@@ -1,4 +1,6 @@
+from typing import Tuple
 import math
+
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -19,7 +21,7 @@ interval : str
 """
 
 
-def download_data_all(config: dict, **kwargs) -> list:
+def download_data_all(config: dict, **kwargs) -> Tuple[dict, list, list, dict]:
     """Download data (for functions)
 
     Arguments:
@@ -30,23 +32,24 @@ def download_data_all(config: dict, **kwargs) -> list:
         end {str} -- date (default: {None})
 
     Returns:
-        list -- downloaded data, list of funds
+        Tuple[dict, list, list, dict] -- downloaded data, list of funds, periods, config
     """
-    period = config.get('period', ['2y'])
+    periods = list(config.get('period', ['2y']))
     interval = config.get('interval', ['1d'])
     tickers = config['tickers']
     ticker_print = config['ticker print']
     start = kwargs.get('start')
     end = kwargs.get('end')
 
-    if len(period) > len(interval):
-        diff = len(period) - len(interval)
+    if len(periods) > len(interval):
+        diff = len(periods) - len(interval)
         for _ in range(diff):
             interval.append('1d')
         config['interval'] = interval
 
-    dataset = dict()
-    for i, per in enumerate(period):
+    dataset = {}
+    funds = []
+    for i, per in enumerate(periods):
         inter = interval[i]
         if (start is not None) and (end is not None):
             print(
@@ -65,8 +68,7 @@ def download_data_all(config: dict, **kwargs) -> list:
         data = data_format(data, config=config)
 
         dataset[per] = data
-
-    return dataset, funds, period, config
+    return dataset, funds, periods, config
 
 
 def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
