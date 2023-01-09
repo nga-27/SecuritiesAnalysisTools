@@ -196,7 +196,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
 
             if match_fund is not None:
                 comp_funds, comp_data = api_sector_funds(
-                    match_fund, config, fund_len=fund_len, period=period, interval=interval)
+                    match_fund, fund_len=fund_len, period=period, interval=interval)
 
                 if match_data is None:
                     match_data = full_data_dict
