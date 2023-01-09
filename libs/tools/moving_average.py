@@ -222,15 +222,15 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     progress_bar = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
-    tshort = simple_moving_avg(fund, config[0])
+    sma_short = simple_moving_avg(fund, config[0])
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    tmed = simple_moving_avg(fund, config[1])
+    sma_med = simple_moving_avg(fund, config[1])
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    tlong = simple_moving_avg(fund, config[2])
+    sma_long = simple_moving_avg(fund, config[2])
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
@@ -247,20 +247,20 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     tmed2 = []
     tlong2 = []
 
-    if len(tshort) > 0:
+    if len(sma_short) > 0:
         for i, close in enumerate(fund['Close']):
-            mshort.append(np.round((close - tshort[i]) / tshort[i] * 100.0, 3))
-        tshort_x, tshort2 = adjust_signals(fund, tshort, offset=config[0])
+            mshort.append(np.round((close - sma_short[i]) / sma_short[i] * 100.0, 3))
+        tshort_x, tshort2 = adjust_signals(fund, sma_short, offset=config[0])
 
-    if len(tmed) > 0:
+    if len(sma_med) > 0:
         for i, close in enumerate(fund['Close']):
-            mmed.append(np.round((close - tmed[i]) / tmed[i] * 100.0, 3))
-        tmed_x, tmed2 = adjust_signals(fund, tmed, offset=config[1])
+            mmed.append(np.round((close - sma_med[i]) / sma_med[i] * 100.0, 3))
+        tmed_x, tmed2 = adjust_signals(fund, sma_med, offset=config[1])
 
-    if len(tlong) > 0:
+    if len(sma_long) > 0:
         for i, close in enumerate(fund['Close']):
-            mlong.append(np.round((close - tlong[i]) / tlong[i] * 100.0, 3))
-        tlong_x, tlong2 = adjust_signals(fund, tlong, offset=config[2])
+            mlong.append(np.round((close - sma_long[i]) / sma_long[i] * 100.0, 3))
+        tlong_x, tlong2 = adjust_signals(fund, sma_long, offset=config[2])
 
     plot_short = {"plot": tshort2, "color": "blue",
                   "legend": f"{config[0]}-day MA", "x": tshort_x}
@@ -276,12 +276,10 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
                 config[0], config[1], config[2])
 
         if plot_output:
-            candlestick_plot(fund, title=name2, additional_plts=[
-                             plot_short, plot_med, plot_long])
+            candlestick_plot(fund, title=name2, additional_plts=[plot_short, plot_med, plot_long])
 
         else:
-            filename = os.path.join(
-                name, view, f"simple_moving_averages_{name}.png")
+            filename = os.path.join(name, view, f"simple_moving_averages_{name}.png")
             candlestick_plot(fund, title=name2, filename=filename,
                              saveFig=True, additional_plts=[plot_short, plot_med, plot_long])
 
@@ -289,7 +287,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     tma['short'] = {'period': config[0]}
     tma['medium'] = {'period': config[1]}
     tma['long'] = {'period': config[2]}
-    tma['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
+    tma['tabular'] = {'short': sma_short, 'medium': sma_med, 'long': sma_long}
     tma['metrics'] = {f'{config[0]}-d': mshort,
                       f'{config[1]}-d': mmed, f'{config[2]}-d': mlong}
 

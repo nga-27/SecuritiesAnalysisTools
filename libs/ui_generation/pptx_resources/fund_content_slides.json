@@ -1,7 +1,7 @@
 {
     "info": {
         "quad_slides": 10,
-        "single_slides": 2
+        "single_slides": 3
     },
     "plots": {
         "simple_moving_averages": {
@@ -12,129 +12,133 @@
             "index": 1,
             "location": 5
         },
-        "obv_standard": {
+        "stop_losses": {
             "index": 2,
+            "location": 5
+        },
+        "obv_standard": {
+            "index": 3,
             "location": 0
         },
         "overall_metrics": {
-            "index": 2,
+            "index": 3,
             "location": 1
         },
         "macd_bar": {
-            "index": 2,
+            "index": 3,
             "location": 2
         },
         "clustered_osc_metrics": {
-            "index": 2,
+            "index": 3,
             "location": 3
         },
         "relative_strength": {
-            "index": 3,
+            "index": 4,
             "location": 0
         },
         "grades": {
-            "index": 3,
+            "index": 4,
             "location": 1
         },
         "commodity_channel": {
-            "index": 3,
+            "index": 4,
             "location": 2
         },
         "commodity_metrics": {
-            "index": 3,
+            "index": 4,
             "location": 3
         },
         "ultimate_osc_metrics": {
-            "index": 4,
+            "index": 5,
             "location": 0
         },
         "swing_trades_sma": {
-            "index": 4,
+            "index": 5,
             "location": 1
         },
         "macd_metrics": {
-            "index": 4,
+            "index": 5,
             "location": 2
         },
         "momentum_metrics": {
-            "index": 4,
+            "index": 5,
             "location": 3
         },
         "bear_bull_power": {
-            "index": 5,
+            "index": 6,
             "location": 0
         },
         "awesome_metrics": {
-            "index": 5,
+            "index": 6,
             "location": 1
         },
         "total_pwr_metrics": {
-            "index": 5,
+            "index": 6,
             "location": 2
         },
         "awesome_bar": {
-            "index": 5,
+            "index": 6,
             "location": 3
         },
         "rate_of_change": {
-            "index": 6,
+            "index": 7,
             "location": 0
         },
         "demand_index": {
-            "index": 6,
+            "index": 7,
             "location": 1
         },
         "kst_oscillator": {
-            "index": 6,
+            "index": 7,
             "location": 2
         },
         "kst_metrics": {
-            "index": 6,
+            "index": 7,
             "location": 3
         },
         "volume": {
-            "index": 7,
+            "index": 8,
             "location": 0
         },
         "RSI_standard": {
-            "index": 7,
+            "index": 8,
             "location": 1
         },
         "bollinger_bands": {
-            "index": 7,
+            "index": 8,
             "location": 2
         },
         "bollinger_band_metrics": {
-            "index": 7,
+            "index": 8,
             "location": 3
         },
         "atr": {
-            "index": 8,
+            "index": 9,
             "location": 0
         },
         "obv_diff": {
-            "index": 8,
-            "location": 1
-        },
-        "adx_tabular": {
-            "index": 8,
-            "location": 2
-        },
-        "parabolic_sar": {
-            "index": 8,
-            "location": 3
-        },
-        "roc_metrics": {
             "index": 9,
             "location": 1
         },
-        "resist_support": {
+        "adx_tabular": {
+            "index": 9,
+            "location": 2
+        },
+        "parabolic_sar": {
+            "index": 9,
+            "location": 3
+        },
+        "roc_metrics": {
             "index": 10,
+            "location": 1
+        },
+        "resist_support": {
+            "index": 11,
             "location": 4,
             "table": 0
         },
         "trendline": {
-            "index": 11,
+            "index": 12,
             "location": 4,
             "table": 1
         }

@@ -38,7 +38,7 @@ REQUIRES = [
     "python-pptx==0.6.18",
     'colorama==0.4.3',
     "yfinance==0.2.3",
-    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@v1.0.0"
+    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@v1.0.1"
 ]
 
 REQUIRES_DEV = [

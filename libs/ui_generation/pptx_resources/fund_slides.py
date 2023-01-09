@@ -1,30 +1,20 @@
 import os
 import glob
 import json
-import datetime
-import pandas as pd
 import numpy as np
 
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from libs.utils import fund_list_extractor, INDEXES
+from libs.utils import INDEXES
 from libs.tools import trend_simple_forecast
 
 from .slide_utils import slide_title_header, color_to_RGB, pptx_ui_errors
 from .synopsis_slide import generate_synopsis_slide
 
 # Slide Layouts
-PRES_TITLE_SLIDE = 0
-TITLE_CONTENT_SLIDE = 1
-SECTION_HEADER_SLIDE = 2
-TWO_CONTENT_SLIDE = 3
-COMPARISON_SLIDE = 4
-TITLE_ONLY_SLIDE = 5
 BLANK_SLIDE = 6
-CONTENT_W_CAPTION_SLIDE = 7
-PICTURE_W_CAPTION_SLIDE = 8
 
 TEMP_DIR = os.path.join("output", "temp")
 
@@ -79,24 +69,24 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     left = Inches(4)
     width = Inches(5)
     height = Inches(2)
-    txtbox = slide.shapes.add_textbox(left, top, width, height)
-    text_frame = txtbox.text_frame
+    txt_box = slide.shapes.add_textbox(left, top, width, height)
+    text_frame = txt_box.text_frame
 
-    p = text_frame.paragraphs[0]
-    p.alignment = PP_ALIGN.CENTER
-    p.text = f'{fund_name}'
-    p.font.bold = True
-    p.font.size = Pt(60)
-    p.font.name = 'Arial'
+    paragraph = text_frame.paragraphs[0]
+    paragraph.alignment = PP_ALIGN.CENTER
+    paragraph.text = f'{fund_name}'
+    paragraph.font.bold = True
+    paragraph.font.size = Pt(60)
+    paragraph.font.name = 'Arial'
 
-    p2 = text_frame.add_paragraph()
-    p2.alignment = PP_ALIGN.CENTER
-    p2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  " + \
+    paragraph2 = text_frame.add_paragraph()
+    paragraph2.alignment = PP_ALIGN.CENTER
+    paragraph2.text = f"Dates Covered: {analysis[fund][views]['dates_covered']['start']}  :  " + \
         f"{analysis[fund][views]['dates_covered']['end']}"
-    p2.font.bold = False
-    p2.font.size = Pt(18)
-    p2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
-    p2.font.name = 'Arial'
+    paragraph2.font.bold = False
+    paragraph2.font.size = Pt(18)
+    paragraph2.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
+    paragraph2.font.name = 'Arial'
 
     has_beta = False
 
@@ -233,18 +223,15 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         top = Inches(1.4)
         height = Inches(6)
         width = Inches(10.5)
-        slide.shapes.add_picture(
-            content, left, top, height=height, width=width)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     else:
         slide = pptx_ui_errors(slide, "No Candlestick Chart available.")
 
     price_pt = np.round(analysis[fund][views]
                         ['statistics']['current_price'], 2)
-    price_chg_p = np.round(
-        analysis[fund][views]['statistics']['current_percent_change'], 3)
-    price_chg = np.round(analysis[fund][views]
-                         ['statistics']['current_change'], 2)
+    price_chg_p = np.round(analysis[fund][views]['statistics']['current_percent_change'], 3)
+    price_chg = np.round(analysis[fund][views]['statistics']['current_change'], 2)
 
     if price_chg > 0.0:
         price_str = f"${price_pt} +{price_chg} (+{price_chg_p}%)"
@@ -257,12 +244,10 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     slide = generate_synopsis_slide(slide, analysis, fund, views=views)
 
     indexes = []
-    m_file = os.path.join("libs", "ui_generation",
-                          "pptx_resources", "fund_content_slides.json")
+    m_file = os.path.join("libs", "ui_generation", "pptx_resources", "fund_content_slides.json")
     if os.path.exists(m_file):
-        with open(m_file, 'r') as mfl:
+        with open(m_file, 'r', encoding='utf-8') as mfl:
             m_data = json.load(mfl)
-            mfl.close()
 
         # Slides with 4 plots on each
         num_quad_slides = m_data.get('info', {}).get('quad_slides', 0)
@@ -327,9 +312,8 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
         return prs
 
     slide_config = {}
-    with open(content_file, 'r') as c_file:
+    with open(content_file, 'r', encoding='utf-8') as c_file:
         slide_config = json.load(c_file)
-        c_file.close()
 
     views = kwargs.get('views', '')
     current_price = kwargs.get('current_price')

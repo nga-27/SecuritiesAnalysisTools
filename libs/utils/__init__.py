@@ -10,8 +10,10 @@ from .error_handler import has_critical_error
 from .formatting import index_extractor, fund_list_extractor, index_appender
 from .formatting import dates_extractor_list, date_extractor, dates_convert_from_index
 
-from .plotting import dual_plotting, generic_plotting, bar_chart, specialty_plotting
-from .plotting import candlestick_plot, shape_plotting
+from .plotting import (
+    dual_plotting, generic_plotting, bar_chart, specialty_plotting, candlestick_plot,
+    shape_plotting, volatility_factor_plot
+)
 
 from .progress_bar import ProgressBar, start_clock
 

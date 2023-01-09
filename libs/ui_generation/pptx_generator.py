@@ -33,8 +33,7 @@ def slide_creator(analysis: dict, debug: bool = False, **kwargs):
         version {str} -- '0.1.20', for example (default: {None})
         config {dict} -- main control obj (default: {None})
     """
-
-    version = kwargs.get('version', "0.2.02")
+    version = kwargs.get('version', "1.0.0")
     config = kwargs.get('config')
 
     if not debug and config is not None:

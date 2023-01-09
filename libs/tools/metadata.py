@@ -49,7 +49,7 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         metadata['info'] = fund_info.get_info(ticker)
 
     if function == 'all' or function == 'volatility':
-        metadata['volatility'] = volatility.get_volatility(fund_ticker)
+        metadata['volatility'] = volatility.get_volatility(fund_ticker, plot_output=plot_output)
         if pb is not None:
             pb.uptick(increment=0.1)
 
