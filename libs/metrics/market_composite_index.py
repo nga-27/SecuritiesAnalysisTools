@@ -14,7 +14,7 @@ import json
 import pandas as pd
 import numpy as np
 
-from libs.tools import cluster_oscs, beta_comparison_list
+from libs.tools import cluster_oscillators, beta_comparison_list
 from libs.tools import windowed_moving_avg
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import ProgressBar, index_appender
@@ -179,7 +179,7 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
     """
     composite = []
     for tick in sectors:
-        cluster = cluster_oscs(
+        cluster = cluster_oscillators(
             data[tick],
             plot_output=False,
             function='market',

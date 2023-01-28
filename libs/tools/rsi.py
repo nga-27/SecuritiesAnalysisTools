@@ -8,7 +8,7 @@ from libs.features import normalize_signals
 
 from .trends import autotrend
 from .moving_average import exponential_moving_avg
-from .trends import get_trendlines_regression
+from .trends import get_trend_lines_regression
 
 
 def RSI(position: pd.DataFrame, **kwargs) -> dict:
@@ -107,7 +107,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
     if trendlines:
         end = len(rsi)
         rsi_trend = rsi[end-100: end]
-        get_trendlines_regression(rsi_trend, plot_output=True, indicator='RSI')
+        get_trend_lines_regression(rsi_trend, plot_output=True, indicator='RSI')
 
     rsi_data['type'] = 'oscillator'
     rsi_data['length_of_data'] = len(rsi)

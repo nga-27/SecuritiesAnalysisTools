@@ -14,8 +14,8 @@ from libs.metrics import metadata_to_dataset
 from libs.metrics import generate_synopsis
 from libs.metrics import assemble_last_signals
 
-from libs.tools import get_trendlines, find_resistance_support_lines
-from libs.tools import cluster_oscs, RSI, full_stochastic, ultimate_oscillator
+from libs.tools import get_trend_lines, find_resistance_support_lines
+from libs.tools import cluster_oscillators, RSI, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength
 from libs.tools import on_balance_volume, demand_index
@@ -85,34 +85,6 @@ def correlation_index_function(config: dict):
     config['properties']['Indexes']['Correlation'] = config['properties']['Indexes'].get(
         'Correlation', temp)
     correlation_composite_index(config=config)
-
-
-def trends_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Trends of {TICKER}{fund}{NORMAL}...")
-            get_trendlines(data[fund], plot_output=True, name=fund)
-
-
-def support_resistance_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Support & Resistance of {TICKER}{fund}{NORMAL}...")
-            find_resistance_support_lines(
-                data[fund], plot_output=True, name=fund)
-
-
-def cluster_oscs_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Clustered Oscillators of {TICKER}{fund}{NORMAL}...")
-            cluster_oscs(data[fund], name=fund,
-                         plot_output=True, function='all')
 
 
 def head_and_shoulders_function(config: dict):
@@ -360,7 +332,7 @@ def risk_function(config: dict):
 def vf_function(config: dict):
     print(f"Volatility & Stop Losses for funds...")
     print(f"")
-    data, fund_list = function_data_download(config)
+    data, fund_list = function_data_download(config, fund_list_only=True)
     for fund in fund_list:
         vf = get_volatility(fund)
         vf_function_print(vf, fund)
@@ -549,11 +521,16 @@ def pdf_output_function(config: dict):
 ####################################################
 
 
-def function_data_download(config: dict) -> list:
-    data, fund_list = download_data(config=config)
+def function_data_download(config: dict, **kwargs) -> list:
+    fund_list_only = kwargs.get('fund_list_only', False)
+    data, fund_list = download_data(config=config, fund_list_only=fund_list_only)
+    if fund_list_only:
+        # primarily used for VF, which downloads its own data separately.
+        return {}, fund_list
+
     e_check = {'tickers': config['tickers']}
     if has_critical_error(data, 'download_data', misc=e_check):
-        return [], []
+        return {}, []
     return data, fund_list
 
 
@@ -674,13 +651,22 @@ def nasit_build(data: dict, makeup: dict, has_cash=False, by_price=True):
 ################################################
 
 
+def run_function(config: dict, function_to_run: function, **kwargs):
+    data, fund_list = function_data_download(config)
+    function_str = str(function_to_run.__name__).capitalize()
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"{function_str} of {TICKER}{fund}{NORMAL}...")
+            function_to_run(data[fund], plot_output=True, name=fund, **kwargs)
+
+
 FUNCTION_MAP = {
-    'mci': mci_function,
-    'bci': bci_function,
-    'tci': tci_function,
-    'trend': trends_function,
-    'support_resistance': support_resistance_function,
-    'clustered_oscs': cluster_oscs_function,
+    'mci': [mci_function],
+    'bci': [bci_function],
+    'tci': [tci_function],
+    'trend': [run_function, get_trend_lines],
+    'support_resistance': [run_function, find_resistance_support_lines],
+    'clustered_oscs': [run_function, cluster_oscillators, {'function': 'all'}],
     'head_shoulders': head_and_shoulders_function,
     'correlation': correlation_index_function,
     'rsi': rsi_function,
@@ -719,15 +705,6 @@ FUNCTION_MAP = {
 }
 
 
-def run_function(config: dict, function_value: str):
-    data, fund_list = function_data_download(config)
-    function_str = function_value.capitalize()
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"{function_str} of {TICKER}{fund}{NORMAL}...")
-            # get_trendlines(data[fund], plot_output=True, name=fund)
-            eval(f"")
-
 def only_functions_handler(config: dict):
     """ Main control function for functions """
     if config.get('run_functions') == ['nf']:
@@ -746,4 +723,12 @@ def only_functions_handler(config: dict):
         return
 
     for function in config['run_functions']:
-        FUNCTION_MAP[function](config)
+        functions = FUNCTION_MAP[function]
+        if len(functions) == 1:
+            functions[0](config)
+        else:
+            keyword_args = {}
+            if len(functions) > 2:
+                keyword_args = functions[2]
+            print(keyword_args)
+            functions[0](config, functions[1], **keyword_args)

@@ -6,7 +6,7 @@ import numpy as np
 from libs.utils import generic_plotting, dual_plotting, bar_chart, dates_extractor_list, INDEXES
 
 from .moving_average import simple_moving_avg
-from .trends import get_trendlines, get_trendlines_regression
+from .trends import get_trend_lines, get_trend_lines_regression
 
 
 def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
@@ -57,7 +57,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     sub_name = f"obv3_{name}"
     max_window = int(len(fund['Close']) / 4)
-    obv_dict['trends'] = get_trendlines(
+    obv_dict['trends'] = get_trend_lines(
         trend_data2, name=name,
         sub_name=sub_name,
         plot_output=plot_output,
@@ -72,7 +72,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     end = len(obv_dict['obv'])
     obv = obv_dict['obv'][end-100: end]
     if obv[1] != 0.0 and trendlines:
-        get_trendlines_regression(
+        get_trend_lines_regression(
             obv, dates=fund.index, plot_output=plot_output, indicator='OBV')
 
     if progress_bar is not None:
@@ -81,7 +81,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     end = len(obv_dict['obv'])
     obv = obv_dict['obv'][end-50: end]
     if obv[1] != 0.0 and trendlines:
-        get_trendlines_regression(
+        get_trend_lines_regression(
             obv, dates=None, plot_output=plot_output, indicator='OBV')
 
     if progress_bar is not None:

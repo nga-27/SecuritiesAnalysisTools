@@ -22,7 +22,7 @@ BASE_WEIGHTS = {
 }
 
 
-def cluster_oscs(position: pd.DataFrame, **kwargs):
+def cluster_oscillators(position: pd.DataFrame, **kwargs):
     """
     2-3-5-8 multiplier comparing several different osc lengths
 
@@ -48,11 +48,11 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     prog_bar = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
-    cluster_oscs = {}
+    cluster_oscillators = {}
 
     clusters = generate_cluster(position, function, p_bar=prog_bar)
-    cluster_oscs['tabular'] = clusters
-    cluster_oscs['length_of_data'] = len(clusters)
+    cluster_oscillators['tabular'] = clusters
+    cluster_oscillators['length_of_data'] = len(clusters)
 
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = exponential_moving_avg(
@@ -68,12 +68,12 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
     if prog_bar is not None:
         prog_bar.uptick(increment=0.1)
 
-    cluster_oscs['clustered type'] = function
-    cluster_oscs[function] = dates
-    cluster_oscs['signals'] = signals
+    cluster_oscillators['clustered type'] = function
+    cluster_oscillators[function] = dates
+    cluster_oscillators['signals'] = signals
 
-    cluster_oscs = clustered_metrics(
-        position, cluster_oscs, plot_output=plot_output, name=name, view=view)
+    cluster_oscillators = clustered_metrics(
+        position, cluster_oscillators, plot_output=plot_output, name=name, view=view)
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Clustering: ' + function
@@ -92,11 +92,11 @@ def cluster_oscs(position: pd.DataFrame, **kwargs):
         prog_bar.uptick(increment=0.2)
 
     if wma:
-        cluster_oscs['tabular'] = clusters_wma
+        cluster_oscillators['tabular'] = clusters_wma
 
-    cluster_oscs['type'] = 'oscillator'
+    cluster_oscillators['type'] = 'oscillator'
 
-    return cluster_oscs
+    return cluster_oscillators
 
 
 def clustering(updatable: list, evaluator: dict, **kwargs) -> list:
@@ -244,7 +244,7 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
 
     else:
         print(
-            f'{WARNING}Warning: Unrecognized function input of {function} in cluster_oscs.{NORMAL}')
+            f'{WARNING}Warning: Unrecognized function input of {function} in cluster_oscillators.{NORMAL}')
         return None
 
     if p_bar is not None:
@@ -328,12 +328,12 @@ def generate_weights(position, **kwargs) -> dict:
     return weights
 
 
-def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> dict:
+def clustered_metrics(position: pd.DataFrame, cluster_oscillators: dict, **kwargs) -> dict:
     """Clustered Metrics
 
     Arguments:
         position {pd.DataFrame} -- dataset
-        cluster_oscs {dict} -- clustered osc data object
+        cluster_oscillators {dict} -- clustered osc data object
 
     Optional Args:
         plot_output {bool} -- (default: {True})
@@ -347,7 +347,7 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
     name = kwargs.get('name', '')
     view = kwargs.get('view')
 
-    ults = cluster_oscs['tabular']
+    ults = cluster_oscillators['tabular']
 
     # Take indicator set: weight, filter, normalize
     weights = [1.0, 0.85, 0.55, 0.1]
@@ -375,7 +375,7 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
     norm = normalize_signals([metrics])
     metrics = norm[0]
 
-    cluster_oscs['metrics'] = metrics
+    cluster_oscillators['metrics'] = metrics
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + " - Clustered Oscillator Metrics"
@@ -388,7 +388,7 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscs: dict, **kwargs) -> d
         dual_plotting(position['Close'], metrics, 'Price',
                       'Metrics', title=name2, filename=filename, save_fig=True)
 
-    return cluster_oscs
+    return cluster_oscillators
 
 
 def clustered_signals(sig_list: list, **kwargs) -> list:

@@ -15,7 +15,7 @@
 from typing import Tuple
 
 # Imports that are custom tools that are the crux of this program
-from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscs, RSI
+from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscillators, RSI
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import relative_strength, moving_average_swing_trade
 from libs.tools import triple_moving_average, triple_exp_mov_average
@@ -23,7 +23,7 @@ from libs.tools import hull_moving_average
 from libs.tools import mov_avg_convergence_divergence
 from libs.tools import on_balance_volume, demand_index
 from libs.tools import find_resistance_support_lines
-from libs.tools import get_trendlines
+from libs.tools import get_trend_lines
 from libs.tools import get_high_level_stats
 from libs.tools import bear_bull_power
 from libs.tools import total_power
@@ -114,7 +114,7 @@ def run_dev(script: list) -> Tuple[dict, float]:
 
             fund_data['statistics'] = get_high_level_stats(fund)
 
-            fund_data['clustered_osc'] = cluster_oscs(
+            fund_data['clustered_osc'] = cluster_oscillators(
                 fund,
                 function='all',
                 filter_thresh=3,
@@ -230,7 +230,7 @@ def run_dev(script: list) -> Tuple[dict, float]:
                 fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             # Get Trendlines
-            fund_data['trendlines'] = get_trendlines(
+            fund_data['trendlines'] = get_trend_lines(
                 fund,
                 name=fund_name,
                 plot_output=False,

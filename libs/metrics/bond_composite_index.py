@@ -11,7 +11,7 @@ import json
 import pandas as pd
 import numpy as np
 
-from libs.tools import cluster_oscs, windowed_moving_avg
+from libs.tools import cluster_oscillators, windowed_moving_avg
 from libs.utils import dual_plotting, generic_plotting
 from libs.utils import ProgressBar, dates_extractor_list
 from libs.utils import download_data_indexes
@@ -218,7 +218,7 @@ def composite_index(data: dict,
     composite = []
     for tick in sectors:
         if tick != index_type:
-            cluster = cluster_oscs(
+            cluster = cluster_oscillators(
                 data[tick], plot_output=False, function='market', wma=False)
             graph = cluster['tabular']
             p.uptick()

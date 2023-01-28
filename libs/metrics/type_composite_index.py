@@ -1,7 +1,7 @@
 import os
 import json
 
-from libs.tools import cluster_oscs
+from libs.tools import cluster_oscillators
 from libs.tools import windowed_moving_avg
 from libs.utils import download_data_indexes
 from libs.utils import dual_plotting, generic_plotting
@@ -74,7 +74,7 @@ def type_composite_index(**kwargs) -> list:
 
                         composite = {}
                         for sect in sectors:
-                            cluster = cluster_oscs(
+                            cluster = cluster_oscillators(
                                 data[sect],
                                 plot_output=False,
                                 function='market',

@@ -10,7 +10,7 @@ from .moving_average import adjust_signals
 from .hull_moving_average import hull_moving_average
 
 from .trends import get_trend, get_trend_analysis
-from .trends import get_trendlines, trend_simple_forecast, autotrend
+from .trends import get_trend_lines, trend_simple_forecast, autotrend
 from .resistance_support import find_resistance_support_lines
 
 from .true_strength import relative_strength
@@ -23,7 +23,7 @@ from .momentum_oscillator import momentum_oscillator
 from .rate_of_change import rate_of_change_oscillator, roc_signal
 from .know_sure_thing import know_sure_thing
 
-from .clusters import cluster_oscs
+from .clusters import cluster_oscillators
 
 from .macd import mov_avg_convergence_divergence
 from .bear_bull_power import bear_bull_power

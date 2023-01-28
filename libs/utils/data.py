@@ -128,6 +128,11 @@ def download_data(config: dict, **kwargs) -> list:
 
     start = kwargs.get('start')
     end = kwargs.get('end')
+    fund_list_only = kwargs.get('fund_list_only', False)
+
+    if fund_list_only:
+        funds = tickers.upper().split(' ')
+        return {}, funds
 
     if isinstance(period, (list)):
         period = period[0]

@@ -5,7 +5,7 @@ from libs.utils import INDEXES, dual_plotting
 from libs.features import normalize_signals
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
-from .trends import get_trendlines_regression
+from .trends import get_trend_lines_regression
 
 
 def demand_index(fund: pd.DataFrame, **kwargs) -> dict:
@@ -37,7 +37,7 @@ def demand_index(fund: pd.DataFrame, **kwargs) -> dict:
     if trendlines:
         end = len(dmx['tabular'])
         dmx_trend = dmx['tabular'][end-100: end]
-        get_trendlines_regression(
+        get_trend_lines_regression(
             dmx_trend, plot_output=True, indicator='Demand Index')
 
     dmx['type'] = 'oscillator'

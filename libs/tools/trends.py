@@ -18,7 +18,7 @@ NORMAL = STANDARD_COLORS["normal"]
 TREND_PTS = [2, 3, 6]
 
 
-def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
+def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     """Get Trendlines
 
     Arguments:
@@ -188,7 +188,7 @@ def get_trendlines(fund: pd.DataFrame, **kwargs) -> dict:
 
         except:
             print(
-                f"{WARNING}Warning: plot failed to generate in trends.get_trendlines.{NORMAL}")
+                f"{WARNING}Warning: plot failed to generate in trends.get_trend_lines.{NORMAL}")
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
@@ -923,7 +923,7 @@ def autotrend(data, **kwargs) -> list:
 DIVISORS = [1, 2, 4, 8]
 
 
-def get_trendlines_regression(signal: list, **kwargs) -> dict:
+def get_trend_lines_regression(signal: list, **kwargs) -> dict:
     """Get Trendlines Regression
 
     A regression-only based method of generating trendlines (w/o use of local minima and maxima).

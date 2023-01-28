@@ -405,7 +405,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'support_resistance', type_='list')
 
-    if ('--sr' in i_keys) or ('--rs' in i_keys) or ('--support_resistance' in i_keys):
+    if ('--sr' in i_keys) or ('--rs' in i_keys):
         config['tickers'] = ' '.join(ticker_keys)
         config = add_str_to_dict_key(
             config, 'run_functions', 'support_resistance', type_='list')
