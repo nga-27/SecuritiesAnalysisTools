@@ -48,106 +48,6 @@ SIDEWAYS_COLOR = TEXT_COLOR_MAP["yellow"]
 DOWN_COLOR = TEXT_COLOR_MAP["red"]
 
 
-def only_functions_handler(config: dict):
-    """ Main control function for functions """
-    if config.get('run_functions') == ['nf']:
-        print(f"Running {TICKER}NASIT{NORMAL} generation...")
-    elif (config.get('run_functions') == ['tci']) or (config.get('run_functions') == ['bci']) \
-            or (config.get('run_functions') == ['mci']):
-        print(
-            f"Running {TICKER}{config.get('run_functions')[0].upper()}{NORMAL}...")
-    else:
-        print(
-            f"Running functions: {config['run_functions']} for {TICKER}{config['tickers']}{NORMAL}")
-
-    if 'export' in config['run_functions']:
-        # Non-dashed inputs will cause issues beyond export if not returning.
-        export_function(config)
-        return
-
-    if 'mci' in config['run_functions']:
-        mci_function(config)
-    if 'bci' in config['run_functions']:
-        bci_function(config)
-    if 'tci' in config['run_functions']:
-        tci_function(config)
-    if 'trend' in config['run_functions']:
-        trends_function(config)
-    if 'support_resistance' in config['run_functions']:
-        support_resistance_function(config)
-    if 'clustered_oscs' in config['run_functions']:
-        cluster_oscs_function(config)
-    if 'head_shoulders' in config['run_functions']:
-        head_and_shoulders_function(config)
-    if 'correlation' in config['run_functions']:
-        correlation_index_function(config)
-    if 'rsi' in config['run_functions']:
-        rsi_function(config)
-    if 'stoch' in config['run_functions']:
-        stochastic_function(config)
-    if 'ultimate' in config['run_functions']:
-        ultimate_osc_function(config)
-    if 'awesome' in config['run_functions']:
-        awesome_osc_function(config)
-    if 'momentum' in config['run_functions']:
-        momentum_osc_function(config)
-    if 'macd' in config['run_functions']:
-        macd_function(config)
-    if 'relative_strength' in config['run_functions']:
-        relative_strength_function(config)
-    if 'obv' in config['run_functions']:
-        obv_function(config)
-    if 'ma' in config['run_functions']:
-        ma_function(config)
-    if 'swings' in config['run_functions']:
-        swing_trade_function(config)
-    if 'hull' in config['run_functions']:
-        hull_ma_function(config)
-    if 'bear_bull' in config['run_functions']:
-        bear_bull_function(config)
-    if 'total_power' in config['run_functions']:
-        total_power_function(config)
-    if 'bol_bands' in config['run_functions']:
-        bollinger_bands_function(config)
-    if 'roc' in config['run_functions']:
-        roc_function(config)
-    if 'kst' in config['run_functions']:
-        kst_function(config)
-    if 'gaps' in config['run_functions']:
-        price_gap_function(config)
-    if 'candlestick' in config['run_functions']:
-        candlestick_function(config)
-    if 'commodity' in config['run_functions']:
-        commodity_function(config)
-    if 'atr' in config['run_functions']:
-        atr_function(config)
-    if 'adx' in config['run_functions']:
-        adx_function(config)
-    if 'sar' in config['run_functions']:
-        sar_function(config)
-    if 'demand' in config['run_functions']:
-        demand_function(config)
-    if 'alpha' in config['run_functions']:
-        risk_function(config)
-    if 'vf' in config['run_functions']:
-        vf_function(config)
-    if 'nf' in config['run_functions']:
-        nasit_generation_function(config)
-    if 'nfnow' in config['run_functions']:
-        nasit_generation_function(config, print_only=True)
-    if 'ledger' in config['run_functions']:
-        ledger_function(config)
-    if 'synopsis' in config['run_functions']:
-        synopsis_function(config)
-    if 'last_signals' in config['run_functions']:
-        assemble_last_signals_function(config)
-    if 'metadata' in config['run_functions']:
-        metadata_function(config)
-    if 'pptx' in config['run_functions']:
-        pptx_output_function(config)
-    if 'pdf' in config['run_functions']:
-        pdf_output_function(config)
-
 ###############################################################################
 
 
@@ -770,3 +670,80 @@ def nasit_build(data: dict, makeup: dict, has_cash=False, by_price=True):
         new_closes.append(close)
 
     return new_closes
+
+################################################
+
+
+FUNCTION_MAP = {
+    'mci': mci_function,
+    'bci': bci_function,
+    'tci': tci_function,
+    'trend': trends_function,
+    'support_resistance': support_resistance_function,
+    'clustered_oscs': cluster_oscs_function,
+    'head_shoulders': head_and_shoulders_function,
+    'correlation': correlation_index_function,
+    'rsi': rsi_function,
+    'stoch': stochastic_function,
+    'ultimate': ultimate_osc_function,
+    'awesome': awesome_osc_function,
+    'momentum': momentum_osc_function,
+    'macd': macd_function,
+    'relative_strength': relative_strength_function,
+    'obv': obv_function,
+    'ma': ma_function,
+    'swings': swing_trade_function,
+    'hull': hull_ma_function,
+    'bear_bull': bear_bull_function,
+    'total_power': total_power_function,
+    'bol_bands': bollinger_bands_function,
+    'roc': roc_function,
+    'kst': kst_function,
+    'gaps': price_gap_function,
+    'candlestick': candlestick_function,
+    'commodity': commodity_function,
+    'atr': atr_function,
+    'adx': adx_function,
+    'sar': sar_function,
+    'demand': demand_function,
+    'alpha': risk_function,
+    'vf': vf_function,
+    'nf': nasit_generation_function,
+    'nfnow': nasit_generation_function,
+    'ledger': ledger_function,
+    'synopsis': synopsis_function,
+    'last_signals':  assemble_last_signals_function,
+    'metadata': metadata_function,
+    'pptx': pptx_output_function,
+    'pdf': pdf_output_function
+}
+
+
+def run_function(config: dict, function_value: str):
+    data, fund_list = function_data_download(config)
+    function_str = function_value.capitalize()
+    for fund in fund_list:
+        if fund != '^GSPC':
+            print(f"{function_str} of {TICKER}{fund}{NORMAL}...")
+            # get_trendlines(data[fund], plot_output=True, name=fund)
+            eval(f"")
+
+def only_functions_handler(config: dict):
+    """ Main control function for functions """
+    if config.get('run_functions') == ['nf']:
+        print(f"Running {TICKER}NASIT{NORMAL} generation...")
+    elif (config.get('run_functions') == ['tci']) or (config.get('run_functions') == ['bci']) \
+            or (config.get('run_functions') == ['mci']):
+        print(
+            f"Running {TICKER}{config.get('run_functions')[0].upper()}{NORMAL}...")
+    else:
+        print(
+            f"Running functions: {config['run_functions']} for {TICKER}{config['tickers']}{NORMAL}")
+
+    if 'export' in config['run_functions']:
+        # Non-dashed inputs will cause issues beyond export if not returning.
+        export_function(config)
+        return
+
+    for function in config['run_functions']:
+        FUNCTION_MAP[function](config)
