@@ -1,6 +1,9 @@
+""" ledger """
 import os
 import datetime
 import glob
+from typing import Union
+
 import pandas as pd
 import numpy as np
 
@@ -99,7 +102,7 @@ def extract_from_format(ledger: pd.DataFrame, index: int = 0) -> dict:
     return content
 
 
-def find_start_index(ledger: pd.DataFrame, column_name: str) -> int:
+def find_start_index(ledger: pd.DataFrame, column_name: str) -> Union[int, None]:
     """Find Start Index
 
     Arguments:
@@ -109,15 +112,16 @@ def find_start_index(ledger: pd.DataFrame, column_name: str) -> int:
     Returns:
         int -- index of start of actual ledger content
     """
-    KEY = 'Stock'
-    MAX = 1000
+    key = 'Stock'
+    max_threshold = 1000
     for i, row in enumerate(ledger[column_name]):
-        if row == KEY:
-            return (i+1)
-        if i > MAX:
+        if row == key:
+            return i + 1
+        if i > max_threshold:
             print(
-                f"ERROR: Badly formed ledger file. No keyword '{KEY}' in correct location.")
+                f"ERROR: Badly formed ledger file. No keyword '{key}' in correct location.")
             return None
+    return None
 
 
 def extract_funds(ledger: pd.DataFrame, start_index: int) -> list:
@@ -154,13 +158,14 @@ def create_fund(content: dict) -> dict:
     Returns:
         dict -- updates content with actual fund
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     ledger = content['ledger']
     data = content['raw']
 
     temp_tick = ledger['Stock'][0]
-    MAX = 100
+    max_threshold = 100
     i = 0
-    while(i < MAX):
+    while i < max_threshold:
         if temp_tick in data:
             break
         i += 1
@@ -180,9 +185,9 @@ def create_fund(content: dict) -> dict:
 
             date = date_converter(ledger['Date'][i])
             idx = 0
-            for a, ind in enumerate(full_dates):
+            for a_val, ind in enumerate(full_dates):
                 if ind == date:
-                    idx = a
+                    idx = a_val
                     break
 
             if action == 'Deposit':
@@ -237,8 +242,8 @@ def create_fund(content: dict) -> dict:
     value = []
     for i in range(len(data[temp_tick]['Close'])):
         val = 0.0
-        for ticker in composite:
-            val += composite[ticker]['value'][i]
+        for _, value in composite.items():
+            val += value['value'][i]
         value.append(val)
 
     content['tabular'] = value
@@ -313,14 +318,14 @@ def date_to_index(date, content: dict, try_again=False) -> int:
     date_list = data[temp_tick].index
 
     idx = None
-    for a, date_x in enumerate(date_list):
+    for a_val, date_x in enumerate(date_list):
         if date == date_x:
-            idx = a
+            idx = a_val
             break
 
         if try_again:
             if date <= date_x:
-                idx = a
+                idx = a_val
                 break
     return idx
 
@@ -328,7 +333,7 @@ def date_to_index(date, content: dict, try_again=False) -> int:
 def generate_dividends(content: dict) -> dict:
     """Generate Dividends
 
-    Uses yfinance api to pull dividends of stocks, this function then 
+    Uses yfinance api to pull dividends of stocks, this function then
     generates the new 'fund' dividends using applicable rules.
 
     Arguments:
@@ -336,17 +341,16 @@ def generate_dividends(content: dict) -> dict:
 
     Returns:
         dict -- dividend data object
-
-    Yields:
-        Iterator[dict] -- ??
     """
+    # pylint: disable=too-many-locals,too-many-branches
     divs = {'raw': {}, 'refined': {'dates': [], 'dividends': []}}
     data = content['raw']
 
     temp_tick = list(data.keys())[0]
     start_date = data[temp_tick].index[0]
 
-    print(f"Fetching Dividends...")
+    print("Fetching Dividends...")
+    # pylint: disable=too-many-nested-blocks
     for ticker in data:
         if ticker != '^GSPC':
             divs['raw'][ticker] = get_dividends(None, symbol=ticker)
@@ -373,7 +377,7 @@ def generate_dividends(content: dict) -> dict:
                                 divs['raw'][ticker]['dividends'][i]
                             divs['refined']['dividends'].append(amt)
 
-    QUARTERS = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]
+    quarters = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10, 11, 12]]
     divs['actual'] = {}
 
     for i, date in enumerate(divs['refined']['dates']):
@@ -383,14 +387,14 @@ def generate_dividends(content: dict) -> dict:
                 "value": 0.0}, {"value": 0.0}, {"value": 0.0}]
 
         month = date.month
-        for j, qtr in enumerate(QUARTERS):
+        for j, qtr in enumerate(quarters):
             if month in qtr:
                 divs['actual'][year][j]['value'] += np.round(
                     divs['refined']['dividends'][i], 2)
 
     for year in divs['actual']:
         for i, qtr in enumerate(divs['actual'][year]):
-            month = max(QUARTERS[i])
+            month = max(quarters[i])
             day = 27
             date = f"{year}-{month}-{day}"
             index = date_to_index(date, content, try_again=True)
@@ -417,22 +421,22 @@ def create_plot_content(dataset: dict) -> dict:
     Returns:
         dict -- plot content for plotting
     """
-    plot_content = dict()
+    plot_content = {}
 
     plots = []
     tickers = []
-    x = []
+    x_val = []
     for ticker in dataset:
         bench_mark = dataset[ticker]['bench']
         plots.append(dataset[ticker]['price'])
         tickers.append(dataset[ticker]['symbol'])
-        x.append(list(dataset[ticker]['raw']['^GSPC'].index))
+        x_val.append(list(dataset[ticker]['raw']['^GSPC'].index))
 
         plots.append(bench_mark)
-        x.append(x[-1])
+        x_val.append(x_val[-1])
         tickers.append(f"S&P 500 - {tickers[-1]}")
 
-    plot_content['x'] = x
+    plot_content['x'] = x_val
     plot_content['prices'] = plots
     plot_content['tickers'] = tickers
 
@@ -488,10 +492,10 @@ def export_funds(dataset: dict):
             content['dividend amount'].append("")
             content['dividend yield'].append("")
 
-        df = pd.DataFrame.from_dict(content)
-        df = df.set_index('date')
+        data_frame = pd.DataFrame.from_dict(content)
+        data_frame = data_frame.set_index('date')
 
-        df.to_csv(filepath)
+        data_frame.to_csv(filepath)
 
 
 def holdings_calculation(fund: dict) -> list:
