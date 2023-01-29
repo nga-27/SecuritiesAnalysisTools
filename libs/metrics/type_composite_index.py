@@ -1,19 +1,20 @@
+""" type composite index """
 import os
 import json
+from typing import Tuple, Union
 
-from libs.tools import cluster_oscillators
-from libs.tools import windowed_moving_avg
-from libs.utils import download_data_indexes
-from libs.utils import dual_plotting, generic_plotting
-from libs.utils import ProgressBar, index_appender
-from libs.utils import STANDARD_COLORS
+from libs.tools import cluster_oscillators, windowed_moving_avg
+from libs.utils import (
+    download_data_indexes, dual_plotting, generic_plotting, ProgressBar, index_appender,
+    STANDARD_COLORS
+)
 
 ERROR_COLOR = STANDARD_COLORS["error"]
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
 
 
-def type_composite_index(**kwargs) -> list:
+def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list, None]]:
     """Type Composite Index (MCI)
 
     Similar to MCI, TCI compares broader market types (sensitive, cyclical, and defensive)
@@ -29,6 +30,7 @@ def type_composite_index(**kwargs) -> list:
     returns:
         list -- dict contains all tci information, data, sectors
     """
+    # pylint: disable=too-many-locals,too-many-statements,too-many-nested-blocks
     config = kwargs.get('config')
     period = kwargs.get('period')
     plot_output = kwargs.get('plot_output', True)
@@ -44,12 +46,11 @@ def type_composite_index(**kwargs) -> list:
         print(
             f"{ERROR_COLOR}ERROR: config and period both provided {period} " +
             f"for type_composite_index{NORMAL}")
-        return {}
+        return {}, None, None
 
     else:
         # Support for release 1 versions
-        period = period
-        properties = dict()
+        properties = {}
         properties['Indexes'] = {}
         properties['Indexes']['Type Sector'] = True
 
@@ -58,20 +59,18 @@ def type_composite_index(**kwargs) -> list:
         if 'Indexes' in properties.keys():
             props = properties['Indexes']
             if 'Type Sector' in props.keys():
-                if props['Type Sector'] == True:
-
+                if props['Type Sector']:
                     m_data = get_metrics_content()
                     if data is None or sectors is None:
                         data, sectors = metrics_initializer(
                             m_data, period='2y')
 
                     if data:
-                        p = ProgressBar(
+                        prog_bar = ProgressBar(
                             19, name='Type Composite Index', offset=clock)
-                        p.start()
+                        prog_bar.start()
 
-                        tci = dict()
-
+                        tci = {}
                         composite = {}
                         for sect in sectors:
                             cluster = cluster_oscillators(
@@ -79,7 +78,7 @@ def type_composite_index(**kwargs) -> list:
                                 plot_output=False,
                                 function='market',
                                 wma=False,
-                                progress_bar=p
+                                progress_bar=prog_bar
                             )
 
                             graph = cluster['tabular']
@@ -87,32 +86,32 @@ def type_composite_index(**kwargs) -> list:
 
                         defensive = type_composites(
                             composite, m_data, type_type='Defensive')
-                        p.uptick()
+                        prog_bar.uptick()
 
                         sensitive = type_composites(
                             composite, m_data, type_type='Sensitive')
-                        p.uptick()
+                        prog_bar.uptick()
 
                         cyclical = type_composites(
                             composite, m_data, type_type='Cyclical')
-                        p.uptick()
+                        prog_bar.uptick()
 
                         d_val = weighted_signals(
                             data, m_data, type_type='Defensive')
-                        p.uptick()
+                        prog_bar.uptick()
 
                         s_val = weighted_signals(
                             data, m_data, type_type='Sensitive')
-                        p.uptick()
+                        prog_bar.uptick()
 
                         c_val = weighted_signals(
                             data, m_data, type_type='Cyclical')
-                        p.uptick()
+                        prog_bar.uptick()
 
                         d_val = windowed_moving_avg(d_val, 3, data_type='list')
                         c_val = windowed_moving_avg(c_val, 3, data_type='list')
                         s_val = windowed_moving_avg(s_val, 3, data_type='list')
-                        p.uptick()
+                        prog_bar.uptick()
 
                         tci['defensive'] = {
                             "tabular": d_val,
@@ -130,13 +129,17 @@ def type_composite_index(**kwargs) -> list:
                         dates = data['VGT'].index
                         if plot_output:
                             dual_plotting(y1=d_val, y2=defensive, y1_label='Defensive Index',
-                                          y2_label='Clustered Osc', title='Defensive Index', x=dates)
+                                          y2_label='Clustered Osc', title='Defensive Index',
+                                          x=dates)
                             dual_plotting(y1=s_val, y2=sensitive, y1_label='Sensitive Index',
-                                          y2_label='Clustered Osc', title='Sensitive Index', x=dates)
+                                          y2_label='Clustered Osc', title='Sensitive Index',
+                                          x=dates)
                             dual_plotting(y1=c_val, y2=cyclical, y1_label='Cyclical Index',
-                                          y2_label='Clustered Osc', title='Cyclical Index', x=dates)
-                            generic_plotting([d_val, s_val, c_val], legend=[
-                                'Defensive', 'Sensitive', 'Cyclical'], title='Type Indexes', x=dates)
+                                          y2_label='Clustered Osc', title='Cyclical Index',
+                                          x=dates)
+                            generic_plotting([d_val, s_val, c_val],
+                                              legend=['Defensive', 'Sensitive', 'Cyclical'],
+                                              title='Type Indexes', x=dates)
                         else:
                             generic_plotting(
                                 [d_val, s_val, c_val],
@@ -148,7 +151,7 @@ def type_composite_index(**kwargs) -> list:
                                 filename='tci.png'
                             )
 
-                        p.end()
+                        prog_bar.end()
                         return tci, data, sectors
     return {}, None, None
 
@@ -193,7 +196,7 @@ def get_metrics_content() -> dict:
             f"'metrics_initializer'. Failed.{NORMAL}")
         return None, [], None
 
-    with open(metrics_file) as m_file:
+    with open(metrics_file, encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
         m_data = m_data.get("Type_Composite")

@@ -1,32 +1,35 @@
 """
 market_composite_index.py
 
-An equal-weight aggregate metric that takes the computed clustered oscillator metric 
+An equal-weight aggregate metric that takes the computed clustered oscillator metric
 for each of the 11 sectors of the market represented by the Vanguard ETFs listed under
-'tickers' below in 'metrics_initializer'. Arguably a more accurate metric than a 
-clustered oscillator metric on the S&P500 by itself. 
+'tickers' below in 'metrics_initializer'. Arguably a more accurate metric than a
+clustered oscillator metric on the S&P500 by itself.
 
 Newer - compares this metric with a correlation metric of each sector.
 """
 
 import os
 import json
+from typing import Tuple, Union
+
 import pandas as pd
 import numpy as np
 
-from libs.tools import cluster_oscillators, beta_comparison_list
-from libs.tools import windowed_moving_avg
-from libs.utils import dual_plotting, generic_plotting
-from libs.utils import ProgressBar, index_appender
-from libs.utils import download_data_indexes
-from libs.utils import STANDARD_COLORS
+from libs.tools import (
+    cluster_oscillators, beta_comparison_list, windowed_moving_avg
+)
+from libs.utils import (
+    dual_plotting, generic_plotting, ProgressBar, index_appender, download_data_indexes,
+    STANDARD_COLORS
+)
 
 ERROR_COLOR = STANDARD_COLORS["error"]
 WARNING = STANDARD_COLORS["warning"]
 NORMAL_COLOR = STANDARD_COLORS["normal"]
 
 
-def market_composite_index(**kwargs) -> dict:
+def market_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list, None]]:
     """Market Composite Index (MCI)
 
     Optional Args:
@@ -54,12 +57,11 @@ def market_composite_index(**kwargs) -> dict:
         print(
             f"{ERROR_COLOR}ERROR: config and period both provided {period} " +
             f"for market_composite_index{NORMAL_COLOR}")
-        return {}
+        return {}, None, None
 
     else:
         # Support for release 1 versions
-        period = period
-        properties = dict()
+        properties = {}
         properties['Indexes'] = {}
         properties['Indexes']['Market Sector'] = True
 
@@ -68,31 +70,30 @@ def market_composite_index(**kwargs) -> dict:
         if 'Indexes' in properties.keys():
             props = properties['Indexes']
             if 'Market Sector' in props.keys():
-                if props['Market Sector'] == True:
-
-                    mci = dict()
+                if props['Market Sector']:
+                    mci = {}
                     if data is None or sectors is None:
                         data, sectors = metrics_initializer(period=period)
 
                     if data:
-                        p = ProgressBar(len(sectors)*2+5,
+                        prog_bar = ProgressBar(len(sectors) * 2 + 5,
                                         name='Market Composite Index', offset=clock)
-                        p.start()
+                        prog_bar.start()
 
                         composite = composite_index(
-                            data, sectors, plot_output=plot_output, progress_bar=p)
+                            data, sectors, plot_output=plot_output, progress_bar=prog_bar)
                         correlations = composite_correlation(
-                            data, sectors, plot_output=plot_output, progress_bar=p)
+                            data, sectors, plot_output=plot_output, progress_bar=prog_bar)
 
                         mci['tabular'] = {'mci': composite}
                         mci['correlations'] = correlations
-                        p.end()
+                        prog_bar.end()
 
                         return mci, data, sectors
     return {}, None, None
 
 
-def metrics_initializer(period='5y', name='Market Composite Index'):
+def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dict, list]:
     """Metrics Initializer
 
     Keyword Arguments:
@@ -109,7 +110,7 @@ def metrics_initializer(period='5y', name='Market Composite Index'):
             f"'metrics_initializer'. Failed.{NORMAL_COLOR}")
         return None, []
 
-    with open(metrics_file) as m_file:
+    with open(metrics_file, 'r', encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
         m_data = m_data.get("Market_Composite")
@@ -132,7 +133,9 @@ def metrics_initializer(period='5y', name='Market Composite Index'):
     return data, sectors
 
 
-def simple_beta_rsq(fund: pd.DataFrame, benchmark: pd.DataFrame, recent_period: list = []) -> list:
+def simple_beta_rsq(fund: pd.DataFrame,
+                    benchmark: pd.DataFrame,
+                    recent_period: Union[list, None] = None) -> list:
     """Simple Beta R-Squared
 
     Arguments:
@@ -145,18 +148,20 @@ def simple_beta_rsq(fund: pd.DataFrame, benchmark: pd.DataFrame, recent_period: 
     Returns:
         list -- list of beta/r-squared data objects
     """
+    if not recent_period:
+        recent_period = []
     simple_br = []
 
     for period in recent_period:
-        val = dict()
+        val = {}
         val['period'] = period
         tot_len = len(fund['Close'])
 
-        b, r = beta_comparison_list(
+        beta, r_squared = beta_comparison_list(
             fund['Close'][tot_len-period:tot_len], benchmark['Close'][tot_len-period:tot_len])
 
-        val['beta'] = np.round(b, 5)
-        val['r_squared'] = np.round(r, 5)
+        val['beta'] = np.round(beta, 5)
+        val['r_squared'] = np.round(r_squared, 5)
 
         simple_br.append(val.copy())
 
@@ -191,11 +196,11 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
 
     composite2 = []
     for i in range(len(composite[0])):
-        s = 0.0
-        for j in range(len(composite)):
-            s += float(composite[j][i])
+        s_val = 0.0
+        for j_val in composite:
+            s_val += float(j_val[i])
 
-        composite2.append(s)
+        composite2.append(s_val)
 
     progress_bar.uptick()
 
@@ -233,15 +238,13 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
     Returns:
         dict -- correlation dictionary
     """
+    # pylint: disable=too-many-locals,invalid-name
     DIVISOR = 5
     correlations = {}
 
     if '^GSPC' in data.keys():
         tot_len = len(data['^GSPC']['Close'])
-        start_pt = int(np.floor(tot_len / DIVISOR))
-
-        if start_pt > 100:
-            start_pt = 100
+        start_pt = min(int(np.floor(tot_len / DIVISOR)), 100)
 
         corrs = {}
         dates = data['^GSPC'].index[start_pt:tot_len]
@@ -273,11 +276,11 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
                     progress_bar.uptick(increment=increment)
                     counter = 0
 
-        plots = [corrs[x] for x in corrs.keys()]
-        legend = [x for x in corrs.keys()]
+        plots = [value for _, value in corrs.items()]
+        legend = list(corrs)
 
-        generic_plotting(plots, x=dates, title='MCI Correlations', legend=legend, save_fig=(
-            not plot_output), filename='MCI_correlations.png')
+        generic_plotting(plots, x=dates, title='MCI Correlations', legend=legend,
+            save_fig=(not plot_output), filename='MCI_correlations.png')
 
         progress_bar.uptick()
 

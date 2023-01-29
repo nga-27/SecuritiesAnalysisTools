@@ -1,3 +1,4 @@
+""" synopsis """
 import numpy as np
 
 from libs.utils import INDEXES, TEXT_COLOR_MAP, EXEMPT_METRICS
@@ -20,15 +21,16 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
     Returns:
         dict -- summarized keys for a "dashboard"
     """
+    # pylint: disable=too-many-branches,too-many-statements
     name = kwargs.get('name')
     print_out = kwargs.get('print_out', False)
 
-    synopsis = dict()
+    synopsis = {}
     if name is None:
         return synopsis
 
+    # pylint: disable=too-many-nested-blocks
     for period in analysis[name]:
-
         if period not in EXEMPT_METRICS:
             synopsis[period] = {
                 'tabular': {},
@@ -40,7 +42,7 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
             }
 
             for metric in analysis[name][period]:
-                if (metric != 'name'):
+                if metric != 'name':
                     mets = analysis[name][period][metric].get('metrics')
                     cat = analysis[name][period][metric].get('type')
 
@@ -87,7 +89,7 @@ def generate_synopsis(analysis: dict, **kwargs) -> dict:
 
                                 if len(mets) == 0:
                                     continue
-                                
+
                                 synopsis[period]['metrics'][met_str] = mets[-1]
                                 diff = mets[-2]
                                 synopsis[period]['metrics_delta'][met_str] = np.round(
@@ -163,18 +165,17 @@ def strings_to_tabs(string: str, style='default') -> str:
         str -- properly formatted string
     """
     if style == 'default':
-        LENGTH_KEY = 42
-        space_len = LENGTH_KEY - len(string)
+        length_key = 42
+        space_len = length_key - len(string)
         tabs = " " * space_len
 
     elif style == 'percent':
-        LENGTH_KEY = 20
-        space_len = LENGTH_KEY - len(string)
+        length_key = 20
+        space_len = length_key - len(string)
         tabs = " " * space_len
 
     else:
         return ''
-
     return tabs
 
 

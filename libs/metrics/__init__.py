@@ -1,3 +1,4 @@
+""" Metrics """
 from .market_composite_index import market_composite_index
 from .bond_composite_index import bond_composite_index
 from .type_composite_index import type_composite_index

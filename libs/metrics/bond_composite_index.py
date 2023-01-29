@@ -8,17 +8,23 @@ as market oscillators, but the metrics can still provide buy-sell signals.
 """
 import os
 import json
+from typing import Tuple, Union
+
 import pandas as pd
 import numpy as np
 
 from libs.tools import cluster_oscillators, windowed_moving_avg
-from libs.utils import dual_plotting, generic_plotting
-from libs.utils import ProgressBar, dates_extractor_list
-from libs.utils import download_data_indexes
-from libs.utils import STANDARD_COLORS
+from libs.utils import (
+    dual_plotting, generic_plotting, ProgressBar, dates_extractor_list, download_data_indexes,
+    STANDARD_COLORS
+)
 
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
+
+BOND_NAME_MAP = {
+    "Treasury": "Government"
+}
 
 
 def bond_composite_index(config: dict, **kwargs):
@@ -31,6 +37,7 @@ def bond_composite_index(config: dict, **kwargs):
         plot_output {bool} -- True to render plot in realtime (default: {True})
         clock {float} -- time for prog_bar (default: {None})
     """
+    # pylint: disable=too-many-branches,too-many-locals
     plot_output = kwargs.get('plot_output', True)
     clock = kwargs.get('clock')
 
@@ -43,44 +50,19 @@ def bond_composite_index(config: dict, **kwargs):
     if properties is not None:
         if 'Indexes' in properties:
             props = properties['Indexes']
-            if 'Treasury Bond' in props:
-                if props['Treasury Bond'] == True:
+            for bond_type in ('Treasury Bond', 'Corporate Bond', 'International Bond'):
+                if bond_type in props:
+                    bond_type_name = bond_type.split(' ', maxsplit=1)[0]
                     data, sectors, index_type, m_data = metrics_initializer(
-                        period=period, bond_type='Treasury')
+                        period=period, bond_type=bond_type_name)
                     if m_data:
                         _, data, dates = composite_index(data, sectors, m_data,
-                                                         plot_output=plot_output,
-                                                         bond_type='Treasury',
-                                                         index_type=index_type,
-                                                         clock=clock)
+                                                            plot_output=plot_output,
+                                                            bond_type=bond_type_name,
+                                                            index_type=index_type,
+                                                            clock=clock)
                         plots.append(data)
-                        legend.append("Treasury")
-
-            if 'Corporate Bond' in props:
-                if props['Corporate Bond'] == True:
-                    data, sectors, index_type, m_data = metrics_initializer(
-                        period=period, bond_type='Corporate')
-                    if m_data:
-                        _, data, dates = composite_index(data, sectors, m_data,
-                                                         plot_output=plot_output,
-                                                         bond_type='Corporate',
-                                                         index_type=index_type,
-                                                         clock=clock)
-                        plots.append(data)
-                        legend.append("Corporate")
-
-            if 'International Bond' in props:
-                if props['International Bond'] == True:
-                    data, sectors, index_type, m_data = metrics_initializer(
-                        period=period, bond_type='International')
-                    if m_data:
-                        _, data, dates = composite_index(data, sectors, m_data,
-                                                         plot_output=plot_output,
-                                                         bond_type='International',
-                                                         index_type=index_type,
-                                                         clock=clock)
-                        plots.append(data)
-                        legend.append("International")
+                        legend.append(bond_type_name)
 
             if len(plots) > 0:
                 if plot_output:
@@ -88,14 +70,15 @@ def bond_composite_index(config: dict, **kwargs):
                         plots, x=dates, title='Bond Composite Indexes',
                         legend=legend, ylabel='Normalized Price')
                 else:
-                    filename = f"combined_BCI.png"
+                    filename = "combined_BCI.png"
                     generic_plotting(
                         plots, x=dates, title='Bond Composite Indexes',
                         legend=legend, save_fig=True, filename=filename,
                         ylabel='Normalized Price')
 
 
-def metrics_initializer(period='2y', bond_type='Treasury'):
+def metrics_initializer(period='2y',
+                        bond_type='Treasury') -> Tuple[dict, list, str, Union[dict, None]]:
     """Metrics Initializer
 
     Keyword Arguments:
@@ -112,40 +95,20 @@ def metrics_initializer(period='2y', bond_type='Treasury'):
             f"'metrics_initializer'. Failed.{NORMAL}")
         return {}, [], '', None
 
-    with open(metrics_file) as m_file:
+    with open(metrics_file, 'r', encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
         m_data = m_data.get("Bond_Weight")
 
-    if bond_type == 'Treasury':
-        # Treasury (Gov't only - general alternative would be BSV/BIV/BLV)
-        data = m_data[bond_type]
-        tickers = list(data.keys())
-        tickers = ' '.join(tickers)
-        index = 'Government'
-
-    elif bond_type == 'Corporate':
-        # Corporate investment-grade bonds (BBB/BAA or higher)
-        data = m_data[bond_type]
-        tickers = list(data.keys())
-        tickers = ' '.join(tickers)
-        index = 'Corporate'
-
-    elif bond_type == 'International':
-        # BNDX & VWOB
-        data = m_data[bond_type]
-        tickers = list(data.keys())
-        tickers = ' '.join(tickers)
-        index = 'International'
-
-    else:
-        tickers = 'BND'
+    data = m_data[bond_type]
+    tickers = list(data.keys())
+    tickers = ' '.join(tickers)
+    index = BOND_NAME_MAP.get(bond_type, bond_type)
 
     if isinstance(period, (list)):
         period = period[0]
 
     sectors = tickers.split(' ')
-    # tickers = index_appender(tickers)
     print(" ")
     print(f'Fetching {bond_type} Bond Composite Index funds for {period}...')
     data, _ = download_data_indexes(
@@ -162,7 +125,8 @@ def bond_type_index_generator(data: pd.DataFrame, m_data: dict, bond_type='Treas
         m_data {dict} -- bond content from sectors.json
 
     Keyword Arguments:
-        bond_type {str} -- Either 'Treasury', 'International', or 'Corporate' (default: {'Treasury'})
+        bond_type {str} -- Either 'Treasury', 'International', or 'Corporate'
+            (default: {'Treasury'})
 
     Returns:
         list -- the bond type index
@@ -183,13 +147,14 @@ def bond_type_index_generator(data: pd.DataFrame, m_data: dict, bond_type='Treas
     return index_chart
 
 
+# pylint: disable=too-many-arguments
 def composite_index(data: dict,
                     sectors: list,
                     index_dict: dict,
                     plot_output=True,
                     bond_type='Treasury',
                     index_type='BND',
-                    **kwargs):
+                    **kwargs) -> Tuple[list, list, list]:
     """Composite Index
 
     Arguments:
@@ -208,12 +173,12 @@ def composite_index(data: dict,
     Returns:
         list -- composite signal, plots, dates
     """
+    # pylint: disable=too-many-locals
     clock = kwargs.get('clock')
 
     progress = len(sectors) + 2
-    p = ProgressBar(
-        progress, name=f'{bond_type} Bond Composite Index', offset=clock)
-    p.start()
+    prog_bar = ProgressBar(progress, name=f'{bond_type} Bond Composite Index', offset=clock)
+    prog_bar.start()
 
     composite = []
     for tick in sectors:
@@ -221,17 +186,17 @@ def composite_index(data: dict,
             cluster = cluster_oscillators(
                 data[tick], plot_output=False, function='market', wma=False)
             graph = cluster['tabular']
-            p.uptick()
+            prog_bar.uptick()
             composite.append(graph)
 
     composite2 = []
     for i in range(len(composite[0])):
-        s = 0.0
-        for j in range(len(composite)):
-            s += float(composite[j][i])
+        s_val = 0.0
+        for j_val in composite:
+            s_val += float(j_val[i])
 
-        composite2.append(s)
-    p.uptick()
+        composite2.append(s_val)
+    prog_bar.uptick()
 
     composite2 = windowed_moving_avg(composite2, 3, data_type='list')
     max_ = np.max(np.abs(composite2))
@@ -250,6 +215,6 @@ def composite_index(data: dict,
                       y1_label=index_type, y2_label='BCI',
                       title=f'{bond_type} Bond Composite Index', x=dates,
                       save_fig=True, filename=f'{bond_type}_BCI.png')
-    p.uptick()
+    prog_bar.uptick()
 
     return composite2, data_to_plot, dates

@@ -1,9 +1,10 @@
+""" metrics content list """
 import os
 import pandas as pd
 
-from libs.utils import dual_plotting
-from libs.utils import STANDARD_COLORS, TREND_COLORS, INDEXES
-from libs.utils import EXEMPT_METRICS, INDICATOR_NAMES
+from libs.utils import (
+    dual_plotting, STANDARD_COLORS, TREND_COLORS, INDEXES, EXEMPT_METRICS, INDICATOR_NAMES
+)
 
 NORMAL = STANDARD_COLORS["normal"]
 WARNING = STANDARD_COLORS["warning"]
@@ -44,6 +45,7 @@ def assemble_last_signals(meta_sub: dict,
     Returns:
         dict -- last signals data object
     """
+    # pylint: disable=too-many-locals,too-many-nested-blocks,too-many-branches,too-many-statements
     standalone = kwargs.get('standalone', False)
     print_out = kwargs.get('print_out', False)
     name = kwargs.get('name', '')
@@ -69,7 +71,7 @@ def assemble_last_signals(meta_sub: dict,
     increment = 1.0 / float(len(metadata))
 
     content = {"signals": [], "metrics": []}
-    for a, sub in enumerate(metadata):
+    for top_key, sub in enumerate(metadata):
         content['signals'] = []
 
         for key in sub:
@@ -118,7 +120,7 @@ def assemble_last_signals(meta_sub: dict,
             fund = sub.get(STATS_KEY, {}).get('tabular')
 
         if print_out:
-            content_printer(content, meta_keys[a], name=name2)
+            content_printer(content, meta_keys[top_key], name=name2)
 
         if fund is not None:
             title = f"NATA Metrics - {name2}"
@@ -132,7 +134,7 @@ def assemble_last_signals(meta_sub: dict,
                     fund, [content["metrics"], upper, lower], 'Price', 'Metrics', title=title)
             else:
                 filename = os.path.join(
-                    name, meta_keys[a], f"overall_metrics_{name}.png")
+                    name, meta_keys[top_key], f"overall_metrics_{name}.png")
                 dual_plotting(
                     fund, [content["metrics"], upper,
                            lower], 'Price', 'Metrics',
@@ -153,6 +155,7 @@ def content_printer(content: dict, meta_key: str, **kwargs):
     Optional Args:
         name {str} -- (default: {''})
     """
+    # pylint: disable=too-many-locals,invalid-name
     name = kwargs.get('name', '')
 
     COL_1_SPACE = 8
