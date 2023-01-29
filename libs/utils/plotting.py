@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from typing import List, Any
+from typing import List
 
 import pandas as pd
 import numpy as np
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.patches import Rectangle
 
-from intellistop import VFTimeSeriesType, VFStopsResultType
+from intellistop import VFStopsResultType
 
 from .formatting import dates_extractor_list
 from .constants import STANDARD_COLORS
@@ -97,13 +97,13 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
         else:
             x = dates_extractor_list(y1)
 
-    fig, ax1 = plt.subplots()
+    fig = plt.figure()
 
     if subplot:
-
         num_plots = 2
         plots = [y1]
         ylabels = [y1_label]
+
         if is_data_list(y1):
             num_plots += len(y1) - 1
         if is_data_list(y2):
@@ -116,7 +116,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
 
         sp_index = num_plots * 100 + 11
         for plot in range(num_plots):
-            plt.subplot(sp_index)
+            ax1 = plt.subplot(sp_index)
             plt.plot(x, plots[plot])
             plt.ylabel(ylabels[plot])
 
@@ -127,6 +127,7 @@ def dual_plotting(y1: list, y2: list, y1_label: str, y2_label: str, **kwargs):
             sp_index += 1
 
     else:
+        ax1 = plt.subplot(111)
         if is_data_list(y2):
             color = 'k'
         else:

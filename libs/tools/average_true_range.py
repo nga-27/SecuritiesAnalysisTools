@@ -192,7 +192,7 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
 
     if plot_output and not out_suppress:
         name2 = INDEXES.get(name, name)
-        title = f"{name2} - ATR Moving Averages"
+        title = f"{name2} - Average True Range Moving Averages"
         dual_plotting(fund['Close'], [atr_dict['tabular'],
                                       ema_1, ema_2], 'Price', 'ATRs', title=title)
 

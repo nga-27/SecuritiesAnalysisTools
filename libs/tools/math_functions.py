@@ -275,6 +275,7 @@ def risk_comparison(fund: pd.DataFrame,
         alpha['r_squared']["sector"] = rsqd_sector
 
     if print_out:
+        print("\r\n")
         print(f"\r\nAlpha Market:\t\t{alpha_val}")
         print(f"Alpha Sector:\t\t{alpha_sector}")
         print(f"Beta Market:\t\t{beta}")

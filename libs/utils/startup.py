@@ -435,7 +435,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     if ('--stochastic' in i_keys) or ('--stoch' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'stoch', type_='list')
+            config, 'run_functions', 'stochastic', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--ultimate' in i_keys) or ('--ult' in i_keys):
@@ -470,7 +470,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     if ('--ma' in i_keys) or ('--moving_average' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'ma', type_='list')
+            config, 'run_functions', 'moving_average', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--swings' in i_keys) or ('--swing_trade' in i_keys):
@@ -496,22 +496,22 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if ('--bollinger' in i_keys) or ('--bollinger_bands' in i_keys) or \
             ('--bands' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'bol_bands', type_='list')
+            config, 'run_functions', 'bollinger_bands', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--roc' in i_keys) or ('--rate_of_change' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'roc', type_='list')
+            config, 'run_functions', 'rate_of_change', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--kst' in i_keys) or ('--know_sure_thing' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'kst', type_='list')
+            config, 'run_functions', 'know_sure_thing', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--atr' in i_keys) or ('--average_true_range' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'atr', type_='list')
+            config, 'run_functions', 'average_true_range', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--adx' in i_keys) or ('--average_directional_index' in i_keys):
@@ -521,12 +521,12 @@ def header_options_parse(input_str: str, config: dict) -> list:
 
     if ('--sar' in i_keys) or ('--parabolic_sar' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'sar', type_='list')
+            config, 'run_functions', 'parabolic_sar', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--demand' in i_keys) or ('--demand_index' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'demand', type_='list')
+            config, 'run_functions', 'demand_index', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--gaps' in i_keys) or ('--price_gaps' in i_keys):
@@ -544,23 +544,23 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'commodity', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
-    if ('--alpha' in i_keys) or ('--beta' in i_keys) or ('--risk' in i_keys):
+    if ('--alpha' in i_keys) or ('--beta' in i_keys) or ('--risk' in i_keys) or ('--sharpe' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'alpha', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
-    if ('--vf' in i_keys) or ('--stop_loss' in i_keys):
+    if ('--vf' in i_keys) or ('--stop_loss' in i_keys) or ('--volatility_factor' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'vf', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
     if ('--nasit_funds' in i_keys) or ('--nf' in i_keys):
         config = add_str_to_dict_key(
-            config, 'run_functions', 'nf', type_='list')
+            config, 'run_functions', 'nasit_funds', type_='list')
 
     if '--nf_now' in i_keys:
         config = add_str_to_dict_key(
-            config, 'run_functions', 'nfnow', type_='list')
+            config, 'run_functions', 'nf_now', type_='list')
 
     if '--ledger' in i_keys:
         config = add_str_to_dict_key(

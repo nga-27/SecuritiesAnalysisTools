@@ -93,58 +93,6 @@ def export_function(config: dict):
     metadata_to_dataset(config)
 
 
-def rsi_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"relative_strength_indicator_rsi of {TICKER}{fund}{NORMAL}...")
-            relative_strength_indicator_rsi(data[fund], name=fund, plot_output=True,
-                out_suppress=False, trendlines=True)
-
-
-def stochastic_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Full Stochastic Oscillator of {TICKER}{fund}{NORMAL}...")
-            full_stochastic(data[fund], name=fund,
-                            plot_output=True, out_suppress=False)
-
-
-def ultimate_osc_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Ultimate Oscillator of {TICKER}{fund}{NORMAL}...")
-            ultimate_oscillator(data[fund], name=fund,
-                                plot_output=True, out_suppress=False)
-
-
-def awesome_osc_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Awesome Oscillator of {TICKER}{fund}{NORMAL}")
-            awesome_oscillator(data[fund], name=fund, plot_output=True)
-
-
-def momentum_osc_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"(Chande) Momentum Oscillator of {TICKER}{fund}{NORMAL}")
-            momentum_oscillator(data[fund], name=fund, plot_output=True)
-
-
-def macd_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"MACD of {TICKER}{fund}{NORMAL}...")
-            mov_avg_convergence_divergence(
-                data[fund], name=fund, plot_output=True)
-
-
 def relative_strength_function(config: dict):
     config['tickers'] += ' ^GSPC'
     data, fund_list = function_data_download(config)
@@ -154,149 +102,6 @@ def relative_strength_function(config: dict):
                 f"Relative Strength of {TICKER}{fund}{NORMAL} compared to S&P500...")
             relative_strength(fund, full_data_dict=data,
                               config=config, plot_output=True)
-
-
-def obv_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"On Balance Volume of {TICKER}{fund}{NORMAL}...")
-            on_balance_volume(data[fund], name=fund,
-                              plot_output=True, trendlines=True)
-
-
-def ma_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
-            triple_moving_average(data[fund], name=fund, plot_output=True)
-
-
-def swing_trade_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Triple Moving Average of {TICKER}{fund}{NORMAL}...")
-            moving_average_swing_trade(data[fund], name=fund, plot_output=True)
-
-
-def hull_ma_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Hull Moving Average of {TICKER}{fund}{NORMAL}...")
-            hull_moving_average(data[fund], name=fund, plot_output=True)
-
-
-def bear_bull_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Bear Bull Power Indicator of {TICKER}{fund}{NORMAL}...")
-            bear_bull_power(data[fund], name=fund, plot_output=True)
-
-
-def total_power_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Total Power Indicator of {TICKER}{fund}{NORMAL}...")
-            total_power(data[fund], name=fund, plot_output=True)
-
-
-def bollinger_bands_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Bollinger Bands of {TICKER}{fund}{NORMAL}...")
-            bollinger_bands(data[fund], name=fund, plot_output=True)
-
-
-def roc_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(f"Rate of Change of {TICKER}{fund}{NORMAL}...")
-            rate_of_change_oscillator(data[fund], name=fund, plot_output=True)
-
-
-def kst_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Know Sure Thing / Summed Rate of Change of {TICKER}{fund}{NORMAL}...")
-            know_sure_thing(data[fund], name=fund, plot_output=True)
-
-
-def atr_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Average True Range (ATR) of {TICKER}{fund}{NORMAL}...")
-            average_true_range(data[fund], name=fund, plot_output=True)
-
-
-def adx_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Average Directional Index (ADX) of {TICKER}{fund}{NORMAL}...")
-            average_directional_index(data[fund], name=fund, plot_output=True)
-
-
-def sar_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Parabolic 'Stop And Reverse' (SAR) of {TICKER}{fund}{NORMAL}...")
-            parabolic_sar(data[fund], name=fund, plot_output=True)
-
-
-def demand_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Demand Index of {TICKER}{fund}{NORMAL}...")
-            demand_index(data[fund], name=fund, plot_output=True)
-
-
-def price_gap_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Price Gap Analysis of {TICKER}{fund}{NORMAL}...")
-            analyze_price_gaps(data[fund], name=fund, plot_output=True)
-
-
-def candlestick_function(config: dict):
-    print(f"Candlestick patterns for funds...\r\n")
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Candlestick Analysis of {TICKER}{fund}{NORMAL}...")
-            candlesticks(data[fund], name=fund, plot_output=True)
-
-
-def commodity_function(config: dict):
-    print(f"Commodity Channel Index for funds...\r\n")
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Commodity Channel Index of {TICKER}{fund}{NORMAL}...")
-            commodity_channel_index(data[fund], name=fund, plot_output=True)
 
 
 def risk_function(config: dict):
@@ -324,10 +129,9 @@ def risk_function(config: dict):
 def vf_function(config: dict):
     print(f"Volatility & Stop Losses for funds...")
     print(f"")
-    data, fund_list = function_data_download(config, fund_list_only=True)
+    _, fund_list = function_data_download(config, fund_list_only=True)
     for fund in fund_list:
-        vf = get_volatility(fund)
-        vf_function_print(vf, fund)
+        vf_function_print(fund)
 
 
 def nasit_generation_function(config: dict, print_only=False):
@@ -401,7 +205,7 @@ def ledger_function(config: dict):
     generate_fund_from_ledger(config['tickers'])
 
 
-def synopsis_function(config: dict):
+def synopsis_function(_: dict):
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
@@ -422,7 +226,7 @@ def synopsis_function(config: dict):
                     return
 
 
-def assemble_last_signals_function(config: dict):
+def assemble_last_signals_function(_: dict):
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
@@ -549,9 +353,11 @@ def function_sector_match(meta: dict, fund_data: pd.DataFrame, config: dict) -> 
     return None, None
 
 
-def vf_function_print(volatility_factor: dict, fund: str):
+def vf_function_print(fund: str):
+    volatility_factor = get_volatility(fund)
     if not volatility_factor:
         return
+
     last_max = volatility_factor.get('last_max', {}).get('Price')
     stop_loss = volatility_factor.get('stop_loss')
     latest = volatility_factor.get('latest_price')
@@ -666,39 +472,42 @@ FUNCTION_MAP = {
     'clustered_oscs': [run_function, cluster_oscillators, {'function': 'all'}],
     'head_shoulders': [run_function, feature_detection_head_and_shoulders],
     'correlation': correlation_index_function,
-    'rsi': rsi_function,
-    'stoch': stochastic_function,
-    'ultimate': ultimate_osc_function,
-    'awesome': awesome_osc_function,
-    'momentum': momentum_osc_function,
-    'macd': macd_function,
-    'relative_strength': relative_strength_function,
-    'obv': obv_function,
-    'ma': ma_function,
-    'swings': swing_trade_function,
-    'hull': hull_ma_function,
-    'bear_bull': bear_bull_function,
-    'total_power': total_power_function,
-    'bol_bands': bollinger_bands_function,
-    'roc': roc_function,
-    'kst': kst_function,
-    'gaps': price_gap_function,
-    'candlestick': candlestick_function,
-    'commodity': commodity_function,
-    'atr': atr_function,
-    'adx': adx_function,
-    'sar': sar_function,
-    'demand': demand_function,
-    'alpha': risk_function,
-    'vf': vf_function,
-    'nf': nasit_generation_function,
-    'nfnow': nasit_generation_function,
-    'ledger': ledger_function,
-    'synopsis': synopsis_function,
-    'last_signals':  assemble_last_signals_function,
+    'rsi': [
+        run_function, relative_strength_indicator_rsi,
+        {'out_suppress': False, 'trendlines': True}
+    ],
+    'stochastic': [run_function, full_stochastic, {"out_suppress": False}],
+    'ultimate': [run_function, ultimate_oscillator, {"out_suppress": False}],
+    'awesome': [run_function, awesome_oscillator],
+    'momentum': [run_function, momentum_oscillator],
+    'macd': [run_function, mov_avg_convergence_divergence],
+    'relative_strength': [relative_strength_function],
+    'obv': [run_function, on_balance_volume, {"trendlines": True}],
+    'moving_average': [run_function, triple_moving_average],
+    'swings': [run_function, moving_average_swing_trade],
+    'hull': [run_function, hull_moving_average],
+    'bear_bull': [run_function, bear_bull_power],
+    'total_power': [run_function, total_power],
+    'bollinger_bands': [run_function, bollinger_bands],
+    'rate_of_change': [run_function, rate_of_change_oscillator],
+    'know_sure_thing': [run_function, know_sure_thing],
+    'gaps': [run_function, analyze_price_gaps],
+    'candlestick': [run_function, candlesticks],
+    'commodity': [run_function, commodity_channel_index],
+    'average_true_range': [run_function, average_true_range],
+    'adx': [run_function, average_directional_index],
+    'parabolic_sar': [run_function, parabolic_sar],
+    'demand_index': [run_function, demand_index],
+    'alpha': [risk_function],
+    'vf': [vf_function],
+    'nasit_funds': [nasit_generation_function],
+    'nf_now': [run_function, nasit_generation_function, {"print_only": True}, False],
+    'ledger': [ledger_function],
+    'synopsis': [synopsis_function],
+    'last_signals':  [assemble_last_signals_function],
     'metadata': [metadata_function],
-    'pptx': pptx_output_function,
-    'pdf': pdf_output_function
+    'pptx': [pptx_output_function],
+    'pdf': [pdf_output_function]
 }
 
 
@@ -729,4 +538,7 @@ def only_functions_handler(config: dict):
             keyword_args = {}
             if len(functions) > 2:
                 keyword_args = functions[2]
-            functions[0](config, functions[1], **keyword_args)
+            if len(functions) == 4:
+                functions[1](config, **keyword_args)
+            else:
+                functions[0](config, functions[1], **keyword_args)

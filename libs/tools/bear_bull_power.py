@@ -256,6 +256,6 @@ def filter_features(feature_list: list, plot_output=False) -> list:
             new_list.append(feat)
             latest_index = feat['index']
             if plot_output:
-                print(f"BearBullPower: {feat}")
+                print(f"BearBullPower: {feat['type']} -> {feat['value']} :: {feat['date']}")
 
     return new_list
