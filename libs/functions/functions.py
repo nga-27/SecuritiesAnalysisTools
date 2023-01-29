@@ -444,10 +444,15 @@ def assemble_last_signals_function(config: dict):
 def metadata_function(config: dict):
     print(f"Getting Metadata for funds...")
     print(f"")
-    data, fund_list = function_data_download(config)
+    _, fund_list = function_data_download(config, fund_list_only=True)
     for fund in fund_list:
         if fund != '^GSPC':
-            get_api_metadata(fund, data=data[fund], plot_output=True)
+            metadata = get_api_metadata(fund, plot_output=True)
+            altman_z = metadata.get('altman_z', {})
+            color = TEXT_COLOR_MAP[altman_z.get('color', 'white')]
+            print("\r\n")
+            print(f"Altman-Z Score: {color}{altman_z['score']}{NORMAL}")
+            print("\r\n")
 
 
 def pptx_output_function(config: dict):
@@ -691,7 +696,7 @@ FUNCTION_MAP = {
     'ledger': ledger_function,
     'synopsis': synopsis_function,
     'last_signals':  assemble_last_signals_function,
-    'metadata': metadata_function,
+    'metadata': [metadata_function],
     'pptx': pptx_output_function,
     'pdf': pdf_output_function
 }
