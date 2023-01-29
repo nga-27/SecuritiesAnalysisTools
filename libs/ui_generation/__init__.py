@@ -1,3 +1,4 @@
-from .pptx_generator import slide_creator
+""" UI-related Components """
+from .pptx_generator import create_slides
 from .json_generator import output_to_json
-from .pdf_generator import PDF_creator
+from .pdf_generator import create_pdf

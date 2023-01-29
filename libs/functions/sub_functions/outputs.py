@@ -5,7 +5,7 @@ import os
 from libs.metrics import (
     metadata_to_dataset, generate_synopsis, assemble_last_signals
 )
-from libs.ui_generation import slide_creator, PDF_creator
+from libs.ui_generation import create_slides, create_pdf
 from libs.tools import get_api_metadata
 
 from .utils import (
@@ -122,7 +122,7 @@ def pptx_output_function(config: dict):
                 if period not in ('metadata', 'synopsis'):
                     config['views']['pptx'] = period
 
-        slide_creator(m_data, config=config)
+        create_slides(m_data, config=config)
 
 
 def pdf_output_function(config: dict):
@@ -156,4 +156,4 @@ def pdf_output_function(config: dict):
                 if period not in ('metadata', 'synopsis'):
                     config['views']['pptx'] = period
 
-        PDF_creator(m_data, config=config)
+        create_pdf(m_data, config=config)
