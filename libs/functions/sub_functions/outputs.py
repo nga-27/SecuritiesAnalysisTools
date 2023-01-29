@@ -1,3 +1,4 @@
+""" outputs functions """
 import json
 import os
 
@@ -13,17 +14,27 @@ from .utils import (
 
 
 def export_function(config: dict):
+    """export_function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     metadata_to_dataset(config)
 
 
 def synopsis_function(_: dict):
+    """synopsis function
+
+    Args:
+        _ (dict): empty / n/a
+    """
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
 
-    with open(meta_file) as m_file:
+    with open(meta_file, 'r', encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
 
@@ -38,13 +49,18 @@ def synopsis_function(_: dict):
 
 
 def assemble_last_signals_function(_: dict):
+    """assemble_last_signals_function
+
+    Args:
+        _ (dict): empty / n/a
+    """
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
 
-    with open(meta_file) as m_file:
+    with open(meta_file, 'r', encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
 
@@ -57,8 +73,13 @@ def assemble_last_signals_function(_: dict):
 
 
 def metadata_function(config: dict):
-    print(f"Getting Metadata for funds...")
-    print(f"")
+    """metadata_function
+
+    Args:
+        config (dict): configuration dictionary
+    """
+    print("Getting Metadata for funds...")
+    print("")
     _, fund_list = function_data_download(config, fund_list_only=True)
     for fund in fund_list:
         if fund != '^GSPC':
@@ -71,13 +92,18 @@ def metadata_function(config: dict):
 
 
 def pptx_output_function(config: dict):
+    """pptx_output_function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
 
-    with open(meta_file) as m_file:
+    with open(meta_file, 'r', encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
 
@@ -93,21 +119,25 @@ def pptx_output_function(config: dict):
 
         if '2y' not in m_data[t_fund]:
             for period in m_data[t_fund]:
-                if (period != 'metadata') and (period != 'synopsis'):
+                if period not in ('metadata', 'synopsis'):
                     config['views']['pptx'] = period
 
         slide_creator(m_data, config=config)
-        return
 
 
 def pdf_output_function(config: dict):
+    """pdf_output_function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     meta_file = os.path.join("output", "metadata.json")
     if not os.path.exists(meta_file):
         print(
             f"{WARNING}Warning: '{meta_file}' file does not exist. Run main program.{NORMAL}")
         return
 
-    with open(meta_file) as m_file:
+    with open(meta_file, 'r', encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
 
@@ -123,8 +153,7 @@ def pdf_output_function(config: dict):
 
         if '2y' not in m_data[t_fund]:
             for period in m_data[t_fund]:
-                if (period != 'metadata') and (period != 'synopsis'):
+                if period not in ('metadata', 'synopsis'):
                     config['views']['pptx'] = period
 
         PDF_creator(m_data, config=config)
-        return

@@ -1,3 +1,6 @@
+""" utility functions for functions """
+from typing import Tuple, Union
+
 import pandas as pd
 
 from libs.utils import (
@@ -13,7 +16,19 @@ SIDEWAYS_COLOR = TEXT_COLOR_MAP["yellow"]
 DOWN_COLOR = TEXT_COLOR_MAP["red"]
 
 
-def function_data_download(config: dict, **kwargs) -> list:
+def function_data_download(config: dict, **kwargs) -> Tuple[dict, list]:
+    """function_data_download
+
+    Args:
+        config (dict): configuration dictionary
+
+    Optional Args:
+        fund_list_only (bool): If True, skips downloading ticker data and returns ticker list only.
+            defaults to False.
+
+    Returns:
+        Tuple[dict, list]: ticker data, fund list
+    """
     fund_list_only = kwargs.get('fund_list_only', False)
     data, fund_list = download_data(config=config, fund_list_only=fund_list_only)
     if fund_list_only:
@@ -26,7 +41,19 @@ def function_data_download(config: dict, **kwargs) -> list:
     return data, fund_list
 
 
-def function_sector_match(meta: dict, fund_data: pd.DataFrame, config: dict) -> dict:
+def function_sector_match(meta: dict,
+                          fund_data: pd.DataFrame,
+                          config: dict) -> Tuple[Union[str, None], Union[dict, None]]:
+    """function_sector_match
+
+    Args:
+        meta (dict): metadata object
+        fund_data (pd.DataFrame): ticker fund data data_frame
+        config (dict): configuration dictionary
+
+    Returns:
+        Tuple[Union[str, None], Union[dict, None]]: matched name of the sector ticker, sector data
+    """
     match = meta.get('info', {}).get('sector')
     if match is not None:
         fund_len = {

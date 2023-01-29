@@ -1,3 +1,4 @@
+""" Miscellaneous Functions """
 from libs.tools import (
     relative_strength, get_api_metadata, risk_comparison
 )
@@ -8,6 +9,11 @@ from .utils import (
 
 
 def relative_strength_function(config: dict):
+    """relative_strength_function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     config['tickers'] += ' ^GSPC'
     data, fund_list = function_data_download(config)
     for fund in fund_list:
@@ -19,12 +25,17 @@ def relative_strength_function(config: dict):
 
 
 def risk_function(config: dict):
-    print(f"Risk Factors for funds...\r\n")
+    """risk_function
+
+    Args:
+        config (dict): configuration dictionary
+    """
+    print("Risk Factors for funds...\r\n")
     config['tickers'] += ' ^GSPC ^IRX'
     data, fund_list = function_data_download(config)
 
     for fund in fund_list:
-        if fund != '^GSPC' and fund != '^IRX':
+        if fund not in ('^GSPC', '^IRX'):
             print(
                 f"\r\nRisk Factors of {TICKER}{fund}{NORMAL}...")
 

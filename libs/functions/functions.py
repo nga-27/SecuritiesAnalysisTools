@@ -1,3 +1,4 @@
+""" functions to be used a single operations (or eventual API functions) """
 from types import FunctionType
 
 from libs.tools import (
@@ -29,6 +30,14 @@ from libs.functions.sub_functions.misc import (
 
 
 def run_function(config: dict, function_to_run: FunctionType, **kwargs):
+    """run_functions
+
+    Primary function that uses the function map to run all applicable functions
+
+    Args:
+        config (dict): configuration dictionary
+        function_to_run (FunctionType): function referenced from the function map
+    """
     data, fund_list = function_data_download(config)
     function_str = str(function_to_run.__name__).capitalize()
     for fund in fund_list:

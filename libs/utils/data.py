@@ -71,7 +71,7 @@ def download_data_all(config: dict, **kwargs) -> Tuple[dict, list, list, dict]:
     return dataset, funds, periods, config
 
 
-def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
+def download_data_indexes(indexes: list, tickers: str, **kwargs) -> Tuple[dict, list]:
     """Download Data Indexes
 
     Arguments:
@@ -86,7 +86,7 @@ def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
         fund_len {int} -- (default: {None})
 
     Returns:
-        list -- data of funds, index list
+        Tuple[dict, list] -- data of funds, index list
     """
     period = kwargs.get('period', '2y')
     interval = kwargs.get('interval', '1d')
@@ -108,7 +108,7 @@ def download_data_indexes(indexes: list, tickers: str, **kwargs) -> list:
     return data, indexes
 
 
-def download_data(config: dict, **kwargs) -> list:
+def download_data(config: dict, **kwargs) -> Tuple[dict, list]:
     """Download data (for functions)
 
     Arguments:
@@ -119,7 +119,7 @@ def download_data(config: dict, **kwargs) -> list:
         end {str} -- date (default: {None})
 
     Returns:
-        list -- downloaded data, list of funds
+        Tuple[dict, list] -- downloaded data, list of funds
     """
     period = config.get('period', '2y')
     interval = config.get('interval', '1d')
@@ -451,7 +451,7 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
     return new_list
 
 
-def filter_date(dates, fund_len: dict = None):
+def filter_date(dates, fund_len: dict = None) -> list:
     """Filter Date
 
     Arguments:

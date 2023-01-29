@@ -1,9 +1,15 @@
+""" composite functions """
 from libs.metrics import (
     market_composite_index, bond_composite_index, correlation_composite_index, type_composite_index
 )
 
 
 def mci_function(config: dict):
+    """market composite index function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     config['properties'] = config.get('properties', {})
     config['properties']['Indexes'] = config['properties'].get('Indexes', {})
     config['properties']['Indexes']['Market Sector'] = config['properties']['Indexes'].get(
@@ -12,6 +18,11 @@ def mci_function(config: dict):
 
 
 def bci_function(config: dict):
+    """bond composite index function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     config['properties'] = config.get('properties', {})
     config['properties']['Indexes'] = config['properties'].get('Indexes', {})
     config['properties']['Indexes']['Treasury Bond'] = True
@@ -21,6 +32,11 @@ def bci_function(config: dict):
 
 
 def tci_function(config: dict):
+    """type composite index function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     config['properties'] = config.get('properties', {})
     config['properties']['Indexes'] = config['properties'].get('Indexes', {})
     config['properties']['Indexes']['Type Sector'] = config['properties']['Indexes'].get(
@@ -29,6 +45,11 @@ def tci_function(config: dict):
 
 
 def correlation_index_function(config: dict):
+    """correlation composite index function
+
+    Args:
+        config (dict): configuration dictionary
+    """
     config['properties'] = config.get('properties', {})
     config['properties']['Indexes'] = config['properties'].get('Indexes', {})
 

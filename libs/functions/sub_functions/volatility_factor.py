@@ -1,3 +1,4 @@
+""" volatility factor functions """
 import numpy as np
 
 from libs.tools import get_volatility
@@ -7,6 +8,11 @@ from libs.functions.sub_functions.utils import (
 
 
 def vf_function_print(fund: str):
+    """volatility factor function print
+
+    Args:
+        fund (str): fund ticker symbol to run volatility factor
+    """
     volatility_factor = get_volatility(fund)
     if not volatility_factor:
         return
@@ -37,8 +43,13 @@ def vf_function_print(fund: str):
 
 
 def vf_function(config: dict):
-    print(f"Volatility & Stop Losses for funds...")
-    print(f"")
+    """volatility factor function
+
+    Args:
+        config (dict): configuration dictionary
+    """
+    print("Volatility & Stop Losses for funds...")
+    print("")
     _, fund_list = function_data_download(config, fund_list_only=True)
     for fund in fund_list:
         vf_function_print(fund)

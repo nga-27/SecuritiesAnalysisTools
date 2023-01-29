@@ -39,20 +39,20 @@ def api_sector_match(sector: str,
         print(f"{WARNING}Warning: sector file '{sector_match_file}' not found.{NORMAL}")
         return None, None
 
-    with open(sector_match_file) as f:
-        matcher = json.load(f)
-        matched = matcher.get("Sector", {}).get(sector)
-        if matched is None:
+    with open(sector_match_file, encoding='utf-8') as f_sector:
+        matcher = json.load(f_sector)
+        matched_sector_str = matcher.get("Sector", {}).get(sector)
+        if matched_sector_str is None:
             return None, None
 
         # To save downloads, if the matched items are already in the ticker list, simply use them
         tickers = config.get('tickers', '').split(' ')
-        if matched in tickers:
-            return matched, {}
+        if matched_sector_str in tickers:
+            return matched_sector_str, {}
 
         fund_data = download_single_fund(
-            matched, config, period=period, interval=interval, fund_len=fund_len)
-        return matched, fund_data
+            matched_sector_str, config, period=period, interval=interval, fund_len=fund_len)
+        return matched_sector_str, fund_data
 
 
 def api_sector_funds(sector_fund: str, fund_len=None, **kwargs) -> Tuple[List[str], dict]:
