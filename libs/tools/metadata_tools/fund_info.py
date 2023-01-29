@@ -11,7 +11,7 @@ def get_info(ticker: yf.Ticker) -> dict:
         dict -- fund info data object
     """
     try:
-        info = ticker.info
+        info = dict(ticker.info)
     except:
         info = {}
     return info

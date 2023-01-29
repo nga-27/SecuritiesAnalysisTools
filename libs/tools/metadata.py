@@ -1,4 +1,6 @@
 import yfinance as yf
+import json
+import pprint
 
 from libs.utils import STANDARD_COLORS, INDEXES, PRINT_CONSTANTS
 
@@ -92,6 +94,6 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         metadata['altman_z'] = altman_z_score.get_altman_z_score(metadata)
 
     api_print += "  Done."
-    print(f"{REVERSE_LINE}{REVERSE_LINE}{REVERSE_LINE}{api_print}")
+    print(f"{REVERSE_LINE}{REVERSE_LINE}{REVERSE_LINE}{REVERSE_LINE}{api_print}")
 
     return metadata

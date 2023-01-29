@@ -6,7 +6,7 @@ from libs.utils import dual_plotting, date_extractor, INDEXES, STANDARD_COLORS
 from libs.features import normalize_signals
 
 from .ultimate_oscillator import ultimate_oscillator
-from .rsi import RSI
+from .rsi import relative_strength_indicator_rsi
 from .full_stochastic import full_stochastic
 
 from .moving_average import exponential_moving_avg
@@ -214,9 +214,9 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
             position, config=[10, 20, 40], plot_output=False, name=name)
 
     elif function == 'rsi':
-        fast = RSI(position, plot_output=False, period=8, name=name)
-        med = RSI(position, plot_output=False, period=14, name=name)
-        slow = RSI(position, plot_output=False, period=20)
+        fast = relative_strength_indicator_rsi(position, plot_output=False, period=8, name=name)
+        med = relative_strength_indicator_rsi(position, plot_output=False, period=14, name=name)
+        slow = relative_strength_indicator_rsi(position, plot_output=False, period=20)
 
     elif function == 'all':
         fast_stoch = full_stochastic(
@@ -231,16 +231,16 @@ def generate_cluster(position: pd.DataFrame, function: str, name='', p_bar=None)
             position, config=[7, 14, 28], plot_output=False, name=name)
         slow_ult = ultimate_oscillator(
             position, config=[10, 20, 40], plot_output=False, name=name)
-        fast_rsi = RSI(position, plot_output=False, period=8, name=name)
-        med_rsi = RSI(position, plot_output=False, period=14, name=name)
-        slow_rsi = RSI(position, plot_output=False, period=20, name=name)
+        fast_rsi = relative_strength_indicator_rsi(position, plot_output=False, period=8, name=name)
+        med_rsi = relative_strength_indicator_rsi(position, plot_output=False, period=14, name=name)
+        slow_rsi = relative_strength_indicator_rsi(position, plot_output=False, period=20, name=name)
 
     elif function == 'market':
         fast = full_stochastic(
             position, config=[14, 3, 3], plot_output=False, name=name)
         med = ultimate_oscillator(
             position, config=[7, 14, 28], plot_output=False, name=name)
-        slow = RSI(position, plot_output=False, period=14, name=name)
+        slow = relative_strength_indicator_rsi(position, plot_output=False, period=14, name=name)
 
     else:
         print(

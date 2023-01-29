@@ -11,7 +11,7 @@ from .moving_average import exponential_moving_avg
 from .trends import get_trend_lines_regression
 
 
-def RSI(position: pd.DataFrame, **kwargs) -> dict:
+def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     """Relative Strength Indicator
 
     Arguments:
@@ -20,7 +20,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
     Optional Args:
         name {str} -- name of fund, primarily for plotting (default: {''})
         plot_output {bool} -- True to render plot in realtime (default: {True})
-        period {int} -- size of RSI indicator (default: {14})
+        period {int} -- size of relative_strength_indicator_rsi indicator (default: {14})
         out_suppress {bool} -- output plot/prints are suppressed (default: {True})
         progress_bar {ProgressBar} -- (default: {None})
         overbought {float} -- threshold to trigger overbought/sell condition (default: {70.0})
@@ -75,13 +75,13 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
 
     if not out_suppress:
         name3 = INDEXES.get(name, name)
-        name2 = name3 + ' - RSI'
+        name2 = name3 + ' - relative_strength_indicator_rsi'
 
         if plot_output:
             dual_plotting(position['Close'], main_plots,
-                          'Position Price', 'RSI', title=name2)
+                          'Position Price', 'relative_strength_indicator_rsi', title=name2)
             dual_plotting(position['Close'], rsi_data['metrics'],
-                          'Position Price', 'RSI Indicators', title=name2)
+                          'Position Price', 'relative_strength_indicator_rsi Indicators', title=name2)
 
         else:
             filename1 = os.path.join(name, view, f"RSI_standard_{name}.png")
@@ -89,14 +89,14 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
             dual_plotting(position['Close'],
                           main_plots,
                           'Position Price',
-                          'RSI',
+                          'relative_strength_indicator_rsi',
                           title=name2,
                           save_fig=True,
                           filename=filename1)
             dual_plotting(position['Close'],
                           rsi_data['metrics'],
                           'Position Price',
-                          'RSI Metrics',
+                          'relative_strength_indicator_rsi Metrics',
                           title=name2,
                           save_fig=True,
                           filename=filename2)
@@ -107,7 +107,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
     if trendlines:
         end = len(rsi)
         rsi_trend = rsi[end-100: end]
-        get_trend_lines_regression(rsi_trend, plot_output=True, indicator='RSI')
+        get_trend_lines_regression(rsi_trend, plot_output=True, indicator='relative_strength_indicator_rsi')
 
     rsi_data['type'] = 'oscillator'
     rsi_data['length_of_data'] = len(rsi)
@@ -117,7 +117,7 @@ def RSI(position: pd.DataFrame, **kwargs) -> dict:
 
 
 def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
-    """Generate RSI Signal
+    """Generate relative_strength_indicator_rsi Signal
 
     Arguments:
         position {pd.DataFrame}
@@ -127,7 +127,7 @@ def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
         p_bar {ProgressBar} -- (default: {None})
 
     Returns:
-        list -- RSI signal
+        list -- relative_strength_indicator_rsi signal
     """
     period = kwargs.get('period', 14)
     p_bar = kwargs.get('p_bar')
@@ -143,12 +143,12 @@ def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
     if p_bar is not None:
         p_bar.uptick(increment=0.15)
 
-    RSI = []
+    relative_strength_indicator_rsi = []
     # gains, losses, rs
     RS = []
 
     for i in range(0, PERIOD):
-        RSI.append(50.0)
+        relative_strength_indicator_rsi.append(50.0)
         RS.append([0.0, 0.0, 1.0])
 
     # Calculate RS for all future points
@@ -187,16 +187,16 @@ def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
                        np.round(neg/float(PERIOD), 6), rs])
 
         rsi = 100.0 - (100.0 / (1.0 + RS[i][2]))
-        RSI.append(np.round(rsi, 6))
+        relative_strength_indicator_rsi.append(np.round(rsi, 6))
 
     if p_bar is not None:
         p_bar.uptick(increment=0.15)
 
-    return RSI
+    return relative_strength_indicator_rsi
 
 
 def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
-    """ Find bullish / bearish and RSI indicators
+    """ Find bullish / bearish and relative_strength_indicator_rsi indicators
 
     1. go beyond threshold
     2. go back within thresholds
@@ -205,8 +205,8 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
 
     Arguments:
         position {pd.DataFrame} -- fund data
-        rsi_signal {list} -- pure RSI signal
-        rsi_data {dict} -- RSI data object
+        rsi_signal {list} -- pure relative_strength_indicator_rsi signal
+        rsi_data {dict} -- relative_strength_indicator_rsi data object
 
     Optional Args:
         p_bar {ProgressBar} -- (default: {None})
@@ -391,7 +391,7 @@ def over_threshold_lists(overbought: float,
 
 
 def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
-    """RSI Divergence:
+    """relative_strength_indicator_rsi Divergence:
 
     1. Cross outside threshold at Price A
     2. Cross inside threshold
@@ -518,7 +518,7 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     rsi_data['divergence'] = divs
 
     if plot_output:
-        dual_plotting(position['Close'], divs, 'Price', 'RSI', title='Divs')
+        dual_plotting(position['Close'], divs, 'Price', 'relative_strength_indicator_rsi', title='Divs')
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -527,7 +527,7 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
 
 
 def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
-    """RSI Metrics
+    """relative_strength_indicator_rsi Metrics
 
     Arguments:
         position {pd.DataFrame} -- dataset
@@ -603,7 +603,7 @@ def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
 
 
 def rsi_signals(bull_list: list, bear_list: list) -> list:
-    """RSI Signals
+    """relative_strength_indicator_rsi Signals
 
     Format all rsi signals into a single list
 

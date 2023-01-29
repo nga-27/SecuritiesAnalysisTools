@@ -1,5 +1,7 @@
 import os
 import json
+from types import FunctionType
+
 import pandas as pd
 import numpy as np
 
@@ -15,7 +17,7 @@ from libs.metrics import generate_synopsis
 from libs.metrics import assemble_last_signals
 
 from libs.tools import get_trend_lines, find_resistance_support_lines
-from libs.tools import cluster_oscillators, RSI, full_stochastic, ultimate_oscillator
+from libs.tools import cluster_oscillators, relative_strength_indicator_rsi, full_stochastic, ultimate_oscillator
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import mov_avg_convergence_divergence, relative_strength
 from libs.tools import on_balance_volume, demand_index
@@ -87,16 +89,6 @@ def correlation_index_function(config: dict):
     correlation_composite_index(config=config)
 
 
-def head_and_shoulders_function(config: dict):
-    data, fund_list = function_data_download(config)
-    for fund in fund_list:
-        if fund != '^GSPC':
-            print(
-                f"Head and Shoulders feature detection of {TICKER}{fund}{NORMAL}...")
-            feature_detection_head_and_shoulders(
-                data[fund], name=fund, plot_output=True)
-
-
 def export_function(config: dict):
     metadata_to_dataset(config)
 
@@ -105,8 +97,8 @@ def rsi_function(config: dict):
     data, fund_list = function_data_download(config)
     for fund in fund_list:
         if fund != '^GSPC':
-            print(f"RSI of {TICKER}{fund}{NORMAL}...")
-            RSI(data[fund], name=fund, plot_output=True,
+            print(f"relative_strength_indicator_rsi of {TICKER}{fund}{NORMAL}...")
+            relative_strength_indicator_rsi(data[fund], name=fund, plot_output=True,
                 out_suppress=False, trendlines=True)
 
 
@@ -651,7 +643,7 @@ def nasit_build(data: dict, makeup: dict, has_cash=False, by_price=True):
 ################################################
 
 
-def run_function(config: dict, function_to_run: function, **kwargs):
+def run_function(config: dict, function_to_run: FunctionType, **kwargs):
     data, fund_list = function_data_download(config)
     function_str = str(function_to_run.__name__).capitalize()
     for fund in fund_list:
@@ -667,7 +659,7 @@ FUNCTION_MAP = {
     'trend': [run_function, get_trend_lines],
     'support_resistance': [run_function, find_resistance_support_lines],
     'clustered_oscs': [run_function, cluster_oscillators, {'function': 'all'}],
-    'head_shoulders': head_and_shoulders_function,
+    'head_shoulders': [run_function, feature_detection_head_and_shoulders],
     'correlation': correlation_index_function,
     'rsi': rsi_function,
     'stoch': stochastic_function,
@@ -725,10 +717,11 @@ def only_functions_handler(config: dict):
     for function in config['run_functions']:
         functions = FUNCTION_MAP[function]
         if len(functions) == 1:
+            # Typically a Composite index function
             functions[0](config)
         else:
+            # Other functions. Default to kwargs is {}
             keyword_args = {}
             if len(functions) > 2:
                 keyword_args = functions[2]
-            print(keyword_args)
             functions[0](config, functions[1], **keyword_args)

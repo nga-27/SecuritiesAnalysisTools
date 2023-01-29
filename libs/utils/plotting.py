@@ -553,7 +553,8 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     fig, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 
-    x = [datetime.strptime(d, '%Y-%m-%d').date()
+    # As of yfinance==0.2.9, we need to split the date, because there are HMS-? in it.
+    x = [datetime.strptime(d.split(' ')[0], '%Y-%m-%d').date()
          for d in main_plot.index.astype(str)]
     plt.plot(x, main_plot)
 
@@ -683,7 +684,8 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
     fig, ax = plt.subplots()
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
 
-    x = [datetime.strptime(d, '%Y-%m-%d').date()
+    # As of yfinance==0.2.9, we need to split the date, because there are HMS-? in it.
+    x = [datetime.strptime(d.split(' ')[0], '%Y-%m-%d').date()
          for d in data.index.astype(str)]
     plt.plot(x, data['Close'], alpha=0.01)
 

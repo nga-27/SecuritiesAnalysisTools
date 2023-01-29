@@ -29,7 +29,7 @@ def metadata_copy(data: dict) -> dict:
     return meta
 
 
-def output_to_json(data: dict, exclude_tabular=True):
+def output_to_json(data: dict, config: dict, exclude_tabular=True):
     """Output to JSON
 
     Simple function that outputs dictionary to JSON file
@@ -49,6 +49,12 @@ def output_to_json(data: dict, exclude_tabular=True):
     meta = data
     if exclude_tabular:
         meta = metadata_copy(data)
+
+    if 'debug' in config.get('state', ''):
+        for fund_name in meta:
+            for key in meta[fund_name]:
+                print(f"JSON testing {fund_name}: {key}")
+                json.dump(meta, open(f'output/temp/__{fund_name}_{key}.json', 'w'))
 
     with open(filename, 'w') as f:
         json.dump(meta, f)

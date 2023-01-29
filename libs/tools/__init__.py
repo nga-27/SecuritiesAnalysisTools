@@ -15,7 +15,7 @@ from .resistance_support import find_resistance_support_lines
 
 from .true_strength import relative_strength
 
-from .rsi import RSI
+from .rsi import relative_strength_indicator_rsi
 from .ultimate_oscillator import ultimate_oscillator
 from .full_stochastic import full_stochastic
 from .awesome_oscillator import awesome_oscillator

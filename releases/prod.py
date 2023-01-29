@@ -5,7 +5,7 @@
 #
 #   A program that outputs a graphical and a numerical analysis of
 #   securities (stocks, bonds, equities, and the like). Analysis
-#   includes use of oscillators (Stochastic, RSI, and Ultimate),
+#   includes use of oscillators (Stochastic, relative_strength_indicator_rsi, and Ultimate),
 #   momentum charting (Moving Average Convergence Divergence,
 #   Simple and Exponential Moving Averages), trend analysis (Bands,
 #   Support and Resistance, Channels), and some basic feature
@@ -15,7 +15,7 @@
 from typing import Tuple
 
 # Imports that are custom tools that are the crux of this program
-from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscillators, RSI
+from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscillators, relative_strength_indicator_rsi
 from libs.tools import awesome_oscillator, momentum_oscillator
 from libs.tools import relative_strength, moving_average_swing_trade
 from libs.tools import triple_moving_average, triple_exp_mov_average
@@ -126,7 +126,7 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 fund, name=fund_name, plot_output=False,
                 out_suppress=False, progress_bar=prog_bar, view=period)
 
-            fund_data['rsi'] = RSI(
+            fund_data['rsi'] = relative_strength_indicator_rsi(
                 fund, name=fund_name, plot_output=False,
                 out_suppress=False, progress_bar=prog_bar, view=period)
 

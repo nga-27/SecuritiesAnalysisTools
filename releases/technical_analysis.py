@@ -5,7 +5,7 @@
 #
 #   A program that outputs a graphical and a numerical analysis of
 #   securities (stocks, bonds, equities, and the like). Analysis
-#   includes use of oscillators (Stochastic, RSI, and Ultimate),
+#   includes use of oscillators (Stochastic, relative_strength_indicator_rsi, and Ultimate),
 #   momentum charting (Moving Average Convergence Divergence,
 #   Simple and Exponential Moving Averages), trend analysis (Bands,
 #   Support and Resistance, Channels), and some basic feature

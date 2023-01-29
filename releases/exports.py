@@ -19,7 +19,7 @@ def run_exports(analysis: dict, script: list):
     config = script[3]
 
     slide_creator(analysis, config=config)
-    output_to_json(analysis)
+    output_to_json(analysis, config)
     PDF_creator(analysis, config=config)
 
     metadata_to_dataset(config=config)
