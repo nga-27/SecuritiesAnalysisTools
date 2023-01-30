@@ -1,25 +1,27 @@
+""" Fund Slides """
 import os
 import glob
 import json
-import numpy as np
+from typing import Union
 
+import numpy as np
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
+from pptx.enum.text import PP_ALIGN # pylint: disable=no-name-in-module
+from pptx.presentation import Presentation
 
 from libs.utils import INDEXES
 from libs.tools import trend_simple_forecast
 
-from .slide_utils import slide_title_header, color_to_RGB, pptx_ui_errors
+from .slide_utils import slide_title_header, color_to_rgb, pptx_ui_errors, get_locations
 from .synopsis_slide import generate_synopsis_slide
 
 # Slide Layouts
 BLANK_SLIDE = 6
-
 TEMP_DIR = os.path.join("output", "temp")
 
 
-def make_fund_slides(prs, analysis: dict, **kwargs):
+def make_fund_slides(prs: Presentation, analysis: dict, **kwargs) -> Presentation:
     """Make Fund Slides
 
     Arguments:
@@ -37,11 +39,10 @@ def make_fund_slides(prs, analysis: dict, **kwargs):
     for fund in funds:
         if fund != '_METRICS_':
             prs = add_fund_content(prs, fund, analysis, views=views)
-
     return prs
 
 
-def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
+def add_fund_content(prs: Presentation, fund: str, analysis: dict, **kwargs) -> Presentation:
     """Add Fund Content
 
     Arguments:
@@ -55,6 +56,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     Returns:
         pptx-object -- modified pptx
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     views = kwargs.get('views', '')
     if views is None:
         return prs
@@ -147,36 +149,28 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     risk_ratios = analysis[fund][views]['statistics'].get('risk_ratios', {})
 
     if 'market' in risk_ratios.get('alpha', {}):
-        table.cell(2, 1).text = str(
-            np.round(risk_ratios['alpha']['market'], 5))
+        table.cell(2, 1).text = str(np.round(risk_ratios['alpha']['market'], 5))
 
     if 'sector' in risk_ratios.get('alpha', {}):
-        table.cell(3, 1).text = str(
-            np.round(risk_ratios['alpha']['sector'], 5))
+        table.cell(3, 1).text = str(np.round(risk_ratios['alpha']['sector'], 5))
 
     if 'market' in risk_ratios.get('beta', {}):
-        table.cell(4, 1).text = str(
-            np.round(risk_ratios['beta']['market'], 5))
+        table.cell(4, 1).text = str(np.round(risk_ratios['beta']['market'], 5))
 
     if 'sector' in risk_ratios.get('beta', {}):
-        table.cell(5, 1).text = str(
-            np.round(risk_ratios['beta']['sector'], 5))
+        table.cell(5, 1).text = str(np.round(risk_ratios['beta']['sector'], 5))
 
     if 'market' in risk_ratios.get('r_squared', {}):
-        table.cell(6, 1).text = str(
-            np.round(risk_ratios['r_squared']['market'], 5))
+        table.cell(6, 1).text = str(np.round(risk_ratios['r_squared']['market'], 5))
 
     if 'sector' in risk_ratios.get('r_squared', {}):
-        table.cell(7, 1).text = str(
-            np.round(risk_ratios['r_squared']['sector'], 5))
+        table.cell(7, 1).text = str(np.round(risk_ratios['r_squared']['sector'], 5))
 
     if 'sharpe' in risk_ratios:
-        table.cell(8, 1).text = str(
-            np.round(risk_ratios['sharpe'], 5))
+        table.cell(8, 1).text = str(np.round(risk_ratios['sharpe'], 5))
 
     if 'standard_deviation' in risk_ratios:
-        table.cell(9, 1).text = str(
-            np.round(risk_ratios['standard_deviation'], 5))
+        table.cell(9, 1).text = str(np.round(risk_ratios['standard_deviation'], 5))
 
     table.cell(10, 0).text = 'Altman-Z Score'
     alt_z = analysis[fund].get('metadata', {}).get('altman_z', {})
@@ -187,7 +181,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         alt_z_score = str(np.round(alt_z_score, 5))
 
     table.cell(10, 1).text = alt_z_score
-    table.cell(10, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(
+    table.cell(10, 1).text_frame.paragraphs[0].font.color.rgb = color_to_rgb(
         alt_z_color)
 
     end = 10
@@ -202,7 +196,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
         table.cell(end+4, 0).text = 'VF Status'
         table.cell(end+4, 1).text = str(status)
 
-        table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_RGB(vf_color)
+        table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_rgb(vf_color)
 
     table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
     table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
@@ -216,7 +210,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     content = os.path.join(content_dir, f"candlestick_{fund}.png")
     if os.path.exists(content):
         if has_beta:
-            left = Inches(2.6)  # Inches(1.42)
+            left = Inches(2.6)
         else:
             left = Inches(1.42)
 
@@ -228,8 +222,7 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     else:
         slide = pptx_ui_errors(slide, "No Candlestick Chart available.")
 
-    price_pt = np.round(analysis[fund][views]
-                        ['statistics']['current_price'], 2)
+    price_pt = np.round(analysis[fund][views]['statistics']['current_price'], 2)
     price_chg_p = np.round(analysis[fund][views]['statistics']['current_percent_change'], 3)
     price_chg = np.round(analysis[fund][views]['statistics']['current_change'], 2)
 
@@ -275,11 +268,14 @@ def add_fund_content(prs, fund: str, analysis: dict, **kwargs):
     current_price = analysis[fund][views]['statistics']['current_price']
     prs = format_plots(prs, indexes, pics,
                        fund_analysis=fund_analysis, views=views, current_price=current_price)
-
     return prs
 
 
-def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}, **kwargs):
+def format_plots(prs: Presentation,
+                 slide_indices: list,
+                 globs: list,
+                 fund_analysis: Union[dict, None] = None,
+                 **kwargs) -> Presentation:
     """Format Plots
 
     Arguments:
@@ -297,6 +293,10 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
     Returns:
         pptx-object -- filled in slides with content
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    if not fund_analysis:
+        fund_analysis = {}
+
     if len(globs) == 0:
         for ind in slide_indices:
             pptx_ui_errors(prs.slides[ind], "No plot files available.")
@@ -307,8 +307,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
 
     if not os.path.exists(content_file):
         for ind in slide_indices:
-            pptx_ui_errors(
-                prs.slides[ind], "File 'fund_content_slides.json' not found.")
+            pptx_ui_errors(prs.slides[ind], "File 'fund_content_slides.json' not found.")
         return prs
 
     slide_config = {}
@@ -335,35 +334,27 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             location = details.get('location')
             table = details.get('table')
 
-            left = eval(locations[location]['left'])
-            top = eval(locations[location]['top'])
-            height = eval(locations[location]['height'])
-            width = eval(locations[location]['width'])
-
+            location_info = get_locations(locations[location])
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
+                picture, location_info.left, location_info.top,
+                height=location_info.height, width=location_info.width)
 
-            left = eval(tables[table]['left'])
-            top = eval(tables[table]['top'])
-            height = eval(tables[table]['height'])
-            width = eval(tables[table]['width'])
+            location_info = get_locations(tables[table])
+            txt_box = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
+                location_info.left, location_info.top, location_info.width, location_info.height)
 
-            txbox = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
-                left, top, width, height)
-
-            tf = txbox.text_frame
-            p = tf.paragraphs[0]
-            p.text = f"Nearest Support & Resistance Levels"
-            p.font.size = Pt(18)
-            p.font.name = 'Arial'
-            p.font.bold = True
+            txt_frame = txt_box.text_frame
+            paragraph = txt_frame.paragraphs[0]
+            paragraph.text = "Nearest Support & Resistance Levels"
+            paragraph.font.size = Pt(18)
+            paragraph.font.name = 'Arial'
+            paragraph.font.bold = True
 
             left_loc = Inches(8)
             top_loc = Inches(1)
             table_width = Inches(4.5)
 
-            num_srs = len(fund_analysis[views]
-                          ['support_resistance']['major S&R']) + 1
+            num_srs = len(fund_analysis[views]['support_resistance']['major S&R']) + 1
             table_height = Inches(num_srs * 0.33)
             if num_srs * 0.33 > 6.0:
                 table_height = Inches(6.0)
@@ -385,19 +376,13 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
                 table.cell(i+1, 2).text = maj['State']
-                color = color_to_RGB(maj['Color'])
-                table.cell(
-                    i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
-                table.cell(
-                    i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
-                table.cell(
-                    i+1, 2).text_frame.paragraphs[0].font.color.rgb = color
-                table.cell(
-                    i+1, 0).text_frame.paragraphs[0].font.size = Pt(14)
-                table.cell(
-                    i+1, 1).text_frame.paragraphs[0].font.size = Pt(14)
-                table.cell(
-                    i+1, 2).text_frame.paragraphs[0].font.size = Pt(14)
+                color = color_to_rgb(maj['Color'])
+                table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(i+1, 2).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(i+1, 0).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+1, 1).text_frame.paragraphs[0].font.size = Pt(14)
+                table.cell(i+1, 2).text_frame.paragraphs[0].font.size = Pt(14)
 
         elif 'trendline' in part and part in slide_content:
             details = slide_content.get(part, {})
@@ -405,28 +390,21 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             location = details.get('location')
             table = details.get('table')
 
-            left = eval(locations[location]['left'])
-            top = eval(locations[location]['top'])
-            height = eval(locations[location]['height'])
-            width = eval(locations[location]['width'])
-
+            location_info = get_locations(locations[location])
             prs.slides[slide_indices[slide_num]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
+                picture, location_info.left, location_info.top,
+                height=location_info.height, width=location_info.width)
 
-            left = eval(tables[table]['left'])
-            top = eval(tables[table]['top'])
-            height = eval(tables[table]['height'])
-            width = eval(tables[table]['width'])
+            location_info = get_locations(tables[table])
+            txt_box = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
+                location_info.left, location_info.top, location_info.width, location_info.height)
 
-            txbox = prs.slides[slide_indices[slide_num]].shapes.add_textbox(
-                left, top, width, height)
-
-            tf = txbox.text_frame
-            p = tf.paragraphs[0]
-            p.text = f"Long, Intermediate, Short, and Near Term Trend Lines"
-            p.font.size = Pt(18)
-            p.font.name = 'Arial'
-            p.font.bold = True
+            txt_frame = txt_box.text_frame
+            paragraph = txt_frame.paragraphs[0]
+            paragraph.text = "Long, Intermediate, Short, and Near Term Trend Lines"
+            paragraph.font.size = Pt(18)
+            paragraph.font.name = 'Arial'
+            paragraph.font.bold = True
 
             trends = []
             futures = [0, 10, 20, 40, 60, 80]
@@ -465,7 +443,7 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             cell_1 = table.cell(0, 0)
             cell_2 = table.cell(0, num_cols-1)
             cell_1.merge(cell_2)
-            cell_1.text = f"Future Periods of Active Trend Lines"
+            cell_1.text = "Future Periods of Active Trend Lines"
 
             for i, fut in enumerate(futures):
                 table.cell(1, i+1).text = str(fut)
@@ -478,39 +456,33 @@ def format_plots(prs, slide_indices: list, globs: list, fund_analysis: dict = {}
             table.cell(1, i+2).text_frame.paragraphs[0].font.bold = True
 
             for i, trend in enumerate(trends):
+                column_value = 0
                 for j, value in enumerate(forecasts[i]['returns']):
                     table.cell(i+2, j+1).text = f"${value}"
                     table.cell(
                         i+2, j+1).text_frame.paragraphs[0].font.size = Pt(12)
-                    color = color_to_RGB(trend['color'])
-                    table.cell(
-                        i+2, j+1).text_frame.paragraphs[0].font.color.rgb = color
+                    color = color_to_rgb(trend['color'])
+                    table.cell(i+2, j+1).text_frame.paragraphs[0].font.color.rgb = color
+                    column_value = j
 
                 table.cell(i+2, 0).text = forecasts[i]['slope']
-                table.cell(
-                    i+2, 0).text_frame.paragraphs[0].font.size = Pt(12)
-                color = color_to_RGB(trend['color'])
-                table.cell(
-                    i+2, 0).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(i+2, 0).text_frame.paragraphs[0].font.size = Pt(12)
+                color = color_to_rgb(trend['color'])
+                table.cell(i+2, 0).text_frame.paragraphs[0].font.color.rgb = color
 
-                table.cell(i+2, j+2).text = forecasts[i]['above_below']
-                table.cell(
-                    i+2, j+2).text_frame.paragraphs[0].font.size = Pt(12)
-                color = color_to_RGB(trend['color'])
-                table.cell(
-                    i+2, j+2).text_frame.paragraphs[0].font.color.rgb = color
+                table.cell(i+2, column_value + 2).text = forecasts[i]['above_below']
+                table.cell(i+2, column_value + 2).text_frame.paragraphs[0].font.size = Pt(12)
+                color = color_to_rgb(trend['color'])
+                table.cell(i+2, column_value + 2).text_frame.paragraphs[0].font.color.rgb = color
 
         elif part in slide_content:
             details = slide_content.get(part, {})
             slide_index = details.get('index')
             location = details.get('location')
 
-            left = eval(locations[location]['left'])
-            top = eval(locations[location]['top'])
-            height = eval(locations[location]['height'])
-            width = eval(locations[location]['width'])
-
+            location_info = get_locations(locations[location])
             prs.slides[slide_indices[slide_index]].shapes.add_picture(
-                picture, left, top, height=height, width=width)
+                picture, location_info.left, location_info.top,
+                height=location_info.height, width=location_info.width)
 
     return prs

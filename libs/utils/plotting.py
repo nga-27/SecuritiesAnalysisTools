@@ -280,20 +280,18 @@ def generic_plotting(list_of_plots: list, **kwargs):
 
     else:
         if isinstance(x[0], (list, pd.core.indexes.datetimes.DatetimeIndex)):
-            x = x
-            for i in range(len(list_of_plots)):
+            for i, fig_y in enumerate(list_of_plots):
                 if len(colors) > 0:
-                    plt.plot(x[i], list_of_plots[i], colors[i])
+                    plt.plot(x[i], fig_y, colors[i])
                 else:
-                    plt.plot(x[i], list_of_plots[i])
+                    plt.plot(x[i], fig_y)
 
         else:
-            x = x
-            for i, figy in enumerate(list_of_plots):
+            for i, fig_y in enumerate(list_of_plots):
                 if len(colors) > 0:
-                    plt.plot(x, figy, colors[i])
+                    plt.plot(x, fig_y, colors[i])
                 else:
-                    plt.plot(x, figy)
+                    plt.plot(x, fig_y)
 
     # coords = plt.ginput(10)
     # print(f"coords: {coords}")

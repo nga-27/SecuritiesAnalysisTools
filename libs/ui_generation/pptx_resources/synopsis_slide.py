@@ -4,7 +4,7 @@ import numpy as np
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from .slide_utils import pptx_ui_errors, color_to_RGB, space_injector
+from .slide_utils import pptx_ui_errors, color_to_rgb, space_injector
 
 ORDER_RANK = {
     "hull_moving_average": 1,
@@ -164,10 +164,10 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
                 if value > 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("green")
+                        color_to_rgb("green")
                 elif value < 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("red")
+                        color_to_rgb("red")
 
             # A note about moving averages
             note = "'Current vs. Metric' refers to difference between moving average metric " + \
@@ -245,10 +245,10 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
                 if value > 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("green")
+                        color_to_rgb("green")
                 elif value < 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("red")
+                        color_to_rgb("red")
 
         elif category == 'trendlines':
 
@@ -308,10 +308,10 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
                 if style == 'Bull':
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("green")
+                        color_to_rgb("green")
                 else:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("red")
+                        color_to_rgb("red")
 
     return slide
 

@@ -7,8 +7,8 @@ from pptx import Presentation
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 
 from libs.ui_generation.pptx_resources import (
-    title_presentation, intro_slide, make_BCI_slides, make_MCI_slides, make_CCI_slides,
-    make_TCI_slides, make_fund_slides
+    title_presentation, intro_slide, make_bci_slides, make_mci_slides, make_cci_slides,
+    make_tci_slides, make_fund_slides
 )
 
 PPTX_NAME_COLOR = TEXT_COLOR_MAP["purple"]
@@ -30,10 +30,10 @@ def create_slide_content(analysis: dict, year: str, version: str, views: str):
     prs = Presentation()
     prs = title_presentation(prs, year, VERSION=version)
     prs = intro_slide(prs)
-    prs = make_MCI_slides(prs, analysis.get('_METRICS_', {}))
-    prs = make_CCI_slides(prs)
-    prs = make_BCI_slides(prs)
-    prs = make_TCI_slides(prs)
+    prs = make_mci_slides(prs, analysis.get('_METRICS_', {}))
+    prs = make_cci_slides(prs)
+    prs = make_bci_slides(prs)
+    prs = make_tci_slides(prs)
     prs = make_fund_slides(prs, analysis, views=views)
 
     out_dir = "output"

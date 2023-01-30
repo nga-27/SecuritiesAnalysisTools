@@ -145,54 +145,54 @@
     },
     "locations": [
         {
-            "left": "Inches(0)",
-            "top": "Inches(1.1)",
-            "height": "Inches(3.0)",
-            "width": "Inches(6.5)"
+            "left": 0.0,
+            "top": 1.1,
+            "height": 3.0,
+            "width": 6.5
         },
         {
-            "left": "Inches(6.5)",
-            "top": "Inches(1.1)",
-            "height": "Inches(3.0)",
-            "width": "Inches(6.5)"
+            "left": 6.5,
+            "top": 1.1,
+            "height": 3.0,
+            "width": 6.5
         },
         {
-            "left": "Inches(0)",
-            "top": "Inches(4.1)",
-            "height": "Inches(3.0)",
-            "width": "Inches(6.5)"
+            "left": 0.0,
+            "top": 4.1,
+            "height": 3.0,
+            "width": 6.5
         },
         {
-            "left": "Inches(6.5)",
-            "top": "Inches(4.1)",
-            "height": "Inches(3.0)",
-            "width": "Inches(6.5)"
+            "left": 6.5,
+            "top": 4.1,
+            "height": 3.0,
+            "width": 6.5
         },
         {
-            "left": "Inches(0.0)",
-            "top": "Inches(1.55)",
-            "height": "Inches(4.7)",
-            "width": "Inches(7)"
+            "left": 0.0,
+            "top": 1.55,
+            "height": 4.7,
+            "width": 7.0
         },
         {
-            "left": "Inches(0.92)",
-            "top": "Inches(1.08)",
-            "height": "Inches(6)",
-            "width": "Inches(11.5)"
+            "left": 0.92,
+            "top": 1.08,
+            "height": 6.0,
+            "width": 11.5
         }
     ],
     "tables": [
         {
-            "left": "Inches(7.0)",
-            "top": "Inches(0.25)",
-            "height": "Inches(4.7)",
-            "width": "Inches(4.0)"
+            "left": 7.0,
+            "top": 0.25,
+            "height": 4.7,
+            "width": 4.0
         },
         {
-            "left": "Inches(6.5)",
-            "top": "Inches(0.25)",
-            "height": "Inches(4.7)",
-            "width": "Inches(4.0)"
+            "left": 6.5,
+            "top": 0.25,
+            "height": 4.7,
+            "width": 4.0
         }
     ]
 }

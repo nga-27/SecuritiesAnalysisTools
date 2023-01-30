@@ -75,9 +75,9 @@ def slide_title_header(slide, fund: str, include_time=True, price_details=''):
         deets = price_details.split(' ')
 
         if '+' in deets[1]:
-            p.font.color.rgb = color_to_RGB('green')
+            p.font.color.rgb = color_to_rgb('green')
         else:
-            p.font.color.rgb = color_to_RGB('red')
+            p.font.color.rgb = color_to_rgb('red')
 
     return slide
 
@@ -167,7 +167,7 @@ def intro_slide(prs):
     return prs
 
 
-def color_to_RGB(color: str, suppress_warnings=True):
+def color_to_rgb(color: str, suppress_warnings=True):
     """Color to RGB
 
     String named color to RGB object for pptx
@@ -197,7 +197,7 @@ def color_to_RGB(color: str, suppress_warnings=True):
         return RGBColor(0xff, 0x00, 0x00)
     else:
         if not suppress_warnings:
-            print(f"WARNING: Color '{color}' not found in 'color_to_RGB'")
+            print(f"WARNING: Color '{color}' not found in 'color_to_rgb'")
         return RGBColor(0x00, 0x00, 0x00)
 
 
@@ -257,3 +257,25 @@ def space_injector(space_sep_str: str, desired_str_len: int, sep=' ') -> str:
     new_str = new_sep.join(sep_str)
 
     return new_str
+
+
+class LocationType:
+    left: Inches
+    top: Inches
+    height: Inches
+    width: Inches
+
+    def __init__(self):
+        self.left = 0.0
+        self.top = 0.0
+        self.height = 0.0
+        self.width = 0.0
+
+
+def get_locations(location_dict: dict) -> LocationType:
+    location = LocationType()
+    location.left = Inches(location_dict['left'])
+    location.top = Inches(location_dict['top'])
+    location.height = Inches(location_dict['height'])
+    location.width = Inches(location_dict['width'])
+    return location
