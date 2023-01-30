@@ -29,12 +29,7 @@ TIME WINDOWS:
 --1y                :       1 year period
 --2y                :       2 year period (default)
 --5y                :       5 year period
---10y               :       10 year period     
-
-VERSIONS:           :       (flags for versioning)
-
---dev               :       most recent updates, pushed frequently, possibly unstable
---prod              :       default behavior; more updated than release, less than dev, but more stable
+--10y               :       10 year period
 
 COMPOSITE FUNCTIONS::       (e.g. '--f --bci --mci vti AAPL amzn' ) REQUIRES --function flag
 

@@ -16,8 +16,8 @@ from libs.utils import start_header, logo_renderer
 from releases.technical_analysis import technical_analysis, clock_management
 
 ################################
-_VERSION_ = '1.0.0'
-_DATE_REVISION_ = '2023-01-28'
+_VERSION_ = '1.0.00'
+_DATE_REVISION_ = '2023-01-29'
 ################################
 
 
@@ -39,15 +39,9 @@ class App:
             clock = technical_analysis(self.config)
             print(f"\r\nCompleted in {clock_management(clock)}.")
 
-        if 'dev' in self.config['state']:
-            self.config['release'] = True
-            clock = technical_analysis(self.config, release='dev')
-            print(f"\r\nCompleted in {clock_management(clock)}.")
-
         print('Done.')
 
 
 app = App()
-
 if __name__ == '__main__':
     app.run()

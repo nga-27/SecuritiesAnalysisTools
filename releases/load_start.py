@@ -10,11 +10,6 @@ from libs.functions import only_functions_handler
 from libs.utils import TEXT_COLOR_MAP
 
 
-################################
-_DEV_VERSION_ = '1.0.0'
-_DATE_REVISION_DEV_ = '2023-01-08'
-################################
-PROCESS_STEPS_DEV = 30
 PROCESS_STEPS_PROD = 30
 
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
@@ -22,39 +17,17 @@ PROD_COLOR = TEXT_COLOR_MAP["green"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
 
 
-def init_script(config: dict, **kwargs) -> Tuple[
+def init_script(config: dict) -> Tuple[
     Union[dict, None], Union[List[str], None], Union[List[str], None], Union[dict, None]]:
     """Init Script
 
     Arguments:
         config {dict} -- startup config object to control application
 
-    Optional Args:
-        release {str} -- 'dev' or 'prod' (default: {'prod'})
-
     Returns:
         list -- script: dataset, funds, periods, config
     """
-    release = kwargs.get('release', 'prod')
-
-    if release == 'dev':
-        config['process_steps'] = PROCESS_STEPS_DEV
-    elif release == 'prod':
-        config['process_steps'] = PROCESS_STEPS_PROD
-
-    if config['release'] is True:
-        # Use only after release!
-        print(" ")
-
-        if release == 'dev':
-            message = f"{HEADER_COLOR}~~~~ DEVELOPMENT VERSION ~~~~ "
-            message += f"[latest functionality, 'unclean' version]{NORMAL_COLOR}"
-            print(message)
-
-            config = start_header(update_release=_DATE_REVISION_DEV_,
-                                  version=_DEV_VERSION_, options=True)
-            config['process_steps'] = PROCESS_STEPS_DEV
-
+    config['process_steps'] = PROCESS_STEPS_PROD
     if config['state'] == 'halt':
         return None, None, None, None
 

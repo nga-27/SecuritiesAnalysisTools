@@ -28,8 +28,8 @@ def start_header(**kwargs) -> dict:
     Returns:
         dict -- [description]
     """
-    update_release = kwargs.get('update_release', '2020-05-03')
-    version = kwargs.get('version', '0.2.02')
+    update_release = kwargs.get('update_release', '2023-01-31')
+    version = kwargs.get('version', '1.0.0')
     default = kwargs.get('default', 'VTI')
 
     print(" ")
@@ -581,11 +581,6 @@ def header_options_parse(input_str: str, config: dict) -> list:
         config = add_str_to_dict_key(
             config, 'run_functions', 'last_signals', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
-
-    # Configuration flags that control state outcomes and return immediately after setting
-    if '--dev' in i_keys:
-        config['state'] = 'dev'
-        return config, ticker_keys
 
     if ('--function' in i_keys) or ('--f' in i_keys):
         config = add_str_to_dict_key(config, 'state', 'function run')

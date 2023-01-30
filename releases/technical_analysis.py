@@ -19,7 +19,6 @@ from libs.utils import start_clock
 
 # Imports from releases
 from .load_start import init_script
-from .dev import run_dev
 from .prod import run_prod
 from .indexes import run_indexes
 from .exports import run_exports
@@ -28,32 +27,25 @@ from .exports import run_exports
 ####################################################################
 
 
-def technical_analysis(config: dict, release='prod') -> Union[float, None]:
+def technical_analysis(config: dict) -> Union[float, None]:
     """Technical Analysis
 
-    Runs application program, funneling to either 'dev' or 'prod', metrics, etc.
+    Runs application program.
 
     Arguments:
         config {dict} -- app control object
 
-    Keyword Arguments:
-        release {str} -- either 'dev' or 'prod' (default: {'prod'})
-
     Returns:
         float -- clock time
     """
-    script = init_script(config, release=release)
+    script = init_script(config)
 
     if script[0] is None:
         return None
 
     # Start of automated process
     clock = None
-    if release == 'dev':
-        analysis, clock = run_dev(script)
-    else:
-        analysis, clock = run_prod(script)
-
+    analysis, clock = run_prod(script)
     analysis, clock = run_indexes(analysis, script, clock=clock)
     run_exports(analysis, script)
 
