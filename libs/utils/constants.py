@@ -1,3 +1,4 @@
+""" Constants """
 TEXT_COLOR_MAP = {
     "black": "\033[0;30m",
     "red": "\033[0;31m",

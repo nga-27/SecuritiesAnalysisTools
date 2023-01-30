@@ -35,8 +35,7 @@ def function_data_download(config: dict, **kwargs) -> Tuple[dict, list]:
         # primarily used for VF, which downloads its own data separately.
         return {}, fund_list
 
-    e_check = {'tickers': config['tickers']}
-    if has_critical_error(data, 'download_data', misc=e_check):
+    if has_critical_error(data, 'download_data'):
         return {}, []
     return data, fund_list
 

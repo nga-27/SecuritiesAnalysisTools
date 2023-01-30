@@ -1,5 +1,7 @@
+""" File IO """
 import os
 import shutil
+from typing import Union
 
 
 def configure_temp_dir():
@@ -19,7 +21,7 @@ def remove_temp_dir():
         shutil.rmtree(out_path)
 
 
-def create_sub_temp_dir(name: str, sub_periods=[]):
+def create_sub_temp_dir(name: str, sub_periods: Union[list, None] = None):
     """Create Sub Temporary Directory
 
     Arguments:
@@ -28,6 +30,8 @@ def create_sub_temp_dir(name: str, sub_periods=[]):
     Keyword Arguments:
         sub_periods {list} -- list of fund periods, or "views" (default: {[]})
     """
+    if not sub_periods:
+        sub_periods = []
     out_path = os.path.join("output", "temp")
     fund_path = os.path.join(out_path, name)
     if not os.path.exists(fund_path):

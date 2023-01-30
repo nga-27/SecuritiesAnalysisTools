@@ -1,3 +1,4 @@
+""" API functions """
 import os
 import json
 from typing import Tuple, List, Union
@@ -28,7 +29,7 @@ def api_sector_match(sector: str,
         interval {str} -- different interval than in config (default: {config['interval']})
 
     Returns:
-        Tuple[Union[str, None], Union[dict, None]] -- 
+        Tuple[Union[str, None], Union[dict, None]] --
             [matched sector fund], {data for matched sector}
     """
     period = kwargs.get('period', config['period'])
@@ -83,8 +84,8 @@ def api_sector_funds(sector_fund: str, fund_len=None, **kwargs) -> Tuple[List[st
     if sector_fund is None:
         return [], {}
 
-    with open(sector_match_file) as f:
-        matcher = json.load(f)
+    with open(sector_match_file, encoding='utf-8') as sector_file:
+        matcher = json.load(sector_file)
         matched = matcher.get("Comparison", {}).get(sector_fund)
 
         if matched is None:

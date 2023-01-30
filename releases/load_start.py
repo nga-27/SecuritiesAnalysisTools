@@ -1,13 +1,11 @@
 """ load_start - The initial function that builds the start screen """
 from typing import Tuple, Union, List
 
-from libs.utils import start_header
-from libs.utils import download_data_all
-from libs.utils import has_critical_error
-from libs.utils import index_appender
-from libs.utils import remove_temp_dir, configure_temp_dir
+from libs.utils import (
+    download_data_all, has_critical_error, index_appender, remove_temp_dir, configure_temp_dir,
+    TEXT_COLOR_MAP
+)
 from libs.functions import only_functions_handler
-from libs.utils import TEXT_COLOR_MAP
 
 
 PROCESS_STEPS_PROD = 30
@@ -51,8 +49,7 @@ def init_script(config: dict) -> Tuple[
     dataset, funds, periods, config = download_data_all(config=config)
 
     for _, data in dataset.items():
-        e_check = {'tickers': config['tickers']}
-        if has_critical_error(data, 'download_data', misc=e_check):
+        if has_critical_error(data, 'download_data'):
             return None, None, None, None
 
     return dataset, funds, periods, config

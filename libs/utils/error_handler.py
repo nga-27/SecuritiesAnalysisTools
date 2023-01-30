@@ -1,3 +1,4 @@
+""" error handler """
 import pandas as pd
 import numpy as np
 
@@ -8,7 +9,7 @@ NOTE = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
 
 
-def has_critical_error(item: dict, e_type: str, misc: dict = None) -> bool:
+def has_critical_error(item: dict, e_type: str) -> bool:
     """Has Critical Error
 
     Generic Error checker of items
@@ -43,7 +44,7 @@ def has_critical_error(item: dict, e_type: str, misc: dict = None) -> bool:
 
             # Assumption is that point or mutual fund NaN errors will be corrected in data.py
             # before this error handler
-            nans = list(np.where(pd.isna(item[key]['Close']) == True))[0]
+            nans = list(np.where(pd.isna(item[key]['Close']) is True))[0]
             if len(nans) > 0:
                 print("")
                 print(
@@ -51,7 +52,7 @@ def has_critical_error(item: dict, e_type: str, misc: dict = None) -> bool:
                     f"NaN item(s) for 'Close' for '{key}'.")
                 print(
                     f"---> This error is likely caused by '{key}' being an invalid or " +
-                    f"deprecated ticker symbol.")
+                    "deprecated ticker symbol.")
                 print(f"{NOTE}Exiting...{NORMAL}")
                 return True
 

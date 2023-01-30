@@ -15,44 +15,26 @@
 from typing import Tuple
 
 # Imports that are custom tools that are the crux of this program
-from libs.tools import full_stochastic, ultimate_oscillator, cluster_oscillators, relative_strength_indicator_rsi
-from libs.tools import awesome_oscillator, momentum_oscillator
-from libs.tools import relative_strength, moving_average_swing_trade
-from libs.tools import triple_moving_average, triple_exp_mov_average
-from libs.tools import hull_moving_average
-from libs.tools import mov_avg_convergence_divergence
-from libs.tools import on_balance_volume, demand_index
-from libs.tools import find_resistance_support_lines
-from libs.tools import get_trend_lines
-from libs.tools import get_high_level_stats
-from libs.tools import bear_bull_power
-from libs.tools import total_power
-from libs.tools import bollinger_bands
-from libs.tools import commodity_channel_index
-from libs.tools import candlesticks
-from libs.tools import risk_comparison
-from libs.tools import rate_of_change_oscillator
-from libs.tools import know_sure_thing
-from libs.tools import average_true_range
-from libs.tools import parabolic_sar, average_directional_index
-from libs.tools import get_api_metadata
+from libs.tools import (
+    full_stochastic, ultimate_oscillator, cluster_oscillators, relative_strength_indicator_rsi,
+    awesome_oscillator, momentum_oscillator, relative_strength, moving_average_swing_trade,
+    triple_moving_average, triple_exp_mov_average, hull_moving_average,
+    mov_avg_convergence_divergence, on_balance_volume, demand_index, find_resistance_support_lines,
+    get_trend_lines, get_high_level_stats, bear_bull_power, total_power, bollinger_bands,
+    commodity_channel_index, candlesticks, risk_comparison, rate_of_change_oscillator,
+    know_sure_thing, average_true_range, parabolic_sar, average_directional_index, get_api_metadata
+)
 
 # Imports that support functions doing feature detection
-from libs.features import feature_detection_head_and_shoulders
-from libs.features import analyze_price_gaps
+from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
-from libs.utils import date_extractor
-from libs.utils import create_sub_temp_dir
-from libs.utils import INDEXES, SKIP_INDEXES
+from libs.utils import (
+    date_extractor, create_sub_temp_dir, INDEXES, SKIP_INDEXES, ProgressBar, start_clock
+)
 
 # Imports that drive custom metrics for market analysis
-from libs.metrics import future_returns
-from libs.metrics import generate_synopsis
-from libs.metrics import assemble_last_signals
-
-# Imports that start process and show progress doing so
-from libs.utils import ProgressBar, start_clock
+from libs.metrics import future_returns, generate_synopsis, assemble_last_signals
 
 ####################################################################
 ####################################################################

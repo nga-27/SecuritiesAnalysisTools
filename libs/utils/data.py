@@ -1,4 +1,5 @@
-from typing import Tuple
+""" Data Formatting, etc. """
+from typing import Tuple, Union
 import math
 
 import pandas as pd
@@ -59,11 +60,11 @@ def download_data_all(config: dict, **kwargs) -> Tuple[dict, list, list, dict]:
 
         else:
             print(
-                f'Fetching data for {TICKER}{ticker_print}{NORMAL} for {per} at {inter} intervals...')
-            data = yf.download(tickers=tickers, period=per,
-                               interval=inter, group_by='ticker')
-        print(" ")
+                f'Fetching data for {TICKER}{ticker_print}{NORMAL} ' +
+                f'for {per} at {inter} intervals...')
+            data = yf.download(tickers=tickers, period=per, interval=inter, group_by='ticker')
 
+        print(" ")
         funds = fund_list_extractor(data, config=config)
         data = data_format(data, config=config)
 
@@ -147,12 +148,11 @@ def download_data(config: dict, **kwargs) -> Tuple[dict, list]:
 
     else:
         print(
-            f'Fetching data for {TICKER}{ticker_print}{NORMAL} for {period} at {interval} intervals...')
-        data = yf.download(tickers=tickers, period=period,
-                           interval=interval, group_by='ticker')
+            f'Fetching data for {TICKER}{ticker_print}{NORMAL} for ' +
+            f'{period} at {interval} intervals...')
+        data = yf.download(tickers=tickers, period=period, interval=interval, group_by='ticker')
 
     print(" ")
-
     funds = fund_list_extractor(data, config=config)
     data = data_format(data, config=config)
 
@@ -204,7 +204,10 @@ def download_single_fund(fund: str, config: dict, fund_len=None, **kwargs) -> di
     return data
 
 
-def add_status_message(status: list, new_message: str, message_index: int = None, key: str = None) -> list:
+def add_status_message(status: list,
+                       new_message: str,
+                       message_index: Union[int, None] = None,
+                       key: Union[str, None] = None) -> list:
     """Add Status Message
 
     Adds 'new_message' to status if it isn't added already
@@ -280,7 +283,6 @@ def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
     list_of_funds = kwargs.get('list_of_funds')
     single_fund_name = kwargs.get('single_fund_name')
     fund_len = kwargs.get('fund_len')
-
     data_dict = {}
     fund_keys = list_of_funds
     if list_of_funds is None:
@@ -294,8 +296,7 @@ def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
         # Singular fund case
         df_dict = {}
         df_dict['Date'] = filter_date(dates.copy(), fund_len=fund_len)
-        df_dict['Open'] = filter_nan(data['Open'].copy(
-        ), column_key='Open', fund_len=fund_len)
+        df_dict['Open'] = filter_nan(data['Open'].copy(), column_key='Open', fund_len=fund_len)
         df_dict['Close'] = filter_nan(
             data['Close'].copy(), column_key='Close', fund_len=fund_len)
         df_dict['High'] = filter_nan(
@@ -307,17 +308,16 @@ def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
         df_dict['Volume'] = filter_nan(
             data['Volume'].copy(), fund_name=fund_keys[0], column_key='Volume', fund_len=fund_len)
 
-        df = pd.DataFrame.from_dict(df_dict)
-        df = df.set_index('Date')
-
-        data_dict[fund_keys[0]] = df.copy()
+        data_frame = pd.DataFrame.from_dict(df_dict)
+        data_frame = data_frame.set_index('Date')
+        data_dict[fund_keys[0]] = data_frame.copy()
 
     else:
         for fund in fund_keys:
             df_dict = {}
             df_dict['Date'] = filter_date(dates.copy(), fund_len=fund_len)
-            df_dict['Open'] = filter_nan(data[fund]['Open'].copy(
-            ), fund_name=fund, column_key='Open', fund_len=fund_len)
+            df_dict['Open'] = filter_nan(data[fund]['Open'].copy(),
+                fund_name=fund, column_key='Open', fund_len=fund_len)
             df_dict['Close'] = filter_nan(
                 data[fund]['Close'].copy(), column_key='Close', fund_len=fund_len)
             df_dict['High'] = filter_nan(
@@ -329,10 +329,9 @@ def data_format(data: pd.DataFrame, config: dict, **kwargs) -> dict:
             df_dict['Volume'] = filter_nan(
                 data[fund]['Volume'].copy(), column_key='Volume', fund_len=fund_len)
 
-            df = pd.DataFrame.from_dict(df_dict)
-            df = df.set_index('Date')
-
-            data_dict[fund] = df.copy()
+            data_frame = pd.DataFrame.from_dict(df_dict)
+            data_frame = data_frame.set_index('Date')
+            data_dict[fund] = data_frame.copy()
 
     return data_dict
 
@@ -353,12 +352,13 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- newly, cleansed dataframe column
     """
+    # pylint: disable=too-many-branches,too-many-statements
     fund_name = kwargs.get('fund_name')
     column_key = kwargs.get('column_key')
     fund_len = kwargs.get('fund_len')
 
     new_list = list(frame_list.copy())
-    nans = list(np.where(pd.isna(frame_list) == True))[0]
+    nans = list(np.where(pd.isna(frame_list) is True))[0]
 
     corrected = False
     status = []
@@ -399,43 +399,44 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
 
     if len(nans) > 0:
         corrected = True
-        for na in nans:
-
-            if (na == 0) and (not math.isnan(new_list[na+1])):
+        for nan_val in nans:
+            if (nan_val == 0) and (not math.isnan(new_list[nan_val + 1])):
                 status = add_status_message(status, 'Row-0 nan')
-                new_list[na] = new_list[na+1]
+                new_list[nan_val] = new_list[nan_val + 1]
 
-            elif (na != 0) and (na != len(new_list)-1) and (not math.isnan(new_list[na-1]) and
-                                                            (not math.isnan(new_list[na+1]))):
+            elif (nan_val != 0) and \
+                (nan_val != len(new_list)-1) and \
+                    (not math.isnan(new_list[nan_val - 1]) and \
+                        (not math.isnan(new_list[nan_val + 1]))):
                 status = add_status_message(status, 'Row-inner nan')
-                new_list[na] = np.round(
-                    np.mean([new_list[na-1], new_list[na+1]]), 2)
+                new_list[nan_val] = np.round(
+                    np.mean([new_list[nan_val - 1], new_list[nan_val + 1]]), 2)
 
-            elif (na == len(new_list)-1) and (not math.isnan(new_list[na-1])):
+            elif (nan_val == len(new_list)-1) and (not math.isnan(new_list[nan_val - 1])):
                 status = add_status_message(status, 'Mutual Fund nan')
-                new_list[na] = new_list[na-1]
+                new_list[nan_val] = new_list[nan_val - 1]
 
-            elif not math.isnan(new_list[na-1]):
+            elif not math.isnan(new_list[nan_val - 1]):
                 # More general case than above, different error.
                 status = add_status_message(
-                    status, 'Generic progression nan', na, column_key)
-                new_list[na] = new_list[na-1]
+                    status, 'Generic progression nan', nan_val, column_key)
+                new_list[nan_val] = new_list[nan_val - 1]
 
-            elif (na < len(new_list)-2) and (not math.isnan(new_list[na+1])):
+            elif (nan_val < len(new_list)-2) and (not math.isnan(new_list[nan_val + 1])):
                 status = add_status_message(
-                    status, 'Generic progression nan', na, column_key)
-                new_list[na] = new_list[na+1]
+                    status, 'Generic progression nan', nan_val, column_key)
+                new_list[nan_val] = new_list[nan_val + 1]
 
             else:
                 status = add_status_message(
-                    status, 'Unknown/unfixable nan', na, column_key)
+                    status, 'Unknown/unfixable nan', nan_val, column_key)
 
     if corrected and (fund_name is not None):
         message, info = get_status_message(status)
         if 'Unknown/unfixable nan' in message:
             print(
                 f"{ERROR}WARNING: 'NaN' found on {fund_name}. Type: '{message}': " +
-                f"Correction FAILED.")
+                "Correction FAILED.")
             print(f"----> Content: {info}{NORMAL}")
 
         elif 'Generic progression nan' in message:
