@@ -7,7 +7,7 @@ from pptx import Presentation
 from libs.utils import TEXT_COLOR_MAP, STANDARD_COLORS
 
 from libs.ui_generation.pptx_resources import (
-    title_presentation, intro_slide, make_bci_slides, make_mci_slides, make_cci_slides,
+    create_presentation_title, intro_slide, make_bci_slides, make_mci_slides, make_cci_slides,
     make_tci_slides, make_fund_slides
 )
 
@@ -28,7 +28,7 @@ def create_slide_content(analysis: dict, year: str, version: str, views: str):
         views (str): which time periods are shown, such as '2y'
     """
     prs = Presentation()
-    prs = title_presentation(prs, year, VERSION=version)
+    prs = create_presentation_title(prs, version)
     prs = intro_slide(prs)
     prs = make_mci_slides(prs, analysis.get('_METRICS_', {}))
     prs = make_cci_slides(prs)

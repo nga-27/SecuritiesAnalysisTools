@@ -1,5 +1,8 @@
+""" title slide creator """
 from datetime import datetime
+
 from pptx.util import Inches, Pt
+from pptx.presentation import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
@@ -15,12 +18,11 @@ CONTENT_W_CAPTION_SLIDE = 7
 PICTURE_W_CAPTION_SLIDE = 8
 
 
-def title_presentation(prs, year: str, VERSION: str, **kwargs):
+def create_presentation_title(prs: Presentation, version: str) -> Presentation:
     """Title Slide
 
     Arguments:
         prs {pptx-obj} -- powerpoint python object
-        year {str} -- '2020', for exampe
         VERSION {str} -- '0.2.02', for example
 
     Returns:
@@ -31,46 +33,46 @@ def title_presentation(prs, year: str, VERSION: str, **kwargs):
     prs.slide_width = width
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
 
-    LEFT_INCHES = 6
-    left = Inches(LEFT_INCHES)
+    left_inches = 6
+    left = Inches(left_inches)
     top = Inches(2.45)
     text = slide.shapes.add_textbox(left, top, Inches(1), Inches(1))
     text_frame = text.text_frame
 
-    p = text_frame.paragraphs[0]
-    p.alignment = PP_ALIGN.CENTER
-    p.text = f'Securities Analysis'
-    p.font.bold = True
-    p.font.size = Pt(48)
-    p.font.name = 'Arial'
+    paragraph = text_frame.paragraphs[0]
+    paragraph.alignment = PP_ALIGN.CENTER
+    paragraph.text = 'Securities Analysis'
+    paragraph.font.bold = True
+    paragraph.font.size = Pt(48)
+    paragraph.font.name = 'Arial'
 
-    p4 = text_frame.add_paragraph()
-    p4.alignment = PP_ALIGN.CENTER
-    p4.text = f"A Technical Analysis of Financial Markets by 'nga-27'"
-    p4.font.italic = True
-    p4.font.size = Pt(14)
-    p4.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
-    p4.font.name = 'Arial'
+    paragraph4 = text_frame.add_paragraph()
+    paragraph4.alignment = PP_ALIGN.CENTER
+    paragraph4.text = "A Technical Analysis of Financial Markets by 'nga-27'"
+    paragraph4.font.italic = True
+    paragraph4.font.size = Pt(14)
+    paragraph4.font.color.rgb = RGBColor(0x74, 0x3c, 0xe6)
+    paragraph4.font.name = 'Arial'
 
-    left = Inches(LEFT_INCHES)
+    left = Inches(left_inches)
     top = Inches(4.0)
     text = slide.shapes.add_textbox(left, top, Inches(1), Inches(1))
     text_frame2 = text.text_frame
 
-    p2 = text_frame2.paragraphs[0]
-    p2.alignment = PP_ALIGN.CENTER
-    p2.text = f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
-    p2.font.bold = False
-    p2.font.size = Pt(22)
-    p2.font.color.rgb = RGBColor(0x30, 0x9c, 0x4f)
-    p2.font.name = 'Arial'
+    paragraph2 = text_frame2.paragraphs[0]
+    paragraph2.alignment = PP_ALIGN.CENTER
+    paragraph2.text = f'Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+    paragraph2.font.bold = False
+    paragraph2.font.size = Pt(22)
+    paragraph2.font.color.rgb = RGBColor(0x30, 0x9c, 0x4f)
+    paragraph2.font.name = 'Arial'
 
-    p3 = text_frame2.add_paragraph()
-    p3.alignment = PP_ALIGN.CENTER
-    p3.text = f'Software Version: {VERSION}'
-    p3.font.bold = False
-    p3.font.size = Pt(18)
-    p3.font.color.rgb = RGBColor(0x30, 0x9c, 0x4f)
-    p3.font.name = 'Arial'
+    paragraph3 = text_frame2.add_paragraph()
+    paragraph3.alignment = PP_ALIGN.CENTER
+    paragraph3.text = f'Software Version: {version}'
+    paragraph3.font.bold = False
+    paragraph3.font.size = Pt(18)
+    paragraph3.font.color.rgb = RGBColor(0x30, 0x9c, 0x4f)
+    paragraph3.font.name = 'Arial'
 
     return prs

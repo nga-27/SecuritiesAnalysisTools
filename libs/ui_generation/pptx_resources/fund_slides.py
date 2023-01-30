@@ -13,7 +13,7 @@ from pptx.presentation import Presentation
 from libs.utils import INDEXES
 from libs.tools import trend_simple_forecast
 
-from .slide_utils import slide_title_header, color_to_rgb, pptx_ui_errors, get_locations
+from .slide_utils import slide_title_header, COLOR_TO_RGB, pptx_ui_errors, get_locations
 from .synopsis_slide import generate_synopsis_slide
 
 # Slide Layouts
@@ -181,8 +181,8 @@ def add_fund_content(prs: Presentation, fund: str, analysis: dict, **kwargs) -> 
         alt_z_score = str(np.round(alt_z_score, 5))
 
     table.cell(10, 1).text = alt_z_score
-    table.cell(10, 1).text_frame.paragraphs[0].font.color.rgb = color_to_rgb(
-        alt_z_color)
+    table.cell(10, 1).text_frame.paragraphs[0].font.color.rgb = COLOR_TO_RGB.get(
+        alt_z_color, RGBColor(0x00, 0x00, 0x00))
 
     end = 10
 
@@ -196,7 +196,8 @@ def add_fund_content(prs: Presentation, fund: str, analysis: dict, **kwargs) -> 
         table.cell(end+4, 0).text = 'VF Status'
         table.cell(end+4, 1).text = str(status)
 
-        table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = color_to_rgb(vf_color)
+        table.cell(end+4, 1).text_frame.paragraphs[0].font.color.rgb = \
+            COLOR_TO_RGB.get(vf_color, RGBColor(0x00, 0x00, 0x00))
 
     table.cell(0, 0).text_frame.paragraphs[0].font.size = Pt(16)
     table.cell(0, 1).text_frame.paragraphs[0].font.size = Pt(16)
@@ -376,7 +377,7 @@ def format_plots(prs: Presentation,
                 table.cell(i+1, 0).text = f"${maj['Price']}"
                 table.cell(i+1, 1).text = f"{maj['Change']}"
                 table.cell(i+1, 2).text = maj['State']
-                color = color_to_rgb(maj['Color'])
+                color = COLOR_TO_RGB.get(maj['Color'], RGBColor(0x00, 0x00, 0x00))
                 table.cell(i+1, 0).text_frame.paragraphs[0].font.color.rgb = color
                 table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = color
                 table.cell(i+1, 2).text_frame.paragraphs[0].font.color.rgb = color
@@ -461,18 +462,18 @@ def format_plots(prs: Presentation,
                     table.cell(i+2, j+1).text = f"${value}"
                     table.cell(
                         i+2, j+1).text_frame.paragraphs[0].font.size = Pt(12)
-                    color = color_to_rgb(trend['color'])
+                    color = COLOR_TO_RGB.get(trend['color'], RGBColor(0x00, 0x00, 0x00))
                     table.cell(i+2, j+1).text_frame.paragraphs[0].font.color.rgb = color
                     column_value = j
 
                 table.cell(i+2, 0).text = forecasts[i]['slope']
                 table.cell(i+2, 0).text_frame.paragraphs[0].font.size = Pt(12)
-                color = color_to_rgb(trend['color'])
+                color = COLOR_TO_RGB.get(trend['color'], RGBColor(0x00, 0x00, 0x00))
                 table.cell(i+2, 0).text_frame.paragraphs[0].font.color.rgb = color
 
                 table.cell(i+2, column_value + 2).text = forecasts[i]['above_below']
                 table.cell(i+2, column_value + 2).text_frame.paragraphs[0].font.size = Pt(12)
-                color = color_to_rgb(trend['color'])
+                color = COLOR_TO_RGB.get(trend['color'], RGBColor(0x00, 0x00, 0x00))
                 table.cell(i+2, column_value + 2).text_frame.paragraphs[0].font.color.rgb = color
 
         elif part in slide_content:
