@@ -358,7 +358,7 @@ def filter_nan(frame_list: pd.DataFrame, **kwargs) -> list:
     fund_len = kwargs.get('fund_len')
 
     new_list = list(frame_list.copy())
-    nans = list(np.where(pd.isna(frame_list) is True))[0]
+    nans = list(np.where(pd.isna(frame_list)))[0]
 
     corrected = False
     status = []
