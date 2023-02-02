@@ -1,3 +1,4 @@
+""" Earnings """
 import yfinance as yf
 
 
@@ -18,18 +19,18 @@ def get_earnings(ticker: yf.Ticker) -> dict:
         year_earnings = ticker.earnings
         e_year = {}
         e_year['period'] = list(year_earnings.index)
-        e_year['revenue'] = [rev for rev in year_earnings['Revenue']]
-        e_year['earnings'] = [earn for earn in year_earnings['Earnings']]
+        e_year['revenue'] = list(year_earnings['Revenue'])
+        e_year['earnings'] = list(year_earnings['Earnings'])
         earnings['yearly'] = e_year
 
         quarter_earnings = ticker.quarterly_earnings
         e_quarter = {}
         e_quarter['period'] = list(quarter_earnings.index)
-        e_quarter['revenue'] = [rev for rev in quarter_earnings['Revenue']]
-        e_quarter['earnings'] = [earn for earn in quarter_earnings['Earnings']]
+        e_quarter['revenue'] = list(quarter_earnings['Revenue'])
+        e_quarter['earnings'] = list(quarter_earnings['Earnings'])
         earnings['quarterly'] = e_quarter
 
-    except:
+    except: # pylint: disable=bare-except
         earnings['yearly'] = {}
         earnings['quarterly'] = {}
 

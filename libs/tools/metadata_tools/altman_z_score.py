@@ -1,9 +1,12 @@
+""" Altman Z Score Derivation """
 
+GOOD_THRESHOLD = 3.0
+BAD_THRESHOLD = 1.8
 
 def get_altman_z_score(meta: dict) -> dict:
     """Get Altman Z-Score
 
-    Created by Prof. Edward Altman (1968), info here: 
+    Created by Prof. Edward Altman (1968), info here:
     https://www.investopedia.com/terms/a/altman.asp
 
     Each "letter" or term (A-E) represents a different aspect of a company's balance sheet:
@@ -19,9 +22,7 @@ def get_altman_z_score(meta: dict) -> dict:
     Returns:
         dict -- altman_z_score object
     """
-    GOOD_THRESHOLD = 3.0
-    BAD_THRESHOLD = 1.8
-
+    # pylint: disable=too-many-locals,too-many-return-statements,too-many-branches
     balance_sheet = meta.get('balance_sheet')
     financials = meta.get('financials')
     info = meta.get('info')

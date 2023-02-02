@@ -1,3 +1,4 @@
+""" Fund Information """
 import yfinance as yf
 
 
@@ -13,6 +14,6 @@ def get_info(ticker: yf.Ticker) -> dict:
     try:
         info = dict(ticker.info)
         info['marketCap'] = ticker.fast_info.get('market_cap')
-    except:
+    except: # pylint: disable=bare-except
         info = {}
     return info

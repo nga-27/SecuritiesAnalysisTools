@@ -1,3 +1,4 @@
+""" Earnings Per Share """
 import numpy as np
 
 

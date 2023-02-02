@@ -1,3 +1,4 @@
+""" Volatility """
 import os
 from typing import Tuple, List
 
@@ -16,6 +17,7 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
     Returns:
         dict -- volatility quotient data object
     """
+    # pylint: disable=too-many-locals
     volatility_factor = {}
     ticker_str = ticker_str.upper()
 
@@ -42,7 +44,7 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
 
     if vf_data.current_status.status.value == "stopped_out":
         volatility_factor['stop_loss'] = 0.0
-    
+
     status, color = volatility_factor_status_print(vf_data.current_status.status.value)
     volatility_factor['status'] = {'status': status, 'color': color}
 
@@ -59,7 +61,8 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
         status_string = f"{ticker_str} is currently in a green zone. BUY."
         status_color = 'green'
         if vf_data.current_status.status.value == 'stopped_out':
-            status_string = f"{ticker_str} is currently STOPPED OUT. SELL / wait for a re-entry signal."
+            status_string = f"{ticker_str} is currently STOPPED OUT. SELL / " + \
+                "wait for a re-entry signal."
             status_color = 'red'
         elif vf_data.current_status.status.value == 'caution_zone':
             status_string = f"{ticker_str} is currently in a caution state. HOLD."
@@ -107,7 +110,7 @@ def create_zones(close: list, vf_data: VFStopsResultType) -> Tuple[
 
     Args:
         close (list): price list (either "Close" or "Adj Close")
-        vf_data (VFStopsResultType): 
+        vf_data (VFStopsResultType):
 
     Returns:
         Tuple[List[List[int]], List[List[int]], List[List[int]]]: green, yellow, red

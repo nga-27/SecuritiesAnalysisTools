@@ -1,3 +1,4 @@
+""" Balance Sheet """
 import yfinance as yf
 
 
@@ -17,7 +18,7 @@ def get_balance_sheet(ticker: yf.Ticker) -> dict:
         balance_sheet = {index: list(row) for index, row in balance.iterrows()}
         balance_sheet['dates'] = [col.strftime('%Y-%m-%d') for col in balance.columns]
 
-    except:
+    except: # pylint: disable=bare-except
         balance_sheet = {}
 
     return balance_sheet

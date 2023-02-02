@@ -1,3 +1,4 @@
+""" Cashflow """
 import yfinance as yf
 
 
@@ -17,7 +18,7 @@ def get_cashflow(ticker: yf.Ticker) -> dict:
         cash = {index: list(row) for index, row in cashflow.iterrows()}
         cash['dates'] = [col.strftime('%Y-%m-%d') for col in cashflow.columns]
 
-    except:
+    except: # pylint: disable=bare-except
         cash = {}
 
     return cash

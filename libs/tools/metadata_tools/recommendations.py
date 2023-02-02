@@ -1,3 +1,4 @@
+""" Recommendations """
 import os
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -23,10 +24,10 @@ def get_recommendations(ticker: yf.Ticker) -> dict:
     try:
         t_recommend = ticker.recommendations
         recommendations['dates'] = [date.strftime('%Y-%m-%d') for date in t_recommend.index]
-        recommendations['firms'] = [firm for firm in t_recommend['Firm']]
-        recommendations['grades'] = [grade for grade in t_recommend['To Grade']]
-        recommendations['actions'] = [action for action in t_recommend['Action']]
-    except:
+        recommendations['firms'] = list(t_recommend['Firm'])
+        recommendations['grades'] = list(t_recommend['To Grade'])
+        recommendations['actions'] = list(t_recommend['Action'])
+    except: # pylint: disable=bare-except
         recommendations = {'dates': [], 'firms': [], 'grades': [], 'actions': []}
 
     return recommendations
@@ -41,10 +42,11 @@ def calculate_recommendation_curve(recoms: dict, **kwargs) -> dict:
     Returns:
         dict -- recommendation curve data object
     """
+    # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
 
-    tabular = dict()
+    tabular = {}
     tabular['dates'] = []
     tabular['grades'] = []
 
@@ -66,22 +68,21 @@ def calculate_recommendation_curve(recoms: dict, **kwargs) -> dict:
                 firms[firms_x[i]]['date'] = date
                 i += 1
             firms = prune_ratings(firms, date)
-            sum_ = [firms[key]['grade'] for key in firms.keys()]
+            sum_ = [value['grade'] for _, value in firms.items()]
             grades.append(np.mean(sum_))
 
         tabular['grades'] = grades
         tabular['dates'] = dates
 
-        x = [datetime.strptime(date, "%Y-%m-%d")
-             for date in tabular['dates']]
+        x_vals = [datetime.strptime(date, "%Y-%m-%d") for date in tabular['dates']]
 
         if plot_output:
-            generic_plotting([tabular['grades']], x=x, title="Ratings by Firms",
+            generic_plotting([tabular['grades']], x=x_vals, title="Ratings by Firms",
                              ylabel="Ratings (Proportional 0 - 4)")
 
         else:
             filename = os.path.join(name, f"grades_{name}.png")
-            generic_plotting([tabular['grades']], x=x, title="Ratings by Firms",
+            generic_plotting([tabular['grades']], x=x_vals, title="Ratings by Firms",
                              ylabel="Ratings (Proportional 0 - 4)",
                              save_fig=True, filename=filename)
 
@@ -97,7 +98,7 @@ def grade_to_number(grades: list) -> list:
     Returns:
         list -- list of grades (floats)
     """
-    GRADES = {
+    grade_keys = {
         "Strong Buy": 4.0,
         "Buy": 3.0,
         "Overweight": 3.0,
@@ -114,7 +115,7 @@ def grade_to_number(grades: list) -> list:
 
     val_grad = []
     for grade in grades:
-        val_grad.append(GRADES.get(grade, 3.0))
+        val_grad.append(grade_keys.get(grade, 3.0))
     return val_grad
 
 

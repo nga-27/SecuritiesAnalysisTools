@@ -1,3 +1,4 @@
+""" Financials """
 import yfinance as yf
 
 
@@ -17,7 +18,7 @@ def get_financials(ticker: yf.Ticker) -> dict:
         financials = {index: list(row) for index, row in income.iterrows()}
         financials['dates'] = [col.strftime('%Y-%m-%d') for col in income.columns]
 
-    except:
+    except: # pylint: disable=bare-except
         financials = {}
 
     return financials
