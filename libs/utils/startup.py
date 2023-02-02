@@ -143,7 +143,7 @@ def header_json_parse(key: str) -> list:
 
     if os.path.exists(json_path):
         tickers = ''
-        with open(json_path) as json_file:
+        with open(json_path, encoding='utf-8') as json_file:
             core = json.load(json_file)
             tickers = ' '.join(core['Ticker Symbols'])
             props = core['Properties']
@@ -224,16 +224,15 @@ def header_options_print(options_read_lines):
 
 def logo_renderer():
     """ Render logo from logo.txt file """
-    MAIN_LOGO_LINES = 8
+    main_logo_lines = 8
     logo_file = os.path.join("resources", "logo.txt")
     if os.path.exists(logo_file):
-        fs = open(logo_file, 'r')
-        logo_lines = fs.readlines()
-        fs.close()
+        with open(logo_file, 'r', encoding='utf-8') as file_s:
+            logo_lines = file_s.readlines()
         print(" ")
 
         for i, line in enumerate(logo_lines):
-            if i < MAIN_LOGO_LINES:
+            if i < main_logo_lines:
                 line = line.replace("\n", "")
                 line = line.replace("{", f"{OTHER}")
                 line = f"{MAIN}{line}{NORMAL}"
@@ -257,6 +256,7 @@ def header_options_parse(input_str: str, config: dict) -> list:
     Returns:
         list -- config, ticker_keys
     """
+    # pylint: disable=too-many-branches,too-many-statements
     config['state'] = ''
     config['run_functions'] = []
     i_keys, ticker_keys = key_parser(input_str)
@@ -265,9 +265,8 @@ def header_options_parse(input_str: str, config: dict) -> list:
     if '--options' in i_keys:
         options_file = os.path.join("resources", "header_options.txt")
         if os.path.exists(options_file):
-            fs = open(options_file, 'r')
-            options_read = fs.readlines()
-            fs.close()
+            with open(options_file, 'r', encoding='utf-8') as file_s:
+                options_read = file_s.readlines()
             header_options_print(options_read)
 
         else:

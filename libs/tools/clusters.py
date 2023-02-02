@@ -83,7 +83,7 @@ def cluster_oscillators(position: pd.DataFrame, **kwargs):
 
     else:
         filename = os.path.join(name, view, f"clustering_{name}_{function}")
-        dual_plotting(y1=position['Close'], y2=clusters, y1_label='Price',
+        dual_plotting(position['Close'], clusters, y1_label='Price',
                       y2_label='Clustered Oscillator',
                       x_label='Trading Days', title=name2,
                       save_fig=True, filename=filename)
