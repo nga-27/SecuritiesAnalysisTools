@@ -1,7 +1,9 @@
+""" startup script utility """
 import os
 import time
 import json
 from datetime import datetime
+from typing import Tuple
 
 from .constants import TEXT_COLOR_MAP, STANDARD_COLORS, LOGO_COLORS
 
@@ -35,19 +37,18 @@ def start_header(**kwargs) -> dict:
     print(" ")
     print(f"{OUTLINE_COLOR}----------------------------------")
     print(f"-{NORMAL}   Securities Analysis Tools    {OUTLINE_COLOR}-")
-    print(f"-                                -")
+    print("-                                -")
     print(f"-{AUTHOR_COLOR}            nga-27              {OUTLINE_COLOR}-")
-    print(f"-                                -")
+    print("-                                -")
     print(f"-{NORMAL}       version: {version}          {OUTLINE_COLOR}-")
     print(f"-{NORMAL}       updated: {update_release}      {OUTLINE_COLOR}-")
     print(f"----------------------------------{NORMAL}")
     print(" ")
 
     time.sleep(1)
-    config = dict()
+    config = {}
 
-    input_str = input(
-        "Enter ticker symbols (e.g. 'aapl MSFT') and tags (see --options): ")
+    input_str = input("Enter ticker symbols (e.g. 'aapl MSFT') and tags (see --options): ")
 
     config['version'] = version
     config['date_release'] = update_release
@@ -69,7 +70,7 @@ def start_header(**kwargs) -> dict:
     if config['state'] == 'function':
         return config
 
-    if (len(list_of_tickers) == 0) and (config['core'] == False):
+    if len(list_of_tickers) == 0 and not config['core']:
         # Default (hitting enter)
         config['tickers'] = default
 
@@ -82,16 +83,16 @@ def start_header(**kwargs) -> dict:
     ticker_print = ''
 
     # whitespace fixing on input strings
-    t, config = remove_whitespace(config, default=default)
+    ticker_list, config = remove_whitespace(config, default=default)
 
-    if len(t) < 2:
+    if len(ticker_list) < 2:
         if 'no_index' not in config['state']:
-            ticker_print += t[0] + ', S&P500, and 3mo-TBILL'
+            ticker_print += ticker_list[0] + ', S&P500, and 3mo-TBILL'
         else:
-            ticker_print += t[0]
+            ticker_print += ticker_list[0]
 
     else:
-        ticker_print = ', '.join(t)
+        ticker_print = ', '.join(ticker_list)
         if 'no_index' not in config['state']:
             ticker_print += ', S&P500, and 3mo-TBILL'
 
@@ -100,7 +101,7 @@ def start_header(**kwargs) -> dict:
     return config
 
 
-def remove_whitespace(config: dict, default: str) -> list:
+def remove_whitespace(config: dict, default: str) -> Tuple[list, str]:
     """Remove Whitespace
 
     In particular, blank inputs, random number of spaces, etc. General cleansing.
@@ -112,15 +113,15 @@ def remove_whitespace(config: dict, default: str) -> list:
     Returns:
         list -- ticker list, ticker string
     """
-    t2 = config['tickers'].split(' ')
-    t = []
-    for t1 in t2:
-        if t1 != '':
-            t.append(t1)
-    if len(t) == 0:
+    ticker_list_2 = config['tickers'].split(' ')
+    ticker_list = []
+    for ticker_1 in ticker_list_2:
+        if ticker_1 != '':
+            ticker_list.append(ticker_1)
+    if len(ticker_list) == 0:
         config['tickers'] = default
-        t = config['tickers'].split(' ')
-    return t, config
+        ticker_list = config['tickers'].split(' ')
+    return ticker_list, config
 
 
 def header_json_parse(key: str) -> list:
@@ -334,13 +335,13 @@ def header_options_parse(input_str: str, config: dict) -> list:
         export_now = True
 
     # Only creating a pptx from existing metadata file
-    if ('--pptx' in i_keys):
+    if '--pptx' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'pptx', type_='list')
         config = add_str_to_dict_key(config, 'state', 'function run')
         export_now = True
 
-    if ('--pdf' in i_keys):
+    if '--pdf' in i_keys:
         config = add_str_to_dict_key(
             config, 'run_functions', 'pdf', type_='list')
         config = add_str_to_dict_key(config, 'state', 'function run')
@@ -544,7 +545,8 @@ def header_options_parse(input_str: str, config: dict) -> list:
             config, 'run_functions', 'commodity', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
 
-    if ('--alpha' in i_keys) or ('--beta' in i_keys) or ('--risk' in i_keys) or ('--sharpe' in i_keys):
+    if ('--alpha' in i_keys) or ('--beta' in i_keys) or ('--risk' in i_keys) or \
+        ('--sharpe' in i_keys):
         config = add_str_to_dict_key(
             config, 'run_functions', 'alpha', type_='list')
         config['tickers'] = ' '.join(ticker_keys)
