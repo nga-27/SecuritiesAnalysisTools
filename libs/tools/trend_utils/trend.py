@@ -1,3 +1,4 @@
+""" Get Trend """
 import pandas as pd
 import numpy as np
 
@@ -56,6 +57,6 @@ def difference_from_trend(position: pd.DataFrame, trend: list) -> list:
         list -- difference, point by point
     """
     diff_from_trend = []
-    for i in range(len(trend)):
-        diff_from_trend.append(np.round(position['Close'][i] - trend[i], 3))
+    for i, trend_val in enumerate(trend):
+        diff_from_trend.append(np.round(position['Close'][i] - trend_val, 3))
     return diff_from_trend

@@ -1,9 +1,11 @@
+""" Trend Analysis """
+from typing import Union
 import pandas as pd
 
 from .trend import get_trend
 
 
-def get_trend_analysis(position: pd.DataFrame, config: list = [50, 25, 12]) -> dict:
+def get_trend_analysis(position: pd.DataFrame, config: Union[list, None] = None) -> dict:
     """Get Trend Analysis
 
     Determines long, med, and short trend of a position
@@ -18,14 +20,18 @@ def get_trend_analysis(position: pd.DataFrame, config: list = [50, 25, 12]) -> d
     Returns:
         dict -- trend notes
     """
-    tlong = get_trend(position, style='sma', ma_size=config[0])
-    tmed = get_trend(position, style='sma', ma_size=config[1])
-    tshort = get_trend(position, style='sma', ma_size=config[2])
+    # pylint: disable=chained-comparison
+    if not config:
+        config = [50, 25, 12]
+
+    t_long = get_trend(position, style='sma', ma_size=config[0])
+    t_med = get_trend(position, style='sma', ma_size=config[1])
+    t_short = get_trend(position, style='sma', ma_size=config[2])
 
     trend_analysis = {}
-    trend_analysis['long'] = tlong['magnitude']
-    trend_analysis['medium'] = tmed['magnitude']
-    trend_analysis['short'] = tshort['magnitude']
+    trend_analysis['long'] = t_long['magnitude']
+    trend_analysis['medium'] = t_med['magnitude']
+    trend_analysis['short'] = t_short['magnitude']
 
     if trend_analysis['long'] > 0.0:
         trend_analysis['report'] = 'Overall UPWARD, '

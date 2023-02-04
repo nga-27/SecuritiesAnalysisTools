@@ -1,10 +1,14 @@
+""" Line Utilities """
 from typing import Tuple
 
 import numpy as np
 
 
 def consolidate_lines(line_content: list,
-                      lines: list, x_lines: list, signal: list, **kwargs) -> Tuple[list, int]:
+                      lines: list,
+                      x_lines: list,
+                      signal: list,
+                      **kwargs) -> Tuple[list, list, list]:
     """Consolidate Lines
 
     Arguments:
@@ -19,6 +23,7 @@ def consolidate_lines(line_content: list,
     Returns:
         list -- modified line content, modified lines, modified x lines
     """
+    # pylint: disable=too-many-locals
     thresh = kwargs.get('thresh', 2.5)
     thresh2 = thresh / 20.0
 
@@ -69,11 +74,13 @@ def consolidate_lines(line_content: list,
         kept_local = [sort_by_slope[count_base]['id']]
 
     new_content, lines, x_lines = reconstruct_lines(kept_grouped, line_content, x_lines, signal)
-
     return new_content, lines, x_lines
 
 
-def reconstruct_lines(groups: list, content: list, x_s: list, signal: list) -> list:
+def reconstruct_lines(groups: list,
+                      content: list,
+                      x_s: list,
+                      signal: list) -> Tuple[list, list, list]:
     """Reconstruct Lines
 
     Join similar lines
@@ -88,6 +95,7 @@ def reconstruct_lines(groups: list, content: list, x_s: list, signal: list) -> l
     Returns:
         list -- new content, new lines, new x lists
     """
+    # pylint: disable=too-many-locals
     new_lines = []
     new_xs = []
     new_content = []
@@ -120,20 +128,18 @@ def reconstruct_lines(groups: list, content: list, x_s: list, signal: list) -> l
         start = np.min(start)
         end = np.max(end)
 
-        xs = list(range(start, end+1))
-        line = [slope * x + intercept for x in xs]
+        xs_val = list(range(start, end+1))
+        line = [slope * x + intercept for x in xs_val]
+        line, xs_val = filter_nearest_to_signal(signal, xs_val, line, threshold=0.03, ratio=True)
 
-        line, xs = filter_nearest_to_signal(
-            signal, xs, line, threshold=0.03, ratio=True)
-
-        if len(xs) > 4:
+        if len(xs_val) > 4:
             item['length'] = len(line)
             item['id'] = new_id
             new_content.append(item)
             new_id += 1
 
             new_lines.append(line)
-            new_xs.append(xs)
+            new_xs.append(xs_val)
 
     return new_content, new_lines, new_xs
 
@@ -171,9 +177,9 @@ def filter_nearest_to_signal(signal: list,
     line_corrected = []
     x_corrected = []
     indexes = []
-    for j, x in enumerate(x_line):
+    for j, x_val in enumerate(x_line):
         if j not in removals:
-            x_corrected.append(x)
+            x_corrected.append(x_val)
             indexes.append(j)
 
     if len(x_corrected) > 0:

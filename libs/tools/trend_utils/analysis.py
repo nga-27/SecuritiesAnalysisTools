@@ -23,7 +23,6 @@ def generate_analysis(fund: pd.DataFrame,
         list -- list of analysis data objects
     """
     analysis = []
-
     for i, x_val in enumerate(x_list):
         sub = {}
         sub['length'] = len(x_val)
@@ -57,9 +56,7 @@ def generate_analysis(fund: pd.DataFrame,
             sub['current'] = False
 
         sub = get_attribute_analysis(fund, x_val, y_list[i], sub)
-
         analysis.append(sub)
-
     return analysis
 
 
@@ -75,7 +72,7 @@ def get_attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, conte
     Returns:
         dict -- trendline content data object
     """
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     touches = []
     if fund['Close'][x_list[0]] >= y_list[0]:
         state = 'above'
@@ -192,8 +189,7 @@ def get_attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, conte
         for touch in touches:
             if touch['type'] == 'cross' and touch['state'] == 'above':
                 # End of a valid period
-                v_stop_index = touch['index'] - \
-                    1 if touch['index'] != 0 else x_list[0]
+                v_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
                 valid_spot = {'start': {}, 'end': {}}
                 valid_spot['start']['index'] = v_start_index
                 valid_spot['start']['date'] = fund.index[v_start_index].strftime("%Y-%m-%d")
@@ -205,8 +201,7 @@ def get_attribute_analysis(fund: pd.DataFrame, x_list: list, y_list: list, conte
 
             if touch['type'] == 'cross' and touch['state'] == 'below':
                 # End of a broken period
-                b_stop_index = touch['index'] - \
-                    1 if touch['index'] != 0 else x_list[0]
+                b_stop_index = touch['index'] - 1 if touch['index'] != 0 else x_list[0]
                 broken_spot = {'start': {}, 'end': {}}
                 broken_spot['start']['index'] = b_start_index
                 broken_spot['start']['date'] = fund.index[b_start_index].strftime("%Y-%m-%d")

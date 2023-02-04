@@ -1,4 +1,6 @@
+""" Trend of Periods """
 import math
+from typing import Tuple
 
 import pandas as pd
 import numpy as np
@@ -7,7 +9,10 @@ from scipy.stats import linregress
 from .trend_utils import line_extender, line_reducer
 
 
-def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwargs) -> list:
+def get_lines_from_period(fund: pd.DataFrame,
+                          mins_and_maxes: list,
+                          interval: int,
+                          **kwargs) -> Tuple[list, list]:
     """Get Lines from Period
 
     Arguments:
@@ -20,31 +25,29 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
                      end of the period by providing a volatility threshold (default: {0.06})
 
     Returns:
-        list -- list of trendlines given the period
+        Tuple[list,list] -- list of trendlines given the period (x, y)
     """
-    vf = kwargs.get('vf', 0.06)
-
-    EXTENSION = interval
-    BREAK_LOOP = 50
-    cycles = int(np.floor(len(fund['Close'])/interval))
-    mins_y = kargs[1]
-    mins_x = kargs[0]
-    maxes_y = kargs[3]
-    maxes_x = kargs[2]
-    X = []
-    Y = []
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,chained-comparison
+    volatility = kwargs.get('vf', 0.06)
+    extension = interval
+    break_loop = 50
+    cycles = int(np.floor(len(fund['Close']) / interval))
+    mins_y = mins_and_maxes[1]
+    mins_x = mins_and_maxes[0]
+    maxes_y = mins_and_maxes[3]
+    maxes_x = mins_and_maxes[2]
+    set_of_x_lists = []
+    set_of_y_lists = []
 
     for cycle in range(cycles):
         start = cycle * interval
         end = start + interval
         data = fund['Close'][start:end].copy()
 
-        x = list(range(start, end))
-        reg = linregress(x=x, y=data)
+        reg = linregress(x=list(range(start, end)), y=data)
+        use_min = False
         if reg[0] >= 0:
             use_min = True
-        else:
-            use_min = False
 
         count = 0
         st_count = count
@@ -58,26 +61,27 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
                 count += 1
                 end_count = count
 
-            datay = mins_y[st_count:end_count].copy()
-            datax = mins_x[st_count:end_count].copy()
-            dataz = {}
-            dataz['x'] = datax
-            dataz['y'] = datay
-            dataw = pd.DataFrame.from_dict(dataz)
-            dataw.set_index('x')
-            datav = dataw.copy()
+            data_y = mins_y[st_count:end_count].copy()
+            data_x = mins_x[st_count:end_count].copy()
+            data_z = {}
+            data_z['x'] = data_x
+            data_z['y'] = data_y
+
+            data_w = pd.DataFrame.from_dict(data_z)
+            data_w.set_index('x')
+            data_v = data_w.copy()
 
             stop_loop = 0
-            while ((len(dataw['x']) > 0) and (reg[0] > 0.0)) and (stop_loop < BREAK_LOOP):
-                reg = linregress(x=dataw['x'], y=dataw['y'])
-                datav = dataw.copy()
-                dataw = dataw.loc[dataw['y'] < reg[0] * dataw['x'] + reg[1]]
+            while len(data_w['x']) > 0 and reg[0] > 0.0 and stop_loop < break_loop:
+                reg = linregress(x=data_w['x'], y=data_w['y'])
+                data_v = data_w.copy()
+                data_w = data_w.loc[data_w['y'] < reg[0] * data_w['x'] + reg[1]]
                 stop_loop += 1
 
             if reg[0] < 0.0:
-                dataw = datav.copy()
-                if len(dataw) >= 2:
-                    reg = linregress(x=dataw['x'], y=dataw['y'])
+                data_w = data_v.copy()
+                if len(data_w) >= 2:
+                    reg = linregress(x=data_w['x'], y=data_w['y'])
 
         else:
             while (count < len(maxes_x)) and (maxes_x[count] < start):
@@ -89,26 +93,27 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
                 count += 1
                 end_count = count
 
-            datay = maxes_y[st_count:end_count].copy()
-            datax = maxes_x[st_count:end_count].copy()
-            dataz = {}
-            dataz['x'] = datax
-            dataz['y'] = datay
-            dataw = pd.DataFrame.from_dict(dataz)
-            dataw.set_index('x')
-            datav = dataw.copy()
+            data_y = maxes_y[st_count:end_count].copy()
+            data_x = maxes_x[st_count:end_count].copy()
+            data_z = {}
+            data_z['x'] = data_x
+            data_z['y'] = data_y
+
+            data_w = pd.DataFrame.from_dict(data_z)
+            data_w.set_index('x')
+            data_v = data_w.copy()
 
             stop_loop = 0
-            while ((len(dataw['x']) > 0) and (reg[0] < 0.0)) and (stop_loop < BREAK_LOOP):
-                reg = linregress(x=dataw['x'], y=dataw['y'])
-                datav = dataw.copy()
-                dataw = dataw.loc[dataw['y'] > reg[0] * dataw['x'] + reg[1]]
+            while len(data_w['x']) > 0 and reg[0] < 0.0 and stop_loop < break_loop:
+                reg = linregress(x=data_w['x'], y=data_w['y'])
+                data_v = data_w.copy()
+                data_w = data_w.loc[data_w['y'] > reg[0] * data_w['x'] + reg[1]]
                 stop_loop += 1
 
             if reg[0] > 0.0:
-                dataw = datav.copy()
-                if len(dataw) >= 2:
-                    reg = linregress(x=dataw['x'], y=dataw['y'])
+                data_w = data_v.copy()
+                if len(data_w) >= 2:
+                    reg = linregress(x=data_w['x'], y=data_w['y'])
 
         end = line_extender(fund, list(range(start, end)), reg)
         if end != 0:
@@ -118,17 +123,16 @@ def get_lines_from_period(fund: pd.DataFrame, kargs: list, interval: int, **kwar
                 max_range[1] = len(fund['Close'])
             if interval > 100:
                 max_range[1] = len(fund['Close'])
-            if end + EXTENSION > int(0.9 * float(len(fund['Close']))):
+            if end + extension > int(0.9 * float(len(fund['Close']))):
                 max_range[1] = len(fund['Close'])
 
-            max_range[1] = line_reducer(
-                fund, max_range[1], reg, threshold=vf)
+            max_range[1] = line_reducer(fund, max_range[1], reg, threshold=volatility)
 
-            datax = list(range(max_range[0], max_range[1]))
-            datay = [reg[0] * float(x) + reg[1] for x in datax]
+            data_x = list(range(max_range[0], max_range[1]))
+            data_y = [reg[0] * float(x) + reg[1] for x in data_x]
 
-            if (len(datay) > 0) and (not math.isnan(datay[0])):
-                X.append(datax)
-                Y.append(datay)
+            if len(data_y) > 0 and not math.isnan(data_y[0]):
+                set_of_x_lists.append(data_x)
+                set_of_y_lists.append(data_y)
 
-    return X, Y
+    return set_of_x_lists, set_of_y_lists
