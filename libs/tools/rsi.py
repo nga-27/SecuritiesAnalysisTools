@@ -64,8 +64,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     rsi_data = determine_rsi_swing_rejection(
         position, rsi_data, p_bar=progress_bar)
 
-    rsi_data = rsi_divergence(
-        position, rsi_data, plot_output=plot_output, p_bar=progress_bar)
+    rsi_data = rsi_divergence(position, rsi_data, plot_output=plot_output, p_bar=progress_bar)
 
     # Determine metrics, primarily using both indicators
     rsi_data = rsi_metrics(position, rsi_data, p_bar=progress_bar)

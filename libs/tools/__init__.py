@@ -10,7 +10,6 @@ from .moving_average import triple_exp_mov_average
 from .moving_average import adjust_signals
 from .hull_moving_average import hull_moving_average
 
-from .trends import get_trend, get_trend_analysis
 from .trends import get_trend_lines, trend_simple_forecast, auto_trend
 from .resistance_support import find_resistance_support_lines
 

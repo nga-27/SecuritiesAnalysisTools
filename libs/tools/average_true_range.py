@@ -1,3 +1,4 @@
+""" Average True Range """
 import os
 import pandas as pd
 
@@ -28,13 +29,11 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
     p_bar = kwargs.get('progress_bar')
     out_suppress = kwargs.get('out_suppress', False)
 
-    atr = dict()
+    atr = {}
     atr['tabular'] = get_atr_signal(
         fund, plot_output=plot_output, name=name, views=views, out_suppress=out_suppress)
 
-    atr = atr_indicators(fund, atr, plot_output=plot_output,
-                         name=name, out_suppress=out_suppress)
-
+    atr = atr_indicators(fund, atr, plot_output=plot_output, name=name, out_suppress=out_suppress)
     atr['length_of_signal'] = len(atr['tabular'])
     atr['type'] = 'oscillator'
 
@@ -60,6 +59,7 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- atr signal
     """
+    # pylint: disable=too-many-locals
     period = kwargs.get('period', 14)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
@@ -111,8 +111,9 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
         out_suppress {bool} -- (default: {False})
 
     Returns:
-        dict: [description]
+        dict: average_true_range dict
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,chained-comparison
     periods = kwargs.get('periods', [50, 200])
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
