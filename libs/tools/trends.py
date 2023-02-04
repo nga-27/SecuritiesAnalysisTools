@@ -1,3 +1,4 @@
+""" trends """
 import os
 import warnings
 import json
@@ -40,6 +41,7 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         trends {dict} -- contains all trend lines determined by algorithm
     """
+    # pylint: disable=too-many-locals
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     interval = kwargs.get('interval', [4, 8, 16, 32])
@@ -53,28 +55,26 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     # Not ideal to ignore warnings, but these are handled already by scipy/numpy so... eh...
     warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-    trends = dict()
-
+    trends = {}
     mins_y = []
     mins_x = []
     maxes_y = []
     maxes_x = []
     all_x = []
 
-    vf = 0.06
+    volatility = 0.06
     if meta is not None:
         vol = meta.get('volatility', {}).get('VF')
         if vol is not None:
-            vf = vol / 100.0
+            volatility = vol / 100.0
 
     increment = 0.7 / (float(len(interval)) * 3)
-
     for i, period in enumerate(interval):
         ma_size = period
 
         # ma = windowed_ma_list(fund['Close'], interval=ma_size)
         weight_strength = 2.0 + (0.1 * float(i))
-        ma = windowed_moving_avg(fund['Close'], interval=ma_size, weight_strength=weight_strength,
+        ma = windowed_moving_avg(fund['Close'], ma_size, weight_strength=weight_strength,
                                  data_type='list', filter_type='exponential')
         ex = find_filtered_local_extrema(ma)
         r = reconstruct_extrema(
@@ -115,13 +115,13 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     near_term = trend_window[3]
 
     X0, Y0 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term, vf=vf)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term, vf=volatility)
     X1, Y1 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term, vf=vf)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term, vf=volatility)
     X2, Y2 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term, vf=vf)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term, vf=volatility)
     X3, Y3 = get_lines_from_period(
-        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term, vf=vf)
+        fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term, vf=volatility)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=increment*4.0)
