@@ -1,16 +1,18 @@
+""" Average Directional Index """
 import os
+from typing import Union
+
 import pandas as pd
-import numpy as np
 
 from libs.utils import INDEXES, dual_plotting
 from libs.features import normalize_signals
 
-from .trends import autotrend
+from .trends import auto_trend
 from .moving_average import exponential_moving_avg
 from .average_true_range import average_true_range
 
 
-def average_directional_index(fund: pd.DataFrame, atr: list = [], **kwargs) -> dict:
+def average_directional_index(fund: pd.DataFrame, atr: Union[list, None] = None, **kwargs) -> dict:
     """Average Directional Index (ADX)
 
     Arguments:
@@ -33,13 +35,11 @@ def average_directional_index(fund: pd.DataFrame, atr: list = [], **kwargs) -> d
     view = kwargs.get('view', '')
     pbar = kwargs.get('progress_bar')
 
-    adx = dict()
-    if len(atr) == 0:
+    adx = {}
+    if not atr or len(atr) == 0:
         atr = average_true_range(fund, out_suppress=True).get('tabular')
 
-    adx['tabular'] = get_adx_signal(
-        fund, atr, plot_output=plot_output, name=name, view=view)
-
+    adx['tabular'] = get_adx_signal(fund, atr, plot_output=plot_output, name=name, view=view)
     adx = adx_metrics(fund, adx, plot_output=plot_output, name=name, view=view)
 
     adx['length_of_data'] = len(adx['tabular']['adx'])
@@ -76,19 +76,19 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
     Returns:
         dict -- tabular adx and DI signals
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     interval = kwargs.get('interval', 14)
-    ADX_DEFAULT = kwargs.get('adx_default', 20.0)
-    NO_TREND = kwargs.get('no_trend_value', 20.0)
-    STRONG_TREND = kwargs.get('strong_trend_value', 25.0)
-    HIGH_TREND = kwargs.get('high_trend_value', 40.0)
+    adx_default = kwargs.get('adx_default', 20.0)
+    no_trend = kwargs.get('no_trend_value', 20.0)
+    strong_trend = kwargs.get('strong_trend_value', 25.0)
+    high_trend = kwargs.get('high_trend_value', 40.0)
 
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
     pbar = kwargs.get('pbar')
 
-    signal = dict()
-
+    signal = {}
     # Calculate the directional movement signals
     dmp = [0.0] * len(fund['Close'])
     dmn = [0.0] * len(fund['Close'])
@@ -130,7 +130,7 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
         pbar.uptick(increment=0.3)
 
     # Finally, calculate the adx signal as an 'interval' average of dx
-    adx_signal = [ADX_DEFAULT] * len(fund['Close'])
+    adx_signal = [adx_default] * len(fund['Close'])
     adx_signal[interval-1] = sum(dx_signal[0:interval]) / float(interval)
     for i in range(interval, len(adx_signal)):
         adx_signal[i] = ((adx_signal[i-1] * 13) +
@@ -142,9 +142,9 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
     signal['di_+'] = di_p
     signal['di_-'] = di_n
     signal['adx'] = adx_signal
-    signal['high_trend'] = [HIGH_TREND] * len(adx_signal)
-    signal['no_trend'] = [NO_TREND] * len(adx_signal)
-    signal['strong_trend'] = [STRONG_TREND] * len(adx_signal)
+    signal['high_trend'] = [high_trend] * len(adx_signal)
+    signal['no_trend'] = [no_trend] * len(adx_signal)
+    signal['strong_trend'] = [strong_trend] * len(adx_signal)
 
     plots = [
         signal['no_trend'],
@@ -196,6 +196,7 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
     Returns:
         dict -- adx data object
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,chained-comparison
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -204,7 +205,7 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
     adx['metrics'] = [0.0] * len(fund['Close'])
     adx['signals'] = []
 
-    auto = autotrend(fund['Close'], periods=[14])
+    auto = auto_trend(fund['Close'], periods=[14])
 
     no_trend = adx['tabular']['no_trend'][0]
     strong_trend = adx['tabular']['strong_trend'][0]

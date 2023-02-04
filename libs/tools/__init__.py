@@ -1,3 +1,4 @@
+""" Main tools """
 from .math_functions import lower_low, higher_high, bull_bear_th
 from .math_functions import beta_comparison, beta_comparison_list
 from .math_functions import risk_comparison
@@ -10,7 +11,7 @@ from .moving_average import adjust_signals
 from .hull_moving_average import hull_moving_average
 
 from .trends import get_trend, get_trend_analysis
-from .trends import get_trend_lines, trend_simple_forecast, autotrend
+from .trends import get_trend_lines, trend_simple_forecast, auto_trend
 from .resistance_support import find_resistance_support_lines
 
 from .true_strength import relative_strength

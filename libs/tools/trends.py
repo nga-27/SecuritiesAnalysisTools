@@ -857,7 +857,7 @@ def trend_simple_forecast(trend: dict,
     return forecast
 
 
-def autotrend(data, **kwargs) -> list:
+def auto_trend(data, **kwargs) -> list:
     """Autotrend
 
     A more simplistic trend-determiner. Takes a dataset, finds "trend" for each listed period of

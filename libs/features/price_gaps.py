@@ -107,9 +107,9 @@ def determine_gap_types(fund: pd.DataFrame, gaps: dict) -> dict:
     Returns:
         dict -- gap data object
     """
-    trend_short = trends.autotrend(fund['Close'], periods=[7], normalize=True)
-    trend_med = trends.autotrend(fund['Close'], periods=[14], normalize=True)
-    trend_long = trends.autotrend(fund['Close'], periods=[28], normalize=True)
+    trend_short = trends.auto_trend(fund['Close'], periods=[7], normalize=True)
+    trend_med = trends.auto_trend(fund['Close'], periods=[14], normalize=True)
+    trend_long = trends.auto_trend(fund['Close'], periods=[28], normalize=True)
 
     # TODO: Trends w/ gaps might provide insights...
     gaps['trend_short'] = []

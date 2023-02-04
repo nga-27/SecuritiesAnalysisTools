@@ -10,7 +10,7 @@ from .rsi import relative_strength_indicator_rsi
 from .full_stochastic import full_stochastic
 
 from .moving_average import exponential_moving_avg
-from .trends import autotrend
+from .trends import auto_trend
 
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
@@ -300,7 +300,7 @@ def generate_weights(position, **kwargs) -> dict:
     types = kwargs.get('types', ['stoch', 'rsi', 'ultimate'])
     speeds = kwargs.get('speeds', ['fast', 'medium', 'slow'])
 
-    trend = autotrend(position['Close'], periods=[28, 56, 84], weights=[
+    trend = auto_trend(position['Close'], periods=[28, 56, 84], weights=[
                       0.3, 0.4, 0.3], normalize=True)
 
     weights = dict()

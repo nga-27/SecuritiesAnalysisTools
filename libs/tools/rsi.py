@@ -6,7 +6,7 @@ import numpy as np
 from libs.utils import dual_plotting, date_extractor, INDEXES
 from libs.features import normalize_signals
 
-from .trends import autotrend
+from .trends import auto_trend
 from .moving_average import exponential_moving_avg
 from .trends import get_trend_lines_regression
 
@@ -39,7 +39,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     progress_bar = kwargs.get('progress_bar', None)
     overbought = kwargs.get('overbought', 70.0)
     oversold = kwargs.get('oversold', 30.0)
-    auto_trend = kwargs.get('auto_trend', True)
+    use_auto_trend = kwargs.get('auto_trend', True)
     view = kwargs.get('view', '')
     trendlines = kwargs.get('trendlines', False)
 
@@ -49,8 +49,8 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     rsi_data['tabular'] = rsi
 
     slope_trend = []
-    if auto_trend:
-        slope_trend = autotrend(position['Close'], periods=[
+    if use_auto_trend:
+        slope_trend = auto_trend(position['Close'], periods=[
                                 period*3, period*5.5, period*8], weights=[0.45, 0.33, 0.22], normalize=True)
 
     over_thresholds = over_threshold_lists(

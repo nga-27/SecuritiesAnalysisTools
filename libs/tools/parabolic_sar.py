@@ -5,7 +5,7 @@ import numpy as np
 
 from libs.utils import candlestick_plot, INDEXES
 
-from .trends import autotrend
+from .trends import auto_trend
 
 
 def parabolic_sar(fund: pd.DataFrame, adx_tabular: dict = None, **kwargs) -> dict:
@@ -109,7 +109,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     indicators = []
 
     signal = [0.0] * len(fund['Close'])
-    auto = autotrend(fund['Close'], periods=[4])
+    auto = auto_trend(fund['Close'], periods=[4])
 
     # Observe for an 'offset' amount of time before starting
     ep_high = 0.0
