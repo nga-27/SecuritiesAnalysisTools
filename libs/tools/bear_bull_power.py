@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from scipy.stats import linregress
 
-from libs.utils import bar_chart, dual_plotting, dates_extractor_list, INDEXES
+from libs.utils import bar_chart, dates_extractor_list, INDEXES, generate_plot, PlotType
 from libs.tools import exponential_moving_avg
 from libs.features import normalize_signals
 
@@ -218,16 +218,15 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     state4 = norm[0]
 
     title = 'Bear Bull Power Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], state4, 'Price',
-                      'Bear Bull Power', title=title)
-    else:
-        filename = os.path.join(name, view, f"bear_bull_power_{name}.png")
-        dual_plotting(position['Close'], state4, 'Price', 'Metrics', title=title,
-                      save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=state4, y1_label='Price', y2_label='Bear Bull Power', title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"bear_bull_power_{name}.png")
+        )
+    )
 
     bear_bull['metrics'] = state4
-
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 

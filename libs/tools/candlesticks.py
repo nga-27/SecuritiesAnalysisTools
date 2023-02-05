@@ -2,7 +2,8 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import INDEXES, candlestick_plot
+from libs.utils import INDEXES, generate_plot, PlotType #candlestick_plot
+from libs.utils.plot_utils import utils
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from .moving_average import adjust_signals
@@ -62,13 +63,16 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
 
     name2 = INDEXES.get(name, name)
 
-    if plot_output:
-        candlestick_plot(fund, title=name2, additional_plts=[
-                         plot_50, plot_200])
-    else:
-        filename = os.path.join(name, view, f"candlestick_{name}.png")
-        candlestick_plot(fund, title=name2, filename=filename,
-                         save_fig=True, additional_plts=[plot_50, plot_200])
+    generate_plot(
+        PlotType.CANDLESTICKS,
+        fund,
+        **{
+            "title": name2,
+            "additional_plots": [plot_50, plot_200],
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"candlestick_{name}.png")
+        }
+    )
 
     if pbar is not None:
         pbar.uptick(increment=0.1)
@@ -141,8 +145,17 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
 
         plot_obj = {"plot": signal, "color": 'black',
                     "legend": 'candlestick signal'}
-        candlestick_plot(fund, additional_plts=[
-            plot_obj], title='Candlestick Signals')
+        generate_plot(
+            PlotType.CANDLESTICKS,
+            fund,
+            **{
+                "additional_plots": [plot_obj],
+                "title": "Candlestick Signals",
+                "plot_output": plot_output
+            }
+        )
+        # candlestick_plot(fund, additional_plts=[
+        #     plot_obj], title='Candlestick Signals')
 
     candle['patterns'] = patterns
     candle['tabular'] = tabular
@@ -204,8 +217,17 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
         print(f"Long: {thresholds['long']}")
         print(f"Doji: {thresholds['doji']}")
         print(f"Doji Ratio: {thresholds['doji_ratio']}")
-        candlestick_plot(fund, title="Doji & Long/Short Days",
-                         threshold_candles=thresholds)
+        generate_plot(
+            PlotType.CANDLESTICKS,
+            fund,
+            **{
+                "title": "Doji & Long/Short Days",
+                "threshold_candles": thresholds,
+                "plot_output": plot_output
+            }
+        )
+        # candlestick_plot(fund, title="Doji & Long/Short Days",
+        #                  threshold_candles=thresholds)
 
     return thresholds
 

@@ -3,7 +3,7 @@ import os
 import pandas as pd
 
 from libs.utils import (
-    dual_plotting, STANDARD_COLORS, TREND_COLORS, INDEXES, EXEMPT_METRICS, INDICATOR_NAMES
+    generate_plot, PlotType, STANDARD_COLORS, TREND_COLORS, INDEXES, EXEMPT_METRICS, INDICATOR_NAMES
 )
 
 NORMAL = STANDARD_COLORS["normal"]
@@ -129,16 +129,19 @@ def assemble_last_signals(meta_sub: dict,
             lower = 0.3 * min(content["metrics"])
             lower = [lower] * len(content["metrics"])
 
-            if plot_output:
-                dual_plotting(
-                    fund, [content["metrics"], upper, lower], 'Price', 'Metrics', title=title)
-            else:
-                filename = os.path.join(
-                    name, meta_keys[top_key], f"overall_metrics_{name}.png")
-                dual_plotting(
-                    fund, [content["metrics"], upper,
-                           lower], 'Price', 'Metrics',
-                    title=title, save_fig=True, filename=filename)
+            generate_plot(
+                PlotType.DUAL_PLOTTING,
+                fund,
+                **{
+                    "y_list_2": [content["metrics"], upper, lower],
+                    "y1_label": "Price",
+                    "y2_label": "Metrics",
+                    "title": title,
+                    "plot_output": plot_output,
+                    "filename": os.path.join(name, meta_keys[top_key],
+                        f"overall_metrics_{name}.png")
+                }
+            )
 
     return content
 

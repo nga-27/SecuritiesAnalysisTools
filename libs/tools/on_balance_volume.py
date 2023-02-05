@@ -3,7 +3,9 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, dual_plotting, bar_chart, dates_extractor_list, INDEXES
+from libs.utils import (
+    generic_plotting, bar_chart, dates_extractor_list, INDEXES, generate_plot, PlotType
+)
 
 from .moving_average import simple_moving_avg
 from .trends import get_trend_lines, get_trend_lines_regression
@@ -149,29 +151,26 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
     name4 = name3 + ' - Significant OBV Changes'
     name5 = name3 + ' - Volume'
 
+    filename2 = os.path.join(name, view, f"obv_standard_{name}.png")
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=obv, x=x, y1_label='Position Price', y2_label='On Balance Volume',
+            x_label='Trading Days', title=name2, plot_output=plot_output,
+            filename=filename2
+        )
+    )
+
     if plot_output:
-        dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price',
-                      y2_label='On Balance Volume', x_label='Trading Days', title=name2,
-                      subplot=True)
-        dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price',
-                      y2_label='OBV-DIFF', x_label='Trading Days', title=name4,
-                      subplot=True)
         bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
 
     else:
         filename = os.path.join(name, view, f"obv_diff_{name}.png")
-        filename2 = os.path.join(name, view, f"obv_standard_{name}.png")
         filename3 = os.path.join(name, view, f"volume_{name}.png")
 
         bar_chart(volume, x=x, position=fund, title=name5,
                   save_fig=True, filename=filename3, all_positive=True)
         bar_chart(ofilter, x=x, position=fund, title=name4,
                   save_fig=True, filename=filename)
-        dual_plotting(fund['Close'], obv, x=x,
-                      y1_label='Position Price',
-                      y2_label='On Balance Volume',
-                      x_label='Trading Days', title=name2,
-                      save_fig=True, filename=filename2)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)

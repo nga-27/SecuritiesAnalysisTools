@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, date_extractor, INDEXES
+from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .math_functions import lower_low, higher_high, bull_bear_th
@@ -57,20 +57,20 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Ultimate Oscillator'
 
-        if plot_output:
-            dual_plotting(position['Close'], ult_osc, 'Position Price',
-                          'Ultimate Oscillator', title=name2, subplot=True)
-            dual_plotting(position['Close'], ultimate['plots'],
-                          'Position Price', 'Buy-Sell Signal', title=name2)
-
-        else:
-            filename = os.path.join(name, view, f"ultimate_osc_{name}.png")
-            filename2 = os.path.join(
-                name, view, f"ultimate_osc_raw_{name}.png")
-            dual_plotting(position['Close'], ult_osc, 'Position Price',
-                          'Ultimate Oscillator', title=name2, save_fig=True, filename=filename2)
-            dual_plotting(position['Close'], ultimate['plots'], 'Position Price',
-                          'Buy-Sell Signal', title=name2, save_fig=True, filename=filename)
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=ult_osc, y1_label='Position Price', y2_label='Ultimate Oscillator',
+                title=name2, plot_output=plot_output, subplot=True,
+                filename=os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
+            )
+        )
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=ultimate['plots'], y1_label='Position Price',
+                y2_label='Buy-Sell Signal', title=name2, plot_output=plot_output,
+                filename=os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
+            )
+        )
 
     ultimate['type'] = 'oscillator'
     ultimate['length_of_data'] = len(ultimate['tabular'])
@@ -477,15 +477,13 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Ultimate Oscillator Metrics'
 
-        if plot_output:
-            dual_plotting(position['Close'], metrics, 'Price',
-                          'Metrics', title='Ultimate Oscillator Metrics')
-
-        else:
-            filename = os.path.join(
-                name, view, f"ultimate_osc_metrics_{name}.png")
-            dual_plotting(position['Close'], metrics, 'Price',
-                          'Metrics', title=name2, filename=filename, save_fig=True)
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
+                plot_output=plot_output,
+                filename=os.path.join(name, view, f"ultimate_osc_metrics_{name}.png")
+            )
+        )
 
     ultimate['metrics'] = metrics
 

@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import INDEXES, dual_plotting
+from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import find_local_extrema, normalize_signals
 
 from .moving_average import simple_moving_avg
@@ -100,14 +100,13 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         signal.append(cmo)
 
     name2 = INDEXES.get(name, name)
-    if plot_output:
-        dual_plotting(position['Close'], signal, 'Price',
-                      'CMO', title=f'{name2} - (Chande) Momentum Oscillator')
-    else:
-        filename = os.path.join(name, view, f"momentum_oscillator_{name}.png")
-        dual_plotting(position['Close'], signal, 'Price',
-                      'CMO', title='(Chande) Momentum Oscillator',
-                      filename=filename, save_fig=True)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=signal, y1_label='Price', y2_label='CMO',
+            title=f'{name2} - (Chande) Momentum Oscillator',
+            filename=os.path.join(name, view, f"momentum_oscillator_{name}.png"),
+        )
+    )
 
     return signal
 
@@ -142,9 +141,12 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
         else:
             bear_bull.append(0.0)
 
-    if plot_output and (len(position) > 0):
-        dual_plotting(position['Close'], bear_bull,
-                      'Price', 'Bear_Bull', title='Bear Bull')
+    if plot_output and len(position) > 0:
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=bear_bull, y1_label='Price', y2_label='Bear_Bull', title='Bear Bull'
+            )
+        )
 
     return bear_bull
 
@@ -294,12 +296,12 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     mo_dict['changes'] = changes
 
     title = '(Chande) Momentum Oscillator Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], metrics4,
-                      'Price', 'Metrics', title=title)
-    else:
-        filename = os.path.join(name, view, f"momentum_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
-                      save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics4, y1_label='Price', y2_label='Metrics', title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"momentum_metrics_{name}.png")
+        )
+    )
 
     return mo_dict

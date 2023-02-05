@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from libs.utils import INDEXES, dual_plotting
+from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
@@ -146,12 +146,12 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Demand Index"
-    if plot_output:
-        dual_plotting(fund['Close'], metrics, 'Price', 'Demand Index Metrics')
-    else:
-        filename = os.path.join(name, view, f"di_metrics_{name}")
-        dual_plotting(fund['Close'], metrics, 'Price', 'Demand Index Metrics',
-                      title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=metrics, y1_label='Price', y2_label='Demand Index Metrics', title=title,
+            plot_output=plot_output, filename=os.path.join(name, view, f"di_metrics_{name}")
+        )
+    )
 
     return metrics
 
@@ -246,13 +246,12 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Demand Index"
-    if plot_output:
-        dual_plotting(fund['Close'], signal, 'Price',
-                      'Demand Index', title=title)
-    else:
-        filename = os.path.join(name, view, f"demand_index_{name}")
-        dual_plotting(fund['Close'], signal, 'Price', 'Demand Index',
-                      title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=signal, y1_label='Price', y2_label='Demand Index', title=title,
+            plot_output=plot_output, filename=os.path.join(name, view, f"demand_index_{name}")
+        )
+    )
 
     if pbar is not None:
         pbar.uptick(increment=0.1)

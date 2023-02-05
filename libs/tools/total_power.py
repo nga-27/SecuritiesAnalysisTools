@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.tools import exponential_moving_avg
-from libs.utils import dual_plotting, INDEXES
+from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 
@@ -138,22 +138,14 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
 
     name2 = INDEXES.get(name, name)
     title = name2 + ' - Total Power'
-    if plot_output:
-        dual_plotting(position['Close'],
-                      [signals['bears'], signals['bulls'], signals['total']],
-                      'Price',
-                      ['Bear', 'Bull', 'Total'],
-                      title=title)
-
-    else:
-        filename = os.path.join(name, view, f"total_power_{name}.png")
-        dual_plotting(position['Close'],
-                      [signals['bears'], signals['bulls'], signals['total']],
-                      'Price',
-                      ['Bear', 'Bull', 'Total'],
-                      title=title,
-                      save_fig=True,
-                      filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=[signals['bears'], signals['bulls'], signals['total']],
+            y1_label='Price', y2_label=['Bear', 'Bull', 'Total'], title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"total_power_{name}.png")
+        )
+    )
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -318,15 +310,13 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
 
     name2 = INDEXES.get(name, name)
     title = name2 + ' - Total Power Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], metrics, 'Price', 'Metrics')
-        for feat in features:
-            print(f"Total Power: {feat}")
-
-    else:
-        filename = os.path.join(name, view, f"total_pwr_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"total_pwr_metrics_{name}.png")
+        )
+    )
 
     tp['metrics'] = metrics
     tp['signals'] = features

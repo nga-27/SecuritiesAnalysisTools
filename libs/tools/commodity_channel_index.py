@@ -3,7 +3,7 @@ import datetime
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, INDEXES
+from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
 from .moving_average import typical_price_signal, simple_moving_avg
@@ -115,15 +115,12 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     period_strs = ', '.join(period_strs)
     title = f'{name2} - Commodity Channel Index ({period_strs} periods)'
 
-    if plot_output:
-        dual_plotting(position['Close'], plots,
-                      'Price', 'CCI', title=title)
-
-    else:
-        filename = os.path.join(name, view, f"commodity_channel_{name}.png")
-        dual_plotting(position['Close'], plots,
-                      'Price', 'CCI', title=title,
-                      save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=plots, y1_label='Price', y2_label='CCI', title=title, plot_output=plot_output,
+            filename=os.path.join(name, view, f"commodity_channel_{name}.png")
+        )
+    )
 
     return tabular
 
@@ -194,15 +191,13 @@ def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Commodity Channel Index Metrics"
 
-    if plot_output:
-        dual_plotting(position['Close'], metrics,
-                      'Price', 'Metrics', title=title)
-
-    else:
-        filename = filename = os.path.join(
-            name, view, f"commodity_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=title,
+            plot_output=plot_output, filename=os.path.join(
+                name, view, f"commodity_metrics_{name}.png")
+        )
+    )
 
     return metrics
 

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, date_extractor, INDEXES, STANDARD_COLORS
+from libs.utils import date_extractor, INDEXES, STANDARD_COLORS, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .ultimate_oscillator import ultimate_oscillator
@@ -77,16 +77,13 @@ def cluster_oscillators(position: pd.DataFrame, **kwargs):
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Clustering: ' + function
-    if plot_output:
-        dual_plotting(position['Close'], clusters, 'Position Price',
-                      'Clustered Oscillator', x_label='Trading Days', title=name2)
-
-    else:
-        filename = os.path.join(name, view, f"clustering_{name}_{function}")
-        dual_plotting(position['Close'], clusters, y1_label='Price',
-                      y2_label='Clustered Oscillator',
-                      x_label='Trading Days', title=name2,
-                      save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=clusters, y1_label='Position Price', y2_label='Clustered Oscillator',
+            x_label='Trading Days', title=name2, plot_output=plot_output,
+            filename=os.path.join(name, view, f"clustering_{name}_{function}")
+        )
+    )
 
     if prog_bar is not None:
         prog_bar.uptick(increment=0.2)
@@ -379,14 +376,13 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscillators: dict, **kwarg
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + " - Clustered Oscillator Metrics"
-    if plot_output:
-        dual_plotting(position['Close'], metrics,
-                      'Price', 'Metrics', title=name2)
-    else:
-        filename = os.path.join(
-            name, view, f"clustered_osc_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=name2, filename=filename, save_fig=True)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"clustered_osc_metrics_{name}.png")
+        )
+    )
 
     return cluster_oscillators
 

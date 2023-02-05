@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, date_extractor, INDEXES
+from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .moving_average import exponential_moving_avg
@@ -125,10 +125,13 @@ def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwa
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
-    if not out_suppress:
-        if plot_output:
-            dual_plotting(position['Close'], [k_instant, k_smooth, d_sma], 'Price', [
-                          'Fast %K, Slow %K, Slow %D'])
+    if not out_suppress and plot_output:
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=[k_instant, k_smooth, d_sma], y1_label='Price',
+                y2_label=['Fast %K, Slow %K, Slow %D']
+            )
+        )
 
     signals = {"fast_k": k_instant, "smooth_k": k_smooth, "slow_d": d_sma}
 
@@ -419,14 +422,13 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Stochastic'
 
-        if plot_output:
-            dual_plotting(position['Close'], full_stoch['indicator'],
-                          'Position Price', 'Oscillator Signal', title=name2)
-
-        else:
-            filename = os.path.join(name, view, f"stochastic_{name}.png")
-            dual_plotting(position['Close'], full_stoch['indicator'], 'Position Price', 'Stochastic Oscillator',
-                          x_label='Trading Days', title=name2, save_fig=True, filename=filename)
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=full_stoch['indicator'], y1_label='Position Price',
+                y2_label='Oscillator Signal', title=name2, plot_output=plot_output,
+                filename=os.path.join(name, view, f"stochastic_{name}.png")
+            )
+        )
 
     return full_stoch
 
@@ -488,8 +490,11 @@ def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dic
     full_stoch['metrics'] = metrics
 
     if plot_output:
-        dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title='Stochastic Metrics')
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=metrics, y1_label='Price', y2_label='Metrics', title='Stochastic Metrics',
+            )
+        )
 
     return full_stoch
 

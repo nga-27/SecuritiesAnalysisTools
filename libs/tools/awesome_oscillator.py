@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from libs.utils import dual_plotting, bar_chart, dates_extractor_list
+from libs.utils import PlotType, generate_plot, bar_chart, dates_extractor_list
 from libs.features import normalize_signals
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from libs.utils import INDEXES
@@ -132,11 +132,16 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     name2 = name3 + ' - Awesome Oscillator'
 
     if plot_output:
-        dual_plotting([signal, med_term, long_term], position['Close'], [
-                      'Awesome', 'Medium', 'Long'], 'Price')
-        dual_plotting([signal, triggers], position['Close'], [
-                      'Awesome', 'Triggers'], 'Price')
+        generate_plot(
+            PlotType.DUAL_PLOTTING, [signal, med_term, long_term], y_list_2=position['Close'],
+            y1_label=['Awesome', 'Medium', 'Long'], y2_label='Price', plot_type=plot_output
+        )
+        generate_plot(
+            PlotType.DUAL_PLOTTING, [signal, triggers], y_list_2=position['Close'],
+            y1_label=['Awesome', 'Triggers'], y2_label='Price', plot_type=plot_output
+        )
         bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
+
     else:
         filename = os.path.join(name, view, f"awesome_bar_{name}")
         bar_chart(signal, position=position, x=x,
@@ -505,14 +510,11 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
     ao_dict['changes'] = changes
 
     title = 'Awesome Oscillator Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], metrics4,
-                      'Price', 'Metrics', title=title)
-    else:
-        filename = os.path.join(name, view, f"awesome_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
-                      save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], y_list_2=metrics4, y1_label='Price',
+        y2_label='Metrics', title=title, plot_output=plot_output,
+        filename=os.path.join(name, view, f"awesome_metrics_{name}.png")
+    )
 
     ao_dict.pop('pm')
-
     return ao_dict

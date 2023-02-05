@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, dual_plotting, INDEXES
+from libs.utils import generic_plotting, INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
@@ -135,15 +135,13 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + f" - Bollinger Band Metrics"
-    if plot_output:
-        dual_plotting(position['Close'], norm_signal, 'Price',
-                      'Indicators', title=name2)
-    else:
-        filename = os.path.join(
-            name, view, f"bollinger_band_metrics_{name}.png")
-        # filename = name + f"/{view}" + f"/bollinger_band_metrics_{name}.png"
-        dual_plotting(position['Close'], norm_signal, 'Price',
-                      'Metrics', title=name2, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=norm_signal, y1_label='Price', y2_label='Indicators', title=name2,
+            plot_output=plot_output, filename=os.path.join(
+                name, view, f"bollinger_band_metrics_{name}.png")
+        )
+    )
 
     return bol_bands
 
@@ -247,8 +245,12 @@ def volatility_calculation(position: pd.DataFrame, **kwargs) -> list:
         std_correction[i] = std_correction[i] / price
 
     if plot_output:
-        dual_plotting(position['Close'], std_correction, 'Price',
-                      'Volatility', title='Standard Deviation Volatility')
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=std_correction, y1_label='Price', y2_label='Volatility',
+                title='Standard Deviation Volatility'
+            )
+        )
 
     return std_correction
 

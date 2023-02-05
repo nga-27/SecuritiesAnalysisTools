@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import INDEXES, generic_plotting, dual_plotting
+from libs.utils import INDEXES, generic_plotting, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .moving_average import weighted_moving_avg, simple_moving_avg
@@ -324,13 +324,13 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Hull Moving Average Metrics'
 
-    if plot_output:
-        dual_plotting(position['Close'], swings['metrics']['metrics'],
-                      'Price', 'Metrics', title='Hull Moving Average Metrics')
-    else:
-        filename2 = os.path.join(name, view, f"hull_metrics_{name}.png")
-        dual_plotting(position['Close'], swings['metrics']['metrics'],
-                      'Price', 'Metrics', title=name2, save_fig=True, filename=filename2)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=swings['metrics']['metrics'], y1_label='Price', y2_label='Metrics',
+            title=name2, plot_output=plot_output,
+            filename=os.path.join(name, view, f"hull_metrics_{name}.png")
+        )
+    )
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)

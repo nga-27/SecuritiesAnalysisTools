@@ -20,8 +20,8 @@ from libs.tools import (
     cluster_oscillators, beta_comparison_list, windowed_moving_avg
 )
 from libs.utils import (
-    dual_plotting, generic_plotting, ProgressBar, index_appender, download_data_indexes,
-    STANDARD_COLORS
+    generate_plot, generic_plotting, ProgressBar, index_appender, download_data_indexes,
+    STANDARD_COLORS, PlotType
 )
 
 ERROR_COLOR = STANDARD_COLORS["error"]
@@ -210,12 +210,18 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
     composite2 = [x / max_ for x in composite2]
     progress_bar.uptick()
 
-    if plot_output:
-        dual_plotting(data['^GSPC']['Close'], composite2, y1_label='S&P500',
-                      y2_label='MCI', title='Market Composite Index')
-    else:
-        dual_plotting(data['^GSPC']['Close'], composite2, y1_label='S&P500', y2_label='MCI',
-                      title='Market Composite Index', save_fig=True, filename='MCI.png')
+    generate_plot(
+        PlotType.DUAL_PLOTTING,
+        data['^GSPC']['Close'],
+        **dict(
+            y_list_2=composite2,
+            y1_label='S&P500',
+            y2_label='MCI',
+            title='Market Composite Index',
+            plot_output=plot_output,
+            filename="MCI.png"
+        )
+    )
 
     progress_bar.uptick()
     return composite2
@@ -288,14 +294,19 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         net_correlation = [x / max_ for x in net_correlation]
 
         legend = ['Net Correlation', 'S&P500']
-        dual_plotting(net_correlation,
-                      data['^GSPC']['Close'][start_pt:tot_len],
-                      x=dates,
-                      y1_label=legend[0],
-                      y2_label=legend[1],
-                      title='MCI Net Correlation',
-                      save_fig=(not plot_output),
-                      filename='MCI_net_correlation.png')
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            net_correlation,
+            **dict(
+                y_list_2=data['^GSPC']['Close'][start_pt:tot_len],
+                x=dates,
+                y1_label=legend[0],
+                y2_label=legend[1],
+                title='MCI Net Correlation',
+                plot_output=plot_output,
+                filename='MCI_net_correlation.png'
+            )
+        )
 
         progress_bar.uptick()
 

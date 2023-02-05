@@ -14,8 +14,12 @@ from .formatting import (
 )
 
 from .plotting import (
-    dual_plotting, generic_plotting, bar_chart, specialty_plotting, candlestick_plot,
-    shape_plotting, volatility_factor_plot
+    generic_plotting, bar_chart, specialty_plotting, PlotType, shape_plotting,
+    volatility_factor_plot, generate_plot
+)
+
+from .plot_utils import (
+    utils, candlesticks
 )
 
 from .progress_bar import ProgressBar, start_clock

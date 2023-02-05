@@ -5,8 +5,8 @@ from typing import Tuple, Union
 
 from libs.tools import cluster_oscillators, windowed_moving_avg
 from libs.utils import (
-    download_data_indexes, dual_plotting, generic_plotting, ProgressBar, index_appender,
-    STANDARD_COLORS
+    download_data_indexes, generic_plotting, ProgressBar, index_appender, PlotType,
+    STANDARD_COLORS, generate_plot
 )
 
 ERROR_COLOR = STANDARD_COLORS["error"]
@@ -128,15 +128,21 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
 
                         dates = data['VGT'].index
                         if plot_output:
-                            dual_plotting(y1=d_val, y2=defensive, y1_label='Defensive Index',
-                                          y2_label='Clustered Osc', title='Defensive Index',
-                                          x=dates)
-                            dual_plotting(y1=s_val, y2=sensitive, y1_label='Sensitive Index',
-                                          y2_label='Clustered Osc', title='Sensitive Index',
-                                          x=dates)
-                            dual_plotting(y1=c_val, y2=cyclical, y1_label='Cyclical Index',
-                                          y2_label='Clustered Osc', title='Cyclical Index',
-                                          x=dates)
+                            plot_config = dict(
+                                y_list_2=defensive, y1_label='Defensive Index',
+                                y2_label='Clustered Osc', title='Defensive Index',
+                                x=dates, plot_output=plot_output
+                            )
+                            generate_plot(PlotType.DUAL_PLOTTING, d_val, **plot_config)
+                            plot_config.update(dict(
+                                y2=sensitive, y1_label='Sensitive Index', title='Sensitive Index'
+                            ))
+                            generate_plot(PlotType.DUAL_PLOTTING, s_val, **plot_config)
+                            plot_config.update(dict(
+                                y_list_2=cyclical, y1_label='Cyclical Index', title='Cyclical Index'
+                            ))
+                            generate_plot(PlotType.DUAL_PLOTTING, c_val, **plot_config)
+
                             generic_plotting([d_val, s_val, c_val],
                                               legend=['Defensive', 'Sensitive', 'Cyclical'],
                                               title='Type Indexes', x=dates)

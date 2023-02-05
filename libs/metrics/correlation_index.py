@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import numpy as np
 
 from libs.utils import (
-    download_data_indexes, index_appender, ProgressBar, dual_plotting
+    download_data_indexes, index_appender, ProgressBar, PlotType, generate_plot
 )
 from libs.tools import beta_comparison_list, simple_moving_avg
 
@@ -159,14 +159,19 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
 
         net_correlation = norm_corr.copy()
 
-        dual_plotting(net_correlation,
-                      data['^GSPC']['Close'][start_pt:tot_len],
-                      x=dates,
-                      y1_label=legend,
-                      y2_label='S&P500',
-                      title='CCI Net Correlation',
-                      save_fig=(not plot_output),
-                      filename='CCI_net_correlation.png')
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            net_correlation,
+            **{
+                "y_list_2": data['^GSPC']['Close'][start_pt:tot_len],
+                "x": dates,
+                "y1_label": legend,
+                "y2_label": "S&P500",
+                "title": "CCI Net Correlation",
+                "plot_output": plot_output,
+                "filename": "CCI_net_correlation.png"
+            }
+        )
 
         str_dates = []
         for date in dates:
@@ -192,24 +197,34 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
 
         signal_line = simple_moving_avg(overall_signal, 20, data_type='list')
 
-        dual_plotting(data['^GSPC']['Close'][start_pt:tot_len],
-                      [overall_signal, signal_line],
-                      x=dates,
-                      y1_label='S&P500',
-                      y2_label=['Overall Signal', '20d-SMA'],
-                      title='Overall Correlation Signal',
-                      save_fig=(not plot_output),
-                      filename='CCI_overall_correlation.png')
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            data['^GSPC']['Close'][start_pt:tot_len],
+            **dict(
+                y_list_2=[overall_signal, signal_line],
+                x=dates,
+                y1_label='S&P500',
+                y2_label=['Overall Signal', '20d-SMA'],
+                title='Overall Correlation Signal',
+                plot_output=plot_output,
+                filename='CCI_overall_correlation.png'
+            )
+        )
 
         diff_signal = [x - signal_line[i] for i, x in enumerate(overall_signal)]
-        dual_plotting(data['^GSPC']['Close'][start_pt:tot_len],
-                      diff_signal,
-                      x=dates,
-                      y1_label='S&P500',
-                      y2_label='Corr - Signal Line',
-                      title='Diff Correlation Signal',
-                      save_fig=(not plot_output),
-                      filename='CCI_diff_correlation.png')
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            data['^GSPC']['Close'][start_pt:tot_len],
+            **dict(
+                y_list_2=diff_signal,
+                x=dates,
+                y1_label='S&P500',
+                y2_label='Corr - Signal Line',
+                title='Diff Correlation Signal',
+                plot_output=plot_output,
+                filename='CCI_diff_correlation.png'
+            )
+        )
 
         corr_data['tabular']['overall'] = overall_signal
         corr_data['tabular']['signal_line'] = signal_line

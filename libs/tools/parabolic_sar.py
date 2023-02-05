@@ -3,7 +3,8 @@ import pprint
 import pandas as pd
 import numpy as np
 
-from libs.utils import candlestick_plot, INDEXES
+from libs.utils import INDEXES
+from libs.utils.plot_utils import candlesticks
 
 from .trends import auto_trend
 
@@ -210,10 +211,10 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     title = f"{name2} - Parabolic SAR"
 
     if plot_output:
-        candlestick_plot(fund, additional_plts=add_plts, title=title)
+        candlesticks.candlestick_plot(fund, additional_plots=add_plts, title=title)
     else:
         filename = os.path.join(name, view, f"parabolic_sar_{name}")
-        candlestick_plot(fund, additional_plts=add_plts, title=title,
+        candlesticks.candlestick_plot(fund, additional_plots=add_plts, title=title,
                          save_fig=True, filename=filename)
 
     if p_bar is not None:

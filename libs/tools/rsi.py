@@ -3,7 +3,7 @@ import math
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, date_extractor, INDEXES
+from libs.utils import date_extractor, INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
 from .trends import auto_trend
@@ -76,29 +76,21 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - relative_strength_indicator_rsi'
 
-        if plot_output:
-            dual_plotting(position['Close'], main_plots,
-                          'Position Price', 'relative_strength_indicator_rsi', title=name2)
-            dual_plotting(position['Close'], rsi_data['metrics'],
-                          'Position Price', 'relative_strength_indicator_rsi Indicators', title=name2)
-
-        else:
-            filename1 = os.path.join(name, view, f"RSI_standard_{name}.png")
-            filename2 = os.path.join(name, view, f"RSI_indicator_{name}.png")
-            dual_plotting(position['Close'],
-                          main_plots,
-                          'Position Price',
-                          'relative_strength_indicator_rsi',
-                          title=name2,
-                          save_fig=True,
-                          filename=filename1)
-            dual_plotting(position['Close'],
-                          rsi_data['metrics'],
-                          'Position Price',
-                          'relative_strength_indicator_rsi Metrics',
-                          title=name2,
-                          save_fig=True,
-                          filename=filename2)
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=main_plots, y1_label='Position Price',
+                y2_label='relative_strength_indicator_rsi', title=name2, plot_output=plot_output,
+                filename=os.path.join(name, view, f"RSI_standard_{name}.png")
+            )
+        )
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=main_plots, y1_label='Position Price',
+                y2_label='relative_strength_indicator_rsi Metrics', title=name2,
+                plot_output=plot_output,
+                filename=os.path.join(name, view, f"RSI_indicator_{name}.png")
+            )
+        )
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
@@ -517,7 +509,12 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     rsi_data['divergence'] = divs
 
     if plot_output:
-        dual_plotting(position['Close'], divs, 'Price', 'relative_strength_indicator_rsi', title='Divs')
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=divs, y1_label='Price', y2_label='relative_strength_indicator_rsi',
+                title='Divs'
+            )
+        )
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)

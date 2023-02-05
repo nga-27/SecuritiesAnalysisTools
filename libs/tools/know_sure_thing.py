@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, INDEXES
+from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .rate_of_change import roc_signal
@@ -104,13 +104,12 @@ def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Know Sure Thing"
 
-    if plot_output:
-        dual_plotting(fund['Close'], [signal, signal_line],
-                      'Price', 'KST', title=title)
-    else:
-        filename = os.path.join(name, views, f"kst_oscillator_{name}")
-        dual_plotting(fund['Close'], [signal, signal_line], 'Price',
-                      'KST', title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=[signal, signal_line], y1_label='Price', y2_label='KST', title=title,
+            plot_output=plot_output, filename=os.path.join(name, views, f"kst_oscillator_{name}")
+        )
+    )
 
     return signal, signal_line
 
@@ -261,12 +260,11 @@ def kst_metrics(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - KST Metrics"
 
-    if plot_output:
-        dual_plotting(fund['Close'], kst_dict['metrics'],
-                      'Price', 'Metrics', title=title)
-    else:
-        filename = os.path.join(name, views, f"kst_metrics_{name}")
-        dual_plotting(fund['Close'], kst_dict['metrics'], 'Price',
-                      'Metrics', title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=kst_dict['metrics'], y1_label='Price', y2_label='Metrics', title=title,
+            plot_output=plot_output, filename=os.path.join(name, views, f"kst_metrics_{name}")
+        )
+    )
 
     return kst_dict

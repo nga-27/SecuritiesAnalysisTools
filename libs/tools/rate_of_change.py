@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, generic_plotting, INDEXES
+from libs.utils import generic_plotting, INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
 from .moving_average import adjust_signals, exponential_moving_avg
@@ -61,20 +61,17 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
     plots = [ts2, tm2, tl2]
     xs = [tsx, tmx, tlx]
 
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=[tshort, tmed, tlong], y1_label='Price', y2_label='Rate of Change',
+            title=title, legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
+            plot_output=plot_output, filename=os.path.join(name, views, f"rate_of_change_{name}")
+        )
+    )
+
     if plot_output:
-        dual_plotting(fund['Close'], [tshort, tmed, tlong],
-                      'Price', 'Rate of Change', title=title,
-                      legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'])
         generic_plotting(plots, x=xs, title=title, legend=[
                          f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'])
-
-    else:
-        filename = os.path.join(name, views, f"rate_of_change_{name}")
-        dual_plotting(fund['Close'], [tshort, tmed, tlong],
-                      'Price', 'Rate of Change', title=title,
-                      legend=[f'ROC-{periods[0]}',
-                              f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
-                      save_fig=True, filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -160,13 +157,12 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Rate of Change Metrics"
 
-    if plot_output:
-        dual_plotting(fund['Close'], roc_dict['metrics'],
-                      'Price', 'ROC Metrics', title=title)
-    else:
-        filename = os.path.join(name, views, f"roc_metrics_{name}")
-        dual_plotting(fund['Close'], roc_dict['metrics'],
-                      'Price', 'ROC Metrics', title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=roc_dict['metrics'], y1_label='Price', y2_label='ROC Metrics', title=title,
+            plot_output=plot_output, filename=os.path.join(name, views, f"roc_metrics_{name}")
+        )
+    )
 
     return roc_dict
 

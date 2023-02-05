@@ -15,8 +15,8 @@ import numpy as np
 
 from libs.tools import cluster_oscillators, windowed_moving_avg
 from libs.utils import (
-    dual_plotting, generic_plotting, ProgressBar, dates_extractor_list, download_data_indexes,
-    STANDARD_COLORS
+    generate_plot, generic_plotting, ProgressBar, dates_extractor_list, download_data_indexes,
+    STANDARD_COLORS, PlotType
 )
 
 WARNING = STANDARD_COLORS["warning"]
@@ -207,14 +207,20 @@ def composite_index(data: dict,
         data, index_dict, bond_type=bond_type)
     dates = dates_extractor_list(data[key])
 
-    if plot_output:
-        dual_plotting(data_to_plot, composite2, y1_label=index_type,
-                      y2_label='BCI', title=f'{bond_type} Bond Composite Index')
-    else:
-        dual_plotting(data_to_plot, composite2,
-                      y1_label=index_type, y2_label='BCI',
-                      title=f'{bond_type} Bond Composite Index', x=dates,
-                      save_fig=True, filename=f'{bond_type}_BCI.png')
+    generate_plot(
+        PlotType.DUAL_PLOTTING,
+        data_to_plot,
+        **{
+            "y_list_2": composite2,
+            "y1_label": index_type,
+            "y2_label": "BCI",
+            "title": f"{bond_type} Bond Composite Index",
+            "x": dates,
+            "filename": f"{bond_type}_BCI.png",
+            "plot_output": plot_output
+        }
+    )
+
     prog_bar.uptick()
 
     return composite2, data_to_plot, dates

@@ -2,6 +2,7 @@
 import os
 from datetime import datetime
 from typing import List
+from enum import Enum
 
 import numpy as np
 import pandas as pd
@@ -14,203 +15,32 @@ from matplotlib.patches import Rectangle
 from intellistop import VFStopsResultType
 
 from .formatting import dates_extractor_list
-from .constants import STANDARD_COLORS
-
-WARNING = STANDARD_COLORS["warning"]
-NORMAL = STANDARD_COLORS["normal"]
-
-
-def plot_xaxis_disperse(axis_obj, every_nth: int = 2, dynamic: bool = True):
-    """Plot Xaxis Disperse
-
-    Arguments:
-        axis_obj {} -- Matplotlib axis object, likely a dictionary
-
-    Keyword Arguments:
-        every_nth {int} -- tick mark interval (default: {2})
-        dynamic {bool} -- determines if ticks should end on even or odd (default: {True})
-    """
-    num_ticks = len(axis_obj.xaxis.get_ticklabels())
-    tick_even = True
-    if dynamic:
-        tick_even = not bool(num_ticks % 2)
-
-    for n_val, label in enumerate(axis_obj.xaxis.get_ticklabels()):
-        if tick_even:
-            if n_val % every_nth == 0:
-                label.set_visible(False)
-        else:
-            if n_val % every_nth != 0:
-                label.set_visible(False)
+from .plot_utils import (
+    candlesticks, utils, dual_plotting
+)
 
 
-def is_data_list(data) -> bool:
-    """ Determines if data provided is a list [of lists] or simply a vector of data """
-    for dat in data:
-        if isinstance(dat, list):
-            return True
-    return False
+class PlotType(Enum):
+    CANDLESTICKS = 'candlesticks'
+    DUAL_PLOTTING = 'dual_plotting'
 
 
-def dual_plotting(y_list_1: list, y_list_2: list, y1_label: str, y2_label: str, **kwargs):
-    """Dual Plotting
+FUNCTIONS = {
+    PlotType.CANDLESTICKS: candlesticks.candlestick_plot,
+    PlotType.DUAL_PLOTTING: dual_plotting.dual_plotting
+}
 
-    Plot two different scales of y-values against same x-axis. Both y scales can be sets
-    of values, so y1 and y2 can be list of lists. Great use for a fund's price versus various
-    oscillators and metrics with y-values far different than the prices.
 
-    Arguments:
-        y1 {list} -- y-value data to be plotted on y1-axis, can be list of lists
-        y2 {list} -- y-value data to be plotted on y2-axis, can be list of lists
-        y1_label {str} -- label for y1 axis
-        y2_label {str} -- label for y2 axis
-
-    Optional Args:
-        x_label {str} -- label for x axis (default: {'Trading Days'})
-        x {list} -- x-value data (default: {[]}) (length of lists)
-        title {str} -- title of plot (default: {''})
-        legend {list} -- y2 signals (default: {[]})
-        save_fig {bool} -- True will save as 'filename' (default: {False})
-        filename {str} -- path to save plot (default: {'temp_dual_plot.png'})
-        subplot {bool} -- plots on top of eachother (default: {False})
-
-    Returns:
-        None
-    """
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    register_matplotlib_converters()
-
-    x_label = kwargs.get('x_label', 'Trading Days')
-    x_list = kwargs.get('x', [])
-    title = kwargs.get('title', '')
-    legend = kwargs.get('legend', [])
-    save_fig = kwargs.get('save_fig', False)
-    filename = kwargs.get('filename', 'temp_dual_plot.png')
-    subplot = kwargs.get('subplot', False)
-
-    if len(x_list) < 1:
-        if is_data_list(y_list_1):
-            x_list = dates_extractor_list(y_list_1[0])
-        else:
-            x_list = dates_extractor_list(y_list_1)
-
-    fig = plt.figure()
-
-    if subplot:
-        num_plots = 2
-        plots = [y_list_1]
-        ylabels = [y1_label]
-
-        if is_data_list(y_list_1):
-            num_plots += len(y_list_1) - 1
-        if is_data_list(y_list_2):
-            num_plots += len(y_list_2) - 1
-            plots.extend(y_list_2)
-            ylabels.extend(y2_label)
-        else:
-            plots.append(y_list_2)
-            ylabels.append(y2_label)
-
-        sp_index = num_plots * 100 + 11
-        for plot in range(num_plots):
-            ax1 = plt.subplot(sp_index)
-            plt.plot(x_list, plots[plot])
-            plt.ylabel(ylabels[plot])
-
-            if plot == 0:
-                if len(title) > 0:
-                    plt.title(title)
-
-            sp_index += 1
-
-    else:
-        ax1 = plt.subplot(111)
-        if is_data_list(y_list_2):
-            color = 'k'
-        else:
-            color = 'tab:orange'
-        ax1.set_xlabel(x_label)
-
-        list_setting = False
-        if is_data_list(y_list_1):
-            list_setting = True
-            ax1.set_ylabel(y1_label[0])
-
-            for y_val in y_list_1:
-                ax1.plot(x_list, y_val)
-                ax1.tick_params(axis='y')
-                ax1.grid(linestyle=':')
-
-            plt.legend(y1_label)
-
-        else:
-            ax1.set_ylabel(y1_label, color=color)
-            ax1.plot(x_list, y_list_1, color=color)
-            ax1.tick_params(axis='y', labelcolor=color)
-            ax1.grid(linestyle=':')
-            plt.legend([y1_label])
-
-        ax2 = ax1.twinx()
-
-        if list_setting:
-            color = 'k'
-        else:
-            color = 'tab:blue'
-
-        if is_data_list(y_list_2):
-            ax2.set_ylabel(y2_label)
-
-            for y_val in y_list_2:
-                ax2.plot(x_list, y_val)
-                ax2.tick_params(axis='y')
-                ax2.grid()
-
-            if len(legend) > 0:
-                plt.legend(legend)
-            elif isinstance(y2_label, list):
-                plt.legend(y2_label)
-            else:
-                plt.legend([y2_label])
-
-        else:
-            ax2.set_ylabel(y2_label, color=color)
-            ax2.plot(x_list, y_list_2, color=color)
-            ax2.tick_params(axis='y', labelcolor=color)
-            ax2.grid()
-            plt.legend([y2_label])
-
-        if len(title) > 0:
-            plt.title(title)
-
-    plt.tight_layout()
-    plot_xaxis_disperse(ax1)
-
-    try:
-        if save_fig:
-            temp_path = os.path.join("output", "temp")
-            filename = os.path.join(temp_path, filename)
-
-            if not os.path.exists(temp_path):
-                # For functions, this directory may not exist.
-                plt.close(fig)
-                plt.clf()
-                return
-
-            if os.path.exists(filename):
-                os.remove(filename)
-            plt.savefig(filename, bbox_inches="tight")
-
-        else:
-            # Case of functions, show the plot and not save it.
-            plt.show()
-
-    except: # pylint: disable=bare-except
-        print(
-            f"{WARNING} Warning: plot failed to render in 'dual_plotting' of title: " +
-            f"{title}{NORMAL}")
-
-    plt.close('all')
-    plt.clf()
+def generate_plot(plot_type: PlotType, fund: pd.DataFrame, **kwargs):
+    # plot_output = kwargs.get('plot_output', True)
+    # title = kwargs.get('title', f'{plot_type.value}')
+    # filename = kwargs.get('filename', '')
+    # additional_plots = kwargs.get('additional_plots', [])
+    # save_fig = not plot_output
+    # fund_name = kwargs.get('name', '')
+    # view = kwargs.get('view', '')
+    kwargs['save_fig'] = not kwargs.get('plot_output', False)
+    FUNCTIONS.get(plot_type, {})(fund, **kwargs)
 
 
 def generic_plotting(list_of_plots: list, **kwargs):
@@ -253,8 +83,8 @@ def generic_plotting(list_of_plots: list, **kwargs):
     if len(colors) > 0:
         if len(colors) != len(list_of_plots):
             print(
-                f"{WARNING}Warning: lengths of plots ({len(list_of_plots)}) and colors " +
-                f"({len(colors)}) do not match in generic_plotting.{NORMAL}")
+                f"{utils.WARNING}Warning: lengths of plots ({len(list_of_plots)}) and colors " +
+                f"({len(colors)}) do not match in generic_plotting.{utils.NORMAL}")
             return None
 
     if len(x_list) > 0:
@@ -262,9 +92,9 @@ def generic_plotting(list_of_plots: list, **kwargs):
             for i, plot in enumerate(list_of_plots):
                 if len(plot) != len(x_list[i]):
                     print(
-                        f"{WARNING}Warning: lengths of plots ({len(plot)}) and x " +
+                        f"{utils.WARNING}Warning: lengths of plots ({len(plot)}) and x " +
                         f"({len(x_list[i])}) " +
-                        f"do not match in generic_plotting.{NORMAL}")
+                        f"do not match in generic_plotting.{utils.NORMAL}")
                     return None
 
     fig, axis = plt.subplots()
@@ -298,7 +128,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
     if ylabel != '':
         plt.ylabel(ylabel)
 
-    plot_xaxis_disperse(axis)
+    utils.plot_xaxis_disperse(axis)
 
     try:
         if save_fig:
@@ -320,8 +150,8 @@ def generic_plotting(list_of_plots: list, **kwargs):
 
     except: # pylint: disable=bare-except
         print(
-            f"{WARNING}Warning: plot failed to render in 'generic_plotting' of title: " +
-            f"{title}{NORMAL}")
+            f"{utils.WARNING}Warning: plot failed to render in 'generic_plotting' of title: " +
+            f"{title}{utils.NORMAL}")
 
     plt.close('all')
     plt.clf()
@@ -411,7 +241,7 @@ def bar_chart(data: list, **kwargs):
         ax2 = ax1.twinx()
         ax2.plot(position['Close'])
 
-    plot_xaxis_disperse(ax1)
+    utils.plot_xaxis_disperse(ax1)
 
     try:
         if save_fig:
@@ -432,7 +262,7 @@ def bar_chart(data: list, **kwargs):
 
     except: # pylint: disable=bare-except
         print(
-            f"{WARNING}Warning: plot failed to render in 'bar_chart' of name: {title}{NORMAL}")
+            f"{utils.WARNING}Warning: plot failed to render in 'bar_chart' of name: {title}{utils.NORMAL}")
 
     plt.close('all')
     plt.clf()
@@ -485,7 +315,7 @@ def specialty_plotting(list_of_plots: list, **kwargs):
     if len(legend) > 0:
         plt.legend(legend)
 
-    plot_xaxis_disperse(axis)
+    utils.plot_xaxis_disperse(axis)
 
     try:
         if save_fig:
@@ -507,8 +337,8 @@ def specialty_plotting(list_of_plots: list, **kwargs):
 
     except: # pylint: disable=bare-except
         print(
-            f"{WARNING}Warning: plot failed to render in 'specialty plotting' " +
-            f"of title: {title}{NORMAL}")
+            f"{utils.WARNING}Warning: plot failed to render in 'specialty plotting' " +
+            f"of title: {title}{utils.NORMAL}")
 
     plt.close('all')
     plt.clf()
@@ -610,7 +440,7 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     if len(legend) > 0:
         plt.legend(legend)
 
-    plot_xaxis_disperse(axis)
+    utils.plot_xaxis_disperse(axis)
 
     try:
         if save_fig:
@@ -632,181 +462,11 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
 
     except: # pylint: disable=bare-except
         print(
-            f"{WARNING}Warning: plot failed to render in 'shape plotting' of title: " +
-            f"{title}{NORMAL}")
+            f"{utils.WARNING}Warning: plot failed to render in 'shape plotting' of title: " +
+            f"{title}{utils.NORMAL}")
 
     plt.close('all')
     plt.clf()
-
-
-def candlestick_plot(data: pd.DataFrame, **kwargs):
-    """Candlestick Plot
-
-    Plot candlestick chart
-
-    Arguments:
-        data {list} -- list of y-values to be plotted
-
-    Optional Args:
-        title {str} -- title of plot (default: {''})
-        legend {list} -- list of plot labels in legend (default: {[]})
-        save_fig {bool} -- True will save as 'filename' (default: {False})
-        filename {str} -- path to save plot (default: {'temp_candlestick.png'})
-        progress_bar {ProgressBar} -- (default: {None})
-        threshold_candles {dict} -- candlestick thresholds for days (default: {None})
-        additional_plts {list} -- plot_objects "plot", "color", "legend", "style" (default: {[]})
-
-    additional_plts:
-        plot {list} - "y" vector
-        x {list} (optional) - "x" vector (default: {None})
-        color {str} (optional) - color of line or scatter mark (default: {None})
-        legend {str} (optional) - label for the plot (default: {''})
-        style {str} (optional) - 'line' plotted or a 'scatter' (default: {'line'})
-
-    Returns:
-        None
-    """
-    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
-    register_matplotlib_converters()
-
-    title = kwargs.get('title', '')
-    save_fig = kwargs.get('save_fig', False)
-    filename = kwargs.get('filename', 'temp_candlestick.png')
-    p_bar = kwargs.get('progress_bar', None)
-    additional_plts = kwargs.get('additional_plts', [])
-    threshold_candles = kwargs.get('threshold_candles', None)
-
-    fig, axis = plt.subplots()
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-
-    # As of yfinance==0.2.9, we need to split the date, because there are HMS-? in it.
-    x_list = [datetime.strptime(d.split(' ')[0], '%Y-%m-%d').date()
-         for d in data.index.astype(str)]
-    plt.plot(x_list, data['Close'], alpha=0.01)
-
-    increment = 0.5 / float(len(data['Close']) + 1)
-
-    th_candles = False
-    if threshold_candles is not None:
-        _doji = threshold_candles.get('doji', 0.0)
-        _short = threshold_candles.get('short', 0.0)
-        _long = threshold_candles.get('long', 0.0)
-        _ratio = threshold_candles.get('doji_ratio', 5.0)
-        th_candles = True
-
-    for i in range(len(data['Close'])):
-        open_ = data['Open'][i]
-        close = data['Close'][i]
-        high = data['High'][i]
-        low = data['Low'][i]
-
-        shadow_color = 'black'
-        if th_candles:
-            diff = np.abs(data['Close'][i] - data['Open'][i])
-            colors = 'black'
-            if diff >= _long:
-                colors = 'blue'
-            if diff <= _short:
-                colors = 'orange'
-            if diff <= _doji:
-                shadow = data['High'][i] - data['Low'][i]
-                if shadow >= (diff * _ratio):
-                    colors = 'red'
-
-            # Handle mutual fund case here:
-            if (diff == 0) and (data['High'][i] == data['Low'][i]) and (i > 0):
-                colors = 'black'
-                open_ = data['Open'][i-1]
-            shadow_color = colors
-
-        else:
-            if data['Close'][i] > data['Open'][i]:
-                colors = 'green'
-            elif data['Close'][i] == data['Open'][i]:
-                colors = 'black'
-                if i > 0:
-                    open_ = data['Open'][i-1]
-                    if open_ > close:
-                        colors = 'red'
-                    else:
-                        colors = 'green'
-            else:
-                colors = 'red'
-
-        open_close = plt.Line2D((x_list[i], x_list[i]), (open_, close), lw=1.25,
-                        ls='-', alpha=1, color=colors)
-        plt.gca().add_line(open_close)
-        high_low = plt.Line2D((x_list[i], x_list[i]), (high, low), lw=0.375,
-                        ls='-', alpha=1, color=shadow_color)
-        plt.gca().add_line(high_low)
-
-        if p_bar is not None:
-            p_bar.uptick(increment=increment)
-
-    handles = []
-    has_legend = False
-    if len(additional_plts) > 0:
-        for add_plt in additional_plts:
-            color = add_plt.get('color')
-            label = add_plt.get('legend', '')
-            x_lines = add_plt.get('x', x_list)
-            style = add_plt.get('style', 'line')
-
-            if style == 'line':
-                if color is not None:
-                    line, = plt.plot(x_lines, add_plt["plot"],
-                                     color, label=label,
-                                     linewidth=0.5)
-                else:
-                    line, = plt.plot(x_lines, add_plt["plot"],
-                                     label=label, linewidth=0.5)
-
-                handles.append(line)
-
-            if style == 'scatter':
-                has_legend = True
-                if color is not None:
-                    plt.scatter(
-                        x_lines, add_plt["plot"], c=color, s=3, label=label)
-                else:
-                    plt.scatter(x_lines, add_plt["plot"],
-                                label=label, s=3)
-
-    plt.title(title)
-    if len(handles) > 0:
-        plt.legend(handles=handles)
-    elif has_legend:
-        plt.legend()
-
-    plot_xaxis_disperse(axis)
-
-    try:
-        if save_fig:
-            temp_path = os.path.join("output", "temp")
-            if not os.path.exists(temp_path):
-                # For functions, this directory may not exist.
-                plt.close(fig)
-                plt.clf()
-                return
-
-            filename = os.path.join(temp_path, filename)
-            if os.path.exists(filename):
-                os.remove(filename)
-            plt.savefig(filename)
-
-        else:
-            plt.show()
-
-    except: # pylint: disable=bare-except
-        print(
-            f"{WARNING}Warning: plot failed to render in 'shape plotting' of title: " +
-            f"{title}{NORMAL}")
-
-    plt.close('all')
-    plt.clf()
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.5)
 
 
 # pylint: disable=too-many-arguments
@@ -961,8 +621,8 @@ def volatility_factor_plot(prices: list, dates: list, vf_data: VFStopsResultType
 
     except: # pylint: disable=bare-except
         print(
-            f"{WARNING}Warning: plot failed to render in 'volatility factor plot' of title: " +
-            f"{title}{NORMAL}")
+            f"{utils.WARNING}Warning: plot failed to render in 'volatility factor plot' of title: " +
+            f"{title}{utils.NORMAL}")
 
     plt.close('all')
     plt.clf()

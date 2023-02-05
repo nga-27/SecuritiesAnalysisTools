@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    bar_chart, dual_plotting, dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS
+    bar_chart, dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS, PlotType, generate_plot
 )
 from libs.features import normalize_signals
 
@@ -53,15 +53,15 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=[macd_sig, sig_line], y1_label='Position Price',
+            y2_label=['MACD', 'Signal Line'], title=name2, plot_output=plot_output,
+            filename=os.path.join(name, view, f"macd_{name}.png")
+        )
+    )
     if plot_output:
-        dual_plotting(fund['Close'], [macd_sig, sig_line],
-                      'Position Price', ['MACD', 'Signal Line'], title=name2)
         print_macd_statistics(macd)
-
-    else:
-        filename = os.path.join(name, view, f"macd_{name}.png")
-        dual_plotting(fund['Close'], [macd_sig, sig_line], 'Position Price',
-                      ['MACD', 'Signal Line'], title=name2, save_fig=True, filename=filename)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
@@ -199,13 +199,12 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], metrics,
-                      'Price', 'Metrics', title=name2)
-    else:
-        filename = os.path.join(name, view, f"macd_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=name2, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
+            plot_output=plot_output, filename=os.path.join(name, view, f"macd_metrics_{name}.png")
+        )
+    )
 
     return macd
 

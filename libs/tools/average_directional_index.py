@@ -4,7 +4,7 @@ from typing import Union
 
 import pandas as pd
 
-from libs.utils import INDEXES, dual_plotting
+from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .trends import auto_trend
@@ -156,23 +156,18 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Average Directional Index (ADX)"
 
-    if plot_output:
-        dual_plotting(fund['Close'],
-                      plots,
-                      'Price',
-                      ['No Trend', 'Over Trend',
-                       'Strong Trend', 'ADX'],
-                      title=title)
-    else:
-        filename = os.path.join(name, view, f"adx_tabular_{name}.png")
-        dual_plotting(fund['Close'],
-                      plots,
-                      'Price',
-                      ['No Trend', 'Over Trend',
-                       'Strong Trend', 'ADX'],
-                      title=title,
-                      save_fig=True,
-                      filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING,
+        fund['Close'],
+        **dict(
+            y_list_2=plots,
+            y1_label='Price',
+            y2_label=['No Trend', 'Over Trend', 'Strong Trend', 'ADX'],
+            title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"adx_tabular_{name}.png")
+        )
+    )
 
     if pbar is not None:
         pbar.uptick(increment=0.1)
@@ -291,13 +286,18 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - ADX Metrics"
 
-    if plot_output:
-        dual_plotting(fund['Close'], adx['metrics'],
-                      'Price', 'Metrics', title=title)
-    else:
-        filename = os.path.join(name, view, f"adx_metrics_{name}.png")
-        dual_plotting(fund['Close'], adx['metrics'], 'Price',
-                      'Metrics', title=title, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING,
+        fund['Close'],
+        **dict(
+            y_list_2=adx['metrics'],
+            y1_label='Price',
+            y2_label='Metrics',
+            title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"adx_metrics_{name}.png")
+        )
+    )
 
     if pbar is not None:
         pbar.uptick(increment=0.2)

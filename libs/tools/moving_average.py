@@ -5,7 +5,8 @@ from typing import Union
 import pandas as pd
 import numpy as np
 
-from libs.utils import specialty_plotting, candlestick_plot, INDEXES
+from libs.utils import specialty_plotting, INDEXES
+from libs.utils.plot_utils import candlesticks
 from .moving_average_utils import adjust_signals, find_crossovers, normalize_signals_local
 
 
@@ -285,12 +286,12 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         name2 = name3 + f' - Simple Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
         if plot_output:
-            candlestick_plot(fund, title=name2, additional_plts=[plot_short, plot_med, plot_long])
+            candlesticks.candlestick_plot(fund, title=name2, additional_plots=[plot_short, plot_med, plot_long])
 
         else:
             filename = os.path.join(name, view, f"simple_moving_averages_{name}.png")
-            candlestick_plot(fund, title=name2, filename=filename,
-                             save_fig=True, additional_plts=[plot_short, plot_med, plot_long])
+            candlesticks.candlestick_plot(fund, title=name2, filename=filename,
+                             save_fig=True, additional_plots=[plot_short, plot_med, plot_long])
 
     tma = {}
     tma['short'] = {'period': config[0]}
@@ -387,13 +388,13 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
         name2 = name3 + f' - Exp Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
         if plot_output:
-            candlestick_plot(fund, title=name2, additional_plts=[plot_short, plot_med, plot_long])
+            candlesticks.candlestick_plot(fund, title=name2, additional_plots=[plot_short, plot_med, plot_long])
 
         else:
             filename = os.path.join(
                 name, view, f"exp_moving_averages_{name}.png")
-            candlestick_plot(fund, title=name2, filename=filename,
-                             save_fig=True, additional_plts=[plot_short, plot_med, plot_long])
+            candlesticks.candlestick_plot(fund, title=name2, filename=filename,
+                             save_fig=True, additional_plots=[plot_short, plot_med, plot_long])
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
