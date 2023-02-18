@@ -5,8 +5,7 @@ from typing import Tuple, Union
 
 from libs.tools import cluster_oscillators, windowed_moving_avg
 from libs.utils import (
-    download_data_indexes, generic_plotting, ProgressBar, index_appender, PlotType,
-    STANDARD_COLORS, generate_plot
+    download_data_indexes, ProgressBar, index_appender, PlotType, STANDARD_COLORS, generate_plot
 )
 
 ERROR_COLOR = STANDARD_COLORS["error"]
@@ -142,20 +141,14 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
                                 y_list_2=cyclical, y1_label='Cyclical Index', title='Cyclical Index'
                             ))
                             generate_plot(PlotType.DUAL_PLOTTING, c_val, **plot_config)
-
-                            generic_plotting([d_val, s_val, c_val],
-                                              legend=['Defensive', 'Sensitive', 'Cyclical'],
-                                              title='Type Indexes', x=dates)
-                        else:
-                            generic_plotting(
-                                [d_val, s_val, c_val],
-                                legend=['Defensive', 'Sensitive', 'Cyclical'],
-                                title='Type Indexes',
-                                x=dates,
-                                save_fig=True,
-                                ylabel='Normalized "Price"',
+                        
+                        generate_plot(
+                            PlotType.GENERIC_PLOTTING, [d_val, s_val, c_val], **dict(
+                                legend=['Defensive', 'Sensitive', 'Cyclical'], title='Type Indexes',
+                                x=dates, plot_output=plot_output, ylabel='Normalized "Price"',
                                 filename='tci.png'
                             )
+                        )
 
                         prog_bar.end()
                         return tci, data, sectors

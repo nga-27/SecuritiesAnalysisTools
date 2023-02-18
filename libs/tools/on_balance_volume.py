@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    generic_plotting, bar_chart, dates_extractor_list, INDEXES, generate_plot, PlotType
+    bar_chart, dates_extractor_list, INDEXES, generate_plot, PlotType
 )
 
 from .moving_average import simple_moving_avg
@@ -240,11 +240,13 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> list:
     )
 
     if plot_output:
-        generic_plotting(
-            [obv, obv_sig, obv_sig2, obv_sig3],
-            title='OBV Signal Line',
-            legend=['obv', f'sma-{sma_interval}',
-                    f"sma-{sma_interval2}", f"sma-{sma_interval3}"]
+        generate_plot(
+            PlotType.GENERIC_PLOTTING, [obv, obv_sig, obv_sig2, obv_sig3], **dict(
+                title='OBV Signal Line',
+                legend=[
+                    'obv', f'sma-{sma_interval}', f"sma-{sma_interval2}", f"sma-{sma_interval3}"
+                ]
+            )
         )
 
     if progress_bar is not None:

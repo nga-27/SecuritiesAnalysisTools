@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import linregress
 
-from libs.utils import generic_plotting, dates_convert_from_index, INDEXES, STANDARD_COLORS
+from libs.utils import generate_plot, PlotType, dates_convert_from_index, INDEXES, STANDARD_COLORS
 from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
 
 from .moving_average import windowed_moving_avg
@@ -174,14 +174,12 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
         try:
             title = f"{name2} Trend Lines for {near_term}, {short_term}, " + \
                 f"{intermediate_term}, and {long_term} Periods"
-            if plot_output:
-                generic_plotting(Y, x=X, colors=C,
-                                 title=title)
-            else:
-                filename = os.path.join(name, view, f"{sub_name}.png")
-                generic_plotting(Y, x=X, colors=C,
-                                 title=title,
-                                 save_fig=True, filename=filename)
+            generate_plot(
+                PlotType.GENERIC_PLOTTING, Y, **dict(
+                    x=X, colors=C, plot_output=plot_output, title=title, save_fig=True,
+                    filename=os.path.join(name, view, f"{sub_name}.png")
+                )
+            )
 
         except:
             print(
@@ -519,13 +517,12 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
         x_plots = new_xs
 
     title = f"{indicator.capitalize()} Trendlines"
-    if plot_output:
-        generic_plotting(plots, x=x_plots, title=title)
-    else:
-        filename = os.path.join(
-            name, views, f"{indicator}_trendlines_{name}.png")
-        generic_plotting(plots, x=x_plots, title=title,
-                         filename=filename, save_fig=True)
+    generate_plot(
+        PlotType.GENERIC_PLOTTING, plots, **dict(
+            x=x_plots, title=title, plot_output=plot_output, save_fig=True,
+            filename=os.path.join(name, views, f"{indicator}_trendlines_{name}.png")
+        )
+    )
 
-    trends = dict()
+    trends = {}
     return trends

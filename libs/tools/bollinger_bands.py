@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, INDEXES, PlotType, generate_plot
+from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
@@ -300,18 +300,13 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Bollinger Bands'
-    if plot_output:
-        generic_plotting([position['Close'], ma, upper, lower],
-                         title=name2, x=position.index,
-                         legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'])
-
-    else:
-        filename = os.path.join(name, view, f"bollinger_bands_{name}.png")
-        generic_plotting([position['Close'], ma, upper, lower],
-                         title=name2, x=position.index,
-                         legend=['Price', 'Moving Avg',
-                                 'Upper Band', 'Lower Band'],
-                         save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.GENERIC_PLOTTING, [position['Close'], ma, upper, lower], **dict(
+            title=name2, x=position.index, 
+            legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'], plot_output=plot_output,
+            filename=os.path.join(name, view, f"bollinger_bands_{name}.png")
+        )
+    )
 
     return signals
 

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, INDEXES, generate_plot, PlotType
+from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
 from .moving_average import adjust_signals, exponential_moving_avg
@@ -69,9 +69,13 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
         )
     )
 
-    if plot_output:
-        generic_plotting(plots, x=xs, title=title, legend=[
-                         f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'])
+    generate_plot(
+        PlotType.GENERIC_PLOTTING, plots, **dict(
+            x=xs, title=title,
+            legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
+            plot_output=plot_output
+        )
+    )
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)

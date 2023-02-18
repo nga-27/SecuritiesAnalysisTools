@@ -15,8 +15,8 @@ import numpy as np
 
 from libs.tools import cluster_oscillators, windowed_moving_avg
 from libs.utils import (
-    generate_plot, generic_plotting, ProgressBar, dates_extractor_list, download_data_indexes,
-    STANDARD_COLORS, PlotType
+    generate_plot, ProgressBar, dates_extractor_list, download_data_indexes, STANDARD_COLORS,
+    PlotType
 )
 
 WARNING = STANDARD_COLORS["warning"]
@@ -65,16 +65,13 @@ def bond_composite_index(config: dict, **kwargs):
                         legend.append(bond_type_name)
 
             if len(plots) > 0:
-                if plot_output:
-                    generic_plotting(
-                        plots, x=dates, title='Bond Composite Indexes',
-                        legend=legend, ylabel='Normalized Price')
-                else:
-                    filename = "combined_BCI.png"
-                    generic_plotting(
-                        plots, x=dates, title='Bond Composite Indexes',
-                        legend=legend, save_fig=True, filename=filename,
-                        ylabel='Normalized Price')
+                generate_plot(
+                    PlotType.GENERIC_PLOTTING, plots, **dict(
+                        x=dates, title='Bond Composite Indexes', legend=legend,
+                        ylabel='Normalized Price', plot_output=plot_output,
+                        filename="combined_BCI.png"
+                    )
+                )
 
 
 def metrics_initializer(period='2y',

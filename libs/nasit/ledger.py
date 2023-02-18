@@ -7,7 +7,7 @@ from typing import Union
 import pandas as pd
 import numpy as np
 
-from libs.utils import download_data, generic_plotting
+from libs.utils import download_data, PlotType, generate_plot
 from libs.tools.metadata_tools.dividends import get_dividends
 
 
@@ -43,12 +43,11 @@ def generate_fund_from_ledger(ledger_name: str):
         ledgers[content['symbol']] = content
 
     plots = create_plot_content(ledgers)
-
-    generic_plotting(plots['prices'],
-                     title="Custom Funds",
-                     ylabel='Price',
-                     legend=plots['tickers'],
-                     x=plots['x'])
+    generate_plot(
+        PlotType.GENERIC_PLOTTING, plots['prices'], **dict(
+            title="Custom Funds", ylabel='Price', legend=plots['tickers'], x=plots['x']
+        )
+    )
 
     export_funds(ledgers)
 

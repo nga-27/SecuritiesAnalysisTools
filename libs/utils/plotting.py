@@ -16,18 +16,20 @@ from intellistop import VFStopsResultType
 
 from .formatting import dates_extractor_list
 from .plot_utils import (
-    candlesticks, utils, dual_plotting
+    candlesticks, utils, dual_plotting, generic
 )
 
 
 class PlotType(Enum):
     CANDLESTICKS = 'candlesticks'
     DUAL_PLOTTING = 'dual_plotting'
+    GENERIC_PLOTTING = 'generic_plotting'
 
 
 FUNCTIONS = {
     PlotType.CANDLESTICKS: candlesticks.candlestick_plot,
-    PlotType.DUAL_PLOTTING: dual_plotting.dual_plotting
+    PlotType.DUAL_PLOTTING: dual_plotting.dual_plotting,
+    PlotType.GENERIC_PLOTTING: generic.generic_plotting
 }
 
 

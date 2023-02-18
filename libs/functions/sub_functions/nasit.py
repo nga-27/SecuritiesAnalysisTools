@@ -6,7 +6,7 @@ from typing import Tuple
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting
+from libs.utils import generate_plot, PlotType
 from libs.nasit import generate_fund_from_ledger
 
 from .utils import (
@@ -182,10 +182,16 @@ def nasit_generation_function(config: dict, print_only=False):
                 plot_able2.append(fund_data)
                 names2.append(fund_name)
 
-        generic_plotting(plot_able, legend=names, title='NASIT Passives')
-        generic_plotting(plot_able2, legend=names2,
-                         title='NASIT Passives [Returns]')
-
+        generate_plot(
+            PlotType.GENERIC_PLOTTING, plot_able, **dict(
+                legend=names, title='NASIT Passives'
+            )
+        )
+        generate_plot(
+            PlotType.GENERIC_PLOTTING, plot_able2, **dict(
+                legend=names2, title='NASIT Passives [Returns]'
+            )
+        )
 
 def ledger_function(config: dict):
     """ledger_function

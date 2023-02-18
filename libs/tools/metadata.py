@@ -55,10 +55,10 @@ def get_api_metadata(fund_ticker: str, **kwargs) -> dict:
         if pb is not None:
             pb.uptick(increment=0.1)
 
-    if ticker.info.get('holdings') or fund_ticker in INDEXES:
+    if not ticker.info or ticker.info.get('holdings') or fund_ticker in INDEXES:
         # ETFs, Mutual Funds, and other indexes will have these but will output an ugly print
         # on financial data below, so let's just return what we have now.
-        api_print += "  Canceled. (Fund is a mutual fund, ETF, or index.)"
+        api_print += "  Canceled. (Fund is a mutual fund, ETF, index, or has an error.)"
         print(f"{REVERSE_LINE}{REVERSE_LINE}{REVERSE_LINE}{api_print}")
         return metadata
 

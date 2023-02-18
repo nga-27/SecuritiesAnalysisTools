@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    generic_plotting, dates_extractor_list, date_extractor, 
+    generate_plot, PlotType, dates_extractor_list, date_extractor, 
     INDEXES, api_sector_match, api_sector_funds
 )
 
@@ -291,20 +291,13 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
-    if plot_output:
-        generic_plotting(output_data, x=dates, title=title,
-                         legend=legend, ylabel='Difference Ratio')
-
-    else:
-        filename = os.path.join(
-            primary_name, view, f"relative_strength_{primary_name}.png")
-        generic_plotting(output_data,
-                         x=dates,
-                         title=title,
-                         save_fig=True,
-                         filename=filename,
-                         legend=legend,
-                         ylabel='Difference Ratio')
+    generate_plot(
+        PlotType.GENERIC_PLOTTING, output_data, **dict(
+            x=dates, title=title, save_fig=True, legend=legend, ylabel='Difference Ratio',
+            plot_output=plot_output,
+            filename=os.path.join(primary_name, view, f"relative_strength_{primary_name}.png")
+        )
+    )
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)

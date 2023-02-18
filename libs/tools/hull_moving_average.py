@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.utils import INDEXES, generic_plotting, PlotType, generate_plot
+from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .moving_average import weighted_moving_avg, simple_moving_avg
@@ -111,13 +111,12 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     name2 = name3 + ' - Hull Moving Averages'
     legend = ['Price', 'HMA-short', 'HMA-medium', 'HMA-long']
 
-    if plot_output:
-        generic_plotting([position['Close'], plots[0], plots[1],
-                          plots[2]], legend=legend, title=name2)
-    else:
-        filename = os.path.join(name, view, f"hull_moving_average_{name}.png")
-        generic_plotting([position['Close'], plots[0], plots[1],
-                          plots[2]], legend=legend, title=name2, save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.GENERIC_PLOTTING, [position['Close'], plots[0], plots[1], plots[2]], **dict(
+            legend=legend, title=name2, plot_output=plot_output,
+            filename=os.path.join(name, view, f"hull_moving_average_{name}.png")
+        )
+    )
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)

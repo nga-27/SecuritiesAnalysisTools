@@ -20,8 +20,7 @@ from libs.tools import (
     cluster_oscillators, beta_comparison_list, windowed_moving_avg
 )
 from libs.utils import (
-    generate_plot, generic_plotting, ProgressBar, index_appender, download_data_indexes,
-    STANDARD_COLORS, PlotType
+    generate_plot, ProgressBar, index_appender, download_data_indexes, STANDARD_COLORS, PlotType
 )
 
 ERROR_COLOR = STANDARD_COLORS["error"]
@@ -285,9 +284,12 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         plots = [value for _, value in corrs.items()]
         legend = list(corrs)
 
-        generic_plotting(plots, x=dates, title='MCI Correlations', legend=legend,
-            save_fig=(not plot_output), filename='MCI_correlations.png')
-
+        generate_plot(
+            PlotType.GENERIC_PLOTTING, plots, **dict(
+                x=dates, title='MCI Correlations', legend=legend, plot_output=plot_output,
+                filename='MCI_correlations.png'
+            )
+        )
         progress_bar.uptick()
 
         max_ = np.max(net_correlation)
@@ -307,7 +309,6 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
                 filename='MCI_net_correlation.png'
             )
         )
-
         progress_bar.uptick()
 
     return correlations
