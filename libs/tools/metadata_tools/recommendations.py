@@ -6,7 +6,7 @@ from dateutil.relativedelta import relativedelta
 import numpy as np
 import yfinance as yf
 
-from libs.utils.plotting import generic_plotting
+from libs.utils.plotting import PlotType, generate_plot
 
 
 def get_recommendations(ticker: yf.Ticker) -> dict:
@@ -76,15 +76,13 @@ def calculate_recommendation_curve(recoms: dict, **kwargs) -> dict:
 
         x_vals = [datetime.strptime(date, "%Y-%m-%d") for date in tabular['dates']]
 
-        if plot_output:
-            generic_plotting([tabular['grades']], x=x_vals, title="Ratings by Firms",
-                             ylabel="Ratings (Proportional 0 - 4)")
-
-        else:
-            filename = os.path.join(name, f"grades_{name}.png")
-            generic_plotting([tabular['grades']], x=x_vals, title="Ratings by Firms",
-                             ylabel="Ratings (Proportional 0 - 4)",
-                             save_fig=True, filename=filename)
+        generate_plot(
+            PlotType.GENERIC_PLOTTING, [tabular['grades']], **dict(
+                x=x_vals, title="Ratings by Firms", ylabel="Ratings (Proportional 0 - 4)",
+                save_fig=True, plot_output=plot_output,
+                filename=os.path.join(name, f"grades_{name}.png")
+            )
+        )
 
     return tabular
 

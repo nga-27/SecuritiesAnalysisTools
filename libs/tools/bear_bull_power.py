@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from scipy.stats import linregress
 
-from libs.utils import bar_chart, dates_extractor_list, INDEXES, generate_plot, PlotType
+from libs.utils import dates_extractor_list, INDEXES, generate_plot, PlotType
 from libs.tools import exponential_moving_avg
 from libs.features import normalize_signals
 
@@ -78,9 +78,17 @@ def generate_bear_bull_signal(position: pd.DataFrame, **kwargs) -> dict:
     if plot_output:
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Bull Power'
-        bar_chart(bb_signal['bulls'], position=position, title=name2, x=x)
+        generate_plot(
+            PlotType.BAR_CHART, bb_signal['bulls'], **dict(
+                position=position, title=name2, x=x, plot_output=plot_output
+            )
+        )
         name2 = name3 + ' - Bear Power'
-        bar_chart(bb_signal['bears'], position=position, title=name2, x=x)
+        generate_plot(
+            PlotType.BAR_CHART, bb_signal['bears'], **dict(
+                position=position, title=name2, x=x, plot_output=plot_output
+            )
+        )
 
     return bb_signal
 

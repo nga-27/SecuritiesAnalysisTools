@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    bar_chart, dates_extractor_list, INDEXES, generate_plot, PlotType
+    dates_extractor_list, INDEXES, generate_plot, PlotType
 )
 
 from .moving_average import simple_moving_avg
@@ -160,17 +160,20 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
         )
     )
 
-    if plot_output:
-        bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
+    generate_plot(
+        PlotType.BAR_CHART, volume, **dict(
+            x=x, position=fund, title=name5, save_fig=True, plot_output=plot_output,
+            filename=os.path.join(name, view, f"volume_{name}.png"), all_positive=True
+        )
+    )
 
-    else:
-        filename = os.path.join(name, view, f"obv_diff_{name}.png")
-        filename3 = os.path.join(name, view, f"volume_{name}.png")
-
-        bar_chart(volume, x=x, position=fund, title=name5,
-                  save_fig=True, filename=filename3, all_positive=True)
-        bar_chart(ofilter, x=x, position=fund, title=name4,
-                  save_fig=True, filename=filename)
+    if not plot_output:
+        generate_plot(
+            PlotType.BAR_CHART, ofilter, **dict(
+                x=x, position=fund, title=name4, save_fig=True, plot_output=plot_output,
+                filename=os.path.join(name, view, f"obv_diff_{name}.png")
+            )
+        )
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)

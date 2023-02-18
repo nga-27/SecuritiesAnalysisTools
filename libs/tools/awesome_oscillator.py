@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from libs.utils import PlotType, generate_plot, bar_chart, dates_extractor_list
+from libs.utils import PlotType, generate_plot, dates_extractor_list
 from libs.features import normalize_signals
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from libs.utils import INDEXES
@@ -131,21 +131,27 @@ def get_ao_signal(position: pd.DataFrame, **kwargs) -> list:
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Awesome Oscillator'
 
+    generate_plot(
+        PlotType.BAR_CHART, signal, **dict(
+            position=position, x=x, save_fig=True, title=name2, bar_delta=True,
+            plot_output=plot_output, filename=os.path.join(name, view, f"awesome_bar_{name}")
+        )
+    )
     if plot_output:
         generate_plot(
             PlotType.DUAL_PLOTTING, [signal, med_term, long_term], y_list_2=position['Close'],
-            y1_label=['Awesome', 'Medium', 'Long'], y2_label='Price', plot_type=plot_output
+            y1_label=['Awesome', 'Medium', 'Long'], y2_label='Price', plot_output=plot_output
         )
         generate_plot(
             PlotType.DUAL_PLOTTING, [signal, triggers], y_list_2=position['Close'],
-            y1_label=['Awesome', 'Triggers'], y2_label='Price', plot_type=plot_output
+            y1_label=['Awesome', 'Triggers'], y2_label='Price', plot_output=plot_output
         )
-        bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
+        # bar_chart(signal, position=position, x=x, title=name2, bar_delta=True)
 
-    else:
-        filename = os.path.join(name, view, f"awesome_bar_{name}")
-        bar_chart(signal, position=position, x=x,
-                  save_fig=True, filename=filename, title=name2, bar_delta=True)
+    # else:
+    #     filename = os.path.join(name, view, f"awesome_bar_{name}")
+    #     bar_chart(signal, position=position, x=x,
+    #               save_fig=True, filename=filename, title=name2, bar_delta=True)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)

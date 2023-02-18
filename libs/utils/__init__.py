@@ -14,7 +14,7 @@ from .formatting import (
 )
 
 from .plotting import (
-    bar_chart, specialty_plotting, PlotType, shape_plotting, volatility_factor_plot, generate_plot
+    PlotType, shape_plotting, volatility_factor_plot, generate_plot
 )
 
 from .plot_utils import (

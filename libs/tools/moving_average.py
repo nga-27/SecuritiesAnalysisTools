@@ -5,8 +5,7 @@ from typing import Union
 import pandas as pd
 import numpy as np
 
-from libs.utils import specialty_plotting, INDEXES
-from libs.utils.plot_utils import candlesticks
+from libs.utils import INDEXES, PlotType, generate_plot
 from .moving_average_utils import adjust_signals, find_crossovers, normalize_signals_local
 
 
@@ -285,13 +284,13 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         name3 = INDEXES.get(name, name)
         name2 = name3 + f' - Simple Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
-        if plot_output:
-            candlesticks.candlestick_plot(fund, title=name2, additional_plots=[plot_short, plot_med, plot_long])
-
-        else:
-            filename = os.path.join(name, view, f"simple_moving_averages_{name}.png")
-            candlesticks.candlestick_plot(fund, title=name2, filename=filename,
-                             save_fig=True, additional_plots=[plot_short, plot_med, plot_long])
+        generate_plot(
+            PlotType.CANDLESTICKS, fund, **dict(
+                title=name2, plot_output=plot_output, save_fig=True,
+                additional_plots=[plot_short, plot_med, plot_long],
+                filename=os.path.join(name, view, f"simple_moving_averages_{name}.png")
+            )
+        )
 
     tma = {}
     tma['short'] = {'period': config[0]}
@@ -387,14 +386,13 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
         name3 = INDEXES.get(name, name)
         name2 = name3 + f' - Exp Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
-        if plot_output:
-            candlesticks.candlestick_plot(fund, title=name2, additional_plots=[plot_short, plot_med, plot_long])
-
-        else:
-            filename = os.path.join(
-                name, view, f"exp_moving_averages_{name}.png")
-            candlesticks.candlestick_plot(fund, title=name2, filename=filename,
-                             save_fig=True, additional_plots=[plot_short, plot_med, plot_long])
+        generate_plot(
+            PlotType.CANDLESTICKS, fund, **dict(
+                title=name2, plot_output=plot_output, save_fig=True,
+                additional_plots=[plot_short, plot_med, plot_long],
+                filename=os.path.join(name, view, f"exp_moving_averages_{name}.png")
+            )
+        )
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
@@ -490,12 +488,18 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     legend = ['Price', 'Short-SMA', 'Medium-SMA', 'Long-SMA', 'Swing Signal']
 
     if plot_output:
-        specialty_plotting([fund['Close'], short, med, long, swings],
-                            alt_ax_index=[4], legend=legend, title=name2)
+        generate_plot(
+            PlotType.SPECIALITY, [fund['Close'], short, med, long, swings],
+            **dict(alt_ax_index=[4], legend=legend, title=name2, plot_output=plot_output)
+        )
     else:
         filename = os.path.join(name, view, f"swing_trades_{function}_{name}.png")
-        specialty_plotting([fund['Close'], short, med, long, swings], alt_ax_index=[4],
-                            legend=['Swing Signal'], title=name2, save_fig=True, filename=filename)
+        generate_plot(
+            PlotType.SPECIALITY, [fund['Close'], short, med, long, swings], **dict(
+                alt_ax_index=[4], legend=['Swing Signal'], title=name2, save_fig=True, 
+                plot_output=plot_output, filename=filename
+            )
+        )
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)

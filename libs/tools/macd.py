@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    bar_chart, dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS, PlotType, generate_plot
+    dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS, PlotType, generate_plot
 )
 from libs.features import normalize_signals
 
@@ -119,12 +119,12 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
 
-    if plotting:
-        bar_chart(m_bar, position=fund, x=x, title=name2)
-    else:
-        filename = os.path.join(name, view, f"macd_bar_{name}.png")
-        bar_chart(m_bar, position=fund, x=x, title=name2,
-                  save_fig=True, filename=filename)
+    generate_plot(
+        PlotType.BAR_CHART, m_bar, **dict(
+            position=fund, x=x, title=name2, save_fig=True, plot_output=plotting,
+            filename=os.path.join(name, view, f"macd_bar_{name}.png")
+        )
+    )
 
     return macd
 
