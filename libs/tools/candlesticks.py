@@ -1,13 +1,19 @@
 import os
+from typing import Tuple, List
+
 import pandas as pd
 import numpy as np
 
-from libs.utils import INDEXES, generate_plot, PlotType #candlestick_plot
+from libs.utils import INDEXES, generate_plot, PlotType
 from libs.utils.plot_utils import utils
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
 from .moving_average import adjust_signals
 from .full_stochastic import generate_full_stoch_signal
+
+from .candlestick_patterns import (
+    doji_pattern
+)
 
 
 def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
@@ -32,22 +38,21 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view', '')
     pbar = kwargs.get('progress_bar')
 
-    candle = dict()
+    candles = {}
 
-    candle['thresholds'] = thresholding_determination(
-        fund, plot_output=plot_output)
+    candles['thresholds'] = determine_threshold(fund, plot_output=plot_output)
     if pbar is not None:
         pbar.uptick(increment=0.1)
 
-    candle['classification'] = day_classification(fund, candle['thresholds'])
+    candles['classification'] = day_classification(fund, candles['thresholds'])
     if pbar is not None:
         pbar.uptick(increment=0.1)
 
-    candle = pattern_detection(
-        fund, candle, plot_output=plot_output, pbar=pbar)
+    candles = pattern_detection(
+        fund, candles, plot_output=plot_output, pbar=pbar)
 
-    candle['signals'] = get_pattern_signals(candle, fund)
-    candle['length_of_data'] = len(fund.index)
+    candles['signals'] = get_pattern_signals(candles, fund)
+    candles['length_of_data'] = len(fund.index)
 
     fifty_day = simple_moving_avg(fund, 50)
     fifty_day_x, fifty_day = adjust_signals(fund, fifty_day, offset=50)
@@ -76,17 +81,17 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
 
     if pbar is not None:
         pbar.uptick(increment=0.1)
-    return candle
+    return candles
 
 
-def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
+def pattern_detection(fund: pd.DataFrame, candles: dict, **kwargs) -> dict:
     """Pattern Detection
 
     Searches available candlestick patterns on each area of the dataset
 
     Arguments:
         fund {pd.DataFrame} -- fund dataset
-        candle {dict} -- candlestick data object
+        candles {dict} -- candlestick data object
 
     Optional Args:
         plot_output {bool} -- (default: {True})
@@ -99,24 +104,22 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
     pbar = kwargs.get('pbar')
 
     if pbar is not None:
-        divisor = 0.7 / float(len(candle['classification']))
+        divisor = 0.7 / float(len(candles['classification']))
 
     patterns = []
-    for i in range(len(candle['classification'])):
+    for i in range(len(candles['classification'])):
         value = {'value': 0, 'patterns': []}
-        for patt in PATTERNS:
-            val = pattern_library(patt, candle['classification'], i)
+        for pattern in PATTERNS:
+            val = pattern_library(pattern, candles['classification'], i)
             if val[0] != 0:
                 value['value'] += val[0]
-                modified_pattern = f"{patt}: {val[1]}"
+                modified_pattern = f"{pattern}: {val[1]}"
                 value['patterns'].append(modified_pattern)
 
-        for patt in PATTERNS:
-            val = pattern_library(
-                patt, candle['classification'], i, body='vol_body')
-            if val[0] != 0:
-                value['value'] += val[0]
-                modified_pattern = f"{patt}: {val[1]}"
+            vol = pattern_library(pattern, candles['classification'], i, body='vol_body')
+            if vol[0] != 0:
+                value['value'] += vol[0]
+                modified_pattern = f"{pattern}: {vol[1]}"
                 value['patterns'].append(modified_pattern)
 
         if pbar is not None:
@@ -124,24 +127,24 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
 
         patterns.append(value)
 
-    patterns2 = filtered_reversal_patterns(fund, candle)
+    patterns2 = filtered_reversal_patterns(fund, candles)
     tabular = [0.0] * len(patterns)
 
-    for i, patt in enumerate(patterns2):
-        if patt['value'] != 0:
-            patterns[i]['value'] += patt['value']
-            patterns[i]['patterns'].extend(patt['patterns'])
+    for i, pattern in enumerate(patterns2):
+        if pattern['value'] != 0:
+            patterns[i]['value'] += pattern['value']
+            patterns[i]['patterns'].extend(pattern['patterns'])
 
-    for i, patt in enumerate(patterns):
-        tabular[i] += float(patt['value'])
+    for i, pattern in enumerate(patterns):
+        tabular[i] += float(pattern['value'])
 
     if plot_output:
         signal = simple_moving_avg(fund, 10)
 
-        for i, patt in enumerate(patterns):
-            if patt['value'] != 0:
-                signal[i] += (patt['value'] * 10.0)
-                print(f"index {i}: {patt['value']} => {patt['patterns']}")
+        for i, pattern in enumerate(patterns):
+            if pattern['value'] != 0:
+                signal[i] += (pattern['value'] * 10.0)
+                print(f"index {i}: {pattern['value']} => {pattern['patterns']}")
 
         plot_obj = {"plot": signal, "color": 'black',
                     "legend": 'candlestick signal'}
@@ -154,16 +157,14 @@ def pattern_detection(fund: pd.DataFrame, candle: dict, **kwargs) -> dict:
                 "plot_output": plot_output
             }
         )
-        # candlestick_plot(fund, additional_plts=[
-        #     plot_obj], title='Candlestick Signals')
 
-    candle['patterns'] = patterns
-    candle['tabular'] = tabular
+    candles['patterns'] = patterns
+    candles['tabular'] = tabular
 
-    return candle
+    return candles
 
 
-def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
+def determine_threshold(fund: pd.DataFrame, **kwargs) -> dict:
     """Thresholding Determination
 
     Dynamically determine what a "long day", "short day", and a "doji" is.
@@ -181,10 +182,10 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- thresholding values
     """
-    LONG = kwargs.get('long_percentile', 75)
-    SHORT = kwargs.get('short_percentile', 25)
-    DOJI = kwargs.get('doji_percentile', 1)
-    DOJI_RATIO = kwargs.get('doji_ratio', 8)
+    long_percentile = kwargs.get('long_percentile', 75)
+    short_percentile = kwargs.get('short_percentile', 25)
+    doji_percentile = kwargs.get('doji_percentile', 1)
+    doji_ratio = kwargs.get('doji_ratio', 8)
     plot_output = kwargs.get('plot_output', True)
 
     open_close = []
@@ -196,19 +197,19 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
     volatility = exponential_moving_avg(high_low, 25, data_type='list')
     long_price = []
     short_price = []
-    long_thresh = float(LONG) / 100.0
-    short_thresh = float(SHORT) * 2.0 / 100.0
+    long_thresh = float(long_percentile) / 100.0
+    short_thresh = float(short_percentile) * 2.0 / 100.0
     for i, low in enumerate(fund['Low']):
         price_l = low + (volatility[i] * long_thresh)
         price_s = low + (volatility[i] * short_thresh)
         long_price.append(price_l)
         short_price.append(price_s)
 
-    thresholds = dict()
-    thresholds['short'] = np.percentile(open_close, SHORT)
-    thresholds['long'] = np.percentile(open_close, LONG)
-    thresholds['doji'] = np.percentile(open_close, DOJI)
-    thresholds['doji_ratio'] = DOJI_RATIO
+    thresholds = {}
+    thresholds['short'] = np.percentile(open_close, short_percentile)
+    thresholds['long'] = np.percentile(open_close, long_percentile)
+    thresholds['doji'] = np.percentile(open_close, doji_percentile)
+    thresholds['doji_ratio'] = doji_ratio
     thresholds['volatility'] = {"long": long_price, "short": short_price}
 
     if plot_output:
@@ -226,13 +227,11 @@ def thresholding_determination(fund: pd.DataFrame, **kwargs) -> dict:
                 "plot_output": plot_output
             }
         )
-        # candlestick_plot(fund, title="Doji & Long/Short Days",
-        #                  threshold_candles=thresholds)
 
     return thresholds
 
 
-def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
+def day_classification(fund: pd.DataFrame, thresholds: dict) -> List[dict]:
     """Day Classification
 
     Arguments:
@@ -240,9 +239,9 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
         thresholds {dict} -- candlestick body sizes
 
     Returns:
-        list -- each trading period classified by candlesticks
+        list[dict] -- each trading period classified by candlesticks
     """
-    days = []
+    trading_candles = []
     sma = simple_moving_avg(fund, 10)
 
     LONG = thresholds['long']
@@ -255,10 +254,10 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
 
     # Classification elements:
     for i, close in enumerate(fund['Close']):
-        stats = dict()
+        stats = {}
 
         # Raw, basic values to start
-        stats['basic'] = dict()
+        stats['basic'] = {}
         stats['basic']['Close'] = close
         stats['basic']['Open'] = fund['Open'][i]
         stats['basic']['High'] = fund['High'][i]
@@ -273,7 +272,7 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
             stats['trend'] = 'at'
 
         # Candlestick-esc properties
-        stats['candlestick'] = dict()
+        stats['candlestick'] = {}
 
         diff = np.abs(close - fund['Open'][i])
         shadow_length = fund['High'][i] - fund['Low'][i]
@@ -305,11 +304,11 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> list:
             if stats['candlestick']['shadow_ratio'] >= RATIO:
                 stats['candlestick']['doji'] = True
 
-        days.append(stats)
-    return days
+        trading_candles.append(stats)
+    return trading_candles
 
 
-def get_pattern_signals(candle: dict, position: pd.DataFrame) -> list:
+def get_pattern_signals(candles: dict, position: pd.DataFrame) -> List[dict]:
     """Get Pattern Signals
 
     Specifically for lastest signals present
@@ -322,11 +321,11 @@ def get_pattern_signals(candle: dict, position: pd.DataFrame) -> list:
         list -- list of feature objects
     """
     features = []
-    for i, patt in enumerate(candle['patterns']):
+    for i, pattern in enumerate(candles['patterns']):
         date = position.index[i].strftime("%Y-%m-%d")
 
-        if patt['value'] < 0:
-            for style in patt['patterns']:
+        if pattern['value'] < 0:
+            for style in pattern['patterns']:
                 data = {
                     "type": 'bearish',
                     "value": style,
@@ -335,8 +334,8 @@ def get_pattern_signals(candle: dict, position: pd.DataFrame) -> list:
                 }
                 features.append(data)
 
-        elif patt['value'] > 0:
-            for style in patt['patterns']:
+        elif pattern['value'] > 0:
+            for style in pattern['patterns']:
                 data = {
                     "type": 'bullish',
                     "value": style,
@@ -366,27 +365,24 @@ def filtered_reversal_patterns(fund: pd.DataFrame,
         list -- list of detected pattern objects
     """
     filter_signal = []
-    ZONES = [0.0, 0.0]
+    zones = [0.0, 0.0]
     if filter_function == 'stochastic':
         stoch_signals = generate_full_stoch_signal(fund, plot_output=False)
         filter_signal = stoch_signals['smooth_k']
-        ZONES = [80.0, 20.0]
+        zones = [80.0, 20.0]
     else:
         return []
 
     patterns = []
     for i in range(len(candle['classification'])):
         value = {'value': 0, 'patterns': []}
-
-        val = pattern_library("dark_cloud_piercing_line",
-                              candle['classification'], i)
+        val = pattern_library("dark_cloud_piercing_line", candle['classification'], i)
         if val[0] != 0:
             value['value'] += val[0]
             modified_pattern = f"dark_cloud_piercing_line: {val[1]}"
             value['patterns'].append(modified_pattern)
 
-        val = pattern_library("evening_morning_star",
-                              candle['classification'], i)
+        val = pattern_library("evening_morning_star", candle['classification'], i)
         if val[0] != 0:
             value['value'] += val[0]
             modified_pattern = f"evening_morning_star: {val[1]}"
@@ -410,9 +406,9 @@ def filtered_reversal_patterns(fund: pd.DataFrame,
 
     for i in range(1, len(patterns)):
         if patterns[i]['value'] != 0:
-            if (filter_signal[i] >= ZONES[0]) and (filter_signal[i] <= ZONES[1]):
+            if (filter_signal[i] >= zones[0]) and (filter_signal[i] <= zones[1]):
                 patterns[i]['value'] *= 2
-            elif (filter_signal[i-1] >= ZONES[0]) and (filter_signal[i-1] <= ZONES[1]):
+            elif (filter_signal[i-1] >= zones[0]) and (filter_signal[i-1] <= zones[1]):
                 patterns[i]['value'] *= 2
             else:
                 patterns[i] = {'value': 0, 'patterns': []}
@@ -424,7 +420,10 @@ def filtered_reversal_patterns(fund: pd.DataFrame,
 #   PATTERN DETECTION LIBRARY
 ###################################
 
-def pattern_library(pattern: str, days: list, index: int, body: str = 'body') -> list:
+def pattern_library(pattern: str,
+                    trading_candles: List[dict],
+                    index: int,
+                    body: str = 'body') -> Tuple[int, str]:
     """Pattern Library
 
     Command function for properly configuring and running various pattern detections.
@@ -444,21 +443,19 @@ def pattern_library(pattern: str, days: list, index: int, body: str = 'body') ->
     function = PATTERNS.get(pattern, {}).get('function')
     weight = PATTERNS.get(pattern, {}).get('weight', 1)
 
-    if function is None:
-        return 0, ''
-    if index < days_needed - 1:
+    if function is None or index < days_needed - 1:
         return 0, ''
 
     if days_needed == 1:
-        sub_days = days[index].copy()
+        sub_days = trading_candles[index].copy()
     else:
         start = (index + 1) - days_needed
-        sub_days = days[start:index+1].copy()
+        sub_days = trading_candles[start:index+1].copy()
 
-    if isinstance(sub_days, (dict)):
+    if isinstance(sub_days, dict):
         sub_days = [sub_days]
 
-    detection = function(sub_days, body=body)
+    detection = function(sub_days, body)
     if detection is not None:
         if detection['type'] == 'bearish':
             return -1 * weight, detection['style']
@@ -469,22 +466,6 @@ def pattern_library(pattern: str, days: list, index: int, body: str = 'body') ->
 
 
 ###################################
-
-def doji_pattern(day: list, body='body') -> dict:
-    THRESH = 0.05
-    day = day[0]
-    if day.get('candlestick', {}).get('doji'):
-        close = day.get('basic', {}).get('Close')
-        high = day.get('basic', {}).get('High')
-        low = day.get('basic', {}).get('Low')
-
-        clo_low = close - low
-        hi_low = high - low
-        if clo_low >= ((1.0 - THRESH) * hi_low):
-            return {'type': 'bullish', 'style': 'dragonfly'}
-        if clo_low <= (THRESH * hi_low):
-            return {'type': 'bearish', 'style': 'gravestone'}
-    return None
 
 
 def dark_cloud_or_piercing_line(day: list, body='body') -> dict:
@@ -1605,7 +1586,7 @@ def on_in_neck_line(day: list, body='body') -> dict:
 
 
 PATTERNS = {
-    "doji": {'days': 1, 'function': doji_pattern},
+    "doji": {'days': 1, 'function': doji_pattern.doji_pattern},
     "dark cloud piercing line": {'days': 2, 'function': dark_cloud_or_piercing_line},
     "evening morning star": {'days': 3, 'function': evening_morning_star},
     "three methods": {'days': 5, 'function': rising_falling_three_methods},
