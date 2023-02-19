@@ -20,6 +20,7 @@ from .plot_utils import (
 
 
 class PlotType(Enum):
+    """ PlotTypes for Generator """
     CANDLESTICKS = 'candlesticks'
     DUAL_PLOTTING = 'dual_plotting'
     GENERIC_PLOTTING = 'generic_plotting'
@@ -39,6 +40,15 @@ FUNCTIONS = {
 
 
 def generate_plot(plot_type: PlotType, fund: pd.DataFrame, **kwargs):
+    """generate_plot
+
+    Args:
+        plot_type (PlotType): Key to trigger the particular plot
+        fund (pd.DataFrame): fund plot data
+
+    Optional Args:
+        All that are needed for plots (see plot_utils for details)
+    """
     # plot_output = kwargs.get('plot_output', True)
     # title = kwargs.get('title', f'{plot_type.value}')
     # filename = kwargs.get('filename', '')
@@ -202,8 +212,8 @@ def volatility_factor_plot(prices: list, dates: list, vf_data: VFStopsResultType
 
     except: # pylint: disable=bare-except
         print(
-            f"{utils.WARNING}Warning: plot failed to render in 'volatility factor plot' of title: " +
-            f"{title}{utils.NORMAL}")
+            f"{utils.WARNING}Warning: plot failed to render in 'volatility factor plot' of " +
+            f"title: {title}{utils.NORMAL}")
 
     plt.close('all')
     plt.clf()
