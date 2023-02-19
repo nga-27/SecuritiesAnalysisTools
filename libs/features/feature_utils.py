@@ -4,7 +4,7 @@ from typing import List
 import pandas as pd
 import numpy as np
 
-from libs.utils import date_extractor, shape_plotting, INDEXES
+from libs.utils import date_extractor, PlotType, generate_plot, INDEXES
 
 
 def find_local_extrema(position: list, threshold: float = 0.03, points: bool = False) -> List[dict]:
@@ -348,12 +348,12 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
 
     save_fig = not plot_output
 
-    shape_plotting(fund['Close'],
-                   shapeXY=shapes,
-                   feature=feature,
-                   save_fig=save_fig,
-                   title=title,
-                   filename=filename)
+    generate_plot(
+        PlotType.SHAPE_PLOTTING, fund['Close'], **dict(
+            shapeXY=shapes, feature=feature, save_fig=save_fig, plot_output=plot_output,
+            title=title, filename=filename
+        )
+    )
 
 
 def raw_signal_extrema(signal: list) -> dict:
