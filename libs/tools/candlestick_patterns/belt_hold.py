@@ -1,6 +1,8 @@
+""" belt hold """
 from typing import Union
 
 def belt_hold(trading_candle: list, _: Union[str, None] = None) -> Union[dict, None]:
+    """ belt hold """
     thresh = 0.005
     if trading_candle[0].get('trend') == 'below':
         candle = trading_candle[0].get('candlestick')

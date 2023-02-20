@@ -1,6 +1,9 @@
+""" shooting star """
 from typing import Union
 
 def shooting_star(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ shooting star """
+    # pylint: disable=too-many-nested-blocks
     if not body:
         body = 'body'
     ratio = 2.0

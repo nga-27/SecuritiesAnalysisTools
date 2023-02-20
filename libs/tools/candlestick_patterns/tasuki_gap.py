@@ -1,7 +1,10 @@
+""" tasuki gap """
 from typing import Union
 
 def tasuki_gap_upside_downside(trading_candle: list,
                                body: Union[str, None] = None) -> Union[dict, None]:
+    """ tasuki gap upside downside """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
 

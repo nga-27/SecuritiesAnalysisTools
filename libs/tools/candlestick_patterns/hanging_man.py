@@ -1,6 +1,8 @@
+""" hanging man """
 from typing import Union
 
 def hanging_man(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ hanging man """
     if not body:
         body = 'body'
     ratio = 2.0

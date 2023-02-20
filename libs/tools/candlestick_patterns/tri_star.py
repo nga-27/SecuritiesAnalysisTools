@@ -1,6 +1,8 @@
+""" tri star """
 from typing import Union
 
 def tri_star(trading_candle: list, _: Union[str, None] = None) -> Union[dict, None]:
+    """ tri star """
     if trading_candle[0]['trend'] == 'below':
         if trading_candle[0]['candlestick']['doji'] and \
             trading_candle[1]['candlestick']['doji'] and \

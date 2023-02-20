@@ -1,7 +1,9 @@
+""" meeting line """
 from typing import Union
 import numpy as np
 
 def meeting_line(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ meeting line """
     if not body:
         body = 'body'
     thresh = 0.01

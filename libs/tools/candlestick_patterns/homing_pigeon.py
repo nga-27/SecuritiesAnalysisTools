@@ -1,6 +1,8 @@
+""" homing pigeon """
 from typing import Union
 
 def homing_pigeon(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ homing pigeon """
     if not body:
         body = 'body'
 

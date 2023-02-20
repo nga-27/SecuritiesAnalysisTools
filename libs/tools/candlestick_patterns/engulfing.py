@@ -1,6 +1,8 @@
+""" engulfing """
 from typing import Union
 
 def engulfing(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ engulfing """
     if not body:
         body = 'body'
 

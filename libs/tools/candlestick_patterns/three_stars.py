@@ -1,8 +1,11 @@
+""" three stars """
 from typing import Union
 import numpy as np
 
 def three_stars_in_the_south(trading_candle: list,
                              body: Union[str, None] = None) -> Union[dict, None]:
+    """ three stars in the south """
+    # pylint: disable=too-many-locals,too-many-nested-blocks
     if not body:
         body = 'body'
     shadow_ratio = 1.6
@@ -18,7 +21,7 @@ def three_stars_in_the_south(trading_candle: list,
             hi_op = basic_0['High'] - basic_0['Open']
             oc_thr = np.abs(basic_0['Close'] - basic_0['Open']) * thresh
 
-            if (hi_op <= oc_thr):
+            if hi_op <= oc_thr:
                 candle_1 = trading_candle[1]['candlestick']
                 if candle_1[body] == 'short' and candle_1['color'] == 'black':
                     basic_1 = trading_candle[1]['basic']

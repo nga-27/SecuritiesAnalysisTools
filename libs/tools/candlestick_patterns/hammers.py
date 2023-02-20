@@ -1,6 +1,8 @@
+""" hammers """
 from typing import Union
 
 def inverted_hammer(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ inverted hammer """
     if not body:
         body = 'body'
     ratio = 2.0
@@ -26,6 +28,7 @@ def inverted_hammer(trading_candle: list, body: Union[str, None] = None) -> Unio
 
 
 def hammer_positive(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ hammer positive """
     if not body:
         body = 'body'
     ratio = 2.0

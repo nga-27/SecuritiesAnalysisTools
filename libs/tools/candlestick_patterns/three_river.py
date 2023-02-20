@@ -1,6 +1,9 @@
+""" three river """
 from typing import Union
 
 def unique_three_river(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ unique three river """
+    # pylint: disable=too-many-nested-blocks
     if not body:
         body = 'body'
     thresh = 0.02

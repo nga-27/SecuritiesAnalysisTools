@@ -1,7 +1,9 @@
+""" kicking """
 from typing import Union
 import numpy as np
 
 def kicking(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ kicking """
     if not body:
         body = 'body'
     thresh = 0.01
@@ -23,7 +25,7 @@ def kicking(trading_candle: list, body: Union[str, None] = None) -> Union[dict, 
             hi_cl = basic_1['High'] - basic_1['Close']
             op_lo = basic_1['Open'] - basic_1['Low']
             if (hi_cl <= oc_thr) and (op_lo <= oc_thr):
-                if (basic_0['High'] < basic_1['Low']):
+                if basic_0['High'] < basic_1['Low']:
                     return {"type": 'bullish', "style": '+'}
 
     if candle_0[body] == 'long' and \
@@ -41,6 +43,6 @@ def kicking(trading_candle: list, body: Union[str, None] = None) -> Union[dict, 
             hi_cl = basic_1['High'] - basic_1['Open']
             op_lo = basic_1['Close'] - basic_1['Low']
             if (hi_cl <= oc_thr) and (op_lo <= oc_thr):
-                if (basic_0['Low'] > basic_1['High']):
+                if basic_0['Low'] > basic_1['High']:
                     return {"type": 'bearish', "style": '-'}
     return None

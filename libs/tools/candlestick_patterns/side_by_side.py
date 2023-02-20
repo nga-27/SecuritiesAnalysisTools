@@ -1,7 +1,10 @@
+""" side by side """
 from typing import Union
 
 def side_by_side_white_lines(trading_candle: list,
                              body: Union[str, None] = None) -> Union[dict, None]:
+    """ side by side white lines """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
 

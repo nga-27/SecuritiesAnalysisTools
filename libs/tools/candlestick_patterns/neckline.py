@@ -1,9 +1,13 @@
+""" neckline """
 from typing import Union
 
 def on_in_neck_line(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ on in neckline """
+    # pylint: disable=too-many-branches
     if not body:
         body = 'body'
     thresh = 0.05
+
     if trading_candle[0]['trend'] == 'below':
         candle_0 = trading_candle[0]['candlestick']
         if candle_0[body] == 'long' and candle_0['color'] == 'black':

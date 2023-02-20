@@ -1,9 +1,9 @@
+""" separating lines """
 from typing import Union
-
 import numpy as np
 
-
 def separating_lines(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ separating_lines """
     if not body:
         body = 'body'
     thresh = 0.05

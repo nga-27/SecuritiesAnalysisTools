@@ -1,6 +1,9 @@
+""" breakaway """
 from typing import Union
 
 def breakaway(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ breakaway """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
 

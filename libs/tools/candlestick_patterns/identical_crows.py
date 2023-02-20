@@ -1,6 +1,9 @@
+""" identical crows """
 from typing import Union
 
 def identical_three_crows(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ identical crows """
+    # pylint: disable=too-many-locals,too-many-nested-blocks
     if not body:
         body = 'body'
     thresh = 0.03
@@ -30,7 +33,7 @@ def identical_three_crows(trading_candle: list, body: Union[str, None] = None) -
                             lower_th = length_0 * (1.0 - size_range)
                             length_1 = basic_1['Open'] - basic_1['Close']
                             length_2 = basic_2['Open'] - basic_2['Close']
-                            if (length_1 <= upper_th) and (length_1 >= lower_th):
-                                if (length_2 <= upper_th) and (length_2 >= lower_th):
+                            if lower_th >= length_1 <= upper_th:
+                                if lower_th >= length_2 <= upper_th:
                                     return {"type": 'bearish', "style": '-'}
     return None

@@ -1,6 +1,9 @@
+""" ladder """
 from typing import Union
 
 def ladder(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ ladder """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
     shadow_ratio = 2.0
@@ -12,6 +15,7 @@ def ladder(trading_candle: list, body: Union[str, None] = None) -> Union[dict, N
             candle_1 = trading_candle[1]['candlestick']
             basic_0 = trading_candle[0]['basic']
             basic_1 = trading_candle[1]['basic']
+
             if candle_1[body] != 'short' and candle_1['color'] == 'black' and \
                 basic_1['Open'] < basic_0['Open'] and basic_1['Open'] > basic_0['Close'] and \
                     basic_1['Close'] < basic_0['Close']:
@@ -22,6 +26,7 @@ def ladder(trading_candle: list, body: Union[str, None] = None) -> Union[dict, N
                         basic_2['Open'] > basic_1['Close'] and \
                         basic_2['Close'] < basic_1['Close']:
                     candle_3 = trading_candle[3]['candlestick']
+
                     if candle_3[body] == 'short' and candle_3['color'] == 'black' and \
                             candle_3['shadow_ratio'] >= shadow_ratio:
                         basic_3 = trading_candle[3]['basic']
@@ -39,6 +44,7 @@ def ladder(trading_candle: list, body: Union[str, None] = None) -> Union[dict, N
             candle_1 = trading_candle[1]['candlestick']
             basic_0 = trading_candle[0]['basic']
             basic_1 = trading_candle[1]['basic']
+
             if candle_1[body] != 'short' and candle_1['color'] == 'white' and \
                 basic_1['Open'] > basic_0['Open'] and basic_1['Open'] < basic_0['Close'] and \
                     basic_1['Close'] > basic_0['Close']:
@@ -49,6 +55,7 @@ def ladder(trading_candle: list, body: Union[str, None] = None) -> Union[dict, N
                         basic_2['Open'] < basic_1['Close'] and \
                         basic_2['Close'] > basic_1['Close']:
                     candle_3 = trading_candle[3]['candlestick']
+
                     if candle_3[body] == 'short' and candle_3['color'] == 'white' and \
                             candle_3['shadow_ratio'] >= shadow_ratio:
                         basic_3 = trading_candle[3]['basic']

@@ -1,10 +1,13 @@
+""" dark cloud or piercing line """
 from typing import Union
 
 def dark_cloud_or_piercing_line(trading_candle: list,
                                 body: Union[str, None] = None) -> Union[dict, None]:
-    # Dark Cloud
+    """ dark_cloud_or_piercing_line """
     if not body:
         body = 'body'
+
+    # Dark Cloud
     if trading_candle[0].get('trend') == 'above':
         candle_0 = trading_candle[0].get('candlestick')
         if candle_0.get(body) == 'long':

@@ -1,3 +1,4 @@
+""" candlesticks """
 import os
 from typing import Tuple, List
 
@@ -11,12 +12,61 @@ from .moving_average import adjust_signals
 from .full_stochastic import generate_full_stoch_signal
 
 from .candlestick_patterns import (
-    doji_pattern, dark_cloud_or_piercing_line, inside_outside, neckline, three_methods, three_line_strike,
-    side_by_side, tasuki_gap, separating_lines, advanced_block, ladder, homing_pigeon, two_crows,
-    matching, deliberation, identical_crows, stick_sandwich, concealing_baby, three_stars,
-    three_river, kicking, breakaway, tri_star, three_soldier_crows, meeting_line, harami,
-    engulfing, belt_hold, shooting_star, hammers, hanging_man, evening_morning_star
+    doji_pattern, dark_cloud_or_piercing_line, inside_outside, neckline, three_methods,
+    three_line_strike, side_by_side, tasuki_gap, separating_lines, advanced_block, ladder,
+    homing_pigeon, two_crows, matching, deliberation, identical_crows, stick_sandwich,
+    concealing_baby, three_stars, three_river, kicking, breakaway, tri_star, three_soldier_crows,
+    meeting_line, harami, engulfing, belt_hold, shooting_star, hammers, hanging_man,
+    evening_morning_star
 )
+
+PATTERNS = {
+    "doji": {'days': 1, 'function': doji_pattern.doji_pattern},
+    "dark cloud piercing line": {
+        'days': 2,
+        'function': dark_cloud_or_piercing_line.dark_cloud_or_piercing_line
+    },
+    "evening morning star": {'days': 3, 'function': evening_morning_star.evening_morning_star},
+    "three methods": {'days': 5, 'function': three_methods.rising_falling_three_methods},
+    "hammer": {'days': 1, 'function': hammers.hammer_positive},
+    "hanging man": {'days': 1, 'function': hanging_man.hanging_man},
+    "inverted hammer": {'days': 2, 'function': hammers.inverted_hammer},
+    "shooting star": {'days': 2, 'function': shooting_star.shooting_star},
+    "belt hold": {'days': 1, 'function': belt_hold.belt_hold},
+    "engulfing": {'days': 2, 'function': engulfing.engulfing},
+    "harami": {'days': 2, 'function': harami.harami},
+    "doji star": {'days': 2, 'function': doji_pattern.doji_star},
+    "meeting line": {'days': 2, 'function': meeting_line.meeting_line},
+    "three soldier crows": {
+        'days': 3,
+        'function': three_soldier_crows.three_white_soldiers_black_crows
+    },
+    "tri star": {'days': 3, 'function': tri_star.tri_star, "weight": 3},
+    "breakaway": {'days': 5, 'function': breakaway.breakaway},
+    "three inside": {'days': 3, 'function': inside_outside.three_inside},
+    "three outside": {'days': 3, 'function': inside_outside.three_outside},
+    "kicking": {'days': 2, 'function': kicking.kicking},
+    "three river": {'days': 3, 'function': three_river.unique_three_river},
+    "three stars": {'days': 3, 'function': three_stars.three_stars_in_the_south},
+    "concealing baby": {'days': 4, 'function': concealing_baby.concealing_baby_swallow},
+    "stick sandwich": {'days': 3, 'function': stick_sandwich.stick_sandwich},
+    "identical crows": {'days': 3, 'function': identical_crows.identical_three_crows},
+    "deliberation": {'days': 3, 'function': deliberation.deliberation},
+    "matching": {'days': 2, 'function': matching.matching_high_low},
+    "two crows": {'days': 3, 'function': two_crows.upside_gap_two_crows},
+    "homing pigeon": {'days': 2, 'function': homing_pigeon.homing_pigeon},
+    "ladder": {'days': 5, 'function': ladder.ladder},
+    "advance block": {'days': 3, 'function': advanced_block.advance_block},
+    "separating lines": {'days': 2, 'function': separating_lines.separating_lines},
+    "tasuki gap": {'days': 3, 'function': tasuki_gap.tasuki_gap_upside_downside},
+    "side by side": {'days': 3, 'function': side_by_side.side_by_side_white_lines},
+    "three line strike": {'days': 4, 'function': three_line_strike.three_line_strike},
+    "gap three methods": {
+        'days': 3,
+        'function': three_methods.upside_downside_gap_three_methods
+    },
+    "neck line": {'days': 2, 'function': neckline.on_in_neck_line}
+}
 
 
 def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
@@ -103,6 +153,7 @@ def pattern_detection(fund: pd.DataFrame, candles: dict, **kwargs) -> dict:
     Returns:
         dict -- candlestick data object
     """
+    # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
     pbar = kwargs.get('pbar')
 
@@ -185,6 +236,7 @@ def determine_threshold(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- thresholding values
     """
+    # pylint: disable=too-many-locals
     long_percentile = kwargs.get('long_percentile', 75)
     short_percentile = kwargs.get('short_percentile', 25)
     doji_percentile = kwargs.get('doji_percentile', 1)
@@ -193,8 +245,8 @@ def determine_threshold(fund: pd.DataFrame, **kwargs) -> dict:
 
     open_close = []
     high_low = []
-    for i, op in enumerate(fund['Open']):
-        open_close.append(np.abs(op - fund['Close'][i]))
+    for i, open_val in enumerate(fund['Open']):
+        open_close.append(np.abs(open_val - fund['Close'][i]))
         high_low.append(np.abs(fund['High'][i] - fund['Low'][i]))
 
     volatility = exponential_moving_avg(high_low, 25, data_type='list')
@@ -216,7 +268,7 @@ def determine_threshold(fund: pd.DataFrame, **kwargs) -> dict:
     thresholds['volatility'] = {"long": long_price, "short": short_price}
 
     if plot_output:
-        print(f"\r\nThresholding for candlesticks:")
+        print("\r\nThresholding for candlesticks:")
         print(f"\r\nShort: {thresholds['short']}")
         print(f"Long: {thresholds['long']}")
         print(f"Doji: {thresholds['doji']}")
@@ -244,13 +296,9 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> List[dict]:
     Returns:
         list[dict] -- each trading period classified by candlesticks
     """
+    # pylint: disable=too-many-branches
     trading_candles = []
     sma = simple_moving_avg(fund, 10)
-
-    LONG = thresholds['long']
-    SHORT = thresholds['short']
-    DOJI = thresholds['doji']
-    RATIO = thresholds['doji_ratio']
 
     vol_long = thresholds['volatility']['long']
     vol_short = thresholds['volatility']['short']
@@ -280,9 +328,9 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> List[dict]:
         diff = np.abs(close - fund['Open'][i])
         shadow_length = fund['High'][i] - fund['Low'][i]
 
-        if diff >= LONG:
+        if diff >= thresholds['long']:
             stats['candlestick']['body'] = 'long'
-        elif diff <= SHORT:
+        elif diff <= thresholds['short']:
             stats['candlestick']['body'] = 'short'
         else:
             stats['candlestick']['body'] = 'normal'
@@ -303,8 +351,8 @@ def day_classification(fund: pd.DataFrame, thresholds: dict) -> List[dict]:
         stats['candlestick']['shadow_ratio'] = 0.0
         if diff > 0.0:
             stats['candlestick']['shadow_ratio'] = shadow_length / diff
-        if diff <= DOJI:
-            if stats['candlestick']['shadow_ratio'] >= RATIO:
+        if diff <= thresholds['doji']:
+            if stats['candlestick']['shadow_ratio'] >= thresholds['doji_ratio']:
                 stats['candlestick']['doji'] = True
 
         trading_candles.append(stats)
@@ -448,52 +496,3 @@ def pattern_library(pattern: str,
             return 1 * weight, detection['style']
 
     return 0, ''
-
-
-PATTERNS = {
-    "doji": {'days': 1, 'function': doji_pattern.doji_pattern},
-    "dark cloud piercing line": {
-        'days': 2,
-        'function': dark_cloud_or_piercing_line.dark_cloud_or_piercing_line
-    },
-    "evening morning star": {'days': 3, 'function': evening_morning_star.evening_morning_star},
-    "three methods": {'days': 5, 'function': three_methods.rising_falling_three_methods},
-    "hammer": {'days': 1, 'function': hammers.hammer_positive},
-    "hanging man": {'days': 1, 'function': hanging_man.hanging_man},
-    "inverted hammer": {'days': 2, 'function': hammers.inverted_hammer},
-    "shooting star": {'days': 2, 'function': shooting_star.shooting_star},
-    "belt hold": {'days': 1, 'function': belt_hold.belt_hold},
-    "engulfing": {'days': 2, 'function': engulfing.engulfing},
-    "harami": {'days': 2, 'function': harami.harami},
-    "doji star": {'days': 2, 'function': doji_pattern.doji_star},
-    "meeting line": {'days': 2, 'function': meeting_line.meeting_line},
-    "three soldier crows": {
-        'days': 3,
-        'function': three_soldier_crows.three_white_soldiers_black_crows
-    },
-    "tri star": {'days': 3, 'function': tri_star.tri_star, "weight": 3},
-    "breakaway": {'days': 5, 'function': breakaway.breakaway},
-    "three inside": {'days': 3, 'function': inside_outside.three_inside},
-    "three outside": {'days': 3, 'function': inside_outside.three_outside},
-    "kicking": {'days': 2, 'function': kicking.kicking},
-    "three river": {'days': 3, 'function': three_river.unique_three_river},
-    "three stars": {'days': 3, 'function': three_stars.three_stars_in_the_south},
-    "concealing baby": {'days': 4, 'function': concealing_baby.concealing_baby_swallow},
-    "stick sandwich": {'days': 3, 'function': stick_sandwich.stick_sandwich},
-    "identical crows": {'days': 3, 'function': identical_crows.identical_three_crows},
-    "deliberation": {'days': 3, 'function': deliberation.deliberation},
-    "matching": {'days': 2, 'function': matching.matching_high_low},
-    "two crows": {'days': 3, 'function': two_crows.upside_gap_two_crows},
-    "homing pigeon": {'days': 2, 'function': homing_pigeon.homing_pigeon},
-    "ladder": {'days': 5, 'function': ladder.ladder},
-    "advance block": {'days': 3, 'function': advanced_block.advance_block},
-    "separating lines": {'days': 2, 'function': separating_lines.separating_lines},
-    "tasuki gap": {'days': 3, 'function': tasuki_gap.tasuki_gap_upside_downside},
-    "side by side": {'days': 3, 'function': side_by_side.side_by_side_white_lines},
-    "three line strike": {'days': 4, 'function': three_line_strike.three_line_strike},
-    "gap three methods": {
-        'days': 3,
-        'function': three_methods.upside_downside_gap_three_methods
-    },
-    "neck line": {'days': 2, 'function': neckline.on_in_neck_line}
-}

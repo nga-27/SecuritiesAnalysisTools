@@ -1,7 +1,10 @@
+""" three soldier crows """
 from typing import Union
 
 def three_white_soldiers_black_crows(trading_candle: list,
                                      body: Union[str, None] = None) -> Union[dict, None]:
+    """ three white soldiers black crows """
+    # pylint: disable=too-many-branches,too-many-nested-blocks
     if not body:
         body = 'body'
     thresh = 0.3

@@ -1,13 +1,17 @@
+""" concealing baby """
 from typing import Union
 
 def concealing_baby_swallow(trading_candle: list,
                             body: Union[str, None] = None) -> Union[dict, None]:
+    """ concealing baby """
+    # pylint: disable=too-many-locals
     if not body:
         body = 'body'
     mf_shadow_ratio = 1.03
     shadow_ratio = 1.6
     thresh = 0.02
 
+    # pylint: disable=too-many-nested-blocks
     if trading_candle[0]['trend'] == 'below':
         candle_0 = trading_candle[0]['candlestick']
         if candle_0[body] != 'short' and candle_0['color'] == 'black' and \

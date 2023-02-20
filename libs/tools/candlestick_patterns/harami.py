@@ -1,7 +1,10 @@
+""" harami """
 from typing import Union
 import numpy as np
 
 def harami(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ harami """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
     thresh = 0.01

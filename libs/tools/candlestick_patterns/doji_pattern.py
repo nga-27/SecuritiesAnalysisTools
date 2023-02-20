@@ -1,7 +1,9 @@
+""" DOJI Patterns """
 from typing import Union
 
 def doji_pattern(trading_candle: list, _: Union[str, None] = None) -> Union[dict, None]:
-    THRESH = 0.05
+    """ doji pattern """
+    thresh = 0.05
     day_candle = trading_candle[0]
     if day_candle.get('candlestick', {}).get('doji'):
         close = day_candle['basic']['Close']
@@ -10,14 +12,15 @@ def doji_pattern(trading_candle: list, _: Union[str, None] = None) -> Union[dict
 
         clo_low = close - low
         hi_low = high - low
-        if clo_low >= ((1.0 - THRESH) * hi_low):
+        if clo_low >= ((1.0 - thresh) * hi_low):
             return {'type': 'bullish', 'style': 'dragonfly'}
-        if clo_low <= (THRESH * hi_low):
+        if clo_low <= (thresh * hi_low):
             return {'type': 'bearish', 'style': 'gravestone'}
     return None
 
 
 def doji_star(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ doji star """
     if not body:
         body = 'body'
 

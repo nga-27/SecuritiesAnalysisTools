@@ -1,6 +1,9 @@
+""" inside_outside """
 from typing import Union
 
 def three_outside(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ three outside """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
 
@@ -39,6 +42,8 @@ def three_outside(trading_candle: list, body: Union[str, None] = None) -> Union[
 
 
 def three_inside(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ three inside """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
 
@@ -55,7 +60,7 @@ def three_inside(trading_candle: list, body: Union[str, None] = None) -> Union[d
                         basic_2 = trading_candle[2]['basic']
                         if (basic_2['Open'] > basic_1['Open']) and \
                                 (basic_2['Open'] < basic_1['Close']):
-                            if (basic_2['Close'] > basic_0['Open']):
+                            if basic_2['Close'] > basic_0['Open']:
                                 return {"type": 'bullish', "style": 'up'}
 
     if trading_candle[0]['trend'] == 'above':
@@ -71,6 +76,6 @@ def three_inside(trading_candle: list, body: Union[str, None] = None) -> Union[d
                         basic_2 = trading_candle[2]['basic']
                         if (basic_2['Open'] > basic_1['Close']) and \
                                 (basic_2['Open'] < basic_1['Open']):
-                            if (basic_2['Close'] < basic_0['Open']):
+                            if basic_2['Close'] < basic_0['Open']:
                                 return {"type": 'bearish', "style": 'down'}
     return None

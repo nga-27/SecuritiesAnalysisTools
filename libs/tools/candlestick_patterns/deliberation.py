@@ -1,9 +1,12 @@
+""" deliberation """
 from typing import Union
 
 def deliberation(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ deliberation """
     if not body:
         body = 'body'
 
+    # pylint: disable=too-many-nested-blocks
     if trading_candle[0]['trend'] == 'above':
         candle_0 = trading_candle[0]['candlestick']
         if candle_0[body] == 'long' and candle_0['color'] == 'white':
@@ -17,6 +20,6 @@ def deliberation(trading_candle: list, body: Union[str, None] = None) -> Union[d
                     candle_2 = trading_candle[2]['candlestick']
                     if candle_2[body] == 'short' or candle_2['color'] == 'white':
                         basic_2 = trading_candle[2]['basic']
-                        if (basic_2['Open'] > basic_1['Close']):
+                        if basic_2['Open'] > basic_1['Close']:
                             return {"type": 'bearish', "style": '-'}
     return None

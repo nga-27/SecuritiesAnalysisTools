@@ -1,6 +1,9 @@
+""" stick sandwich """
 from typing import Union
 
 def stick_sandwich(trading_candle: list, body: Union[str, None] = None) -> Union[dict, None]:
+    """ stick sandwich """
+    # pylint: disable=too-many-nested-blocks,too-many-branches
     if not body:
         body = 'body'
     thresh = 0.02
@@ -13,8 +16,9 @@ def stick_sandwich(trading_candle: list, body: Union[str, None] = None) -> Union
             basic_0 = trading_candle[0]['basic']
             oc_thr = (basic_0['Open'] - basic_0['Close']) * thresh
             cl_low = basic_0['Close'] - basic_0['Low']
-            if (cl_low <= oc_thr):
+            if cl_low <= oc_thr:
                 candle_1 = trading_candle[1]['candlestick']
+
                 if candle_1[body] == 'long' and candle_1['color'] == 'white' and \
                         candle_1['shadow_ratio'] <= mf_shadow_ratio:
                     basic_1 = trading_candle[1]['basic']
@@ -22,6 +26,7 @@ def stick_sandwich(trading_candle: list, body: Union[str, None] = None) -> Union
                     if (basic_1['Open'] > basic_0['Close']) and \
                             (basic_1['Open'] < basic_0['Open']):
                         candle_2 = trading_candle[2]['candlestick']
+
                         if candle_2[body] == 'long' and candle_2['color'] == 'black':
                             basic_2 = trading_candle[2]['basic']
                             point1 = ((basic_2['Open'] - basic_2['Close']) * close_thresh) + \
@@ -38,8 +43,9 @@ def stick_sandwich(trading_candle: list, body: Union[str, None] = None) -> Union
             basic_0 = trading_candle[0]['basic']
             oc_thr = (basic_0['Close'] - basic_0['Open']) * thresh
             cl_low = basic_0['High'] - basic_0['Close']
-            if (cl_low <= oc_thr):
+            if cl_low <= oc_thr:
                 candle_1 = trading_candle[1]['candlestick']
+
                 if candle_1[body] == 'long' and candle_1['color'] == 'black' and \
                         candle_1['shadow_ratio'] <= mf_shadow_ratio:
                     basic_1 = trading_candle[1]['basic']
@@ -47,6 +53,7 @@ def stick_sandwich(trading_candle: list, body: Union[str, None] = None) -> Union
                     if (basic_1['Open'] > basic_0['Open']) and \
                             (basic_1['Open'] < basic_0['Close']):
                         candle_2 = trading_candle[2]['candlestick']
+
                         if candle_2[body] == 'long' and candle_2['color'] == 'white':
                             basic_2 = trading_candle[2]['basic']
                             point1 = ((basic_2['Close'] - basic_2['Open']) * close_thresh) + \
