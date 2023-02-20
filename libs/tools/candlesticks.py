@@ -13,7 +13,9 @@ from .full_stochastic import generate_full_stoch_signal
 
 from .candlestick_patterns import (
     doji_pattern, dark_cloud_or_piercing_line, neckline, three_methods, three_line_strike,
-    side_by_side, tasuki_gap, separating_lines, advanced_block, ladder, homing_pigeon
+    side_by_side, tasuki_gap, separating_lines, advanced_block, ladder, homing_pigeon, two_crows,
+    matching, deliberation, identical_crows, stick_sandwich, concealing_baby, three_stars,
+    three_river
 )
 
 
@@ -995,264 +997,6 @@ def kicking(day: list, body='body') -> dict:
     return None
 
 
-def unique_three_river(day: list, body='body') -> dict:
-    THRESH = 0.02
-    SHADOW_RATIO = 2.0
-    if day[0]['trend'] == 'below':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'black':
-            candle_1 = day[1]['candlestick']
-            if candle_1[body] == 'short' and candle_1['color'] == 'black' and \
-                    candle_1['shadow_ratio'] >= SHADOW_RATIO:
-                basic_1 = day[1]['basic']
-                basic_0 = day[0]['basic']
-                hi_op = basic_1['High'] - basic_1['Open']
-                oc_thr = (basic_1['Open'] - basic_1['Close']) * THRESH
-                if (hi_op <= oc_thr) and (basic_1['Open'] < basic_0['Open']) and \
-                        (basic_1['Low'] < basic_0['Close']):
-                    if day[2]['candlestick']['color'] == 'white':
-                        basic_2 = day[2]['basic']
-                        if (basic_2['Open'] >= basic_0['Close']) and \
-                                (basic_2['Close'] <= basic_1['Close']):
-                            return {"type": 'bullish', "style": '+'}
-    return None
-
-
-def three_stars_in_the_south(day: list, body='body') -> dict:
-    SHADOW_RATIO = 1.6
-    OC_SHADOW_RATIO = 1.03
-    THRESH = 0.01
-    OP_THR = 0.2
-    if day[0]['trend'] == 'below':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'black' and \
-                candle_0['shadow_ratio'] >= SHADOW_RATIO:
-            basic_0 = day[0]['basic']
-            hi_op = basic_0['High'] - basic_0['Open']
-            oc_thr = np.abs(basic_0['Close'] - basic_0['Open']) * THRESH
-            if (hi_op <= oc_thr):
-                candle_1 = day[1]['candlestick']
-                if candle_1[body] == 'short' and candle_1['color'] == 'black':
-                    basic_1 = day[1]['basic']
-                    op_point = (
-                        (basic_0['Open'] - basic_0['Close']) * OP_THR) + basic_0['Close']
-                    if (basic_1['Open'] < op_point) and \
-                        (basic_1['Open'] > basic_0['Close']) and \
-                            (basic_1['Close'] < basic_0['Close']) and \
-                            (basic_1['Low'] > basic_0['Low']):
-                        candle_2 = day[2]['candlestick']
-                        if candle_2['shadow_ratio'] <= OC_SHADOW_RATIO and \
-                                candle_2['color'] == 'black' and candle_2[body] == 'short':
-                            basic_2 = day[2]['basic']
-                            mid_pt = (
-                                (basic_1['Open'] - basic_1['Close']) * 0.5) + basic_1['Close']
-                            if basic_2['Open'] < mid_pt and basic_2['Close'] < basic_1['Close']:
-                                return {"type": 'bullish', "style": "in the south +"}
-    return None
-
-
-def concealing_baby_swallow(day: list, body='body') -> dict:
-    MF_SHADOW_RATIO = 1.03
-    SHADOW_RATIO = 1.6
-    THRESH = 0.02
-    if day[0]['trend'] == 'below':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] != 'short' and candle_0['color'] == 'black' and \
-                candle_0['shadow_ratio'] <= MF_SHADOW_RATIO:
-            candle_1 = day[1]['candlestick']
-            if candle_1[body] != 'short' and candle_1['color'] == 'black' and \
-                    candle_1['shadow_ratio'] <= MF_SHADOW_RATIO:
-                basic_0 = day[0]['basic']
-                basic_1 = day[1]['basic']
-                mid_pt = ((basic_0['Open'] - basic_0['Close'])
-                          * 0.5) + basic_0['Close']
-                if (basic_1['Open'] < mid_pt) and (basic_1['Open'] >= basic_0['Close']):
-                    candle_2 = day[2]['candlestick']
-                    if candle_2[body] == 'short' and candle_2['color'] == 'black' and \
-                            candle_2['shadow_ratio'] >= SHADOW_RATIO:
-                        basic_2 = day[2]['basic']
-                        oc_thr = (basic_2['Open'] - basic_2['Close']) * THRESH
-                        cl_low = (basic_2['Close'] - basic_2['Low'])
-                        if (cl_low <= oc_thr) and (basic_2['Open'] < basic_1['Close']) and \
-                                (basic_2['High'] >= basic_1['Close']):
-                            candle_3 = day[3]['candlestick']
-                            if candle_3['color'] == 'black' and \
-                                candle_3[body] != 'short' and \
-                                    candle_3['shadow_ratio'] <= MF_SHADOW_RATIO:
-                                basic_3 = day[3]['basic']
-                                if (basic_3['Close'] <= basic_2['Close']) and \
-                                        (basic_3['Open'] > basic_2['Open']):
-                                    return {"type": 'bullish', "style": 'swallow +'}
-    return None
-
-
-def stick_sandwich(day: list, body='body') -> dict:
-    THRESH = 0.02
-    MF_SHADOW_RATIO = 1.03
-    CLOSE_THRESH = 0.05
-    if day[0]['trend'] == 'below':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'black':
-            basic_0 = day[0]['basic']
-            oc_thr = (basic_0['Open'] - basic_0['Close']) * THRESH
-            cl_low = basic_0['Close'] - basic_0['Low']
-            if (cl_low <= oc_thr):
-                candle_1 = day[1]['candlestick']
-                if candle_1[body] == 'long' and candle_1['color'] == 'white' and \
-                        candle_1['shadow_ratio'] <= MF_SHADOW_RATIO:
-                    basic_1 = day[1]['basic']
-                    basic_0 = day[0]['basic']
-                    if (basic_1['Open'] > basic_0['Close']) and \
-                            (basic_1['Open'] < basic_0['Open']):
-                        candle_2 = day[2]['candlestick']
-                        if candle_2[body] == 'long' and candle_2['color'] == 'black':
-                            basic_2 = day[2]['basic']
-                            point1 = ((basic_2['Open'] - basic_2['Close']) * CLOSE_THRESH) + \
-                                basic_2['Close']
-                            point2 = basic_2['Close'] - \
-                                ((basic_2['Open'] - basic_2['Close'])
-                                 * CLOSE_THRESH)
-                            if (basic_0['Close'] <= point1) and (basic_0['Close'] >= point2):
-                                if basic_2['Open'] > basic_1['Close']:
-                                    return {"type": 'bullish', "style": '+'}
-
-    if day[0]['trend'] == 'above':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'white':
-            basic_0 = day[0]['basic']
-            oc_thr = (basic_0['Close'] - basic_0['Open']) * THRESH
-            cl_low = basic_0['High'] - basic_0['Close']
-            if (cl_low <= oc_thr):
-                candle_1 = day[1]['candlestick']
-                if candle_1[body] == 'long' and candle_1['color'] == 'black' and \
-                        candle_1['shadow_ratio'] <= MF_SHADOW_RATIO:
-                    basic_1 = day[1]['basic']
-                    basic_0 = day[0]['basic']
-                    if (basic_1['Open'] > basic_0['Open']) and \
-                            (basic_1['Open'] < basic_0['Close']):
-                        candle_2 = day[2]['candlestick']
-                        if candle_2[body] == 'long' and candle_2['color'] == 'white':
-                            basic_2 = day[2]['basic']
-                            point1 = ((basic_2['Close'] - basic_2['Open']) * CLOSE_THRESH) + \
-                                basic_2['Close']
-                            point2 = basic_2['Close'] - \
-                                ((basic_2['Close'] - basic_2['Open'])
-                                 * CLOSE_THRESH)
-                            if (basic_0['Close'] <= point1) and (basic_0['Close'] >= point2):
-                                if basic_2['Open'] < basic_1['Close']:
-                                    return {"type": 'bearish', "style": '-'}
-    return None
-
-
-def identical_three_crows(day: list, body='body') -> dict:
-    THRESH = 0.03
-    SIZE_RANGE = 0.05
-    if day[0]['trend'] == 'above':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] != 'short' and candle_0['color'] == 'black':
-            candle_1 = day[1]['candlestick']
-            if candle_1[body] != 'short' and candle_1['color'] == 'black':
-                basic_1 = day[1]['basic']
-                basic_0 = day[0]['basic']
-                point1 = ((basic_0['Open'] - basic_0['Close'])
-                          * THRESH) + basic_0['Close']
-                point2 = basic_0['Close'] - \
-                    ((basic_0['Open'] - basic_0['Close']) * THRESH)
-                if (basic_1['Open'] <= point1) and (basic_1['Close'] >= point2):
-                    candle_2 = day[2]['candlestick']
-                    if candle_2[body] != 'short' and candle_2['color'] == 'black':
-                        basic_2 = day[2]['basic']
-                        point1 = (
-                            (basic_1['Open'] - basic_1['Close']) * THRESH) + basic_1['Close']
-                        point2 = basic_1['Close'] - \
-                            ((basic_1['Open'] - basic_1['Close']) * THRESH)
-                        if (basic_2['Open'] <= point1) and (basic_2['Open'] >= point2):
-                            length_0 = basic_0['Open'] - basic_0['Close']
-                            upper_th = length_0 * (1.0 + SIZE_RANGE)
-                            lower_th = length_0 * (1.0 - SIZE_RANGE)
-                            length_1 = basic_1['Open'] - basic_1['Close']
-                            length_2 = basic_2['Open'] - basic_2['Close']
-                            if (length_1 <= upper_th) and (length_1 >= lower_th):
-                                if (length_2 <= upper_th) and (length_2 >= lower_th):
-                                    return {"type": 'bearish', "style": '-'}
-    return None
-
-
-def deliberation(day: list, body='body') -> dict:
-    if day[0]['trend'] == 'above':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'white':
-            candle_1 = day[1]['candlestick']
-            if candle_1[body] == 'long' and candle_0['color'] == 'white':
-                basic_0 = day[0]['basic']
-                mid_pt = (basic_0['Close'] - basic_0['Open']) * 0.5
-                basic_1 = day[1]['basic']
-                if (basic_1['Open'] > mid_pt) and (basic_1['Open'] < basic_0['Close']) and \
-                        (basic_1['Close'] > basic_0['Close']):
-                    candle_2 = day[2]['candlestick']
-                    if candle_2[body] == 'short' or candle_2['color'] == 'white':
-                        basic_2 = day[2]['basic']
-                        if (basic_2['Open'] > basic_1['Close']):
-                            return {"type": 'bearish', "style": '-'}
-    return None
-
-
-def matching_high_low(day: list, body='body') -> dict:
-    THRESH = 0.03
-    if day[0]['trend'] == 'below':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'black':
-            if day[1]['candlestick']['color'] == 'black':
-                basic_0 = day[0]['basic']
-                basic_1 = day[1]['basic']
-                point1 = ((basic_0['Open'] - basic_0['Close'])
-                          * THRESH) + basic_0['Close']
-                point2 = basic_0['Close'] - \
-                    ((basic_0['Open'] - basic_0['Close']) * THRESH)
-                if (basic_1['Open'] < basic_0['Open']) and (basic_1['Close'] <= point1) and \
-                        (basic_1['Close'] >= point2):
-                    return {"type": 'bullish', "style": 'low'}
-
-    if day[0]['trend'] == 'above':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'white':
-            if day[1]['candlestick']['color'] == 'white':
-                basic_0 = day[0]['basic']
-                basic_1 = day[1]['basic']
-                point1 = ((basic_0['Close'] - basic_0['Open'])
-                          * THRESH) + basic_0['Close']
-                point2 = basic_0['Close'] - \
-                    ((basic_0['Close'] - basic_0['Open']) * THRESH)
-                if (basic_1['Open'] > basic_0['Open']) and (basic_1['Close'] <= point1) and \
-                        (basic_1['Close'] >= point2):
-                    return {"type": 'bearish', "style": 'high'}
-    return None
-
-
-def upside_gap_two_crows(day: list, body='body') -> dict:
-    # Both upside_gap_two_crows and two_crows
-    if day[0]['trend'] == 'above':
-        candle_0 = day[0]['candlestick']
-        if candle_0[body] == 'long' and candle_0['color'] == 'white':
-            candle_1 = day[1]['candlestick']
-            if candle_1[body] == 'short' and candle_1['color'] == 'black':
-                basic_0 = day[0]['basic']
-                basic_1 = day[1]['basic']
-                if basic_1['Close'] > basic_0['Close']:
-                    if day[1]['candlestick']['color'] == 'black':
-                        basic_2 = day[2]['basic']
-                        if (basic_2['Open'] >= basic_1['Open']) and \
-                            (basic_2['Close'] <= basic_1['Close']) and \
-                                (basic_2['Close'] > basic_0['Close']):
-                            return {"type": 'bearish', "style": "upside_gap--"}
-                        if (basic_2['Open'] > basic_1['Close']) and \
-                            (basic_2['Open'] < basic_1['Open']) and \
-                                (basic_2['Close'] < basic_1['Close']) and \
-                                (basic_2['Close'] > basic_1['Open']):
-                            return {"type": 'bearish', "style": '-'}
-    return None
-
-
 PATTERNS = {
     "doji": {'days': 1, 'function': doji_pattern.doji_pattern},
     "dark cloud piercing line": {
@@ -1276,14 +1020,14 @@ PATTERNS = {
     "three inside": {'days': 3, 'function': three_inside},
     "three outside": {'days': 3, 'function': three_outside},
     "kicking": {'days': 2, 'function': kicking},
-    "three river": {'days': 3, 'function': unique_three_river},
-    "three stars": {'days': 3, 'function': three_stars_in_the_south},
-    "concealing baby": {'days': 4, 'function': concealing_baby_swallow},
-    "stick sandwich": {'days': 3, 'function': stick_sandwich},
-    "identical crows": {'days': 3, 'function': identical_three_crows},
-    "deliberation": {'days': 3, 'function': deliberation},
-    "matching": {'days': 2, 'function': matching_high_low},
-    "two crows": {'days': 3, 'function': upside_gap_two_crows},
+    "three river": {'days': 3, 'function': three_river.unique_three_river},
+    "three stars": {'days': 3, 'function': three_stars.three_stars_in_the_south},
+    "concealing baby": {'days': 4, 'function': concealing_baby.concealing_baby_swallow},
+    "stick sandwich": {'days': 3, 'function': stick_sandwich.stick_sandwich},
+    "identical crows": {'days': 3, 'function': identical_crows.identical_three_crows},
+    "deliberation": {'days': 3, 'function': deliberation.deliberation},
+    "matching": {'days': 2, 'function': matching.matching_high_low},
+    "two crows": {'days': 3, 'function': two_crows.upside_gap_two_crows},
     "homing pigeon": {'days': 2, 'function': homing_pigeon.homing_pigeon},
     "ladder": {'days': 5, 'function': ladder.ladder},
     "advance block": {'days': 3, 'function': advanced_block.advance_block},
