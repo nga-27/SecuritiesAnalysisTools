@@ -1,5 +1,7 @@
+""" commodity channel index """
 import os
 import datetime
+
 import pandas as pd
 import numpy as np
 
@@ -30,7 +32,7 @@ def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view', '')
     p_bar = kwargs.get('progress_bar')
 
-    cci = dict()
+    cci = {}
 
     periods = [20, 40, 80]
     cci['periods'] = {'short': periods[0],
@@ -73,8 +75,9 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- tabular commodity channel index signal
     """
+    # pylint: disable=too-many-locals
     intervals = kwargs.get('intervals', [10, 20, 40])
-    CONSTANT = kwargs.get('constant', .015)
+    constant = kwargs.get('constant', .015)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -99,12 +102,12 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
             # Avoid dividing by 0
             mean_dev[i] = mean_dev[interval]
 
-        for i in range(len(tps)):
-            cci = (tps[i] - sma[i]) / (CONSTANT * mean_dev[i])
+        for i, tp_ in enumerate(tps):
+            cci = (tp_ - sma[i]) / (constant * mean_dev[i])
             tabular[str(interval)].append(cci)
 
-    overbought = [100.0 for _ in range(len(tps))]
-    oversold = [-100.0 for _ in range(len(tps))]
+    overbought = [100.0] * len(tps)
+    oversold = [-100.0] * len(tps)
 
     plots = [tabular[tab] for tab in tabular]
     plots.append(overbought)
@@ -136,18 +139,17 @@ def cci_feature_detection(position: pd.DataFrame, cci: dict) -> list:
         list -- list of features
     """
     features = []
-
     for period in cci['tabular']:
         features.extend(get_crossover_features(
             position, cci['tabular'][period], period))
 
     features.sort(key=lambda x: x['index'])
-
     return features
 
 
 def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
-
+    """ cci metrics """
+    # pylint: disable=too-many-locals,too-many-branches
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -213,6 +215,7 @@ def get_crossover_features(position: pd.DataFrame, signal: list, period: str) ->
     Returns:
         list -- list of crossover features
     """
+    # pylint: disable=too-many-branches
     features = []
     state = 'x'
     for i, comp in enumerate(signal):

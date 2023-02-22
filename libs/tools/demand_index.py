@@ -1,4 +1,6 @@
+""" demand index """
 import os
+
 import pandas as pd
 
 from libs.utils import INDEXES, generate_plot, PlotType
@@ -30,7 +32,7 @@ def demand_index(fund: pd.DataFrame, **kwargs) -> dict:
     pbar = kwargs.get('progress_bar')
     trendlines = kwargs.get('trendlines', False)
 
-    dmx = dict()
+    dmx = {}
     dmx['tabular'] = generate_di_signal(
         fund, plot_output=plot_output, name=name, view=view, pbar=pbar)
 
@@ -43,7 +45,8 @@ def demand_index(fund: pd.DataFrame, **kwargs) -> dict:
     dmx['type'] = 'oscillator'
     dmx['length_of_data'] = len(dmx['tabular'])
     dmx['signals'] = demand_index_indicators(fund, dmx, pbar=pbar)
-    dmx['metrics'] = demand_index_metrics(fund, dmx, plot_output=plot_output, name=name, view=view, pbar=pbar)
+    dmx['metrics'] = demand_index_metrics(fund, dmx, plot_output=plot_output,
+        name=name, view=view, pbar=pbar)
 
     if pbar is not None:
         pbar.uptick(increment=0.1)
@@ -92,6 +95,7 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
     Returns:
         list -- demand index data object
     """
+    # pylint: disable=too-many-locals,too-many-branches
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -107,9 +111,9 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
 
     for sig in dmx['signals']:
         ind = sig['index']
-        s = 1.0
+        s_val = 1.0
         if sig['type'] == 'bearish':
-            s = -1.0
+            s_val = -1.0
 
         if 'dual-signal-line' in sig['value']:
             weights = weight_map['dual-signal-line']
@@ -117,22 +121,22 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
             weights = weight_map['signal-line zone']
         else:
             weights = weight_map['zero crossover']
-        
-        metrics[ind] = s
+
+        metrics[ind] = s_val
 
         # Smooth the curves
         if ind - 1 >= 0:
-            metrics[ind-1] += s * weights[1]
+            metrics[ind-1] += s_val * weights[1]
         if ind + 1 < len(metrics):
-            metrics[ind+1] += s * weights[1]
+            metrics[ind+1] += s_val * weights[1]
         if ind - 2 >= 0:
-            metrics[ind-2] += s * weights[2]
+            metrics[ind-2] += s_val * weights[2]
         if ind + 2 < len(metrics):
-            metrics[ind+2] += s * weights[2]
+            metrics[ind+2] += s_val * weights[2]
         if ind - 3 >= 0:
-            metrics[ind-3] += s * weights[3]
+            metrics[ind-3] += s_val * weights[3]
         if ind + 3 < len(metrics):
-            metrics[ind+3] += s * weights[3]
+            metrics[ind+3] += s_val * weights[3]
 
     if pbar is not None:
         pbar.uptick(increment=0.1)
@@ -171,6 +175,7 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- demand index signal
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -193,12 +198,12 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
         pbar.uptick(increment=0.05)
 
     # Calculate the constant 'K'.
-    const_K = [0.0] * len(vol_av)
+    const_k = [0.0] * len(vol_av)
     for i, vol in enumerate(vol_av):
         if vol == 0.0:
-            const_K[i] = 0.0
+            const_k[i] = 0.0
         else:
-            const_K[i] = 3.0 * fund['Close'][i] / vol
+            const_k[i] = 3.0 * fund['Close'][i] / vol
 
     if pbar is not None:
         pbar.uptick(increment=0.05)
@@ -206,36 +211,36 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
     # Calculate daily percent change of open-close.
     percent = [0.0] * len(vol_av)
     for i, ope in enumerate(fund['Open']):
-        percent[i] = (fund['Close'][i] - ope) / ope * const_K[i]
+        percent[i] = (fund['Close'][i] - ope) / ope * const_k[i]
 
     if pbar is not None:
         pbar.uptick(increment=0.05)
 
     # Calculate BP and SP, so we can get DI = BP/SP | SP/BP
-    B_P = []
-    S_P = []
+    b_p = []
+    s_p = []
     for i, vol in enumerate(fund['Volume']):
         if percent[i] == 0.0:
-            B_P.append(0.0)
-            S_P.append(0.0)
+            b_p.append(0.0)
+            s_p.append(0.0)
         elif percent[i] > 0.0:
-            B_P.append(vol)
-            S_P.append(vol / percent[i])
+            b_p.append(vol)
+            s_p.append(vol / percent[i])
         else:
-            B_P.append(vol / percent[i])
-            S_P.append(vol)
+            b_p.append(vol / percent[i])
+            s_p.append(vol)
 
     if pbar is not None:
         pbar.uptick(increment=0.05)
 
-    for i, bpx in enumerate(B_P):
-        if abs(bpx) > abs(S_P[i]):
-            signal.append(S_P[i] / bpx)
+    for i, bpx in enumerate(b_p):
+        if abs(bpx) > abs(s_p[i]):
+            signal.append(s_p[i] / bpx)
         else:
-            if abs(bpx) == 0.0 and abs(S_P[i]) == 0.0:
+            if abs(bpx) == 0.0 and abs(s_p[i]) == 0.0:
                 signal.append(0.0)
             else:
-                signal.append(bpx / S_P[i])
+                signal.append(bpx / s_p[i])
 
     if pbar is not None:
         pbar.uptick(increment=0.1)
@@ -320,6 +325,7 @@ def di_divergences(fund: pd.DataFrame, signal: list) -> list:
     Returns:
         list -- list of divergent features
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     divs = []
     price = [0.0, 0.0]
     windows = [3, 4, 5, 7, 10]
@@ -341,7 +347,7 @@ def di_divergences(fund: pd.DataFrame, signal: list) -> list:
                 if sig < signal_ma[i]:
                     state = 'e'
                     meter[i] = -1.0
-                
+
             elif state == 'e':
                 if sig > signal_ma[i]:
                     state = 'u'
@@ -362,13 +368,13 @@ def di_divergences(fund: pd.DataFrame, signal: list) -> list:
                 if fun < fund_ma[i]:
                     state = 'e'
                     funder[i] = -1.0
-                
+
             elif state == 'e':
                 if fun > fund_ma[i]:
                     state = 'u'
                     funder[i] = 1.0
 
-        
+
         for i, met in enumerate(meter):
             data = None
             date = fund.index[i].strftime("%Y-%m-%d")
@@ -423,7 +429,7 @@ def di_divergences(fund: pd.DataFrame, signal: list) -> list:
                             "date": date
                         }
                     price[0] = price[1]
-                
+
             elif state == 'e1':
                 if sig > signal_ma[i]:
                     state = 'u1'

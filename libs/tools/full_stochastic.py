@@ -1,4 +1,7 @@
+""" full stochastic """
 import os
+from typing import Union
+
 import pandas as pd
 import numpy as np
 
@@ -8,7 +11,7 @@ from libs.features import normalize_signals
 from .moving_average import exponential_moving_avg
 
 
-def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs) -> dict:
+def full_stochastic(position: pd.DataFrame, config: Union[list, None] = None, **kwargs) -> dict:
     """Full Stochastic
 
     Typical periods are [14, 3, 3], [10, 3, 3], [20, 5, 5]
@@ -28,14 +31,16 @@ def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs)
     Returns:
         dict -- [description]
     """
+    if not config:
+        config = [14, 3, 3]
+
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     out_suppress = kwargs.get('out_suppress', True)
     progress_bar = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
-    full_stoch = dict()
-
+    full_stoch = {}
     signals = generate_full_stoch_signal(
         position, periods=config, plot_output=plot_output,
         out_suppress=out_suppress, p_bar=progress_bar, view=view)
@@ -60,7 +65,8 @@ def full_stochastic(position: pd.DataFrame, config: list = [14, 3, 3], **kwargs)
     return full_stoch
 
 
-def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwargs) -> dict:
+def generate_full_stoch_signal(position: pd.DataFrame,
+                               periods: Union[list, None] = None, **kwargs) -> dict:
     """Generate Full Stochastic Signal
 
     For fast/normal stochastic signals: %k, slow %k (which is %d for fast stochastics)
@@ -80,19 +86,23 @@ def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwa
     Returns:
         dict -- tabular object of signals {"fast_k", "smooth_k", "slow_d"}
     """
+    # pylint: disable=too-many-locals
+    if not periods:
+        periods = [14, 3, 3]
+
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     p_bar = kwargs.get('p_bar')
 
-    FAST_K = periods[0]
-    SLOW_K = periods[1]
-    SLOW_D = periods[2]
+    fast_k = periods[0]
+    slow_k = periods[1]
+    slow_d = periods[2]
 
     k_instant = []
     k_smooth = []
     d_sma = []
 
-    for i in range(FAST_K-1):
+    for i in range(fast_k - 1):
         k_instant.append(50.0)
         k_smooth.append(50.0)
         d_sma.append(50.0)
@@ -100,27 +110,26 @@ def generate_full_stoch_signal(position: pd.DataFrame, periods=[14, 3, 3], **kwa
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    for i in range(FAST_K-1, len(position['Close'])):
-
+    for i in range(fast_k - 1, len(position['Close'])):
         # Find first lookback of oscillator
-        lows = position['Low'][i-(FAST_K-1):i+1]
-        highs = position['High'][i-(FAST_K-1):i+1]
+        lows = position['Low'][i-(fast_k - 1):i+1]
+        highs = position['High'][i-(fast_k - 1):i+1]
         low = np.min(lows)
         high = np.max(highs)
 
         # For very low cost funds with no movement over range, will be NaN
         if low != high:
-            K = (position['Close'][i] - low) / (high - low) * 100.0
+            k_value = (position['Close'][i] - low) / (high - low) * 100.0
         else:
-            K = 50.0
+            k_value = 50.0
 
-        k_instant.append(K)
+        k_instant.append(k_value)
 
         # Smooth oscillator with config[1]
-        k_smooth.append(np.average(k_instant[i-(SLOW_K-1):i+1]))
+        k_smooth.append(np.average(k_instant[i-(slow_k-1):i+1]))
 
         # Find 'Simple Moving Average' (SMA) of k2
-        d_sma.append(np.average(k_smooth[i-(SLOW_D-1):i+1]))
+        d_sma.append(np.average(k_smooth[i-(slow_d-1):i+1]))
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
@@ -149,15 +158,16 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
         full_stoch {dict} -- full stochastic object
 
     Optional Args:
-        p_bar {ProgressBar} -- (default: {None}) 
+        p_bar {ProgressBar} -- (default: {None})
 
     Returns:
         dict -- full stochastic object
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     p_bar = kwargs.get('p_bar')
 
-    OVER_BOUGHT = 80.0
-    OVER_SOLD = 20.0
+    over_bought = 80.0
+    over_sold = 20.0
 
     fast_k = full_stoch['tabular']['fast_k']
     smooth_k = full_stoch['tabular']['smooth_k']
@@ -172,12 +182,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
     for i, fast in enumerate(fast_k):
 
         # Bearish / overbought signaling
-        if (state == 'n') and (fast >= OVER_BOUGHT):
+        if (state == 'n') and (fast >= over_bought):
             state = 'b1'
 
-        elif (state == 'b1'):
-            if (fast >= OVER_BOUGHT):
-                if (smooth_k[i] >= OVER_BOUGHT):
+        elif state == 'b1':
+            if fast >= over_bought:
+                if smooth_k[i] >= over_bought:
                     state = 'b2'
             else:
                 state = 'n'
@@ -185,8 +195,8 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
         elif (state == 'b2') and (fast < smooth_k[i]):
             state = 'b3'
 
-        elif (state == 'b3'):
-            if (fast < OVER_BOUGHT):
+        elif state == 'b3':
+            if fast < over_bought:
                 bearish.append([
                     date_extractor(position.index[i], _format='str'),
                     position['Close'][i],
@@ -197,12 +207,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
                 state = 'n'
 
         # Bullish / oversold signaling
-        elif (state == 'n') and (fast <= OVER_SOLD):
+        elif (state == 'n') and (fast <= over_sold):
             state = 's1'
 
-        elif (state == 's1'):
-            if (fast <= OVER_SOLD):
-                if (smooth_k[i] <= OVER_SOLD):
+        elif state == 's1':
+            if fast <= over_sold:
+                if smooth_k[i] <= over_sold:
                     state = 's2'
             else:
                 state = 'n'
@@ -210,8 +220,8 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
         elif (state == 's2') and (fast > smooth_k[i]):
             state = 's3'
 
-        elif (state == 's3'):
-            if (fast > OVER_SOLD):
+        elif state == 's3':
+            if fast > over_sold:
                 bullish.append([
                     date_extractor(position.index[i], _format='str'),
                     position['Close'][i],
@@ -229,12 +239,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
     for i, slow in enumerate(smooth_k):
 
         # Bearish / overbought signaling
-        if (state == 'n') and (slow >= OVER_BOUGHT):
+        if state == 'n' and slow >= over_bought:
             state = 'b1'
 
-        elif (state == 'b1'):
-            if (slow >= OVER_BOUGHT):
-                if (d_sma[i] >= OVER_BOUGHT):
+        elif state == 'b1':
+            if slow >= over_bought:
+                if d_sma[i] >= over_bought:
                     state = 'b2'
             else:
                 state = 'n'
@@ -242,8 +252,8 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
         elif (state == 'b2') and (slow < d_sma[i]):
             state = 'b3'
 
-        elif (state == 'b3'):
-            if (slow < OVER_BOUGHT):
+        elif state == 'b3':
+            if slow < over_bought:
                 bearish.append([
                     date_extractor(position.index[i], _format='str'),
                     position['Close'][i],
@@ -254,12 +264,12 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
                 state = 'n'
 
         # Bullish / oversold signaling
-        elif (state == 'n') and (slow <= OVER_SOLD):
+        elif (state == 'n') and (slow <= over_sold):
             state = 's1'
 
-        elif (state == 's1'):
-            if (slow <= OVER_SOLD):
-                if (d_sma[i] <= OVER_SOLD):
+        elif state == 's1':
+            if slow <= over_sold:
+                if d_sma[i] <= over_sold:
                     state = 's2'
             else:
                 state = 'n'
@@ -267,8 +277,8 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
         elif (state == 's2') and (slow > d_sma[i]):
             state = 's3'
 
-        elif (state == 's3'):
-            if (slow > OVER_SOLD):
+        elif state == 's3':
+            if slow > over_sold:
                 bullish.append([
                     date_extractor(position.index[i], _format='str'),
                     position['Close'][i],
@@ -299,19 +309,20 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
         name {str} -- (default: {''})
         plot_output {bool} -- (default: {True})
         out_suppress {bool} -- (default: {True})
-        p_bar {ProgressBar} -- (default: {None}) 
+        p_bar {ProgressBar} -- (default: {None})
 
     Returns:
         dict -- stoch data object
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     p_bar = kwargs.get('p_bar')
     view = kwargs.get('view')
 
-    OVER_BOUGHT = 80.0
-    OVER_SOLD = 20.0
+    over_bought = 80.0
+    over_sold = 20.0
 
     fast_k = full_stoch['tabular']['fast_k']
     state = 'n'
@@ -322,7 +333,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
     for i, fast in enumerate(fast_k):
 
         # Bearish divergences
-        if (state == 'n') and fast >= OVER_BOUGHT:
+        if (state == 'n') and fast >= over_bought:
             state = 'b1'
             s_vals[0] = fast
 
@@ -334,7 +345,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
                 s_vals[0] = fast
 
         elif state == 'b2':
-            if fast < OVER_BOUGHT:
+            if fast < over_bought:
                 state = 'b3'
                 s_vals[1] = fast
             elif fast > s_vals[0]:
@@ -369,7 +380,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
                     state = 'b1'
 
         # Bullish divergences
-        elif (state == 'n') and fast <= OVER_SOLD:
+        elif (state == 'n') and fast <= over_sold:
             state = 's1'
             s_vals[0] = fast
 
@@ -381,7 +392,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
                 s_vals[0] = fast
 
         elif state == 's2':
-            if fast > OVER_SOLD:
+            if fast > over_sold:
                 state = 's3'
                 s_vals[1] = fast
             elif fast < s_vals[0]:
@@ -456,23 +467,23 @@ def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dic
     weights = [1.0, 0.85, 0.55, 0.1]
     state2 = [0.0] * len(stochs)
 
-    for ind, s in enumerate(stochs):
-        if s != 0.0:
-            state2[ind] += s
+    for ind, stoch in enumerate(stochs):
+        if stoch != 0.0:
+            state2[ind] += stoch
 
             # Smooth the curves
             if ind - 1 >= 0:
-                state2[ind-1] += s * weights[1]
+                state2[ind-1] += stoch * weights[1]
             if ind + 1 < len(stochs):
-                state2[ind+1] += s * weights[1]
+                state2[ind+1] += stoch * weights[1]
             if ind - 2 >= 0:
-                state2[ind-2] += s * weights[2]
+                state2[ind-2] += stoch * weights[2]
             if ind + 2 < len(stochs):
-                state2[ind+2] += s * weights[2]
+                state2[ind+2] += stoch * weights[2]
             if ind - 3 >= 0:
-                state2[ind-3] += s * weights[3]
+                state2[ind-3] += stoch * weights[3]
             if ind + 3 < len(stochs):
-                state2[ind+3] += s * weights[3]
+                state2[ind+3] += stoch * weights[3]
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
