@@ -1,4 +1,6 @@
+""" hull moving average """
 import os
+
 import pandas as pd
 import numpy as np
 
@@ -67,6 +69,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- hull data object
     """
+    # pylint: disable=too-many-locals
     period = kwargs.get('period', [9, 16, 36])
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
@@ -87,12 +90,12 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     plots = []
     for per in period:
         n_div_2 = weighted_moving_avg(position, int(per/2))
-        n = weighted_moving_avg(position, per)
+        n_ma = weighted_moving_avg(position, per)
 
         wma = []
-        for i, d in enumerate(n_div_2):
-            t = (2.0 * d) - n[i]
-            wma.append(t)
+        for i, div in enumerate(n_div_2):
+            t_val = (2.0 * div) - n_ma[i]
+            wma.append(t_val)
 
         sq_period = int(np.round(np.sqrt(float(per)), 0))
         hma = weighted_moving_avg(wma, sq_period, data_type='list')
@@ -135,7 +138,7 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
     e1 = sh < (md || ln)
     n = "else"
 
-    Transitions: 
+    Transitions:
         n -> u2 = 0.5
         u2 -> u3 = 1.0
         n -> e2 = -0.5
@@ -152,29 +155,30 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
     Returns:
         dict -- swing trade data object
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     p_bar = kwargs.get('p_bar')
     config = kwargs.get('config', [9, 16, 36])
 
     max_period = kwargs.get('max_period', 36)
-    sh = swings['tabular']['short']
-    md = swings['tabular']['medium']
-    ln = swings['tabular']['long']
+    short = swings['tabular']['short']
+    med = swings['tabular']['medium']
+    long = swings['tabular']['long']
 
     close = position['Close']
     states = ['n'] * len(close)
     for i in range(max_period, len(states)):
 
-        if (sh[i] > md[i]) and (md[i] > ln[i]):
+        if (short[i] > med[i]) and (med[i] > long[i]):
             states[i] = 'u3'
-        elif (sh[i] > md[i]) and (sh[i] > ln[i]):
+        elif (short[i] > med[i]) and (short[i] > long[i]):
             states[i] = 'u2'
-        elif (sh[i] > md[i]) or (sh[i] > ln[i]):
+        elif (short[i] > med[i]) or (short[i] > long[i]):
             states[i] = 'u1'
-        elif (sh[i] < md[i]) and (md[i] < ln[i]):
+        elif (short[i] < med[i]) and (med[i] < long[i]):
             states[i] = 'e3'
-        elif (sh[i] < md[i]) and (sh[i] < ln[i]):
+        elif (short[i] < med[i]) and (short[i] < long[i]):
             states[i] = 'e2'
-        elif (sh[i] < md[i]) or (sh[i] < ln[i]):
+        elif (short[i] < med[i]) or (short[i] < long[i]):
             states[i] = 'e1'
 
     periods = ''
@@ -189,7 +193,7 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         date = position.index[i].strftime("%Y-%m-%d")
         data = None
 
-        if (states[i] == 'u2'):
+        if states[i] == 'u2':
             if (states[i-1] == 'e3') or (states[i-1] == 'e2') or (states[i-1] == 'e1'):
                 signal[i] = 0.5
                 set_block = 'u1'
@@ -210,10 +214,10 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
                 "date": date
             }
 
-        elif close[i] > ln[i]:
+        elif close[i] > long[i]:
             signal[i] = 0.1
 
-        elif (states[i] == 'e2'):
+        elif states[i] == 'e2':
             if (states[i-1] == 'u3') or (states[i-1] == 'u2') or (states[i-1] == 'u1'):
                 set_block = 'e1'
                 signal[i] = -0.5
@@ -234,7 +238,7 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
                 "date": date
             }
 
-        elif close[i] < ln[i]:
+        elif close[i] < long[i]:
             signal[i] = -0.1
 
         if data is not None:
@@ -266,6 +270,7 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     Returns:
         dict -- hull data object
     """
+    # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')

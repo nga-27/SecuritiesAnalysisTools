@@ -1,4 +1,6 @@
+""" know sure thing """
 import os
+
 import pandas as pd
 import numpy as np
 
@@ -31,7 +33,7 @@ def know_sure_thing(fund: pd.DataFrame, **kwargs) -> dict:
     views = kwargs.get('views', '')
     p_bar = kwargs.get('progress_bar')
 
-    kst = dict()
+    kst = {}
 
     signal, signal_line = kst_signal(
         fund, plot_output=plot_output, name=name, views=views, p_bar=p_bar)
@@ -73,6 +75,7 @@ def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- kst signal and its 9d sma signal line
     """
+    # pylint: disable=too-many-locals
     periods = kwargs.get('periods', [10, 15, 20, 30])
     sma_intervals = kwargs.get('sma_intervals', [10, 10, 10, 15])
     plot_output = kwargs.get('plot_output', True)
@@ -92,8 +95,8 @@ def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
         if p_bar:
             p_bar.uptick(increment=increment)
 
-        for j in range(len(signal)):
-            signal[j] += float(i + 1) * sma[j]
+        for j, sig in enumerate(signal):
+            sig += float(i + 1) * sma[j]
         if p_bar:
             p_bar.uptick(increment=increment)
 
@@ -130,6 +133,7 @@ def kst_indicators(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
     Returns:
         dict -- kst data object
     """
+    # pylint: disable=too-many-branches
     upper_thresh = kwargs.get('upper_thresh', 85.0)
     lower_thresh = kwargs.get('lower_thresh', 15.0)
 
