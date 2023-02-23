@@ -1,4 +1,7 @@
+""" rate of change """
 import os
+from typing import Union
+
 import pandas as pd
 import numpy as np
 
@@ -8,7 +11,8 @@ from libs.features import normalize_signals
 from .moving_average import adjust_signals, exponential_moving_avg
 
 
-def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], **kwargs) -> dict:
+def rate_of_change_oscillator(fund: pd.DataFrame,
+                              periods: Union[list, None] = None, **kwargs) -> dict:
     """Rate of Change Oscillator
 
     Arguments:
@@ -26,44 +30,47 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
     Returns:
         dict -- roc data object
     """
+    # pylint: disable=too-many-locals
+    if not periods:
+        periods = [10, 20, 40]
+
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
     p_bar = kwargs.get('progress_bar')
 
-    roc = dict()
-
-    tshort = roc_signal(fund, periods[0])
+    roc = {}
+    t_short = roc_signal(fund, periods[0])
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    tmed = roc_signal(fund, periods[1])
+    t_med = roc_signal(fund, periods[1])
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    tlong = roc_signal(fund, periods[2])
+    t_long = roc_signal(fund, periods[2])
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    roc['tabular'] = {'short': tshort, 'medium': tmed, 'long': tlong}
+    roc['tabular'] = {'short': t_short, 'medium': t_med, 'long': t_long}
     roc['short'] = periods[0]
     roc['medium'] = periods[1]
     roc['long'] = periods[2]
 
-    tsx, ts2 = adjust_signals(fund, tshort, offset=periods[0])
-    tmx, tm2 = adjust_signals(fund, tmed, offset=periods[1])
-    tlx, tl2 = adjust_signals(fund, tlong, offset=periods[2])
+    tsx, ts2 = adjust_signals(fund, t_short, offset=periods[0])
+    tmx, tm2 = adjust_signals(fund, t_med, offset=periods[1])
+    tlx, tl2 = adjust_signals(fund, t_long, offset=periods[2])
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Rate of Change Oscillator"
     plots = [ts2, tm2, tl2]
-    xs = [tsx, tmx, tlx]
+    x_s = [tsx, tmx, tlx]
 
     generate_plot(
         PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=[tshort, tmed, tlong], y1_label='Price', y2_label='Rate of Change',
+            y_list_2=[t_short, t_med, t_long], y1_label='Price', y2_label='Rate of Change',
             title=title, legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
             plot_output=plot_output, filename=os.path.join(name, views, f"rate_of_change_{name}")
         )
@@ -71,7 +78,7 @@ def rate_of_change_oscillator(fund: pd.DataFrame, periods: list = [10, 20, 40], 
 
     generate_plot(
         PlotType.GENERIC_PLOTTING, plots, **dict(
-            x=xs, title=title,
+            x=x_s, title=title,
             legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
             plot_output=plot_output
         )
@@ -133,7 +140,7 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
     views = kwargs.get('views', '')
     p_bar = kwargs.get('p_bar')
 
-    MAP_TABULAR = {
+    map_tabular = {
         'short': 0.65,
         'medium': 1.0,
         'long': 0.4
@@ -143,11 +150,11 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
     roc_dict['signals'] = []
 
     # Look at zero crossovers first
-    roc_dict = roc_zero_crossovers(fund, roc_dict, MAP_TABULAR)
+    roc_dict = roc_zero_crossovers(fund, roc_dict, map_tabular)
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    roc_dict = roc_over_threshold_crossovers(fund, roc_dict, MAP_TABULAR)
+    roc_dict = roc_over_threshold_crossovers(fund, roc_dict, map_tabular)
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
@@ -171,7 +178,7 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
     return roc_dict
 
 
-def roc_zero_crossovers(fund: pd.DataFrame, roc_dict: dict, MAP_TABULAR: dict, **kwargs) -> dict:
+def roc_zero_crossovers(fund: pd.DataFrame, roc_dict: dict, map_tabular: dict, **kwargs) -> dict:
     """Rate of Change Zero Crossovers
 
     Arguments:
@@ -185,6 +192,7 @@ def roc_zero_crossovers(fund: pd.DataFrame, roc_dict: dict, MAP_TABULAR: dict, *
     Returns:
         dict -- roc data object
     """
+    # pylint: disable=too-many-locals
     weight = kwargs.get('weight', 0.75)
 
     tabular = roc_dict['tabular']
@@ -193,7 +201,7 @@ def roc_zero_crossovers(fund: pd.DataFrame, roc_dict: dict, MAP_TABULAR: dict, *
 
     for tab in tabular:
         sh_state = 'n'
-        multiple = MAP_TABULAR[tab] * weight
+        multiple = map_tabular[tab] * weight
         period = roc_dict[tab]
 
         for i, sig in enumerate(tabular[tab]):
@@ -237,10 +245,11 @@ def roc_zero_crossovers(fund: pd.DataFrame, roc_dict: dict, MAP_TABULAR: dict, *
     return roc_dict
 
 
-def roc_over_threshold_crossovers(fund: pd.DataFrame, roc_dict: dict, MAP_TABULAR: dict, **kwargs) -> dict:
+def roc_over_threshold_crossovers(fund: pd.DataFrame, roc_dict: dict,
+                                  map_tabular: dict, **kwargs) -> dict:
     """Rate of Change: Over-Threshold Crossovers
 
-    Dynamically determine thresholds, then find when roc signal enters/leaves zone. Trigger 
+    Dynamically determine thresholds, then find when roc signal enters/leaves zone. Trigger
     signal on leaving zone.
 
     Arguments:
@@ -256,6 +265,7 @@ def roc_over_threshold_crossovers(fund: pd.DataFrame, roc_dict: dict, MAP_TABULA
     Returns:
         dict -- roc data object
     """
+    # pylint: disable=too-many-locals
     top_thresh = kwargs.get('top_thresh', 90.0)
     bottom_thresh = kwargs.get('bottom_thresh', 10.0)
     weight = kwargs.get('weight', 1.0)
@@ -269,7 +279,7 @@ def roc_over_threshold_crossovers(fund: pd.DataFrame, roc_dict: dict, MAP_TABULA
         over_bottom = np.percentile(tabular[tab], bottom_thresh)
 
         state = 'n'
-        multiple = MAP_TABULAR[tab] * weight
+        multiple = map_tabular[tab] * weight
         period = roc_dict[tab]
 
         for i, sig in enumerate(tabular[tab]):

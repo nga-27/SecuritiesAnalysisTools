@@ -1,10 +1,13 @@
+""" resistance support """
 import os
+from typing import Tuple, Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import generate_plot, PlotType, dates_convert_from_index, INDEXES
 
+# pylint: disable=pointless-string-statement
 """
     1. Combine points backward (i.e. for time=34 combine 34's and 21's)
     2. Sort on y
@@ -36,9 +39,10 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- contains all trendline information
     """
+    # pylint: disable=too-many-locals
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
-    timeframes = kwargs.get('timeframes', [13, 21, 34, 55])
+    time_frames = kwargs.get('timeframes', [13, 21, 34, 55])
     progress_bar = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
@@ -46,24 +50,23 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     resist_support_lines['support'] = {}
     resist_support_lines['resistance'] = {}
 
-    increment = 0.5 / (float(len(timeframes)))
+    increment = 0.5 / (float(len(time_frames)))
 
     support = {}
     resistance = {}
-    for time in timeframes:
+    for time in time_frames:
         support[str(time)] = {}
-        x, y = find_points(data, line_type='support',
-                           timeframe=time, filter_type='windowed')
-        support[str(time)]['x'] = x
-        support[str(time)]['y'] = y
+        x_list, y_list = find_points(data, line_type='support',
+                           time_frame=time, filter_type='windowed')
+        support[str(time)]['x'] = x_list
+        support[str(time)]['y'] = y_list
         sorted_support = sort_and_group(support)
-        resist_support_lines['support'][str(
-            time)] = cluster_notables(sorted_support, data)
+        resist_support_lines['support'][str(time)] = cluster_notables(sorted_support, data)
 
         resistance[str(time)] = {}
-        x2, y2 = find_points(data, line_type='resistance', timeframe=time)
-        resistance[str(time)]['x'] = x2
-        resistance[str(time)]['y'] = y2
+        x2_list, y2_list = find_points(data, line_type='resistance', time_frame=time)
+        resistance[str(time)]['x'] = x2_list
+        resistance[str(time)]['y'] = y2_list
         sorted_resistance = sort_and_group(resistance)
         resist_support_lines['resistance'][str(
             time)] = cluster_notables(sorted_resistance, data)
@@ -71,32 +74,32 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
         if progress_bar is not None:
             progress_bar.uptick(increment=increment)
 
-    Xs, Ys, Xr, Yr = get_plot_content(
-        data, resist_support_lines, selected_timeframe=str(timeframes[len(timeframes)-1]))
+    x_support, y_support, x_resistance, y_resistance = get_plot_content(
+        data, resist_support_lines, selected_timeframe=str(time_frames[len(time_frames)-1]))
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    Xc, Yc = res_sup_unions(Yr, Xr, Ys, Xs)
+    x_combined, y_combined = res_sup_unions(y_resistance, x_resistance, y_support, x_support)
     # Odd list behavior when no res/sup lines drawn on appends, so if-else to fix
-    if len(Yc) > 0:
-        Xp = Xc.copy()
-        Xp2 = dates_convert_from_index(data, Xp)
-        Yp = Yc.copy()
-        Xp2.append(data.index)
-        Yp.append(remove_dates_from_close(data))
+    if len(y_combined) > 0:
+        x_p = x_combined.copy()
+        x_p2 = dates_convert_from_index(data, x_p)
+        y_p = y_combined.copy()
+        x_p2.append(data.index)
+        y_p.append(remove_dates_from_close(data))
     else:
-        Xp2 = data.index
-        Yp = [remove_dates_from_close(data)]
-    c = colorize_plots(len(Yp), primary_plot_index=len(Yp)-1)
+        x_p2 = data.index
+        y_p = [remove_dates_from_close(data)]
+    colors = colorize_plots(len(y_p), primary_plot_index=len(y_p)-1)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
     name2 = INDEXES.get(name, name)
     generate_plot(
-        PlotType.GENERIC_PLOTTING, Yp, **dict(
-            x=Xp2, colors=c, title=f'{name2} Major Resistance & Support', save_fig=True,
+        PlotType.GENERIC_PLOTTING, y_p, **dict(
+            x=x_p2, colors=colors, title=f'{name2} Major Resistance & Support', save_fig=True,
             plot_output=plot_output, filename=os.path.join(name, view, f"resist_support_{name}.png")
         )
     )
@@ -104,7 +107,8 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
-    analysis = detailed_analysis([Yr, Ys, Yc], data, key_args={'Colors': c})
+    analysis = detailed_analysis([y_resistance, y_support, y_combined],
+        data, key_args={'Colors': colors})
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
@@ -113,7 +117,7 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     return analysis
 
 
-def truncate_points(X: list, Y: list) -> list:
+def truncate_points(x_list: list, y_list: list) -> Tuple[list, list]:
     """Truncate Points
 
     Shrink list of a resistance/support line so that it doesn't last the entire
@@ -126,20 +130,20 @@ def truncate_points(X: list, Y: list) -> list:
     Returns:
         list -- new, adjust lists of x and y values
     """
-    new_X = []
-    new_Y = []
-    for i, x in enumerate(X):
-        if x not in new_X:
-            new_X.append(x)
-            new_Y.append(Y[i])
-    return new_X, new_Y
+    new_x = []
+    new_y = []
+    for i, x_val in enumerate(x_list):
+        if x_val not in new_x:
+            new_x.append(x_val)
+            new_y.append(y_list[i])
+    return new_x, new_y
 
 
-def find_points(data: pd.DataFrame, timeframe: int, **kwargs) -> list:
+def find_points(data: pd.DataFrame, time_frame: int, **kwargs) -> Tuple[list, list]:
     """Find Points
 
     Arguments:
-        data {pd.DataFrame} 
+        data {pd.DataFrame}
         timeframe {int} -- time window (number of periods)
 
     Keyword Arguments:
@@ -157,16 +161,16 @@ def find_points(data: pd.DataFrame, timeframe: int, **kwargs) -> list:
         total_entries -= 1
 
     sect_count = 0
-    X = []
-    Y = []
+    x_list = []
+    y_list = []
 
     if filter_type == 'windowed':
-        sections = int(np.ceil(float(total_entries) / float(timeframe)))
-        while (sect_count < sections):
-            left = sect_count * timeframe
-            right = left + timeframe
+        sections = int(np.ceil(float(total_entries) / float(time_frame)))
+        while sect_count < sections:
+            left = sect_count * time_frame
+            right = left + time_frame
             # print(f"tot: {total_entries}, left: {left}, right: {right}")
-            if total_entries < (left + timeframe + 1):
+            if total_entries < (left + time_frame + 1):
                 right = total_entries
 
             if line_type == 'support':
@@ -176,16 +180,16 @@ def find_points(data: pd.DataFrame, timeframe: int, **kwargs) -> list:
                 val = np.max(data['Close'][left:right])
                 point = np.where(data['Close'][left:right] == val)[0][0] + left
 
-            X.append(point)
-            Y.append(val)
+            x_list.append(point)
+            y_list.append(val)
 
             sect_count += 1
 
     if filter_type == 'convolution':
-        while (sect_count + timeframe < total_entries):
+        while sect_count + time_frame < total_entries:
             left = sect_count
-            right = left + timeframe
-            if total_entries < (left + timeframe + 1):
+            right = left + time_frame
+            if total_entries < (left + time_frame + 1):
                 right = total_entries
 
             if line_type == 'support':
@@ -195,13 +199,13 @@ def find_points(data: pd.DataFrame, timeframe: int, **kwargs) -> list:
                 val = np.max(data['Close'][left:right])
                 point = np.where(data['Close'][left:right] == val)[0][0] + left
 
-            X.append(point)
-            Y.append(val)
+            x_list.append(point)
+            y_list.append(val)
 
             sect_count += 1
-        X, Y = truncate_points(X, Y)
+        x_list, y_list = truncate_points(x_list, y_list)
 
-    return X, Y
+    return x_list, y_list
 
 
 def sort_and_group(points: dict) -> list:
@@ -215,19 +219,20 @@ def sort_and_group(points: dict) -> list:
     Returns:
         list -- list of condensed lines
     """
-    x = []
-    y = []
+    x_list = []
+    y_list = []
     for key in points.keys():
-        x.extend(points[key]['x'])
-        y.extend(points[key]['y'])
-    zipped = list(zip(x, y))
+        x_list.extend(points[key]['x'])
+        y_list.extend(points[key]['y'])
+
+    zipped = list(zip(x_list, y_list))
     zipped.sort(key=lambda x: x[1])
     notables = []
     t_note = 0
     for i in range(1, len(zipped)-1):
         val = (zipped[i][1] - zipped[i-1][1]) / zipped[i-1][1]
         val *= 100.0
-        if (val < CLUSTER_THRESHOLD) and (val > -1 * CLUSTER_THRESHOLD):
+        if -1 * CLUSTER_THRESHOLD < val < CLUSTER_THRESHOLD:
             if zipped[i-1][0] not in notables:
                 notables.append(zipped[i-1][0])
                 t_note += 1
@@ -268,7 +273,7 @@ def cluster_notables(sorted_x: list, data: pd.DataFrame) -> list:
     for i in range(1, len(sorted_x)):
         val = (data['Close'][sorted_x[i]] - data['Close']
                [sub[len(sub)-1]]) / data['Close'][sub[len(sub)-1]] * 100.0
-        if (val > -1*CLUSTER_THRESHOLD) and (val < CLUSTER_THRESHOLD):
+        if CLUSTER_THRESHOLD > val > -1 * CLUSTER_THRESHOLD:
             sub.append(sorted_x[i])
         else:
             clusters.append(sub)
@@ -278,10 +283,10 @@ def cluster_notables(sorted_x: list, data: pd.DataFrame) -> list:
     lines = []
     for chunk in clusters:
         content = {}
-        ys = []
-        for x in chunk:
-            ys.append(data['Close'][x])
-        content['price'] = np.round(np.mean(ys), 2)
+        ys_list = []
+        for x_val in chunk:
+            ys_list.append(data['Close'][x_val])
+        content['price'] = np.round(np.mean(ys_list), 2)
         content['x'] = chunk
         content['start'] = int(np.min(chunk))
         lines.append(content)
@@ -291,7 +296,7 @@ def cluster_notables(sorted_x: list, data: pd.DataFrame) -> list:
 
 def get_plot_content(data: pd.DataFrame,
                      rs_lines: dict,
-                     selected_timeframe: str = '144') -> list:
+                     selected_timeframe: str = '144') -> Tuple[list, list, list, list]:
     """Get Plot Content
 
     Generate plot lists for resistance/support lines
@@ -306,36 +311,37 @@ def get_plot_content(data: pd.DataFrame,
     Returns:
         list -- x-support, y-support, x-resistance, y-resistance lists
     """
-    Xs = []
-    Ys = []
-    Xs.append(list(range(len(data['Close']))))
-    Ys.append(data['Close'])
+    x_support = []
+    y_support = []
+    x_support.append(list(range(len(data['Close']))))
+    y_support.append(data['Close'])
 
-    Xr = []
-    Yr = []
-    Xr.append(list(range(len(data['Close']))))
-    Yr.append(data['Close'])
+    x_resistance = []
+    y_resistance = []
+    x_resistance.append(list(range(len(data['Close']))))
+    y_resistance.append(data['Close'])
 
     if 'support' in rs_lines.keys():
         if selected_timeframe in rs_lines['support'].keys():
             for key in rs_lines['support'][selected_timeframe]:
-                x = list(range(key['start'], len(data['Close'])))
-                y = [key['price']] * len(x)
-                Xs.append(x)
-                Ys.append(y)
+                x_list = list(range(key['start'], len(data['Close'])))
+                y_list = [key['price']] * len(x_list)
+                x_support.append(x_list)
+                y_support.append(y_list)
 
     if 'resistance' in rs_lines.keys():
         if selected_timeframe in rs_lines['resistance'].keys():
             for key in rs_lines['resistance'][selected_timeframe]:
-                x = list(range(key['start'], len(data['Close'])))
-                y = [key['price']] * len(x)
-                Xr.append(x)
-                Yr.append(y)
+                x_list = list(range(key['start'], len(data['Close'])))
+                y_list = [key['price']] * len(x_list)
+                x_resistance.append(x_list)
+                y_resistance.append(y_list)
 
-    return Xs, Ys, Xr, Yr
+    return x_support, y_support, x_resistance, y_resistance
 
 
-def res_sup_unions(Yr: list, Xr: list, Ys: list, Xs: list) -> list:
+def res_sup_unions(y_resistance: list, x_resistance: list,
+                   y_support: list, x_support: list) -> Tuple[list, list]:
     """Resistance / Support Unions
 
     Join a resistance/support line that becomes a support/resistance line. Combines Resistances and
@@ -350,71 +356,75 @@ def res_sup_unions(Yr: list, Xr: list, Ys: list, Xs: list) -> list:
     Returns:
         list -- x-combined points, y-combined points lists
     """
-    Yc = []
-    Xc = []
+    # pylint: disable=too-many-locals
+    y_combined = []
+    x_combined = []
 
-    Yc.extend(Yr)
-    Xc.extend(Xr)
-    Yc.extend(Ys)
-    Xc.extend(Xs)
+    y_combined.extend(y_resistance)
+    x_combined.extend(x_resistance)
+    y_combined.extend(y_support)
+    x_combined.extend(x_support)
 
-    C = list(zip(Xc, Yc))
-    C.sort(key=lambda x: x[1][0])
-    Xc, Yc = list(zip(*C))
+    combined = list(zip(x_combined, y_combined))
+    combined.sort(key=lambda x: x[1][0])
+    x_combined, y_combined = list(zip(*combined))
 
     no_changes = False
     while not no_changes:
         no_changes = True
-        Yu = []
-        Xu = []
+        y_u = []
+        x_u = []
         added_ith = False
 
-        for i in range(1, len(Yc)):
-            neg = Yc[i][0] * (1.0 - (MAJOR_GROUP_THRESHOLD / 100.0))
-            pos = Yc[i][0] * (1.0 + (MAJOR_GROUP_THRESHOLD / 100.0))
+        for i in range(1, len(y_combined)):
+            neg = y_combined[i][0] * (1.0 - (MAJOR_GROUP_THRESHOLD / 100.0))
+            pos = y_combined[i][0] * (1.0 + (MAJOR_GROUP_THRESHOLD / 100.0))
 
-            if ((Yc[i-1][0] > neg) and (Yc[i-1][0] < pos)):
+            if ((y_combined[i-1][0] > neg) and (y_combined[i-1][0] < pos)):
                 # Two lines are near each other, average and combine. If added_ith=True, pop item
                 # in list before to combine
                 if added_ith:
                     added_ith = False
-                    Yu.pop(len(Yu)-1)
-                    Xu.pop(len(Xu)-1)
-                start = min(Xc[i-1][0], Xc[i][0])
-                end = max(Xc[i-1][len(Xc[i-1])-1], Xc[i][len(Xc[i])-1])
-                y = [np.round(np.mean([Yc[i-1][0], Yc[i][0]]), 2)
-                     ] * (end-start)
-                x = list(range(start, end))
-                Xu.append(x)
-                Yu.append(y)
+                    y_u.pop(len(y_u)-1)
+                    x_u.pop(len(x_u)-1)
+
+                start = min(x_combined[i-1][0], x_combined[i][0])
+                end = max(
+                    x_combined[i-1][len(x_combined[i-1])-1],
+                    x_combined[i][len(x_combined[i])-1]
+                )
+                y_val = [np.round(np.mean([y_combined[i-1][0], y_combined[i][0]]), 2)] * (end-start)
+                x_val = list(range(start, end))
+                x_u.append(x_val)
+                y_u.append(y_val)
                 no_changes = False
 
-            elif (i == 1):
+            elif i == 1:
                 # Special case where neither i=0 or i=1 are near, append both
-                Xu.append(Xc[i-1])
-                Xu.append(Xc[i])
-                Yu.append(Yc[i-1])
-                Yu.append(Yc[i])
+                x_u.append(x_combined[i-1])
+                x_u.append(x_combined[i])
+                y_u.append(y_combined[i-1])
+                y_u.append(y_combined[i])
                 added_ith = True
 
             else:
                 # ith case added
-                Xu.append(Xc[i])
-                Yu.append(Yc[i])
+                x_u.append(x_combined[i])
+                y_u.append(y_combined[i])
                 added_ith = True
 
-        y = [y[0] for y in Yu]
+        y_val = [y[0] for y in y_u]
 
-        Xc = Xu.copy()
-        Yc = Yu.copy()
+        x_combined = x_u.copy()
+        y_combined = y_u.copy()
 
-    return Xc, Yc
+    return x_combined, y_combined
 
 
 def get_nearest_lines(ylist: list,
                       cur_price: float,
                       support_resistance='support',
-                      color=[]) -> list:
+                      color: Union[list, None] = None) -> list:
     """Get Nearest Lines
 
     Arguments:
@@ -428,10 +438,14 @@ def get_nearest_lines(ylist: list,
     Returns:
         list -- keys, list of price-to-list objects
     """
+    # pylint: disable=too-many-branches,too-many-statements
+    if not color:
+        color = []
+
     keys = []
     if support_resistance == 'major':
-        for y in range(len(ylist)-1, -1, -1):
-            percent = np.round((ylist[y] - cur_price) / cur_price * 100.0, 3)
+        for y_val in range(len(ylist)-1, -1, -1):
+            percent = np.round((ylist[y_val] - cur_price) / cur_price * 100.0, 3)
             if percent < 0.0:
                 state = 'Support'
             else:
@@ -439,26 +453,31 @@ def get_nearest_lines(ylist: list,
 
             y_color = 'black'
             if len(color) > 0:
-                y_color = color[y]
+                y_color = color[y_val]
 
             keys.append(
-                {'Price': f"{ylist[y]}", 'Change': f"{percent}%", 'Color': y_color, 'State': state})
+                {
+                    'Price': f"{ylist[y_val]}",
+                    'Change': f"{percent}%",
+                    'Color': y_color,
+                    'State': state
+                })
         return keys
 
-    elif support_resistance == 'support':
-        endcap = 0
+    if support_resistance == 'support':
+        end_cap = 0
         count = 0
         modifier = -1
         while ((count < len(ylist)) and (cur_price > ylist[count])):
             count += 1
     else:
-        endcap = len(ylist) - 1
+        end_cap = len(ylist) - 1
         count = len(ylist) - 1
         modifier = 1
         while ((count >= 0) and (cur_price < ylist[count])):
             count -= 1
 
-    if count != endcap:
+    if count != end_cap:
         count += modifier
         if support_resistance == 'support':
             if (count - NUM_NEAREST_LINES) < 0:
@@ -509,7 +528,8 @@ def get_nearest_lines(ylist: list,
     return keys
 
 
-def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> dict:
+def detailed_analysis(zipped_content: list, data: pd.DataFrame,
+                      key_args: Union[dict, None] = None) -> dict:
     """Detailed Analysis
 
     Arguments:
@@ -522,6 +542,9 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> 
     Returns:
         dict -- resistance/support data object
     """
+    if not key_args:
+        key_args = {}
+
     analysis = {}
     colors = []
 
@@ -530,13 +553,13 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> 
     if 'Colors' in key_args.keys():
         colors = key_args['Colors']
 
-    Yr = zipped_content[0]
-    Ys = zipped_content[1]
-    Yc = zipped_content[2]
+    y_resistance = zipped_content[0]
+    y_support = zipped_content[1]
+    y_combined = zipped_content[2]
 
-    res = [y[0] for y in Yr]
-    sup = [y[0] for y in Ys]
-    maj = [y[0] for y in Yc]
+    res = [y[0] for y in y_resistance]
+    sup = [y[0] for y in y_support]
+    maj = [y[0] for y in y_combined]
 
     zipper = list(zip(maj, colors))
     zipper.sort(key=lambda x: x[0])
@@ -564,7 +587,7 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame, key_args={}) -> 
     return analysis
 
 
-def remove_dates_from_close(df: pd.DataFrame) -> list:
+def remove_dates_from_close(data_frame: pd.DataFrame) -> list:
     """Remove Dates from Close
 
     Cleanse data of dates in index
@@ -576,8 +599,8 @@ def remove_dates_from_close(df: pd.DataFrame) -> list:
         list -- fund dataset without dates
     """
     fixed_list = []
-    for i in range(len(df)):
-        fixed_list.append(df['Close'][i])
+    for i in range(len(data_frame)):
+        fixed_list.append(data_frame['Close'][i])
     return fixed_list
 
 
@@ -593,21 +616,21 @@ def colorize_plots(len_of_plots: int, primary_plot_index: int = None) -> list:
     Returns:
         list -- list of colors
     """
-    NUM_COLORS = 6
+    num_colors = 6
     colors = []
 
     for i in range(len_of_plots):
-        if i % NUM_COLORS == 1:
+        if i % num_colors == 1:
             colors.append('purple')
-        elif i % NUM_COLORS == 2:
+        elif i % num_colors == 2:
             colors.append('blue')
-        elif i % NUM_COLORS == 3:
+        elif i % num_colors == 3:
             colors.append('green')
-        elif i % NUM_COLORS == 4:
+        elif i % num_colors == 4:
             colors.append('yellow')
-        elif i % NUM_COLORS == 5:
+        elif i % num_colors == 5:
             colors.append('orange')
-        elif i % NUM_COLORS == 0:
+        elif i % num_colors == 0:
             colors.append('red')
 
     if primary_plot_index is not None:
