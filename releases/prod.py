@@ -170,8 +170,7 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['parabolic_sar'] = parabolic_sar(
-                fund, adx_tabular=fund_data['adx']['tabular'], plot_output=False,
-                name=fund_name, progress_bar=prog_bar, view=period)
+                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['demand_index'] = demand_index(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)

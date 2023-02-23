@@ -496,7 +496,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
         filename = os.path.join(name, view, f"swing_trades_{function}_{name}.png")
         generate_plot(
             PlotType.SPECIALITY, [fund['Close'], short, med, long, swings], **dict(
-                alt_ax_index=[4], legend=['Swing Signal'], title=name2, save_fig=True, 
+                alt_ax_index=[4], legend=['Swing Signal'], title=name2, save_fig=True,
                 plot_output=plot_output, filename=filename
             )
         )
