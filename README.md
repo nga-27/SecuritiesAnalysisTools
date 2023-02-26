@@ -63,7 +63,7 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 * `0.2.11`, `2021-11-23` - Risk factor bug handling + modified metrics for low interest rates
 * `0.2.12`, `2022-04-17` - Better error handling of VQ failures, notably since API is no longer available.
 * `0.2.14`, `2023-01-01` - Integration of `Intellistop` (replacement for VQ)
-* **`1.0.0`, `2023-01-31`** - Release 3 - the first full release
+* **`1.0.0`, `2023-02-25`** - Release 3 - the first full release
 
 
 ---
