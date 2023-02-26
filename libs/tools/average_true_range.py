@@ -1,7 +1,8 @@
+""" Average True Range """
 import os
 import pandas as pd
 
-from libs.utils import dual_plotting, INDEXES
+from libs.utils import generate_plot, PlotType, INDEXES
 from libs.features import normalize_signals
 from .moving_average import exponential_moving_avg
 
@@ -28,13 +29,11 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
     p_bar = kwargs.get('progress_bar')
     out_suppress = kwargs.get('out_suppress', False)
 
-    atr = dict()
+    atr = {}
     atr['tabular'] = get_atr_signal(
         fund, plot_output=plot_output, name=name, views=views, out_suppress=out_suppress)
 
-    atr = atr_indicators(fund, atr, plot_output=plot_output,
-                         name=name, out_suppress=out_suppress)
-
+    atr = atr_indicators(fund, atr, plot_output=plot_output, name=name, out_suppress=out_suppress)
     atr['length_of_signal'] = len(atr['tabular'])
     atr['type'] = 'oscillator'
 
@@ -60,6 +59,7 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- atr signal
     """
+    # pylint: disable=too-many-locals
     period = kwargs.get('period', 14)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
@@ -85,12 +85,19 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
     if not out_suppress:
         name2 = INDEXES.get(name, name)
         title = f"{name2} - Average True Range"
-        if plot_output:
-            dual_plotting(fund['Close'], signal, 'Price', 'ATR', title=title)
-        else:
-            filename = os.path.join(name, views, f"atr_{name}.png")
-            dual_plotting(fund['Close'], signal, 'Price', 'ATR',
-                          title=title, saveFig=True, filename=filename)
+
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            fund['Close'],
+            **dict(
+                y_list_2=signal,
+                y1_label='Price',
+                y2_label='ATR',
+                title=title,
+                filename=os.path.join(name, views, f"atr_{name}.png"),
+                plot_output=plot_output
+            )
+        )
 
     return signal
 
@@ -111,8 +118,9 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
         out_suppress {bool} -- (default: {False})
 
     Returns:
-        dict: [description]
+        dict: average_true_range dict
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements,chained-comparison
     periods = kwargs.get('periods', [50, 200])
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
@@ -192,8 +200,15 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
 
     if plot_output and not out_suppress:
         name2 = INDEXES.get(name, name)
-        title = f"{name2} - ATR Moving Averages"
-        dual_plotting(fund['Close'], [atr_dict['tabular'],
-                                      ema_1, ema_2], 'Price', 'ATRs', title=title)
+        title = f"{name2} - Average True Range Moving Averages"
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            fund['Close'],
+            **dict(
+                y_list_2=[atr_dict['tabular'], ema_1, ema_2],
+                y1_label='Price', y2_label='ATRs', title=title,
+                plot_output=plot_output
+            )
+        )
 
     return atr_dict

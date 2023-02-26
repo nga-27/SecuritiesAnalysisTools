@@ -1,12 +1,16 @@
+""" on balance volume """
 import os
+from typing import List, Tuple
 
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, dual_plotting, bar_chart, dates_extractor_list, INDEXES
+from libs.utils import (
+    dates_extractor_list, INDEXES, generate_plot, PlotType
+)
 
 from .moving_average import simple_moving_avg
-from .trends import get_trendlines, get_trendlines_regression
+from .trends import get_trend_lines, get_trend_lines_regression
 
 
 def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
@@ -30,12 +34,13 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         obv_dict {dict} -- contains all obv information
     """
+    # pylint: disable=too-many-locals
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     filter_factor = kwargs.get('filter_factor', 5.0)
     progress_bar = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
-    trendlines = kwargs.get('trendlines', False)
+    trend_lines = kwargs.get('trendlines', False)
 
     obv_dict = generate_obv_content(
         fund,
@@ -49,7 +54,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     obv_dict['dates'] = dates
 
     # Apply trend analysis to find divergences
-    trend_data = dict()
+    trend_data = {}
     trend_data['Close'] = obv_dict['obv']
     trend_data['index'] = fund.index
     trend_data2 = pd.DataFrame.from_dict(trend_data)
@@ -57,7 +62,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     sub_name = f"obv3_{name}"
     max_window = int(len(fund['Close']) / 4)
-    obv_dict['trends'] = get_trendlines(
+    obv_dict['trends'] = get_trend_lines(
         trend_data2, name=name,
         sub_name=sub_name,
         plot_output=plot_output,
@@ -71,8 +76,8 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     end = len(obv_dict['obv'])
     obv = obv_dict['obv'][end-100: end]
-    if obv[1] != 0.0 and trendlines:
-        get_trendlines_regression(
+    if obv[1] != 0.0 and trend_lines:
+        get_trend_lines_regression(
             obv, dates=fund.index, plot_output=plot_output, indicator='OBV')
 
     if progress_bar is not None:
@@ -80,8 +85,8 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
 
     end = len(obv_dict['obv'])
     obv = obv_dict['obv'][end-50: end]
-    if obv[1] != 0.0 and trendlines:
-        get_trendlines_regression(
+    if obv[1] != 0.0 and trend_lines:
+        get_trend_lines_regression(
             obv, dates=None, plot_output=plot_output, indicator='OBV')
 
     if progress_bar is not None:
@@ -110,6 +115,7 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- obv data object
     """
+    # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
     filter_factor = kwargs.get('filter_factor', 2.5)
     sma_interval = kwargs.get('sma_interval', 20)
@@ -117,7 +123,7 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
     progress_bar = kwargs.get('progress_bar')
     view = kwargs.get('view')
 
-    obv_dict = dict()
+    obv_dict = {}
 
     obv = generate_obv_signal(fund)
     obv_dict['obv'] = obv
@@ -125,11 +131,11 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)
 
-    ofilter, features = obv_feature_detection(
+    o_filter, features = obv_feature_detection(
         obv, fund, sma_interval=sma_interval,
         filter_factor=filter_factor, progress_bar=progress_bar, plot_output=plot_output)
 
-    obv_dict['tabular'] = ofilter
+    obv_dict['tabular'] = o_filter
     obv_dict['signals'] = features
 
     if progress_bar is not None:
@@ -143,35 +149,35 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
         else:
             volume.append(fund['Volume'][i])
 
-    x = dates_extractor_list(fund)
+    x_dates = dates_extractor_list(fund)
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - On Balance Volume (OBV)'
     name4 = name3 + ' - Significant OBV Changes'
     name5 = name3 + ' - Volume'
 
-    if plot_output:
-        dual_plotting(fund['Close'], obv, x=x, y1_label='Position Price',
-                      y2_label='On Balance Volume', x_label='Trading Days', title=name2,
-                      subplot=True)
-        dual_plotting(fund['Close'], ofilter, x=x, y1_label='Position Price',
-                      y2_label='OBV-DIFF', x_label='Trading Days', title=name4,
-                      subplot=True)
-        bar_chart(volume, x=x, position=fund, title=name5, all_positive=True)
+    filename2 = os.path.join(name, view, f"obv_standard_{name}.png")
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=obv, x=x_dates, y1_label='Position Price', y2_label='On Balance Volume',
+            x_label='Trading Days', title=name2, plot_output=plot_output,
+            filename=filename2
+        )
+    )
 
-    else:
-        filename = os.path.join(name, view, f"obv_diff_{name}.png")
-        filename2 = os.path.join(name, view, f"obv_standard_{name}.png")
-        filename3 = os.path.join(name, view, f"volume_{name}.png")
+    generate_plot(
+        PlotType.BAR_CHART, volume, **dict(
+            x=x_dates, position=fund, title=name5, save_fig=True, plot_output=plot_output,
+            filename=os.path.join(name, view, f"volume_{name}.png"), all_positive=True
+        )
+    )
 
-        bar_chart(volume, x=x, position=fund, title=name5,
-                  saveFig=True, filename=filename3, all_positive=True)
-        bar_chart(ofilter, x=x, position=fund, title=name4,
-                  saveFig=True, filename=filename)
-        dual_plotting(fund['Close'], obv, x=x,
-                      y1_label='Position Price',
-                      y2_label='On Balance Volume',
-                      x_label='Trading Days', title=name2,
-                      saveFig=True, filename=filename2)
+    if not plot_output:
+        generate_plot(
+            PlotType.BAR_CHART, o_filter, **dict(
+                x=x_dates, position=fund, title=name4, save_fig=True, plot_output=plot_output,
+                filename=os.path.join(name, view, f"obv_diff_{name}.png")
+            )
+        )
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.125)
@@ -199,11 +205,10 @@ def generate_obv_signal(fund: pd.DataFrame) -> list:
             obv.append(obv[i-1])
         else:
             obv.append(obv[i-1] - fund['Volume'][i])
-
     return obv
 
 
-def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> list:
+def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> Tuple[list, list]:
     """On Balance Volume Feature Detection
 
     Arguments:
@@ -220,6 +225,7 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- list of feature dictionaries
     """
+    # pylint: disable=too-many-locals
     sma_interval = kwargs.get('sma_internal', 10)
     plot_output = kwargs.get('plot_output', True)
     filter_factor = kwargs.get('filter_factor', 2.5)
@@ -241,19 +247,21 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> list:
     )
 
     if plot_output:
-        generic_plotting(
-            [obv, obv_sig, obv_sig2, obv_sig3],
-            title='OBV Signal Line',
-            legend=['obv', f'sma-{sma_interval}',
-                    f"sma-{sma_interval2}", f"sma-{sma_interval3}"]
+        generate_plot(
+            PlotType.GENERIC_PLOTTING, [obv, obv_sig, obv_sig2, obv_sig3], **dict(
+                title='OBV Signal Line',
+                legend=[
+                    'obv', f'sma-{sma_interval}', f"sma-{sma_interval2}", f"sma-{sma_interval3}"
+                ]
+            )
         )
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.25)
 
     filter_factor2 = filter_factor / 2.0
-    ofilter = generate_obv_ofilter(obv_diff, filter_factor2)
-    sig_features = find_obv_sig_vol_spikes(ofilter, position)
+    o_filter = generate_obv_o_filter(obv_diff, filter_factor2)
+    sig_features = find_obv_sig_vol_spikes(o_filter, position)
 
     features = []
     for sig in sig_features:
@@ -261,12 +269,12 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> list:
     for sma in sma_features:
         features.append(sma)
 
-    ofilter = generate_obv_ofilter(obv_diff, filter_factor)
+    o_filter = generate_obv_o_filter(obv_diff, filter_factor)
 
-    return ofilter, features
+    return o_filter, features
 
 
-def generate_obv_ofilter(obv_diff: list, filter_factor: float) -> list:
+def generate_obv_o_filter(obv_diff: list, filter_factor: float) -> list:
     """Generate On Balance Volume Filter
 
     Arguments:
@@ -276,22 +284,22 @@ def generate_obv_ofilter(obv_diff: list, filter_factor: float) -> list:
     Returns:
         list -- list of significant spikes/drops in volume
     """
-    omax = np.max(np.abs(obv_diff))
-    ofilter = []
-    for i in range(len(obv_diff)):
-        if obv_diff[i] > omax / filter_factor:
-            ofilter.append(obv_diff[i])
-        elif obv_diff[i] < (-1 * omax) / filter_factor:
-            ofilter.append(obv_diff[i])
+    o_max = np.max(np.abs(obv_diff))
+    o_filter = []
+    for i, obv in enumerate(obv_diff):
+        if obv > o_max / filter_factor:
+            o_filter.append(obv_diff[i])
+        elif obv < (-1 * o_max) / filter_factor:
+            o_filter.append(obv_diff[i])
         else:
-            ofilter.append(0.0)
-    return ofilter
+            o_filter.append(0.0)
+    return o_filter
 
 
 def find_obv_sma_trends(obv: list,
                         sma_lists: list,
                         interval_lists: list,
-                        position: pd.DataFrame) -> list:
+                        position: pd.DataFrame) -> List[dict]:
     """Find On Balance Volume SMA Trends
 
     Compare OBV against simple moving averages of the OBV
@@ -311,12 +319,12 @@ def find_obv_sma_trends(obv: list,
     features = []
     state = 'at'
     for i, sma in enumerate(sma_lists):
-        for j, ob in enumerate(obv):
+        for j, obv_val in enumerate(obv):
             date = position.index[j].strftime("%Y-%m-%d")
             data = None
 
             if state == 'at':
-                if ob > sma[j]:
+                if obv_val > sma[j]:
                     state = 'above'
                     data = {
                         "type": 'bullish',
@@ -324,7 +332,7 @@ def find_obv_sma_trends(obv: list,
                         "index": j,
                         "date": date
                     }
-                elif ob < sma[j]:
+                elif obv_val < sma[j]:
                     state = 'below'
                     data = {
                         "type": 'bearish',
@@ -334,7 +342,7 @@ def find_obv_sma_trends(obv: list,
                     }
 
             elif state == 'above':
-                if ob < sma[j]:
+                if obv_val < sma[j]:
                     state = 'below'
                     data = {
                         "type": 'bearish',
@@ -344,7 +352,7 @@ def find_obv_sma_trends(obv: list,
                     }
 
             elif state == 'below':
-                if ob > sma[j]:
+                if obv_val > sma[j]:
                     state = 'above'
                     data = {
                         "type": 'bullish',
@@ -359,7 +367,7 @@ def find_obv_sma_trends(obv: list,
     return features
 
 
-def find_obv_sig_vol_spikes(ofilter: list, position: pd.DataFrame) -> list:
+def find_obv_sig_vol_spikes(o_filter: list, position: pd.DataFrame) -> List[dict]:
     """Find On Balance Volume Significant Volume Spikes
 
     Using an "ofilter" signal, generate feature/signals content from list
@@ -372,12 +380,12 @@ def find_obv_sig_vol_spikes(ofilter: list, position: pd.DataFrame) -> list:
         list -- list of spike dictionary objects
     """
     features = []
-    for i, obf in enumerate(ofilter):
+    for i, obf in enumerate(o_filter):
         if obf > 0.0:
             date = position.index[i].strftime("%Y-%m-%d")
             data = {
                 "type": 'bullish',
-                "value": f"signficant spike: {int(obf)}",
+                "value": f"significant spike: {int(obf)}",
                 "index": i,
                 "date": date
             }

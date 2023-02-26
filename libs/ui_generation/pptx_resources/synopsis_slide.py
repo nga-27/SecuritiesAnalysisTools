@@ -1,10 +1,10 @@
-import os
+""" Synopsis Slide Generator """
 import numpy as np
 
 from pptx.util import Inches, Pt
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-from .slide_utils import pptx_ui_errors, color_to_RGB, space_injector
+from .slide_utils import pptx_ui_errors, COLOR_TO_RGB, space_injector
 
 ORDER_RANK = {
     "hull_moving_average": 1,
@@ -60,15 +60,15 @@ def add_synopsis_title(slide, title: str):
     left = Inches(7.55)
     width = Inches(5)
     height = Inches(2)
-    txtbox = slide.shapes.add_textbox(left, top, width, height)
-    text_frame = txtbox.text_frame
+    txt_box = slide.shapes.add_textbox(left, top, width, height)
+    text_frame = txt_box.text_frame
 
-    p = text_frame.paragraphs[0]
-    p.alignment = PP_ALIGN.CENTER
-    p.text = f'{title}'
-    p.font.bold = True
-    p.font.size = Pt(40)
-    p.font.name = 'Arial'
+    paragraph = text_frame.paragraphs[0]
+    paragraph.alignment = PP_ALIGN.CENTER
+    paragraph.text = f'{title}'
+    paragraph.font.bold = True
+    paragraph.font.size = Pt(40)
+    paragraph.font.name = 'Arial'
 
     return slide
 
@@ -87,42 +87,41 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
     Returns:
         pptx-slide -- modified slide object
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     cat = type_ + "_categories"
     listed = content.get(cat, {}).get(category, [])
 
-    TOP_TITLE_IN = 0.9
-    TOP_TABLE_IN = 1.35
-    LINE_LEN = 27
+    top_title_inches = 0.9
+    top_table_inches = 1.35
+    line_length = 27
 
     if len(listed) == 0:
-        # Trendline case... look in metrics alone:
+        # Trend line case... look in metrics alone:
         listed = content.get(type_, {}).get(category, [])
 
     if type_ == 'metrics':
-
         if category == 'trend':
-
             listed = reorder_trends(listed)
 
             # Trend Metrics Table
-            top = Inches(TOP_TITLE_IN)
+            top = Inches(top_title_inches)
             left = Inches(0.15)
             width = Inches(4.25)
             height = Inches(.58)
-            txtbox = slide.shapes.add_textbox(left, top, width, height)
-            text_frame = txtbox.text_frame
+            txt_box = slide.shapes.add_textbox(left, top, width, height)
+            text_frame = txt_box.text_frame
 
-            p = text_frame.paragraphs[0]
-            p.alignment = PP_ALIGN.CENTER
-            p.text = f'Trend-Based Metrics'
-            p.font.bold = True
-            p.font.size = Pt(20)
-            p.font.name = 'Arial'
+            paragraph = text_frame.paragraphs[0]
+            paragraph.alignment = PP_ALIGN.CENTER
+            paragraph.text = 'Trend-Based Metrics'
+            paragraph.font.bold = True
+            paragraph.font.size = Pt(20)
+            paragraph.font.name = 'Arial'
 
             table_height = Inches(3)
             table_width = Inches(4.25)
             left_loc = left
-            top_loc = Inches(TOP_TABLE_IN)
+            top_loc = Inches(top_table_inches)
             table_placeholder = slide.shapes.add_table(len(listed) + 1,
                                                        2,
                                                        left_loc,
@@ -149,13 +148,8 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
                 if delta > 0.0:
                     delta_str = f"(+{delta}%)"
 
-                # if len(value_str) < 8:
-                #     value_str += "\t\t"
-                # else:
-                #     value_str += "\t"
-
                 value_str = value_str + ' ' + delta_str
-                value_str = space_injector(value_str, LINE_LEN)
+                value_str = space_injector(value_str, line_length)
 
                 table.cell(i+1, 0).text = item_str
                 table.cell(i+1, 1).text = value_str
@@ -164,10 +158,10 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
                 if value > 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("green")
+                        COLOR_TO_RGB["green"]
                 elif value < 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("red")
+                        COLOR_TO_RGB["red"]
 
             # A note about moving averages
             note = "'Current vs. Metric' refers to difference between moving average metric " + \
@@ -178,37 +172,37 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
             top = Inches(6.8)
             width = Inches(4.25)
             height = Inches(0.56)
-            txtbox2 = slide.shapes.add_textbox(left, top, width, height)
-            text_frame = txtbox2.text_frame
+            txt_box2 = slide.shapes.add_textbox(left, top, width, height)
+            text_frame = txt_box2.text_frame
             text_frame.word_wrap = True
 
-            p = text_frame.paragraphs[0]
-            p.alignment = PP_ALIGN.LEFT
-            p.text = note
-            p.font.bold = False
-            p.font.size = Pt(8)
-            p.font.name = 'Arial'
+            paragraph = text_frame.paragraphs[0]
+            paragraph.alignment = PP_ALIGN.LEFT
+            paragraph.text = note
+            paragraph.font.bold = False
+            paragraph.font.size = Pt(8)
+            paragraph.font.name = 'Arial'
 
         elif category == 'oscillator':
             # Oscillator Metrics Table
-            top = Inches(TOP_TITLE_IN)
+            top = Inches(top_title_inches)
             left = Inches(4.55)
             width = Inches(4.25)
             height = Inches(.58)
-            txtbox = slide.shapes.add_textbox(left, top, width, height)
-            text_frame = txtbox.text_frame
+            txt_box = slide.shapes.add_textbox(left, top, width, height)
+            text_frame = txt_box.text_frame
 
-            p = text_frame.paragraphs[0]
-            p.alignment = PP_ALIGN.CENTER
-            p.text = f'Oscillator-Based Metrics'
-            p.font.bold = True
-            p.font.size = Pt(20)
-            p.font.name = 'Arial'
+            paragraph = text_frame.paragraphs[0]
+            paragraph.alignment = PP_ALIGN.CENTER
+            paragraph.text = 'Oscillator-Based Metrics'
+            paragraph.font.bold = True
+            paragraph.font.size = Pt(20)
+            paragraph.font.name = 'Arial'
 
             table_height = Inches(4)
             table_width = Inches(4.25)
             left_loc = left
-            top_loc = Inches(TOP_TABLE_IN)
+            top_loc = Inches(top_table_inches)
             table_placeholder = slide.shapes.add_table(len(listed) + 1,
                                                        2,
                                                        left_loc,
@@ -228,15 +222,9 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
                 delta = content.get('metrics_delta', {}).get(item, 0.0)
 
                 value_str = f"{np.round(value, 5)}"
-                # if len(value_str) < 8:
-                #     value_str = f"{np.round(value, 5)}\t\t"
-                # else:
-                #     value_str = f"{np.round(value, 5)}\t"
-
                 delta_str = f"({np.round(delta, 5)})"
-
                 value_str = value_str + ' ' + delta_str
-                value_str = space_injector(value_str, LINE_LEN)
+                value_str = space_injector(value_str, line_length)
 
                 table.cell(i+1, 0).text = item_str
                 table.cell(i+1, 1).text = value_str
@@ -245,36 +233,32 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
                 if value > 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("green")
+                        COLOR_TO_RGB["green"]
                 elif value < 0.0:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("red")
+                        COLOR_TO_RGB["red"]
 
         elif category == 'trendlines':
-
             # Trendlines Metrics Table
-            top = Inches(TOP_TITLE_IN)
+            top = Inches(top_title_inches)
             left = Inches(8.95)
             width = Inches(4.25)
             height = Inches(.58)
-            txtbox = slide.shapes.add_textbox(left, top, width, height)
-            text_frame = txtbox.text_frame
+            txt_box = slide.shapes.add_textbox(left, top, width, height)
+            text_frame = txt_box.text_frame
 
-            p = text_frame.paragraphs[0]
-            p.alignment = PP_ALIGN.CENTER
-            p.text = f'Current Calculated Trend Lines'
-            p.font.bold = True
-            p.font.size = Pt(20)
-            p.font.name = 'Arial'
+            paragraph = text_frame.paragraphs[0]
+            paragraph.alignment = PP_ALIGN.CENTER
+            paragraph.text = 'Current Calculated Trend Lines'
+            paragraph.font.bold = True
+            paragraph.font.size = Pt(20)
+            paragraph.font.name = 'Arial'
 
-            height = (float(len(listed)) + 1.0) * 0.4
-            if height > 4:
-                height = 4
-
+            height = min((float(len(listed)) + 1.0) * 0.4, 4.0)
             table_height = Inches(height)
             table_width = Inches(4.25)
             left_loc = left
-            top_loc = Inches(TOP_TABLE_IN)
+            top_loc = Inches(top_table_inches)
             table_placeholder = slide.shapes.add_table(len(listed) + 1,
                                                        2,
                                                        left_loc,
@@ -291,7 +275,6 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
             for i, item in enumerate(listed):
                 periods = item.get('periods', 0)
                 term = ''
-
                 for key in item:
                     if key != 'periods':
                         term = key
@@ -308,15 +291,15 @@ def add_synopsis_category_box(slide, category: str, content: dict, type_='metric
 
                 if style == 'Bull':
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("green")
+                        COLOR_TO_RGB["green"]
                 else:
                     table.cell(i+1, 1).text_frame.paragraphs[0].font.color.rgb = \
-                        color_to_RGB("red")
+                        COLOR_TO_RGB["red"]
 
     return slide
 
 
-def pretty_up_key(key: str, parser='_') -> str:
+def pretty_up_key(key: str, parser: str = '_') -> str:
     """Pretty-Up Key
 
     Arguments:

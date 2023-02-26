@@ -13,16 +13,15 @@ FUND_COLOR = TEXT_COLOR_MAP["cyan"]
 EFFECTIVE_TIME_START = 120
 
 
-class ProgressBar(object):
+class ProgressBar():
     """ProgressBar
 
     Useful class to track progress of a function or analysis set
-
-    Arguments:
-        object {} -- n/a
     """
+    # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, total_items: int, name: str = '', stopwatch: bool = True, offset=None):
+    def __init__(self, total_items: int, name: str = '',
+                 stopwatch: bool = True, offset: float = None):
         self.total = float(total_items)
         self.name = name
         self.iteration = 0.0
@@ -36,43 +35,44 @@ class ProgressBar(object):
         """ Kicks off class timer, etc. """
         if self.start_time is None:
             self.start_time = time.time()
-        self.printProgressBar(self.iteration, self.total, obj=self.name)
+        self.print_progress_bar(self.iteration, self.total, obj=self.name)
 
     def update(self, iteration: int):
         """ Manual changing of the progress bar """
-        self.printProgressBar(iteration, self.total, obj=self.name)
+        self.print_progress_bar(iteration, self.total, obj=self.name)
 
     def uptick(self, increment=1.0):
         """ Automatic updating of the progress bar """
         self.iteration += increment
-        self.printProgressBar(self.iteration, self.total, obj=self.name)
+        self.print_progress_bar(self.iteration, self.total, obj=self.name)
 
-    def end(self):
+    def end(self) -> float:
         """ Sets all progress to 100% and returns time of completion """
-        self.printProgressBar(self.total, self.total, obj=self.name)
+        self.print_progress_bar(self.total, self.total, obj=self.name)
         return time.time()
 
     def interrupt(self, message: str = ''):
         """ Stops p-bar operation (not to 100%) and provides a message for stoppage """
-        clearBar = ''
+        clear_bar = ''
         for _ in range(self.length_of_bar):
-            clearBar += ' '
-        clearBar += '\r'
-        print(clearBar)
+            clear_bar += ' '
+        clear_bar += '\r'
+        print(clear_bar)
         print(message)
 
     # Print iterations progress - courtesy of Greenstick (stackoverflow:
     # https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console)
 
-    def printProgressBar(self,
-                         iteration,
-                         total,
-                         obj='',
-                         prefix='Progress',
-                         suffix='Complete',
-                         decimals=1,
-                         length=50,
-                         fill='█'):
+    # pylint: disable=too-many-arguments
+    def print_progress_bar(self,
+                           iteration: int,
+                           total: int,
+                           obj: str = '',
+                           prefix: str = 'Progress',
+                           suffix: str = 'Complete',
+                           decimals: int = 1,
+                           length: int = 50,
+                           fill: str = '█'):
         """Print Progress Bar
 
         Call in a loop to create terminal progress bar
@@ -88,16 +88,17 @@ class ProgressBar(object):
             length {int} -- character length of bar (default: {50})
             fill {str} -- bar fill character (default: {'█'})
         """
+        # pylint: disable=too-many-locals
         percent = ("{0:." + str(decimals) + "f}").format(100.0 *
                                                          (float(iteration) / float(total)))
-        filledLength = int(float(length) * float(iteration) // float(total))
-        bar = fill * filledLength + '.' * (length - filledLength)
+        filled_length = int(float(length) * float(iteration) // float(total))
+        bar_fill = fill * filled_length + '.' * (length - filled_length)
 
-        pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} " + \
+        p_bar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar_fill}|{NORMAL} " + \
             f"{percent}% {suffix}"
-        self.length_of_bar = len(pBar)
+        self.length_of_bar = len(p_bar)
 
-        effective_length = len(f" {obj} {prefix} |{bar}| {percent}% {suffix}")
+        effective_length = len(f" {obj} {prefix} |{bar_fill}| {percent}% {suffix}")
 
         stopwatch = ""
         if self.show_clock:
@@ -114,17 +115,17 @@ class ProgressBar(object):
             else:
                 stopwatch += f"{self.clock}s"
 
-        pBar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar}|{NORMAL} " + \
+        p_bar = f"\r {FUND_COLOR}{obj}{NORMAL} {prefix} {BAR_COLOR}|{bar_fill}|{NORMAL} " + \
             f"{percent}% {suffix}{stopwatch}"
-        self.length_of_bar = len(pBar)
+        self.length_of_bar = len(p_bar)
 
-        print(pBar, end='\r')
+        print(p_bar, end='\r')
 
         # Print New Line on Complete
         if iteration == total:
             print('')
 
 
-def start_clock():
+def start_clock() -> float:
     """ Wrapper function for time keeping """
     return time.time()

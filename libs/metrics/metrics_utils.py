@@ -1,5 +1,7 @@
+""" metrics utils """
 import json
 import os
+from typing import Union
 
 import pandas as pd
 import numpy as np
@@ -12,7 +14,7 @@ ACCEPTED_ATTS = INDICATOR_NAMES
 """ Utilities for creating data metrics for plotting later """
 
 
-def future_returns(fund: pd.DataFrame, **kwargs):
+def future_returns(fund: pd.DataFrame, **kwargs) -> Union[pd.DataFrame, dict]:
     """Future Returns
 
     Logging data of "futures" time period vs. a past time period
@@ -51,14 +53,14 @@ def future_returns(fund: pd.DataFrame, **kwargs):
             progress_bar.uptick(increment=increment)
 
     f_data = []
-    for i in range(len(fund.index)):
-        f_data.append(fund.index[i].strftime("%Y-%m-%d"))
+    for index_value in fund.index:
+        f_data.append(index_value.strftime("%Y-%m-%d"))
 
     fr_data['index'] = f_data
     if not to_json:
-        df = pd.DataFrame.from_dict(fr_data)
-        df.set_index('index', inplace=True)
-        return df
+        data_frame = pd.DataFrame.from_dict(fr_data)
+        data_frame.set_index('index', inplace=True)
+        return data_frame
 
     future = {'tabular': fr_data}
     if progress_bar is not None:
@@ -68,8 +70,6 @@ def future_returns(fund: pd.DataFrame, **kwargs):
     return future
 
 
-###################################################################
-
 def metadata_to_dataset(config: dict):
     """Metadata to Dataset
 
@@ -78,13 +78,13 @@ def metadata_to_dataset(config: dict):
 
     """
     if config.get('exports', {}).get('run'):
-        print(f"Exporting datasets...")
+        print("Exporting datasets...")
         metadata_file = os.path.join("output", "metadata.json")
         if not os.path.exists(metadata_file):
             print(f"WARNING: {metadata_file} does not exist. Exiting...")
-            return None
+            return
 
-        with open(metadata_file) as json_file:
+        with open(metadata_file, encoding='utf-8') as json_file:
             m_data = json.load(json_file)
             json_file.close()
 
@@ -94,7 +94,7 @@ def metadata_to_dataset(config: dict):
             groomed_data = groom_data(full_data)
             export_data(groomed_data)
 
-            print(f"Exporting datasets complete.")
+            print("Exporting datasets complete.")
 
 
 def metadata_key_filter(keys: str, metadata: dict) -> dict:
@@ -107,7 +107,8 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
     Returns:
         dict -- filtered metadata data object
     """
-    job_dict = dict()
+    # pylint: disable=too-many-branches
+    job_dict = {}
     key_list = keys.split(' ')
     key_list = [k.strip(' ') for k in key_list]
     key_list = list(filter(lambda x: x != '', key_list))
@@ -141,9 +142,10 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
         for key in metadata[temp_key].keys():
             if 'y' in key:
                 job_dict['periods'].append(key)
-                for k2 in metadata[temp_key][key].keys():
-                    if k2 in ACCEPTED_ATTS:
-                        job_dict['attributes'].append(k2)
+                for key2 in metadata[temp_key][key]:
+                    if key2 in ACCEPTED_ATTS:
+                        job_dict['attributes'].append(key2)
+
         for key in metadata.get('_METRICS_', {}).keys():
             if key in ACCEPTED_ATTS:
                 job_dict['attributes'].append(key)
@@ -151,10 +153,20 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
     return job_dict
 
 
-def collate_data(job: dict, metadata: dict):
-    all_data = dict()
+def collate_data(job: dict, metadata: dict) -> dict:
+    """collate_data
+
+    Args:
+        job (dict): tickers and attributes
+        metadata (dict): metadata dict
+
+    Returns:
+        dict: all data
+    """
+    # pylint: disable=too-many-branches,too-many-statements,too-many-nested-blocks
+    all_data = {}
     for ticker in job['tickers']:
-        all_data[ticker] = dict()
+        all_data[ticker] = {}
         for att in job['attributes']:
             attr = metadata[ticker].get(att, {}).get('tabular')
             if attr is None:
@@ -163,26 +175,25 @@ def collate_data(job: dict, metadata: dict):
                     continue
 
             # Flatten tree, if necessary
-            if type(attr) == dict:
+            if isinstance(attr, dict):
                 keys = attr.keys()
                 for key in keys:
 
-                    if type(attr[key]) == dict:
-                        sub_keys = attr[key].keys()
+                    if isinstance(attr[key], dict):
+                        sub_keys = list(attr[key])
 
                         for sub in sub_keys:
-                            if type(attr[key][sub]) == dict:
-                                sub_sub_keys = attr[key].keys()
+                            if isinstance(attr[key][sub], dict):
+                                sub_sub_keys = list(attr[key])
 
                                 for sub_sub in sub_sub_keys:
-                                    if type(attr[key][sub][sub_sub]) == dict:
+                                    if isinstance(attr[key][sub][sub_sub], dict):
                                         print(
-                                            f"WARNING: depth of dictionary exceeded with " +
+                                            "WARNING: depth of dictionary exceeded with " +
                                             f"attribute {att} -> {attr[key][sub][sub_sub].keys()}")
 
                                     else:
-                                        new_name = [att, str(key), str(
-                                            sub), str(sub_sub)]
+                                        new_name = [att, str(key), str(sub), str(sub_sub)]
                                         new_name = '-'.join(new_name)
                                         all_data[ticker][new_name] = attr[key][sub][sub_sub]
 
@@ -205,21 +216,25 @@ def collate_data(job: dict, metadata: dict):
                     continue
 
             # Flatten tree, if necessary
-            if type(attr) == dict:
+            if isinstance(attr, dict):
                 keys = attr.keys()
+
                 for key in keys:
-                    if type(attr[key]) == dict:
+                    if isinstance(attr[key], dict):
                         sub_keys = attr[key].keys()
+
                         for sub in sub_keys:
-                            if type(attr[key][sub]) == dict:
+                            if isinstance(attr[key][sub], dict):
                                 sub_sub_keys = attr[key].keys()
+
                                 for sub_sub in sub_sub_keys:
-                                    if type(attr[key][sub][sub_sub]) == dict:
+                                    if isinstance(attr[key][sub][sub_sub], dict):
                                         print(
-                                            f"WARNING: depth of dictionary exceeded with attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                            "WARNING: depth of dictionary exceeded " +
+                                                f"with attribute {att} -> " +
+                                                f"{attr[key][sub][sub_sub].keys()}")
                                     else:
-                                        new_name = [att, str(key), str(
-                                            sub), str(sub_sub)]
+                                        new_name = [att, str(key), str(sub), str(sub_sub)]
                                         new_name = '-'.join(new_name)
                                         new_name += '-METRICS'
                                         all_data[ticker][new_name] = attr[key][sub][sub_sub]
@@ -240,12 +255,24 @@ def collate_data(job: dict, metadata: dict):
     return all_data
 
 
-def collate_data_periods(job: dict, metadata: dict, all_data=None):
-    if all_data is None:
-        all_data = dict()
+def collate_data_periods(job: dict, metadata: dict, all_data: Union[dict, None] = None) -> dict:
+    """collate_data_periods
 
+    Args:
+        job (dict): job dictionary
+        metadata (dict): metadata dictionary
+        all_data (dict, optional): data to be collated. Defaults to None.
+
+    Returns:
+        dict: all_data
+    """
+    # pylint: disable=too-many-branches,too-many-statements,too-many-nested-blocks
+    if all_data is None:
+        all_data = {}
+
+    # pylint: disable=too-many-nested-blocks
     for ticker in job['tickers']:
-        all_data[ticker] = dict()
+        all_data[ticker] = {}
 
         for period in job['periods']:
             for att in job['attributes']:
@@ -254,22 +281,23 @@ def collate_data_periods(job: dict, metadata: dict, all_data=None):
                     continue
 
                 # Flatten tree, if necessary
-                if type(attr) == dict:
+                if isinstance(attr, dict):
                     keys = attr.keys()
 
                     for key in keys:
-                        if type(attr[key]) == dict:
+                        if isinstance(attr[key], dict):
                             sub_keys = attr[key].keys()
 
                             for sub in sub_keys:
-                                if type(attr[key][sub]) == dict:
+                                if isinstance(attr[key][sub], dict):
                                     sub_sub_keys = attr[key].keys()
 
                                     for sub_sub in sub_sub_keys:
-                                        if type(attr[key][sub][sub_sub]) == dict:
+                                        if isinstance(attr[key][sub][sub_sub], dict):
                                             print(
-                                                f"WARNING: depth of dictionary exceeded with " +
-                                                f"attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                                "WARNING: depth of dictionary exceeded with " +
+                                                f"attribute {att} -> " +
+                                                f"{attr[key][sub][sub_sub].keys()}")
                                         else:
                                             new_name = [period, att, str(key), str(
                                                 sub), str(sub_sub)]
@@ -277,8 +305,7 @@ def collate_data_periods(job: dict, metadata: dict, all_data=None):
                                             all_data[ticker][new_name] = attr[key][sub][sub_sub]
 
                                 else:
-                                    new_name = [period, att,
-                                                str(key), str(sub)]
+                                    new_name = [period, att, str(key), str(sub)]
                                     new_name = '-'.join(new_name)
                                     all_data[ticker][new_name] = attr[key][sub]
 
@@ -298,22 +325,23 @@ def collate_data_periods(job: dict, metadata: dict, all_data=None):
                     continue
 
                 # Flatten tree, if necessary
-                if type(attr) == dict:
+                if isinstance(attr, dict):
                     keys = attr.keys()
 
                     for key in keys:
-                        if type(attr[key]) == dict:
+                        if isinstance(attr[key], dict):
                             sub_keys = attr[key].keys()
 
                             for sub in sub_keys:
-                                if type(attr[key][sub]) == dict:
+                                if isinstance(attr[key][sub], dict):
                                     sub_sub_keys = attr[key].keys()
 
                                     for sub_sub in sub_sub_keys:
-                                        if type(attr[key][sub][sub_sub]) == dict:
+                                        if isinstance(attr[key][sub][sub_sub], dict):
                                             print(
-                                                f"WARNING: depth of dictionary exceeded with " +
-                                                f"attribute {att} -> {attr[key][sub][sub_sub].keys()}")
+                                                "WARNING: depth of dictionary exceeded with " +
+                                                f"attribute {att} -> " +
+                                                f"{attr[key][sub][sub_sub].keys()}")
                                         else:
                                             new_name = [period, att, str(key), str(
                                                 sub), str(sub_sub)]
@@ -322,8 +350,7 @@ def collate_data_periods(job: dict, metadata: dict, all_data=None):
                                             all_data[ticker][new_name] = attr[key][sub][sub_sub]
 
                                 else:
-                                    new_name = [period, att,
-                                                str(key), str(sub)]
+                                    new_name = [period, att, str(key), str(sub)]
                                     new_name = '-'.join(new_name)
                                     new_name += '-METRICS'
                                     all_data[ticker][new_name] = attr[key][sub]
@@ -354,14 +381,14 @@ def groom_data(data: dict) -> dict:
         dict -- groomed data
     """
     max_len = 0
-    new_data = dict()
+    new_data = {}
     for fund in data.keys():
         for key in data[fund].keys():
             if len(data[fund][key]) > max_len:
                 max_len = len(data[fund][key])
 
     for fund in data.keys():
-        new_data[fund] = dict()
+        new_data[fund] = {}
         for key in data[fund].keys():
             len_old = len(data[fund][key])
             temp = [0.0] * (max_len - len_old)
@@ -377,13 +404,13 @@ def export_data(all_data: dict):
     Arguments:
         all_data {dict} -- data object to export
     """
-    exports = dict()
+    exports = {}
     for fund in all_data.keys():
         index = all_data[fund].get('futures-index', [])
-        df = pd.DataFrame.from_dict(all_data[fund])
+        data_frame = pd.DataFrame.from_dict(all_data[fund])
         if len(index) != 0:
-            df.set_index('futures-index')
-        exports[fund] = df.copy()
+            data_frame.set_index('futures-index')
+        exports[fund] = data_frame.copy()
 
     pathname = 'output'
     if not os.path.exists(pathname):
@@ -393,6 +420,6 @@ def export_data(all_data: dict):
     if not os.path.exists(pathname):
         os.mkdir(pathname)
 
-    for fund in exports.keys():
+    for fund, value in exports.items():
         filepath = os.path.join(pathname, f"{fund}.csv")
-        exports[fund].to_csv(filepath)
+        value.to_csv(filepath)

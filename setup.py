@@ -24,7 +24,7 @@ URL = 'https://github.mmm.com/nga-27/SecuritiesAnalysisTools'
 EMAIL = 'namell91@gmail.com'
 AUTHOR = 'Nick Amell'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '0.2.14'
+VERSION = '1.0.0'
 
 # What packages are required for this module to be executed?
 REQUIRES = [
@@ -35,14 +35,14 @@ REQUIRES = [
     "scipy==1.9.3",
     "xlrd==1.2.0",
     "XlsxWriter==1.2.6",
-    "python-pptx==0.6.18",
+    "python-pptx==0.6.21",
     'colorama==0.4.3',
-    "yfinance==0.2.3",
-    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@88b156dd76fcc473d8cd9caa1f53a12508d2bb1f"
+    "yfinance==0.2.9",
+    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@v1.0.2"
 ]
 
 REQUIRES_DEV = [
-    'pylint==2.9.6',
+    'pylint==2.15.0',
 ]
 
 def has_ssh() -> bool:

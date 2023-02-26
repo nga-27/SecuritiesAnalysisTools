@@ -1,4 +1,5 @@
-from typing import Tuple
+""" math functions """
+from typing import Tuple, Union
 
 import pandas as pd
 import numpy as np
@@ -6,7 +7,7 @@ import numpy as np
 from scipy.stats import linregress
 
 
-def lower_low(data, start_val: float, start_ind: int) -> list:
+def lower_low(data: Union[list, pd.DataFrame], start_val: float, start_ind: int) -> list:
     """Lower Low
 
     Looks for a bounce (rise) then lower low
@@ -28,7 +29,6 @@ def lower_low(data, start_val: float, start_ind: int) -> list:
     lows = []
 
     for price in range(start_ind, len(data)):
-
         if (data[price] < start_val) and (bounce_state < 2):
             track_ind = price
             track_val = data[price]
@@ -49,7 +49,7 @@ def lower_low(data, start_val: float, start_ind: int) -> list:
     return lows
 
 
-def higher_high(data, start_val: float, start_ind: int) -> list:
+def higher_high(data: Union[list, pd.DataFrame], start_val: float, start_ind: int) -> list:
     """Higher High
 
     Looks for a bounce (drop) then higher high
@@ -92,7 +92,7 @@ def higher_high(data, start_val: float, start_ind: int) -> list:
     return highs
 
 
-def bull_bear_th(osc: list, start: int, thresh: float, bull_bear='bull'):
+def bull_bear_th(osc: list, start: int, thresh: float, bull_bear: str = 'bull') -> Union[int, None]:
     """Bull Bear Thresholding
 
     Arguments:
@@ -122,8 +122,8 @@ def bull_bear_th(osc: list, start: int, thresh: float, bull_bear='bull'):
     return None
 
 
-def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> list:
-    """Beta Comparison 
+def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> Tuple[float, float]:
+    """Beta Comparison
 
     Arguments:
         fund {pd.DataFrame} -- fund historical data
@@ -149,13 +149,13 @@ def beta_comparison(fund: pd.DataFrame, benchmark: pd.DataFrame) -> list:
         bench_return.append(ret)
 
     # slope, intercept, r-correlation, p-value, stderr
-    beta_figures = linregress(bench_return, fund_return)
-    rsqd = beta_figures[2]**2
+    slope, _, r_value, _, _ = linregress(bench_return, fund_return)
+    r_sqd = r_value ** 2
 
-    return beta_figures[0], rsqd
+    return slope, r_sqd
 
 
-def beta_comparison_list(fund: list, benchmark: list) -> list:
+def beta_comparison_list(fund: list, benchmark: list) -> Tuple[float, float]:
     """Beta Comparison List
 
     Like above, but compares entire list versus a benchmark
@@ -180,10 +180,10 @@ def beta_comparison_list(fund: list, benchmark: list) -> list:
         bench_return.append(ret)
 
     # slope, intercept, r-correlation, p-value, stderr
-    beta_figures = linregress(bench_return, fund_return)
-    rsqd = beta_figures[2]**2
+    slope, _, r_value, _, _ = linregress(bench_return, fund_return)
+    r_sqd = r_value ** 2
 
-    return beta_figures[0], rsqd
+    return slope, r_sqd
 
 
 def risk_comparison(fund: pd.DataFrame,
@@ -212,10 +212,11 @@ def risk_comparison(fund: pd.DataFrame,
     Returns:
         dict -- alpha data object
     """
+    # pylint: disable=too-many-locals,too-many-statements
     print_out = kwargs.get('print_out', False)
     sector_data = kwargs.get('sector_data')
 
-    alpha = dict()
+    alpha = {}
     if beta is None or rsqd is None:
         beta, rsqd = beta_comparison(fund, benchmark)
 
@@ -275,6 +276,7 @@ def risk_comparison(fund: pd.DataFrame,
         alpha['r_squared']["sector"] = rsqd_sector
 
     if print_out:
+        print("\r\n")
         print(f"\r\nAlpha Market:\t\t{alpha_val}")
         print(f"Alpha Sector:\t\t{alpha_sector}")
         print(f"Beta Market:\t\t{beta}")
@@ -289,7 +291,7 @@ def risk_comparison(fund: pd.DataFrame,
     return alpha
 
 
-def get_returns(data: pd.DataFrame, output='annual') -> list:
+def get_returns(data: pd.DataFrame, output: str = 'annual') -> Union[float, float]:
     """Get Returns
 
     Arguments:
@@ -301,28 +303,29 @@ def get_returns(data: pd.DataFrame, output='annual') -> list:
     Returns:
         list -- return, standard deviation
     """
+    # pylint: disable=too-many-locals
     # Determine intervals for returns, start with annual
-    INTERVAL = 250
+    interval = 250
 
-    years = int(len(data['Close']) / INTERVAL)
+    years = int(len(data['Close']) / interval)
     if years == 0:
         years = 1
     quarters = 4 * years
 
-    if len(data['Close']) <= INTERVAL:
-        INTERVAL = 200
+    if len(data['Close']) <= interval:
+        interval = 200
 
     annual_returns = 0.0
     annual_std = []
     for i in range(years):
-        ars = (data['Adj Close'][(i+1) * INTERVAL] - data['Adj Close']
-               [i * INTERVAL]) / data['Adj Close'][i * INTERVAL] * 100.0
+        ars = (data['Adj Close'][(i+1) * interval] - data['Adj Close']
+               [i * interval]) / data['Adj Close'][i * interval] * 100.0
         annual_returns += ars
         annual_std.append(ars)
 
     annual_returns /= float(years)
     annual_returns = (data['Adj Close'][-1] - data['Adj Close']
-                      [-INTERVAL]) / data['Adj Close'][-INTERVAL] * 100.0
+                      [-interval]) / data['Adj Close'][-interval] * 100.0
 
     # Determine intervals for returns, next with quarterly
     q_returns = 0.0
@@ -358,11 +361,11 @@ def get_returns(data: pd.DataFrame, output='annual') -> list:
     std_2 = np.std(q_std)
 
     returns = np.mean([q_returns, annual_returns])
-    stdevs = np.mean([std_1, std_2])
+    st_devs = np.mean([std_1, std_2])
     if output == 'quarterly':
         returns /= 4.0
 
-    return returns, stdevs
+    return returns, st_devs
 
 
 def get_interval_standard_dev(data: pd.DataFrame, interval: int=250) -> Tuple[float, float, float]:

@@ -1,9 +1,11 @@
+""" commodity channel index """
 import os
 import datetime
+
 import pandas as pd
 import numpy as np
 
-from libs.utils import dual_plotting, INDEXES
+from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
 from .moving_average import typical_price_signal, simple_moving_avg
@@ -30,7 +32,7 @@ def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view', '')
     p_bar = kwargs.get('progress_bar')
 
-    cci = dict()
+    cci = {}
 
     periods = [20, 40, 80]
     cci['periods'] = {'short': periods[0],
@@ -73,8 +75,9 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- tabular commodity channel index signal
     """
+    # pylint: disable=too-many-locals
     intervals = kwargs.get('intervals', [10, 20, 40])
-    CONSTANT = kwargs.get('constant', .015)
+    constant = kwargs.get('constant', .015)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -99,12 +102,12 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
             # Avoid dividing by 0
             mean_dev[i] = mean_dev[interval]
 
-        for i in range(len(tps)):
-            cci = (tps[i] - sma[i]) / (CONSTANT * mean_dev[i])
+        for i, tp_ in enumerate(tps):
+            cci = (tp_ - sma[i]) / (constant * mean_dev[i])
             tabular[str(interval)].append(cci)
 
-    overbought = [100.0 for _ in range(len(tps))]
-    oversold = [-100.0 for _ in range(len(tps))]
+    overbought = [100.0] * len(tps)
+    oversold = [-100.0] * len(tps)
 
     plots = [tabular[tab] for tab in tabular]
     plots.append(overbought)
@@ -115,15 +118,12 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     period_strs = ', '.join(period_strs)
     title = f'{name2} - Commodity Channel Index ({period_strs} periods)'
 
-    if plot_output:
-        dual_plotting(position['Close'], plots,
-                      'Price', 'CCI', title=title)
-
-    else:
-        filename = os.path.join(name, view, f"commodity_channel_{name}.png")
-        dual_plotting(position['Close'], plots,
-                      'Price', 'CCI', title=title,
-                      saveFig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=plots, y1_label='Price', y2_label='CCI', title=title, plot_output=plot_output,
+            filename=os.path.join(name, view, f"commodity_channel_{name}.png")
+        )
+    )
 
     return tabular
 
@@ -139,18 +139,17 @@ def cci_feature_detection(position: pd.DataFrame, cci: dict) -> list:
         list -- list of features
     """
     features = []
-
     for period in cci['tabular']:
         features.extend(get_crossover_features(
             position, cci['tabular'][period], period))
 
     features.sort(key=lambda x: x['index'])
-
     return features
 
 
 def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
-
+    """ cci metrics """
+    # pylint: disable=too-many-locals,too-many-branches
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -194,15 +193,13 @@ def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Commodity Channel Index Metrics"
 
-    if plot_output:
-        dual_plotting(position['Close'], metrics,
-                      'Price', 'Metrics', title=title)
-
-    else:
-        filename = filename = os.path.join(
-            name, view, f"commodity_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=title, saveFig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=title,
+            plot_output=plot_output, filename=os.path.join(
+                name, view, f"commodity_metrics_{name}.png")
+        )
+    )
 
     return metrics
 
@@ -218,6 +215,7 @@ def get_crossover_features(position: pd.DataFrame, signal: list, period: str) ->
     Returns:
         list -- list of crossover features
     """
+    # pylint: disable=too-many-branches
     features = []
     state = 'x'
     for i, comp in enumerate(signal):

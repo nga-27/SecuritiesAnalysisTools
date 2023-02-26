@@ -1,8 +1,10 @@
+""" Bollinger Bands """
 import os
+
 import pandas as pd
 import numpy as np
 
-from libs.utils import generic_plotting, dual_plotting, INDEXES
+from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .moving_average import simple_moving_avg, exponential_moving_avg
@@ -37,38 +39,34 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
     if period == 50:
         stdev = 2.5
 
-    bb = dict()
+    bollinger_bands_data = {}
 
-    bb['tabular'] = get_bollinger_signals(
+    bollinger_bands_data['tabular'] = get_bollinger_signals(
         position, period, stdev, plot_output=plot_output, name=name, view=view)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
-    bb['volatility'] = volatility_calculation(
+    bollinger_bands_data['volatility'] = volatility_calculation(
         position, plot_output=plot_output, view=view)
-
     if p_bar is not None:
         p_bar.uptick(increment=0.3)
 
-    bb = bollinger_indicators(position, bb, period=period)
-
+    bollinger_bands_data = bollinger_indicators(position, bollinger_bands_data, period=period)
     if p_bar is not None:
         p_bar.uptick(increment=0.3)
 
-    bb = bollinger_metrics(position, bb, period=period,
+    bollinger_bands_data = bollinger_metrics(position, bollinger_bands_data, period=period,
                            plot_output=plot_output, name=name, view=view)
-
-    features = bollinger_band_features(bb, position, plot_output=plot_output)
-
+    features = bollinger_band_features(bollinger_bands_data, position, plot_output=plot_output)
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
 
-    bb['type'] = 'oscillator'
-    bb['signals'] = features
-    bb['length_of_data'] = len(bb['tabular']['upper_band'])
+    bollinger_bands_data['type'] = 'oscillator'
+    bollinger_bands_data['signals'] = features
+    bollinger_bands_data['length_of_data'] = len(bollinger_bands_data['tabular']['upper_band'])
 
-    return bb
+    return bollinger_bands_data
 
 
 def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict:
@@ -87,6 +85,7 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
     Returns:
         dict -- bollinger band data object
     """
+    # pylint: disable=too-many-locals
     period = kwargs.get('period', 20)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
@@ -120,13 +119,14 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
             metrics[ind+3] += val * weights[3]
 
     close = position['Close']
-    bb = bol_bands['tabular']
+    bollinger_bands_tabular = bol_bands['tabular']
     for i in range(period, len(close)):
-        s_range = bb['middle_band'][i] - bb['lower_band'][i]
+        s_range = bollinger_bands_tabular['middle_band'][i] - \
+            bollinger_bands_tabular['lower_band'][i]
         if metrics[i] <= 0.6 and metrics[i] >= -0.6:
-            c = close[i] - bb['middle_band'][i]
-            c = np.round(c / s_range, 4)
-            metrics[i] = c
+            val = close[i] - bollinger_bands_tabular['middle_band'][i]
+            val = np.round(val / s_range, 4)
+            metrics[i] = val
 
     metrics = exponential_moving_avg(metrics, 7, data_type='list')
     norm_signal = normalize_signals([metrics])[0]
@@ -134,22 +134,20 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
     bol_bands['metrics'] = norm_signal
 
     name3 = INDEXES.get(name, name)
-    name2 = name3 + f" - Bollinger Band Metrics"
-    if plot_output:
-        dual_plotting(position['Close'], norm_signal, 'Price',
-                      'Indicators', title=name2)
-    else:
-        filename = os.path.join(
-            name, view, f"bollinger_band_metrics_{name}.png")
-        # filename = name + f"/{view}" + f"/bollinger_band_metrics_{name}.png"
-        dual_plotting(position['Close'], norm_signal, 'Price',
-                      'Metrics', title=name2, saveFig=True, filename=filename)
+    name2 = name3 + " - Bollinger Band Metrics"
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=norm_signal, y1_label='Price', y2_label='Indicators', title=name2,
+            plot_output=plot_output, filename=os.path.join(
+                name, view, f"bollinger_band_metrics_{name}.png")
+        )
+    )
 
     return bol_bands
 
 
 def bollinger_indicators(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict:
-    """Bollinger Indicators 
+    """Bollinger Indicators
 
     (https://school.stockcharts.com/doku.php?id=technical_indicators:bollinger_bands)
 
@@ -157,15 +155,15 @@ def bollinger_indicators(position: pd.DataFrame, bol_bands: dict, **kwargs) -> d
         position {pd.DataFrame} -- dataset
         bol_bands {dict} -- bol bands data object
 
+    Optional Args:
+        period {int} -- period to search for indicators {default: 20}
+
     Returns:
         dict -- bol bands data object
     """
     period = kwargs.get('period', 20)
-
-    bol_bands['indicators'] = find_W_bottom(position, bol_bands, period)
-
-    bol_bands['indicators'].extend(find_M_top(position, bol_bands, period))
-
+    bol_bands['indicators'] = find_w_shape_bottom(position, bol_bands, period)
+    bol_bands['indicators'].extend(find_m_shape_top(position, bol_bands, period))
     bol_bands = get_extremes_ratios(position, bol_bands, period=period)
 
     return bol_bands
@@ -232,23 +230,27 @@ def volatility_calculation(position: pd.DataFrame, **kwargs) -> list:
     std_correction = []
     for j in range(len(typical_price)):
         if j < periods[1]:
-            s = stdevs[0][j]
+            std_val = stdevs[0][j]
         elif j < periods[2]:
-            s = 0.7 * stdevs[1][j] + 0.3 * stdevs[0][j]
+            std_val = 0.7 * stdevs[1][j] + 0.3 * stdevs[0][j]
         elif j < periods[3]:
-            s = 0.55 * stdevs[2][j] + \
+            std_val = 0.55 * stdevs[2][j] + \
                 0.3 * stdevs[1][j] + 0.15 * stdevs[0][j]
         else:
-            s = 0.4 * stdevs[3][j] + 0.3 * stdevs[2][j] + \
+            std_val = 0.4 * stdevs[3][j] + 0.3 * stdevs[2][j] + \
                 0.2 * stdevs[1][j] + 0.1 * stdevs[0][j]
-        std_correction.append(s)
+        std_correction.append(std_val)
 
     for i, price in enumerate(typical_price):
         std_correction[i] = std_correction[i] / price
 
     if plot_output:
-        dual_plotting(position['Close'], std_correction, 'Price',
-                      'Volatility', title='Standard Deviation Volatility')
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=std_correction, y1_label='Price', y2_label='Volatility',
+                title='Standard Deviation Volatility'
+            )
+        )
 
     return std_correction
 
@@ -270,6 +272,7 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
     Returns:
         dict -- bollinger band data object
     """
+    # pylint: disable=too-many-locals
     filter_type = kwargs.get('filter_type', 'simple')
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
@@ -281,42 +284,37 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
             (close + position['Low'][i] + position['High'][i]) / 3.0)
 
     if filter_type == 'exponential':
-        ma = exponential_moving_avg(typical_price, period, data_type='list')
+        moving_average = exponential_moving_avg(typical_price, period, data_type='list')
     else:
-        ma = simple_moving_avg(typical_price, period, data_type='list')
+        moving_average = simple_moving_avg(typical_price, period, data_type='list')
 
-    upper = ma.copy()
-    lower = ma.copy()
-    std_list = [0.0] * len(ma)
-    for i in range(period, len(ma)):
+    upper = moving_average.copy()
+    lower = moving_average.copy()
+    std_list = [0.0] * len(moving_average)
+    for i in range(period, len(moving_average)):
         std = np.std(typical_price[i-(period): i])
         std_list[i] = std
-        upper[i] = ma[i] + (stdev * std)
-        lower[i] = ma[i] - (stdev * std)
+        upper[i] = moving_average[i] + (stdev * std)
+        lower[i] = moving_average[i] - (stdev * std)
 
-    signals = {'upper_band': upper, 'lower_band': lower, 'middle_band': ma}
+    signals = {'upper_band': upper, 'lower_band': lower, 'middle_band': moving_average}
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Bollinger Bands'
-    if plot_output:
-        generic_plotting([position['Close'], ma, upper, lower],
-                         title=name2, x=position.index,
-                         legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'])
-
-    else:
-        filename = os.path.join(name, view, f"bollinger_bands_{name}.png")
-        generic_plotting([position['Close'], ma, upper, lower],
-                         title=name2, x=position.index,
-                         legend=['Price', 'Moving Avg',
-                                 'Upper Band', 'Lower Band'],
-                         saveFig=True, filename=filename)
+    generate_plot(
+        PlotType.GENERIC_PLOTTING, [position['Close'], moving_average, upper, lower], **dict(
+            title=name2, x=position.index,
+            legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'], plot_output=plot_output,
+            filename=os.path.join(name, view, f"bollinger_bands_{name}.png")
+        )
+    )
 
     return signals
 
 
 ### Metrics Indicator Determinations ###
 
-def find_W_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
+def find_w_shape_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
     """Find the 'W' shape bottom
 
     Arguments:
@@ -327,33 +325,34 @@ def find_W_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
     Returns:
         list -- list of 'W' detected bottoms
     """
+    # pylint: disable=too-many-branches,too-many-statements
     w_list = []
-    bb = bol_bands['tabular']
+    bb_tabular_data = bol_bands['tabular']
 
     state = 'n'
     prices = [0.0, 0.0, 0.0]
     close = position['Close']
     for i in range(period, len(close)):
 
-        if (state == 'n') and (close[i] <= bb['lower_band'][i]):
+        if (state == 'n') and (close[i] <= bb_tabular_data['lower_band'][i]):
             state = 'w1'
             prices[0] = close[i]
 
-        elif (state == 'w1'):
+        elif state == 'w1':
             if close[i] < prices[0]:
                 prices[0] = close[i]
             else:
                 state = 'w2'
 
-        elif (state == 'w2'):
-            if close[i] >= bb['middle_band'][i]:
+        elif state == 'w2':
+            if close[i] >= bb_tabular_data['middle_band'][i]:
                 prices[1] = close[i]
                 state = 'w3'
             elif close[i] < prices[0]:
                 prices[0] = close[i]
                 state = 'w1'
 
-        elif (state == 'w3'):
+        elif state == 'w3':
             if close[i] > prices[1]:
                 prices[1] = close[i]
             else:
@@ -363,7 +362,7 @@ def find_W_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
             if close[i] < prices[0]:
                 prices[2] = close[i]
                 state = 'w5'
-            elif close[i] <= bb['lower_band'][i]:
+            elif close[i] <= bb_tabular_data['lower_band'][i]:
                 state = 'w1'
             elif close[i] > prices[1]:
                 prices[1] = close[i]
@@ -372,7 +371,7 @@ def find_W_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
         elif state == 'w5':
             if close[i] < prices[2]:
                 prices[2] = close[i]
-                if close[i] <= bb['lower_band'][i]:
+                if close[i] <= bb_tabular_data['lower_band'][i]:
                     state = 'w1'
             else:
                 state = 'w6'
@@ -385,7 +384,7 @@ def find_W_bottom(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
             elif close[i] < prices[2]:
                 prices[2] = close[i]
                 state = 'w5'
-                if close[i] <= bb['lower_band'][i]:
+                if close[i] <= bb_tabular_data['lower_band'][i]:
                     state = 'w1'
 
     return w_list
@@ -403,61 +402,62 @@ def get_extremes_ratios(position: pd.DataFrame, bol_bands: dict, **kwargs) -> di
     Returns:
         dict -- bollinger bands data object
     """
+    # pylint: disable=too-many-branches
     period = kwargs.get('period', 20)
-    bb = bol_bands['tabular']
+    bb_tabular_data = bol_bands['tabular']
 
     state = 'n'
     close = position['Close']
     for i in range(period, len(close)):
 
         if state == 'n':
-            if close[i] < bb['middle_band'][i]:
+            if close[i] < bb_tabular_data['middle_band'][i]:
                 state = 'e1'
-            elif close[i] > bb['middle_band'][i]:
+            elif close[i] > bb_tabular_data['middle_band'][i]:
                 state = 'u1'
 
         elif state == 'e1':
-            if close[i] <= bb['lower_band'][i]:
+            if close[i] <= bb_tabular_data['lower_band'][i]:
                 state = 'e2'
                 bol_bands['indicators'].append(
                     {'index': i, 'type': 'bearish', 'style': 'lower band crossover'})
-            if close[i] > bb['middle_band'][i]:
+            if close[i] > bb_tabular_data['middle_band'][i]:
                 state = 'u1'
 
         elif state == 'e2':
-            if close[i] <= bb['lower_band'][i]:
+            if close[i] <= bb_tabular_data['lower_band'][i]:
                 bol_bands['indicators'].append(
                     {'index': i, 'type': 'bearish', 'style': 'lower band extreme'})
             else:
                 state = 'e3'
 
         elif state == 'e3':
-            if close[i] >= bb['middle_band'][i]:
+            if close[i] >= bb_tabular_data['middle_band'][i]:
                 state = 'u1'
 
         elif state == 'u1':
-            if close[i] >= bb['upper_band'][i]:
+            if close[i] >= bb_tabular_data['upper_band'][i]:
                 state = 'u2'
                 bol_bands['indicators'].append(
                     {'index': i, 'type': 'bullish', 'style': 'upper band crossover'})
-            if close[i] < bb['middle_band'][i]:
+            if close[i] < bb_tabular_data['middle_band'][i]:
                 state = 'e1'
 
         elif state == 'u2':
-            if close[i] >= bb['upper_band'][i]:
+            if close[i] >= bb_tabular_data['upper_band'][i]:
                 bol_bands['indicators'].append(
                     {'index': i, 'type': 'bullish', 'style': 'upper band extreme'})
             else:
                 state = 'u3'
 
         elif state == 'u3':
-            if close[i] <= bb['middle_band'][i]:
+            if close[i] <= bb_tabular_data['middle_band'][i]:
                 state = 'e1'
 
     return bol_bands
 
 
-def find_M_top(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
+def find_m_shape_top(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
     """Find the 'M' shape top
 
     Arguments:
@@ -468,33 +468,34 @@ def find_M_top(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
     Returns:
         list -- list of 'M' detected tops
     """
+    # pylint: disable=too-many-branches,too-many-statements
     m_list = []
-    bb = bol_bands['tabular']
+    bb_tabular_data = bol_bands['tabular']
 
     state = 'n'
     prices = [0.0, 0.0, 0.0]
     close = position['Close']
     for i in range(period, len(close)):
 
-        if (state == 'n') and (close[i] > bb['upper_band'][i]):
+        if (state == 'n') and (close[i] > bb_tabular_data['upper_band'][i]):
             state = 'w1'
             prices[0] = close[i]
 
-        elif (state == 'w1'):
+        elif state == 'w1':
             if close[i] > prices[0]:
                 prices[0] = close[i]
             else:
                 state = 'w2'
 
-        elif (state == 'w2'):
-            if close[i] <= bb['middle_band'][i]:
+        elif state == 'w2':
+            if close[i] <= bb_tabular_data['middle_band'][i]:
                 prices[1] = close[i]
                 state = 'w3'
             elif close[i] > prices[0]:
                 prices[0] = close[i]
                 state = 'w1'
 
-        elif (state == 'w3'):
+        elif state == 'w3':
             if close[i] < prices[1]:
                 prices[1] = close[i]
             else:
@@ -504,7 +505,7 @@ def find_M_top(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
             if close[i] > prices[0]:
                 prices[2] = close[i]
                 state = 'w5'
-            elif close[i] >= bb['upper_band'][i]:
+            elif close[i] >= bb_tabular_data['upper_band'][i]:
                 state = 'w1'
             elif close[i] < prices[1]:
                 prices[1] = close[i]
@@ -513,7 +514,7 @@ def find_M_top(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
         elif state == 'w5':
             if close[i] > prices[2]:
                 prices[2] = close[i]
-                if close[i] >= bb['upper_band'][i]:
+                if close[i] >= bb_tabular_data['upper_band'][i]:
                     state = 'w1'
             else:
                 state = 'w6'
@@ -526,7 +527,7 @@ def find_M_top(position: pd.DataFrame, bol_bands: dict, period: int) -> list:
             elif close[i] > prices[2]:
                 prices[2] = close[i]
                 state = 'w5'
-                if close[i] >= bb['upper_band'][i]:
+                if close[i] >= bb_tabular_data['upper_band'][i]:
                     state = 'w1'
 
     return m_list

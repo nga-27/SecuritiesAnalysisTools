@@ -1,3 +1,4 @@
+""" slide utilities """
 import os
 from datetime import datetime
 
@@ -21,6 +22,16 @@ PICTURE_W_CAPTION_SLIDE = 8
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
 
+COLOR_TO_RGB = {
+    'black': RGBColor(0x00, 0x00, 0x00),
+    'blue': RGBColor(0x00, 0x00, 0xFF),
+    'green': RGBColor(0x00, 0xCC, 0x00),
+    'purple': RGBColor(0x7F, 0x00, 0xFF),
+    'yellow':RGBColor(0xee, 0xd4, 0x00),
+    'orange': RGBColor(0xff, 0x99, 0x33),
+    'red': RGBColor(0xff, 0x00, 0x00)
+}
+
 
 def slide_title_header(slide, fund: str, include_time=True, price_details=''):
     """Slide Title Header
@@ -42,42 +53,44 @@ def slide_title_header(slide, fund: str, include_time=True, price_details=''):
 
     left = Inches(0)  # Inches(3.86)
     top = Inches(0)
-    width = height = Inches(0.5)
-    txbox = slide.shapes.add_textbox(left, top, width, height)
-    tf = txbox.text_frame
+    height = Inches(0.5)
+    width = Inches(0.5)
+    txt_box = slide.shapes.add_textbox(left, top, width, height)
+    txt_frame = txt_box.text_frame
 
-    p = tf.paragraphs[0]
-    p.text = fund
-    p.font.size = Pt(36)
-    p.font.name = 'Arial'
-    p.font.bold = True
+    paragraph = txt_frame.paragraphs[0]
+    paragraph.text = fund
+    paragraph.font.size = Pt(36)
+    paragraph.font.name = 'Arial'
+    paragraph.font.bold = True
 
     if include_time:
-        p = tf.add_paragraph()
-        p.font.size = Pt(14)
-        p.font.bold = False
-        p.font.name = 'Arial'
-        p.text = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        paragraph = txt_frame.add_paragraph()
+        paragraph.font.size = Pt(14)
+        paragraph.font.bold = False
+        paragraph.font.name = 'Arial'
+        paragraph.text = str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     if price_details != '':
         left = Inches(2)
         top = Inches(0.1)
-        width = height = Inches(0.5)
-        txbox = slide.shapes.add_textbox(left, top, width, height)
-        tf = txbox.text_frame
+        height = Inches(0.5)
+        width = Inches(0.5)
+        txt_box = slide.shapes.add_textbox(left, top, width, height)
+        txt_frame = txt_box.text_frame
 
-        p = tf.paragraphs[0]
-        p.text = fund
-        p.font.size = Pt(24)
-        p.font.name = 'Arial'
-        p.font.bold = True
-        p.text = price_details
-        deets = price_details.split(' ')
+        paragraph = txt_frame.paragraphs[0]
+        paragraph.text = fund
+        paragraph.font.size = Pt(24)
+        paragraph.font.name = 'Arial'
+        paragraph.font.bold = True
+        paragraph.text = price_details
+        details = price_details.split(' ')
 
-        if '+' in deets[1]:
-            p.font.color.rgb = color_to_RGB('green')
+        if '+' in details[1]:
+            paragraph.font.color.rgb = COLOR_TO_RGB['green']
         else:
-            p.font.color.rgb = color_to_RGB('red')
+            paragraph.font.color.rgb = COLOR_TO_RGB['red']
 
     return slide
 
@@ -92,19 +105,20 @@ def subtitle_header(slide, title: str):
         title {str} -- title to add as subtitle
 
     Returns:
-        pptx-slide -- modified slide object    
+        pptx-slide -- modified slide object
     """
     top = Inches(0.61)
     left = Inches(0.42)
-    width = height = Inches(0.5)
-    txtbox = slide.shapes.add_textbox(left, top, width, height)
-    text_frame = txtbox.text_frame
+    height = Inches(0.5)
+    width = Inches(0.5)
+    txt_box = slide.shapes.add_textbox(left, top, width, height)
+    text_frame = txt_box.text_frame
 
-    p = text_frame.paragraphs[0]
-    p.text = title
-    p.font.bold = False
-    p.font.size = Pt(22)
-    p.font.name = 'Times New Roman'
+    paragraph = text_frame.paragraphs[0]
+    paragraph.text = title
+    paragraph.font.bold = False
+    paragraph.font.size = Pt(22)
+    paragraph.font.name = 'Times New Roman'
 
     return slide
 
@@ -120,20 +134,21 @@ def intro_slide(prs):
     Returns:
         pptx-object -- modified presentation
     """
+    # pylint: disable=too-many-locals
     slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
     slide = slide_title_header(
         slide, 'Explanation of Analysis', include_time=False)
 
-    EXPLANATION_FILE = os.path.join("resources", "metric_explanation.txt")
+    explanation_file_path = os.path.join("resources", "metric_explanation.txt")
 
-    if os.path.exists(EXPLANATION_FILE):
-        filer = open(EXPLANATION_FILE, 'r')
-        content = filer.readlines()
+    if os.path.exists(explanation_file_path):
+        with open(explanation_file_path, 'r', encoding='utf-8') as filer:
+            content = filer.readlines()
+
         content2 = []
-
         for cont in content:
-            c = cont.split('\r\n')[0]
-            content2.append(c)
+            cropped = cont.split('\r\n')[0]
+            content2.append(cropped)
         content = content2
         filer.close()
 
@@ -141,64 +156,30 @@ def intro_slide(prs):
         left = Inches(0.42)
         width = Inches(11)
         height = Inches(6)
-        txtbox = slide.shapes.add_textbox(left, top, width, height)
-        text_frame = txtbox.text_frame
+        txt_box = slide.shapes.add_textbox(left, top, width, height)
+        text_frame = txt_box.text_frame
         text_frame.word_wrap = True
 
-        p = text_frame.paragraphs[0]
-        p.text = content[0]
-        p.font.size = Pt(12)
-        p.font.bold = True
+        paragraph = text_frame.paragraphs[0]
+        paragraph.text = content[0]
+        paragraph.font.size = Pt(12)
+        paragraph.font.bold = True
 
         for i in range(1, len(content)):
-            p = text_frame.add_paragraph()
-            p.text = content[i]
+            paragraph = text_frame.add_paragraph()
+            paragraph.text = content[i]
 
             if i == 5:
-                p.font.size = Pt(12)
-                p.font.bold = True
+                paragraph.font.size = Pt(12)
+                paragraph.font.bold = True
             else:
-                p.font.size = Pt(10)
-                p.font.bold = False
+                paragraph.font.size = Pt(10)
+                paragraph.font.bold = False
 
     else:
         print(f"{WARNING}WARNING - file 'metric_explanation.txt' not found.{NORMAL}")
 
     return prs
-
-
-def color_to_RGB(color: str, suppress_warnings=True):
-    """Color to RGB
-
-    String named color to RGB object for pptx
-
-    Arguments:
-        color {str} -- common name of color
-
-    Keyword Arguments:
-        suppress_warnings {bool} -- (default: {True})
-
-    Returns:
-        RGB Object -- RGB color object
-    """
-    if color == 'black':
-        return RGBColor(0x00, 0x00, 0x00)
-    elif color == 'blue':
-        return RGBColor(0x00, 0x00, 0xFF)
-    elif color == 'green':
-        return RGBColor(0x00, 0xCC, 0x00)
-    elif color == 'purple':
-        return RGBColor(0x7F, 0x00, 0xFF)
-    elif color == 'yellow':
-        return RGBColor(0xee, 0xd4, 0x00)
-    elif color == 'orange':
-        return RGBColor(0xff, 0x99, 0x33)
-    elif color == 'red':
-        return RGBColor(0xff, 0x00, 0x00)
-    else:
-        if not suppress_warnings:
-            print(f"WARNING: Color '{color}' not found in 'color_to_RGB'")
-        return RGBColor(0x00, 0x00, 0x00)
 
 
 def pptx_ui_errors(slide, message: str):
@@ -220,12 +201,12 @@ def pptx_ui_errors(slide, message: str):
     txtbox = slide.shapes.add_textbox(left, top, width, height)
     text_frame = txtbox.text_frame
 
-    p = text_frame.paragraphs[0]
-    p.alignment = PP_ALIGN.CENTER
-    p.text = f'{message}'
-    p.font.bold = True
-    p.font.size = Pt(40)
-    p.font.name = 'Arial'
+    paragraph = text_frame.paragraphs[0]
+    paragraph.alignment = PP_ALIGN.CENTER
+    paragraph.text = f'{message}'
+    paragraph.font.bold = True
+    paragraph.font.size = Pt(40)
+    paragraph.font.name = 'Arial'
 
     return slide
 
@@ -257,3 +238,35 @@ def space_injector(space_sep_str: str, desired_str_len: int, sep=' ') -> str:
     new_str = new_sep.join(sep_str)
 
     return new_str
+
+
+class LocationType:
+    """ Pass the location data from fund_content_slides.json and generate an object """
+    # pylint: disable=too-few-public-methods
+    left: Inches
+    top: Inches
+    height: Inches
+    width: Inches
+
+    def __init__(self):
+        self.left = 0.0
+        self.top = 0.0
+        self.height = 0.0
+        self.width = 0.0
+
+
+def get_locations(location_dict: dict) -> LocationType:
+    """get_locations
+
+    Args:
+        location_dict (dict): from fund_content_slides.json
+
+    Returns:
+        LocationType: Location data
+    """
+    location = LocationType()
+    location.left = Inches(location_dict['left'])
+    location.top = Inches(location_dict['top'])
+    location.height = Inches(location_dict['height'])
+    location.width = Inches(location_dict['width'])
+    return location

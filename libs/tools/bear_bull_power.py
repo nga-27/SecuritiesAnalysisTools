@@ -1,8 +1,10 @@
+""" Bear / Bull Power Signal """
 import os
+
 import pandas as pd
 from scipy.stats import linregress
 
-from libs.utils import bar_chart, dual_plotting, dates_extractor_list, INDEXES
+from libs.utils import dates_extractor_list, INDEXES, generate_plot, PlotType
 from libs.tools import exponential_moving_avg
 from libs.features import normalize_signals
 
@@ -27,16 +29,14 @@ def bear_bull_power(position: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
 
-    bbp = dict()
-
-    bbp['tabular'] = generate_bear_bull_signal(
+    bear_bull_power_data = {}
+    bear_bull_power_data['tabular'] = generate_bear_bull_signal(
         position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
-    bbp = bear_bull_feature_detection(
-        bbp, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
+    bear_bull_power_data = bear_bull_feature_detection(
+        bear_bull_power_data, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
+    bear_bull_power_data['type'] = 'oscillator'
 
-    bbp['type'] = 'oscillator'
-
-    return bbp
+    return bear_bull_power_data
 
 
 def generate_bear_bull_signal(position: pd.DataFrame, **kwargs) -> dict:
@@ -74,13 +74,21 @@ def generate_bear_bull_signal(position: pd.DataFrame, **kwargs) -> dict:
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    x = dates_extractor_list(position)
+    x_dates = dates_extractor_list(position)
     if plot_output:
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Bull Power'
-        bar_chart(bb_signal['bulls'], position=position, title=name2, x=x)
+        generate_plot(
+            PlotType.BAR_CHART, bb_signal['bulls'], **dict(
+                position=position, title=name2, x=x_dates, plot_output=plot_output
+            )
+        )
         name2 = name3 + ' - Bear Power'
-        bar_chart(bb_signal['bears'], position=position, title=name2, x=x)
+        generate_plot(
+            PlotType.BAR_CHART, bb_signal['bears'], **dict(
+                position=position, title=name2, x=x_dates, plot_output=plot_output
+            )
+        )
 
     return bb_signal
 
@@ -101,8 +109,9 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
         view {str} -- (default: {''})
 
     Returns:
-        dict -- [description]
+        dict -- Bear Bull Features Dict
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     interval = kwargs.get('interval', 13)
     bb_interval = kwargs.get('bb_interval', [4, 5, 6, 7, 8])
     plot_output = kwargs.get('plot_output', True)
@@ -115,9 +124,9 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
 
     ema_slopes = [0.0] * (interval-1)
     for i in range(interval-1, len(ema)):
-        x = list(range(i-(interval-1), i))
-        y = ema[i-(interval-1): i]
-        reg = linregress(x, y=y)
+        x_list = list(range(i-(interval-1), i))
+        y_list = ema[i-(interval-1): i]
+        reg = linregress(x_list, y=y_list)
         ema_slopes.append(reg[0])
 
     if p_bar is not None:
@@ -128,21 +137,22 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     state = [0.0] * len(ema)
     features = []
 
-    for bb in bb_interval:
+    # pylint: disable=too-many-nested-blocks
+    for bb_interval_val in bb_interval:
         # Determine the slope of the bear power signal at given points
-        bear_slopes = [0.0] * (bb-1)
-        for i in range(bb-1, len(ema)):
-            x = list(range(i-(bb-1), i))
-            y = bear_bull['tabular']['bears'][i-(bb-1): i]
-            reg = linregress(x, y=y)
+        bear_slopes = [0.0] * (bb_interval_val-1)
+        for i in range(bb_interval_val-1, len(ema)):
+            x_list = list(range(i-(bb_interval_val-1), i))
+            y_list = bear_bull['tabular']['bears'][i-(bb_interval_val-1): i]
+            reg = linregress(x_list, y=y_list)
             bear_slopes.append(reg[0])
 
         # Determine the slope of the bull power signal at given points
-        bull_slopes = [0.0] * (bb-1)
-        for i in range(bb-1, len(ema)):
-            x = list(range(i-(bb-1), i))
-            y = bear_bull['tabular']['bulls'][i-(bb-1): i]
-            reg = linregress(x, y=y)
+        bull_slopes = [0.0] * (bb_interval_val-1)
+        for i in range(bb_interval_val-1, len(ema)):
+            x_list = list(range(i-(bb_interval_val-1), i))
+            y_list = bear_bull['tabular']['bulls'][i-(bb_interval_val-1): i]
+            reg = linregress(x_list, y=y_list)
             bull_slopes.append(reg[0])
 
         for i in range(1, len(ema)):
@@ -161,7 +171,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
                                 state[i] += 1.0
                                 data = {
                                     "type": 'bullish',
-                                    "value": f'bullish divergence: {bb}d interval',
+                                    "value": f'bullish divergence: {bb_interval_val}d interval',
                                     "index": i,
                                     "date": date
                                 }
@@ -178,7 +188,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
                                 state[i] += -1.0
                                 data = {
                                     "type": 'bearish',
-                                    "value": f'bearish divergence: {bb}d interval',
+                                    "value": f'bearish divergence: {bb_interval_val}d interval',
                                     "index": i,
                                     "date": date
                                 }
@@ -195,39 +205,38 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     weights = [1.0, 0.75, 0.45, 0.1]
 
     state2 = [0.0] * len(state)
-    for ind, s in enumerate(state):
-        if s != 0.0:
-            state2[ind] += s
+    for ind, state_val in enumerate(state):
+        if state_val != 0.0:
+            state2[ind] += state_val
 
             # Smooth the curves
             if ind - 1 >= 0:
-                state2[ind-1] += s * weights[1]
+                state2[ind-1] += state_val * weights[1]
             if ind + 1 < len(state):
-                state2[ind+1] += s * weights[1]
+                state2[ind+1] += state_val * weights[1]
             if ind - 2 >= 0:
-                state2[ind-2] += s * weights[2]
+                state2[ind-2] += state_val * weights[2]
             if ind + 2 < len(state):
-                state2[ind+2] += s * weights[2]
+                state2[ind+2] += state_val * weights[2]
             if ind - 3 >= 0:
-                state2[ind-3] += s * weights[3]
+                state2[ind-3] += state_val * weights[3]
             if ind + 3 < len(state):
-                state2[ind+3] += s * weights[3]
+                state2[ind+3] += state_val * weights[3]
 
     state3 = exponential_moving_avg(state2, 7, data_type='list')
     norm = normalize_signals([state3])
     state4 = norm[0]
 
     title = 'Bear Bull Power Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], state4, 'Price',
-                      'Bear Bull Power', title=title)
-    else:
-        filename = os.path.join(name, view, f"bear_bull_power_{name}.png")
-        dual_plotting(position['Close'], state4, 'Price', 'Metrics', title=title,
-                      saveFig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=state4, y1_label='Price', y2_label='Bear Bull Power', title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"bear_bull_power_{name}.png")
+        )
+    )
 
     bear_bull['metrics'] = state4
-
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
@@ -256,6 +265,6 @@ def filter_features(feature_list: list, plot_output=False) -> list:
             new_list.append(feat)
             latest_index = feat['index']
             if plot_output:
-                print(f"BearBullPower: {feat}")
+                print(f"BearBullPower: {feat['type']} -> {feat['value']} :: {feat['date']}")
 
     return new_list

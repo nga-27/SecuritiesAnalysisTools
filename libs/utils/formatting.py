@@ -1,3 +1,4 @@
+""" Formatting Utility """
 from datetime import datetime
 import pandas as pd
 
@@ -49,7 +50,7 @@ def fund_list_extractor(ticker_df: dict, config: dict = None) -> list:
     return funds
 
 
-def dates_extractor_list(df: pd.DataFrame) -> list:
+def dates_extractor_list(data_frame: pd.DataFrame) -> list:
     """Dates Extractor to List
 
     Arguments:
@@ -59,14 +60,14 @@ def dates_extractor_list(df: pd.DataFrame) -> list:
         list -- list of dates separated '%Y-%m-%d' or indexes (for a list)
     """
     dates = []
-    if type(df) == list:
-        for i in range(len(df)):
+    if isinstance(data_frame, list):
+        for i in range(len(data_frame)):
             dates.append(i)
 
     else:
-        for i in range(len(df.index)):
-            date = str(df.index[i])
-            date = date.split(' ')[0]
+        for date_item in data_frame.index:
+            date = str(date_item)
+            date = date.split(' ', maxsplit=1)[0]
             date = datetime.strptime(date, '%Y-%m-%d')
             dates.append(date)
 
@@ -89,18 +90,19 @@ def date_extractor(date, _format=None):
         str, datetime -- either a string or datetime object
     """
     date = str(date)
-    date1 = date.split(' ')[0]
+    date1 = date.split(' ', maxsplit=1)[0]
+    date1 = date1.split('T', maxsplit=1)[0]
     date2 = datetime.strptime(date1, '%Y-%m-%d')
     if _format == 'str':
-        dateX = date1
+        date_val = date1
     elif _format == 'iso':
-        dateX = date2.isoformat()
+        date_val = date2.isoformat()
     else:
-        dateX = date2
-    return dateX
+        date_val = date2
+    return date_val
 
 
-def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list, to_str=False) -> list:
+def dates_convert_from_index(data_frame: pd.DataFrame, list_of_xlists: list, to_str=False) -> list:
     """Dates Convert from Index
 
     Used primarily with various plots and complex plotting (e.g. "shapes")
@@ -120,11 +122,11 @@ def dates_convert_from_index(df: pd.DataFrame, list_of_xlists: list, to_str=Fals
     if len(list_of_xlists) > 0:
         for xlist in list_of_xlists:
             new_xlist = []
-            for x in xlist:
+            for x_val in xlist:
                 if to_str:
-                    date = df.index[x].strftime("%Y-%m-%d")
+                    date = data_frame.index[x_val].strftime("%Y-%m-%d")
                 else:
-                    date = df.index[x]
+                    date = data_frame.index[x_val]
                 new_xlist.append(date)
             new_l_of_xls.append(new_xlist)
     return new_l_of_xls

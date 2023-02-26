@@ -1,10 +1,13 @@
+""" Correlation Composite Index """
 import os
 import json
-import numpy as np
 from datetime import datetime, timedelta
 
-from libs.utils import download_data_indexes, index_appender, ProgressBar
-from libs.utils import dual_plotting
+import numpy as np
+
+from libs.utils import (
+    download_data_indexes, index_appender, ProgressBar, PlotType, generate_plot
+)
 from libs.tools import beta_comparison_list, simple_moving_avg
 
 
@@ -28,7 +31,7 @@ def correlation_composite_index(config: dict, **kwargs) -> dict:
     data = kwargs.get('data')
     sectors = kwargs.get('sectors')
 
-    corr = dict()
+    corr = {}
     corr_config = config.get('properties', {}).get(
         'Indexes', {}).get('Correlation', {})
 
@@ -53,11 +56,12 @@ def metrics_initializer(duration: str = 'short') -> list:
     Returns:
         list -- data downloaded and sector list
     """
+    # pylint: disable=invalid-name
     metrics_file = os.path.join("resources", "sectors.json")
     if not os.path.exists(metrics_file):
         return None, []
 
-    with open(metrics_file) as m_file:
+    with open(metrics_file, 'r', encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_file.close()
         m_data = m_data.get("Correlation")
@@ -98,12 +102,13 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
     Returns:
         dict -- object with correlations
     """
+    # pylint: disable=too-many-locals,invalid-name,too-many-branches,too-many-statements
     plot_output = kwargs.get('plot_output', True)
     clock = kwargs.get('clock')
 
     PERIOD_LENGTH = [100, 50, 25]
     WEIGHTS = [1.5, 1.25, 1.0]
-    corr_data = dict()
+    corr_data = {}
 
     if '^GSPC' in data.keys():
         tot_len = len(data['^GSPC']['Close'])
@@ -127,7 +132,7 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
         counter = 0
 
         for period in PERIOD_LENGTH:
-            nc = [0.0] * (tot_len-start_pt)
+            nc_val = [0.0] * (tot_len-start_pt)
 
             for sector in sectors:
                 corrs[sector] = []
@@ -136,14 +141,14 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
                     _, rsqd = beta_comparison_list(
                         data[sector]['Close'][i-period:i], data['^GSPC']['Close'][i-period:i])
                     corrs[sector].append(rsqd)
-                    nc[i-start_pt] += rsqd
+                    nc_val[i-start_pt] += rsqd
                     counter += 1
 
                     if counter == divisor:
                         progress_bar.uptick()
                         counter = 0
 
-            net_correlation.append(nc.copy())
+            net_correlation.append(nc_val.copy())
             legend.append('Corr-' + str(period))
 
         norm_corr = []
@@ -154,14 +159,19 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
 
         net_correlation = norm_corr.copy()
 
-        dual_plotting(net_correlation,
-                      data['^GSPC']['Close'][start_pt:tot_len],
-                      x=dates,
-                      y1_label=legend,
-                      y2_label='S&P500',
-                      title='CCI Net Correlation',
-                      saveFig=(not plot_output),
-                      filename='CCI_net_correlation.png')
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            net_correlation,
+            **{
+                "y_list_2": data['^GSPC']['Close'][start_pt:tot_len],
+                "x": dates,
+                "y1_label": legend,
+                "y2_label": "S&P500",
+                "title": "CCI Net Correlation",
+                "plot_output": plot_output,
+                "filename": "CCI_net_correlation.png"
+            }
+        )
 
         str_dates = []
         for date in dates:
@@ -187,25 +197,34 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
 
         signal_line = simple_moving_avg(overall_signal, 20, data_type='list')
 
-        dual_plotting(data['^GSPC']['Close'][start_pt:tot_len],
-                      [overall_signal, signal_line],
-                      x=dates,
-                      y1_label='S&P500',
-                      y2_label=['Overall Signal', '20d-SMA'],
-                      title='Overall Correlation Signal',
-                      saveFig=(not plot_output),
-                      filename='CCI_overall_correlation.png')
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            data['^GSPC']['Close'][start_pt:tot_len],
+            **dict(
+                y_list_2=[overall_signal, signal_line],
+                x=dates,
+                y1_label='S&P500',
+                y2_label=['Overall Signal', '20d-SMA'],
+                title='Overall Correlation Signal',
+                plot_output=plot_output,
+                filename='CCI_overall_correlation.png'
+            )
+        )
 
-        diff_signal = [x - signal_line[i]
-                       for i, x in enumerate(overall_signal)]
-        dual_plotting(data['^GSPC']['Close'][start_pt:tot_len],
-                      diff_signal,
-                      x=dates,
-                      y1_label='S&P500',
-                      y2_label='Corr - Signal Line',
-                      title='Diff Correlation Signal',
-                      saveFig=(not plot_output),
-                      filename='CCI_diff_correlation.png')
+        diff_signal = [x - signal_line[i] for i, x in enumerate(overall_signal)]
+        generate_plot(
+            PlotType.DUAL_PLOTTING,
+            data['^GSPC']['Close'][start_pt:tot_len],
+            **dict(
+                y_list_2=diff_signal,
+                x=dates,
+                y1_label='S&P500',
+                y2_label='Corr - Signal Line',
+                title='Diff Correlation Signal',
+                plot_output=plot_output,
+                filename='CCI_diff_correlation.png'
+            )
+        )
 
         corr_data['tabular']['overall'] = overall_signal
         corr_data['tabular']['signal_line'] = signal_line

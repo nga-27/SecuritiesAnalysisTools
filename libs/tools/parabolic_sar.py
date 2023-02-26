@@ -1,14 +1,17 @@
+""" parabolic SAR """
 import os
 import pprint
+
 import pandas as pd
 import numpy as np
 
-from libs.utils import candlestick_plot, INDEXES
+from libs.utils import INDEXES
+from libs.utils.plot_utils import candlesticks
 
-from .trends import autotrend
+from .trends import auto_trend
 
 
-def parabolic_sar(fund: pd.DataFrame, adx_tabular: dict = None, **kwargs) -> dict:
+def parabolic_sar(fund: pd.DataFrame, **kwargs) -> dict:
     """Parabolic Stop and Reverse (SAR)
 
     Arguments:
@@ -32,7 +35,7 @@ def parabolic_sar(fund: pd.DataFrame, adx_tabular: dict = None, **kwargs) -> dic
     view = kwargs.get('view', '')
     p_bar = kwargs.get('progress_bar')
 
-    sar = dict()
+    sar = {}
     sar = generate_sar(
         fund, plot_output=plot_output, name=name, view=view, p_bar=p_bar)
 
@@ -63,7 +66,7 @@ def parabolic_sar(fund: pd.DataFrame, adx_tabular: dict = None, **kwargs) -> dic
         sar['current']['slow_type'] = 'Entry Point'
 
     if plot_output:
-        print(f"\r\nParabolic SAR Status:\r\n")
+        print("\r\nParabolic SAR Status:\r\n")
         pprint.pprint(sar['current'])
 
     if p_bar is not None:
@@ -91,9 +94,10 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- sar data object; signals (different AFs)
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     # Note, higher/faster AF should be first of 2
-    ACC_FACTOR = kwargs.get('af', [0.02, 0.01])
-    MAX_FACTOR = kwargs.get('max_factor', 0.2)
+    acc_factor = kwargs.get('af', [0.02, 0.01])
+    max_factor = kwargs.get('max_factor', 0.2)
     period_offset = kwargs.get('period_offset', 5)
 
     plot_output = kwargs.get('plot_output', True)
@@ -101,7 +105,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view', '')
     p_bar = kwargs.get('pbar')
 
-    sar_dict = dict()
+    sar_dict = {}
 
     signals = {"fast": [], "slow": []}
     sig_names = ["fast", "slow"]
@@ -109,7 +113,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     indicators = []
 
     signal = [0.0] * len(fund['Close'])
-    auto = autotrend(fund['Close'], periods=[4])
+    auto = auto_trend(fund['Close'], periods=[4])
 
     # Observe for an 'offset' amount of time before starting
     ep_high = 0.0
@@ -139,7 +143,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
         p_bar.uptick(increment=0.1)
 
     # Begin generating SAR signal, number of signals determined by number of AFs
-    for k, afx in enumerate(ACC_FACTOR):
+    for k, afx in enumerate(acc_factor):
         a_f = afx
 
         for i in range(period_offset, len(signal)):
@@ -165,8 +169,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
                     if fund['Low'][i] < e_p:
                         e_p = fund['Low'][i]
                         a_f += afx
-                        if a_f > MAX_FACTOR:
-                            a_f = MAX_FACTOR
+                        a_f = min(a_f, max_factor)
 
             else:
                 sar_i = signal[i-1] + a_f * (e_p - signal[i-1])
@@ -187,8 +190,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
                     if fund['High'][i] > e_p:
                         e_p = fund['High'][i]
                         a_f += afx
-                        if a_f > MAX_FACTOR:
-                            a_f = MAX_FACTOR
+                        a_f = min(a_f, max_factor)
 
             signal[i] = sar_i
 
@@ -210,11 +212,11 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     title = f"{name2} - Parabolic SAR"
 
     if plot_output:
-        candlestick_plot(fund, additional_plts=add_plts, title=title)
+        candlesticks.candlestick_plot(fund, additional_plots=add_plts, title=title)
     else:
         filename = os.path.join(name, view, f"parabolic_sar_{name}")
-        candlestick_plot(fund, additional_plts=add_plts, title=title,
-                         saveFig=True, filename=filename)
+        candlesticks.candlestick_plot(fund, additional_plots=add_plts, title=title,
+                         save_fig=True, filename=filename)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -225,7 +227,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     return sar_dict
 
 
-def sar_metrics(fund: pd.DataFrame, sar: dict, **kwargs) -> dict:
+def sar_metrics(fund: pd.DataFrame, sar: dict) -> dict:
     """SAR Metrics
 
     Primarily percent away from a given SAR trend

@@ -1,9 +1,10 @@
+""" momentum oscillator """
 import os
 
 import pandas as pd
 import numpy as np
 
-from libs.utils import INDEXES, dual_plotting
+from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import find_local_extrema, normalize_signals
 
 from .moving_average import simple_moving_avg
@@ -28,38 +29,36 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
 
-    mo = dict()
-
-    mo['tabular'] = generate_momentum_signal(
+    mom = {}
+    mom['tabular'] = generate_momentum_signal(
         position, plot_output=plot_output, name=name, view=view)
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
 
     # Check against signal line (9-day MA)
-    mo['bear_bull'] = compare_against_signal_line(
-        mo['tabular'], position=position, name=name, plot_output=plot_output)
+    mom['bear_bull'] = compare_against_signal_line(
+        mom['tabular'], position=position, name=name, plot_output=plot_output)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
     # Feature detection, primarily divergences (5% drop from peak1 then rise again to peak2?)
-    mo['signals'] = mo_feature_detection(
-        mo['tabular'], position, plot_output=plot_output, name=name)
+    mom['signals'] = mo_feature_detection(mom['tabular'], position)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
 
     # Metrics creation like in awesome oscillator
-    mo = momentum_metrics(
-        position, mo, plot_output=plot_output, name=name, view=view)
+    mom = momentum_metrics(
+        position, mom, plot_output=plot_output, name=name, view=view)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    mo['type'] = 'oscillator'
-    mo['length_of_data'] = len(mo['tabular'])
+    mom['type'] = 'oscillator'
+    mom['length_of_data'] = len(mom['tabular'])
 
-    return mo
+    return mom
 
 
 def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
@@ -80,7 +79,6 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         list -- momentum signal
     """
     interval = kwargs.get('interval', 20)
-    plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
 
@@ -100,14 +98,13 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
         signal.append(cmo)
 
     name2 = INDEXES.get(name, name)
-    if plot_output:
-        dual_plotting(position['Close'], signal, 'Price',
-                      'CMO', title=f'{name2} - (Chande) Momentum Oscillator')
-    else:
-        filename = os.path.join(name, view, f"momentum_oscillator_{name}.png")
-        dual_plotting(position['Close'], signal, 'Price',
-                      'CMO', title='(Chande) Momentum Oscillator',
-                      filename=filename, saveFig=True)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=signal, y1_label='Price', y2_label='CMO',
+            title=f'{name2} - (Chande) Momentum Oscillator',
+            filename=os.path.join(name, view, f"momentum_oscillator_{name}.png"),
+        )
+    )
 
     return signal
 
@@ -134,22 +131,25 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
 
     signal_line = simple_moving_avg(signal, interval, data_type='list')
     bear_bull = []
-    for i in range(len(signal)):
-        if signal[i] > signal_line[i]:
+    for i, sig in enumerate(signal):
+        if sig > signal_line[i]:
             bear_bull.append(1.0)
-        elif signal[i] < signal_line[i]:
+        elif sig < signal_line[i]:
             bear_bull.append(-1.0)
         else:
             bear_bull.append(0.0)
 
-    if plot_output and (len(position) > 0):
-        dual_plotting(position['Close'], bear_bull,
-                      'Price', 'Bear_Bull', title='Bear Bull')
+    if plot_output and len(position) > 0:
+        generate_plot(
+            PlotType.DUAL_PLOTTING, position['Close'], **dict(
+                y_list_2=bear_bull, y1_label='Price', y2_label='Bear_Bull', title='Bear Bull'
+            )
+        )
 
     return bear_bull
 
 
-def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list:
+def mo_feature_detection(signal: list, position: pd.DataFrame) -> list:
     """MO Feature Detection
 
     Find various features associated with this oscillator
@@ -161,18 +161,15 @@ def mo_feature_detection(signal: list, position: pd.DataFrame, **kwargs) -> list
     Returns:
         list -- list of feature dictionaries
     """
-    price_extrema = find_local_extrema(position['Close'])
     signal_extrema = find_local_extrema(signal, threshold=0.40, points=True)
 
     # Compare extrema to find divergences!
-    features = feature_matches(
-        price_extrema, signal_extrema, position, signal)
+    features = feature_matches(signal_extrema, position)
 
     return features
 
 
-def feature_matches(pos_extrema: list, mo_extrema: list,
-                    position: pd.DataFrame, mo_signal: list, **kwargs) -> list:
+def feature_matches(mo_extrema: list, position: pd.DataFrame) -> list:
     """Feature Matches
 
     Search for and match for various features associated with momentum oscillator
@@ -222,7 +219,7 @@ def feature_matches(pos_extrema: list, mo_extrema: list,
 
 
 def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
-    """Momentum Oscillator Metrics 
+    """Momentum Oscillator Metrics
 
     Combination of pure oscillator signal + weighted features
 
@@ -239,6 +236,7 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     Returns:
         dict -- mo_dict w/ updated keys and data
     """
+    # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     period_change = kwargs.get('period_change', 5)
@@ -286,20 +284,20 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
     for _ in range(period_change):
         changes.append(0.0)
     for i in range(period_change, len(metrics4)):
-        c = (((metrics4[i] + min_) /
+        change = (((metrics4[i] + min_) /
               (metrics4[i-period_change] + min_)) - 1.0) * 100.0
-        changes.append(c)
+        changes.append(change)
 
     mo_dict['metrics'] = metrics4
     mo_dict['changes'] = changes
 
     title = '(Chande) Momentum Oscillator Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], metrics4,
-                      'Price', 'Metrics', title=title)
-    else:
-        filename = os.path.join(name, view, f"momentum_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics4, 'Price', 'Metrics', title=title,
-                      saveFig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics4, y1_label='Price', y2_label='Metrics', title=title,
+            plot_output=plot_output,
+            filename=os.path.join(name, view, f"momentum_metrics_{name}.png")
+        )
+    )
 
     return mo_dict

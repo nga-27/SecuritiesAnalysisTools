@@ -1,8 +1,8 @@
+""" Composite Index Slide Content"""
 import os
 
+from pptx.presentation import Presentation
 from pptx.util import Inches, Pt
-from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
 from .slide_utils import slide_title_header
 
@@ -20,8 +20,10 @@ PICTURE_W_CAPTION_SLIDE = 8
 
 TEMP_DIR = os.path.join("output", "temp")
 
+NUM_BOND_INDEXES = 3
 
-def make_MCI_slides(prs, analysis: dict):
+
+def make_mci_slides(prs: Presentation, analysis: dict) -> Presentation:
     """Make MCI Slide
 
     Arguments:
@@ -31,6 +33,7 @@ def make_MCI_slides(prs, analysis: dict):
     Returns:
         pptx-object -- modified pptx object
     """
+    # pylint: disable=too-many-locals,too-many-statements
     content = os.path.join(TEMP_DIR, "MCI.png")
     if os.path.exists(content):
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
@@ -56,11 +59,13 @@ def make_MCI_slides(prs, analysis: dict):
             content, left, top, height=height, width=width)
 
         # Add table here!
-        if 'mci' in analysis.keys():
+        if 'mci' in analysis:
             num_rows = len(list(analysis['mci']['correlations'].keys())) + 2
             fund_key = list(analysis['mci']['correlations'].keys())[0]
-            time_periods = [analysis['mci']['correlations'][fund_key][0]['period'],
-                            analysis['mci']['correlations'][fund_key][1]['period']]
+            time_periods = [
+                analysis['mci']['correlations'][fund_key][0]['period'],
+                analysis['mci']['correlations'][fund_key][1]['period']
+            ]
 
             # list of look back periods, having both B & R, plus name
             num_cols = 5  # len(analysis['MCI'][temp_key]) * 2 + 1
@@ -130,7 +135,7 @@ def make_MCI_slides(prs, analysis: dict):
     return prs
 
 
-def make_BCI_slides(prs):
+def make_bci_slides(prs: Presentation) -> Presentation:
     """Make BCI Slides
 
     Arguments:
@@ -139,21 +144,20 @@ def make_BCI_slides(prs):
     Returns:
         pptx-object -- presentation object
     """
-    NUM_BOND_INDEXES = 3
     for i in range(NUM_BOND_INDEXES):
         if i == 0:
-            filekey = 'Treasury'
+            file_key = 'Treasury'
         elif i == 1:
-            filekey = 'Corporate'
+            file_key = 'Corporate'
         elif i == 2:
-            filekey = 'International'
+            file_key = 'International'
         else:
             return prs
 
-        content = os.path.join(TEMP_DIR, f"{filekey}_BCI.png")
+        content = os.path.join(TEMP_DIR, f"{file_key}_BCI.png")
         if os.path.exists(content):
 
-            title = f"{filekey} Bond Composite Index"
+            title = f"{file_key} Bond Composite Index"
             slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
             slide = slide_title_header(slide, title)
 
@@ -161,13 +165,12 @@ def make_BCI_slides(prs):
             top = Inches(1.27)
             height = Inches(6.1)
             width = Inches(10.5)
-            slide.shapes.add_picture(
-                content, left, top, height=height, width=width)
+            slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     content = os.path.join(TEMP_DIR, "combined_BCI.png")
     if os.path.exists(content):
 
-        title = f"Combined Bond Composite Indexes"
+        title = "Combined Bond Composite Indexes"
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = slide_title_header(slide, title)
 
@@ -175,13 +178,12 @@ def make_BCI_slides(prs):
         top = Inches(1.27)
         height = Inches(6.1)
         width = Inches(10.5)
-        slide.shapes.add_picture(
-            content, left, top, height=height, width=width)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs
 
 
-def make_CCI_slides(prs):
+def make_cci_slides(prs) -> Presentation:
     """Make CCI Slides
 
     Arguments:
@@ -193,7 +195,7 @@ def make_CCI_slides(prs):
     content = os.path.join(TEMP_DIR, "CCI_net_correlation.png")
     if os.path.exists(content):
 
-        title = f"Correlation Composite Index"
+        title = "Correlation Composite Index"
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = slide_title_header(slide, title)
 
@@ -201,13 +203,12 @@ def make_CCI_slides(prs):
         top = Inches(1.27)
         height = Inches(6.1)
         width = Inches(10.5)
-        slide.shapes.add_picture(
-            content, left, top, height=height, width=width)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs
 
 
-def make_TCI_slides(prs):
+def make_tci_slides(prs: Presentation) -> Presentation:
     """Make TCI Slides
 
     Arguments:
@@ -219,7 +220,7 @@ def make_TCI_slides(prs):
     content = os.path.join(TEMP_DIR, "tci.png")
     if os.path.exists(content):
 
-        title = f"Type Composite Index"
+        title = "Type Composite Index"
         slide = prs.slides.add_slide(prs.slide_layouts[BLANK_SLIDE])
         slide = slide_title_header(slide, title)
 
@@ -227,7 +228,6 @@ def make_TCI_slides(prs):
         top = Inches(1.27)
         height = Inches(6.1)
         width = Inches(10.5)
-        slide.shapes.add_picture(
-            content, left, top, height=height, width=width)
+        slide.shapes.add_picture(content, left, top, height=height, width=width)
 
     return prs

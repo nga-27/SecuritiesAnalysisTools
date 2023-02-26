@@ -1,9 +1,12 @@
+""" macd """
 import os
+from typing import Union, Tuple
+
 import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    bar_chart, dual_plotting, dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS
+    dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS, PlotType, generate_plot
 )
 from libs.features import normalize_signals
 
@@ -53,15 +56,15 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
+    generate_plot(
+        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
+            y_list_2=[macd_sig, sig_line], y1_label='Position Price',
+            y2_label=['MACD', 'Signal Line'], title=name2, plot_output=plot_output,
+            filename=os.path.join(name, view, f"macd_{name}.png")
+        )
+    )
     if plot_output:
-        dual_plotting(fund['Close'], [macd_sig, sig_line],
-                      'Position Price', ['MACD', 'Signal Line'], title=name2)
         print_macd_statistics(macd)
-
-    else:
-        filename = os.path.join(name, view, f"macd_{name}.png")
-        dual_plotting(fund['Close'], [macd_sig, sig_line], 'Position Price',
-                      ['MACD', 'Signal Line'], title=name2, saveFig=True, filename=filename)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
@@ -90,21 +93,22 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- macd data object
     """
+    # pylint: disable=too-many-locals
     plotting = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view')
 
-    macd = dict()
+    macd = {}
 
-    emaTw = exponential_moving_avg(fund, interval=12)
-    emaTs = exponential_moving_avg(fund, interval=26)
+    ema_twelve = exponential_moving_avg(fund, interval=12)
+    ema_twenty_six = exponential_moving_avg(fund, interval=26)
     macd_val = []
 
-    for i in range(len(emaTw)):
+    for i, ema_12 in enumerate(ema_twelve):
         if i < 26:
             macd_val.append(0.0)
         else:
-            macd_val.append(emaTw[i] - emaTs[i])
+            macd_val.append(ema_12 - ema_twenty_six[i])
 
     macd_sig = exponential_moving_avg(macd_val, interval=9, data_type='list')
 
@@ -115,16 +119,16 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
 
     macd['tabular'] = {'macd': macd_val, 'signal_line': macd_sig, 'bar': m_bar}
 
-    x = dates_extractor_list(fund)
+    x_dates = dates_extractor_list(fund)
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
 
-    if plotting:
-        bar_chart(m_bar, position=fund, x=x, title=name2)
-    else:
-        filename = os.path.join(name, view, f"macd_bar_{name}.png")
-        bar_chart(m_bar, position=fund, x=x, title=name2,
-                  saveFig=True, filename=filename)
+    generate_plot(
+        PlotType.BAR_CHART, m_bar, **dict(
+            position=fund, x=x_dates, title=name2, save_fig=True, plot_output=plotting,
+            filename=os.path.join(name, view, f"macd_bar_{name}.png")
+        )
+    )
 
     return macd
 
@@ -145,6 +149,7 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
     Returns:
         dict -- macd data object
     """
+    # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
@@ -162,28 +167,27 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
 
     weights = [1.0, 0.85, 0.55, 0.2]
     for mac in macd['indicators']:
-
         if mac['type'] == 'bearish':
-            s = -1.0 * div / 2.0
+            s_val = -1.0 * div / 2.0
         else:
-            s = 1.0 * div / 2.0
+            s_val = 1.0 * div / 2.0
 
         ind = mac['index']
-        m_bar[ind] += s * weights[0]
+        m_bar[ind] += s_val * weights[0]
 
         # Smooth the curves
         if ind - 1 >= 0:
-            m_bar[ind-1] += s * weights[1]
+            m_bar[ind-1] += s_val * weights[1]
         if ind + 1 < len(m_bar):
-            m_bar[ind+1] += s * weights[1]
+            m_bar[ind+1] += s_val * weights[1]
         if ind - 2 >= 0:
-            m_bar[ind-2] += s * weights[2]
+            m_bar[ind-2] += s_val * weights[2]
         if ind + 2 < len(m_bar):
-            m_bar[ind+2] += s * weights[2]
+            m_bar[ind+2] += s_val * weights[2]
         if ind - 3 >= 0:
-            m_bar[ind-3] += s * weights[3]
+            m_bar[ind-3] += s_val * weights[3]
         if ind + 3 < len(m_bar):
-            m_bar[ind+3] += s * weights[3]
+            m_bar[ind+3] += s_val * weights[3]
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -199,13 +203,12 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
 
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD Metrics'
-    if plot_output:
-        dual_plotting(position['Close'], metrics,
-                      'Price', 'Metrics', title=name2)
-    else:
-        filename = os.path.join(name, view, f"macd_metrics_{name}.png")
-        dual_plotting(position['Close'], metrics, 'Price',
-                      'Metrics', title=name2, saveFig=True, filename=filename)
+    generate_plot(
+        PlotType.DUAL_PLOTTING, position['Close'], **dict(
+            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
+            plot_output=plot_output, filename=os.path.join(name, view, f"macd_metrics_{name}.png")
+        )
+    )
 
     return macd
 
@@ -220,6 +223,7 @@ def get_macd_features(macd: dict, position: pd.DataFrame) -> list:
     Returns:
         list -- list of feature dictionaries
     """
+    # pylint: disable=too-many-branches,too-many-statements
     features = []
 
     # Copy divergence features into "features" list
@@ -281,9 +285,9 @@ def get_macd_features(macd: dict, position: pd.DataFrame) -> list:
         if data is not None:
             features.append(data)
 
-    bar = macd['tabular']['bar']
+    macd_bar = macd['tabular']['bar']
     state = 'n'
-    for i, mac in enumerate(bar):
+    for i, mac in enumerate(macd_bar):
         data = None
         date = position.index[i].strftime("%Y-%m-%d")
 
@@ -369,7 +373,8 @@ def print_macd_statistics(macd: dict):
     Arguments:
         macd {dict} -- macd data object
     """
-    print(f"\r\nMACD Statistics:")
+    # pylint: disable=too-many-branches
+    print("\r\nMACD Statistics:")
 
     if np.abs(macd['period_value']) < 7.5:
         color = YELLOW
@@ -422,13 +427,13 @@ def print_macd_statistics(macd: dict):
 
 ##########################################
 
-def get_macd_state(macd: list) -> list:
+def get_macd_state(macd: list) -> Tuple[str, Union[str, None]]:
     """
     states: 'strongly', 'weakly', 'crossover' + bear/bullish
     """
-    cross = has_crossover(macd)
-    if cross is not None:
-        return cross
+    cross_str, color = has_crossover(macd)
+    if cross_str is not None:
+        return cross_str, color
 
     intensity = get_macd_value(macd, value_type='group')
     factor = get_group_duration_factor(macd, len(macd)-1, f_type='state')
@@ -436,23 +441,21 @@ def get_macd_state(macd: list) -> list:
     if np.abs(intensity) > 70.0:
         if intensity > 0.0:
             return 'strongly_bullish', GREEN
-        else:
-            return 'strongly_bearish', RED
-    else:
-        if intensity > 0.0:
-            return 'weakly_bullish', YELLOW
-        else:
-            return 'weakly_bearish', YELLOW
+        return 'strongly_bearish', RED
+
+    if intensity > 0.0:
+        return 'weakly_bullish', YELLOW
+    return 'weakly_bearish', YELLOW
 
 
-def has_crossover(signal: list, interval=3) -> str:
+def has_crossover(signal: list, interval: int = 3) -> Tuple[Union[str, None], Union[str, None]]:
     """ Check if a 0 crossing occurred in last 'interval' periods """
+    # pylint: disable=chained-comparison
     if (signal[-1] > 0.0) and (signal[-1-interval] < 0.0):
         return 'crossover_bullish', GREEN
-    elif (signal[-1] < 0.0) and (signal[-1-interval] > 0.0):
+    if (signal[-1] < 0.0) and (signal[-1-interval] > 0.0):
         return 'crossover_bearish', RED
-    else:
-        return None
+    return None, None
 
 
 def get_group_duration_factor(signal: list, index: int, f_type='signal') -> float:
@@ -461,20 +464,21 @@ def get_group_duration_factor(signal: list, index: int, f_type='signal') -> floa
         index -= 2
     else:
         return 1.25
-    d1 = get_group_range(signal, index)
-    if d1[0] - 2 > 0:
+
+    data_range_1 = get_group_range(signal, index)
+    if data_range_1[0] - 2 > 0:
         # 'start' variable
-        d2 = get_group_range(signal, d1[0]-2)
+        data_range_2 = get_group_range(signal, data_range_1[0]-2)
     else:
         return 1.25
 
-    d_max = np.max([d1[2], d2[2]])
+    d_max = np.max([data_range_1[2], data_range_2[2]])
     if f_type == 'signal':
-        factor = 1.25 - (d1[2] / d_max) * 0.25
+        factor = 1.25 - (data_range_1[2] / d_max) * 0.25
     elif f_type == 'score':
-        factor = 1.1 - (d1[2] / d_max) * 0.1
+        factor = 1.1 - (data_range_1[2] / d_max) * 0.1
     elif f_type == 'state':
-        factor = 1.5 - (d1[2] / d_max) * 0.5
+        factor = 1.5 - (data_range_1[2] / d_max) * 0.5
     else:
         return 1.0
     return factor
@@ -489,19 +493,19 @@ def get_group_max(signal: list, index=-1) -> float:
     return macd_max
 
 
-def get_macd_value(macd: list, value_type='current', index=-1) -> float:
+def get_macd_value(macd: list, value_type='current', index=-1) -> Union[float, None]:
     """ Get MACD value to display in single function printout """
     if value_type == 'current':
         macd_max = np.max(np.abs(macd))
         return macd[-1] / macd_max * 100.0
 
-    elif value_type == 'group':
+    if value_type == 'group':
         macd_max = get_group_max(macd, index=index)
         if macd_max == 0.0:
             return 0.0
         return macd[index] / np.abs(macd_max) * 100.0
 
-    elif value_type == 'change':
+    if value_type == 'change':
         macd_ema = exponential_moving_avg(macd, interval=3, data_type='list')
         macd_max = get_group_max(macd)
         if macd_max == 0.0:
@@ -509,12 +513,10 @@ def get_macd_value(macd: list, value_type='current', index=-1) -> float:
         val = (macd[-1] - macd_ema[-1]) / \
             macd_max * 100.0
         return val
-
-    else:
-        return None
+    return None
 
 
-def get_group_range(signal: list, index: int) -> list:
+def get_group_range(signal: list, index: int) -> Tuple[int, int, int]:
     """ [start_index, end_index] """
     if signal[index] > 0.0:
         state = 1
@@ -522,49 +524,44 @@ def get_group_range(signal: list, index: int) -> list:
         state = 0
 
     start = index
-    while (start >= 0):
+    while start >= 0:
         if state == 1:
             if signal[start] < 0.0:
                 start += 1
                 break
-            else:
-                start -= 1
         else:
             if signal[start] > 0.0:
                 start += 1
                 break
-            else:
-                start -= 1
+        start -= 1
+
     if start == -1:
         start = 0
 
     end = index
-    while (end < len(signal)):
+    while end < len(signal):
         if state == 1:
             if signal[end] < 0.0:
                 end -= 1
                 break
-            else:
-                end += 1
         else:
             if signal[end] > 0.0:
                 end -= 1
                 break
-            else:
-                end += 1
+        end += 1
 
     return [start, end, (end-start+1)]
 
 
-def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
+def get_macd_trend(macd: list, trend_type: str = 'current') -> Union[str, None]:
     """ Get MACD Trend as a simple point-slope form """
+    # pylint: disable=too-many-return-statements,too-many-branches
     if trend_type == 'current':
         if macd[len(macd)-1] > macd[len(macd)-2]:
             return 'rising'
-        else:
-            return 'falling'
+        return 'falling'
 
-    elif trend_type == 'group':
+    if trend_type == 'group':
         if macd[len(macd)-1] > 0.0:
             state = 1
         else:
@@ -585,8 +582,7 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
             if len(m_ema) > 0:
                 if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
                     return 'rising'
-                else:
-                    return 'falling'
+                return 'falling'
 
         else:
             i = len(macd)-2
@@ -603,8 +599,7 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> str:
             if len(m_ema) > 0:
                 if macd[len(macd)-1] > m_ema[len(m_ema)-1]:
                     return 'rising'
-                else:
-                    return 'falling'
+                return 'falling'
 
     else:
         print(
@@ -627,52 +622,52 @@ def macd_divergences(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
     Returns:
         dict -- macd data object
     """
+    # pylint: disable=too-many-branches,too-many-statements
     omit = kwargs.get('omit', 0)
 
     macd['indicators'] = []
     state = 'n'
     prices = [0.0, 0.0]
-    ms = [0.0, 0.0]
+    ms_list = [0.0, 0.0]
     closes = position['Close']
-    md = macd['tabular']['macd']
+    md_list = macd['tabular']['macd']
 
-    for i in range(omit, len(md)):
-
+    for i in range(omit, len(md_list)):
         # Start with bullish divergences
-        if (state == 'n') and (md[i] < 0.0):
+        if (state == 'n') and (md_list[i] < 0.0):
             state = 'u1'
-            ms[0] = md[i]
+            ms_list[0] = md_list[i]
 
         elif state == 'u1':
-            if md[i] < ms[0]:
-                ms[0] = md[i]
+            if md_list[i] < ms_list[0]:
+                ms_list[0] = md_list[i]
             else:
                 prices[0] = closes[i-1]
-                ms[1] = md[i]
+                ms_list[1] = md_list[i]
                 state = 'u2'
 
         elif state == 'u2':
-            if md[i] > ms[1]:
-                if md[i] > 0.0:
+            if md_list[i] > ms_list[1]:
+                if md_list[i] > 0.0:
                     state = 'e1'
-                    ms[0] = md[i]
+                    ms_list[0] = md_list[i]
                 else:
-                    ms[1] = md[i]
+                    ms_list[1] = md_list[i]
             else:
                 state = 'u3'
 
         elif state == 'u3':
-            if md[i] <= ms[1]:
-                ms[1] = md[i]
-                if md[i] <= ms[0]:
+            if md_list[i] <= ms_list[1]:
+                ms_list[1] = md_list[i]
+                if md_list[i] <= ms_list[0]:
                     state = 'u1'
             else:
                 state = 'u4'
                 prices[1] = closes[i-1]
 
         elif state == 'u4':
-            if md[i] >= ms[1]:
-                if (prices[1] < prices[0]) and (ms[0] < ms[1]):
+            if md_list[i] >= ms_list[1]:
+                if (prices[1] < prices[0]) and (ms_list[0] < ms_list[1]):
                     macd['indicators'].append(
                         {'index': i, 'type': 'bullish', 'style': 'divergence'})
                     state = 'n'
@@ -683,40 +678,40 @@ def macd_divergences(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
                 state = 'u3'
 
         # Start with bearish divergences
-        if (state == 'n') and (md[i] > 0.0):
+        if (state == 'n') and (md_list[i] > 0.0):
             state = 'e1'
-            ms[0] = md[i]
+            ms_list[0] = md_list[i]
 
         elif state == 'e1':
-            if md[i] > ms[0]:
-                ms[0] = md[i]
+            if md_list[i] > ms_list[0]:
+                ms_list[0] = md_list[i]
             else:
                 prices[0] = closes[i-1]
-                ms[1] = md[i]
+                ms_list[1] = md_list[i]
                 state = 'e2'
 
         elif state == 'e2':
-            if md[i] < ms[1]:
-                if md[i] < 0.0:
+            if md_list[i] < ms_list[1]:
+                if md_list[i] < 0.0:
                     state = 'u1'
-                    ms[0] = md[i]
+                    ms_list[0] = md_list[i]
                 else:
-                    ms[1] = md[i]
+                    ms_list[1] = md_list[i]
             else:
                 state = 'e3'
 
         elif state == 'e3':
-            if md[i] >= ms[1]:
-                ms[1] = md[i]
-                if md[i] >= ms[0]:
+            if md_list[i] >= ms_list[1]:
+                ms_list[1] = md_list[i]
+                if md_list[i] >= ms_list[0]:
                     state = 'e1'
             else:
                 state = 'e4'
                 prices[1] = closes[i-1]
 
         elif state == 'e4':
-            if md[i] <= ms[1]:
-                if (prices[1] > prices[0]) and (ms[0] < ms[1]):
+            if md_list[i] <= ms_list[1]:
+                if (prices[1] > prices[0]) and (ms_list[0] < ms_list[1]):
                     macd['indicators'].append(
                         {'index': i, 'type': 'bearish', 'style': 'divergence'})
                     state = 'n'

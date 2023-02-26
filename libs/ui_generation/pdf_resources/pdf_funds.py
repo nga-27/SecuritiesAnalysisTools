@@ -1,16 +1,13 @@
-import datetime
+""" PDF Content for Funds """
 import numpy as np
-
-import fpdf  # pylint: disable=F0401
-from fpdf import FPDF  # pylint: disable=F0401
+from fpdf import FPDF
 
 from libs.utils import INDEXES
 
 from .pdf_utils import pdf_set_color_text, horizontal_spacer
-from .pdf_utils import PDF_CONSTS
 
 
-def fund_pdf_pages(pdf, analysis: dict, **kwargs):
+def fund_pdf_pages(pdf: FPDF, analysis: dict, **kwargs):
     """Fund PDF Pages
 
     Arguments:
@@ -63,11 +60,11 @@ def fund_title(pdf, name: str):
     Returns:
         FPDF -- pdf object
     """
-    SPAN = pdf.w - 2 * pdf.l_margin
+    span = pdf.w - 2 * pdf.l_margin
     pdf.set_font("Arial", size=36, style='B')
-    pdf.cell(SPAN, 0.5, txt='', ln=1)
+    pdf.cell(span, 0.5, txt='', ln=1)
     pdf = pdf_set_color_text(pdf, "black")
-    pdf.cell(SPAN, 1, txt=name, ln=1, align='C')
+    pdf.cell(span, 1, txt=name, ln=1, align='C')
     return pdf
 
 
@@ -85,18 +82,18 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
     Returns:
         FPDF -- pdf object
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     num_metrics = kwargs.get('num_metrics', 2)
 
     pdf.ln(0.2)
-
-    SPAN = pdf.w - 2 * pdf.l_margin
-    col_width = SPAN / (2 * num_metrics)
+    span = pdf.w - 2 * pdf.l_margin
+    col_width = span / (2 * num_metrics)
     key_width = col_width + 0.5
     val_width = col_width - 0.5
 
     synopsis = fund_data['synopsis'][views]
 
-    osc_keys = [osc for osc in synopsis['metrics_categories']['oscillator']]
+    osc_keys = list(synopsis['metrics_categories']['oscillator'])
     osc_values = []
     osc_deltas = []
     for osc in osc_keys:
@@ -122,8 +119,8 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
 
     data = []
     colors = []
-    for i in range(len(osc_keys)):
-        val = [trend_keys[i], trend_values[i], osc_keys[i], osc_values[i]]
+    for i, osc_key in enumerate(osc_keys):
+        val = [trend_keys[i], trend_values[i], osc_key, osc_values[i]]
         colo = ["black", "black"]
         if not isinstance(trend_values[i], (str)):
             if trend_values[i] < 0.0:
@@ -143,11 +140,10 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
     pdf = horizontal_spacer(pdf, 0.3)
     pdf = pdf_set_color_text(pdf, "black")
     pdf.set_font('Arial', style='B', size=14.0)
-    pdf.cell(SPAN, 0.0, f'Metrics Data ({views})', align='C')
+    pdf.cell(span, 0.0, f'Metrics Data ({views})', align='C')
 
-    FONT_SIZE = 8.0
-
-    pdf.set_font('Arial', style='', size=FONT_SIZE)
+    font_size = 8.0
+    pdf.set_font('Arial', style='', size=font_size)
     pdf.ln(0.5)
     height = pdf.font_size
 
@@ -155,29 +151,28 @@ def metrics_tables(pdf, fund_data: dict, views: str, **kwargs):
         for i, col in enumerate(row):
             if i % 2 == 0:
                 pdf = pdf_set_color_text(pdf, "black")
-                pdf.set_font('Arial', style='B', size=FONT_SIZE)
-                pdf.cell(key_width, height, str(col),
-                         align='L', border=0)
+                pdf.set_font('Arial', style='B', size=font_size)
+                pdf.cell(key_width, height, str(col), align='L', border=0)
 
             else:
                 ind = int(i / 2)
                 col_str = f"{col}"
-                if (ind == 0) and (trend_deltas[j] != ''):
-                    col_str = f"{col}  ({trend_deltas[j]})"
-                if (ind == 1):
+                if ind == 0:
+                    if trend_deltas[j] != '':
+                        col_str = f"{col}  ({trend_deltas[j]})"
+                elif ind == 1:
                     col_str = f"{col}  ({osc_deltas[j]})"
 
                 pdf = pdf_set_color_text(pdf, colors[j][ind])
-                pdf.set_font('Arial', style='', size=FONT_SIZE)
-                pdf.cell(val_width, height, col_str,
-                         align='L', border=0)
+                pdf.set_font('Arial', style='', size=font_size)
+                pdf.cell(val_width, height, col_str, align='L', border=0)
 
         pdf.ln(height * 2.0)
 
     return pdf
 
 
-def fund_statistics(pdf, fund_data: dict, **kwargs):
+def fund_statistics(pdf: FPDF, fund_data: dict, **kwargs):
     """Fund Statistics (from statistics)
 
     Arguments:
@@ -193,12 +188,11 @@ def fund_statistics(pdf, fund_data: dict, **kwargs):
     sample_view = kwargs.get('sample_view')
     if sample_view is None:
         for period in fund_data:
-            if period != 'synopsis' and period != 'metadata':
+            if period not in ('synopsis', 'metadata'):
                 sample_view = period
                 break
 
-    SPAN = pdf.w - 2 * pdf.l_margin
-
+    span = pdf.w - 2 * pdf.l_margin
     price = np.round(fund_data[sample_view]['statistics']['current_price'], 2)
     change = np.round(fund_data[sample_view]
                       ['statistics']['current_change'], 2)
@@ -217,14 +211,13 @@ def fund_statistics(pdf, fund_data: dict, **kwargs):
 
     pdf = pdf_set_color_text(pdf, colo)
     pdf.set_font('Arial', style='B', size=18.0)
-    pdf.cell(SPAN, 0.3, txt=price_str, align='C', ln=1)
-
+    pdf.cell(span, 0.3, txt=price_str, align='C', ln=1)
     pdf.ln(0.2)
 
     return pdf
 
 
-def beta_rsq(pdf, fund_data: dict):
+def beta_rsq(pdf: FPDF, fund_data: dict):
     """Beta R-Squared
 
     Arguments:
@@ -234,7 +227,8 @@ def beta_rsq(pdf, fund_data: dict):
     Returns:
         FPDF -- pdf object
     """
-    SPAN = pdf.w - 2 * pdf.l_margin
+    # pylint: disable=too-many-locals
+    span = pdf.w - 2 * pdf.l_margin
 
     left_keys = []
     right_keys = []
@@ -242,7 +236,7 @@ def beta_rsq(pdf, fund_data: dict):
     right_vals = []
 
     for period in fund_data:
-        if period != 'synopsis' and period != 'metadata':
+        if period not in ('synopsis', 'metadata'):
             left_keys.append(f"Beta ({period})")
             right_keys.append(f"R-squared ({period})")
             left_keys.append(f"Alpha ({period})")
@@ -269,8 +263,8 @@ def beta_rsq(pdf, fund_data: dict):
                     right_vals.append(risk_factors['sharpe'])
 
     data = []
-    for i in range(len(left_keys)):
-        printable = [left_keys[i], left_vals[i], right_keys[i], right_vals[i]]
+    for i, left_key in enumerate(left_keys):
+        printable = [left_key, left_vals[i], right_keys[i], right_vals[i]]
         data.append(printable)
 
     pdf = pdf_set_color_text(pdf, "black")
@@ -278,7 +272,7 @@ def beta_rsq(pdf, fund_data: dict):
     pdf = horizontal_spacer(pdf, 0.3)
     height = pdf.font_size
 
-    quad = SPAN / 4.0
+    quad = span / 4.0
     quad_name = quad + 0.5
     quad_val = quad - 0.5
 
@@ -304,8 +298,8 @@ def fund_volatility(pdf, fund_data: dict):
     Returns:
         FPDF -- pdf object
     """
-    SPAN = pdf.w - 2 * pdf.l_margin
-
+    # pylint: disable=too-many-locals
+    span = pdf.w - 2 * pdf.l_margin
     vf_data = fund_data['metadata'].get('volatility', {})
     status = vf_data.get('status', {}).get('status', '')
     color = vf_data.get('status', {}).get('color', "black")
@@ -313,18 +307,18 @@ def fund_volatility(pdf, fund_data: dict):
 
     pdf = pdf_set_color_text(pdf, color)
     pdf.set_font('Arial', style='B', size=16.0)
-    pdf.cell(SPAN, 0.4, txt=vol_str, align='C', ln=1)
+    pdf.cell(span, 0.4, txt=vol_str, align='C', ln=1)
 
     vol = vf_data.get("VF", "")
-    vf_str = f"Current Volatility:"
+    vf_str = "Current Volatility:"
     vf_str2 = f"{vol}%"
     max_price = vf_data.get("last_max", {}).get("Price", "")
-    mp_str = f"Last relative max price:"
+    mp_str = "Last relative max price:"
     mp_str2 = f"${max_price}"
 
     pdf = horizontal_spacer(pdf, 0.2)
 
-    quad = SPAN / 4.0
+    quad = span / 4.0
     quad_name = quad + 0.5
     quad_val = quad - 0.5
 
@@ -336,11 +330,11 @@ def fund_volatility(pdf, fund_data: dict):
     pdf.cell(quad_val, 0.2, txt=mp_str2, align='L', ln=1)
 
     stop_loss = vf_data.get("stop_loss", "")
-    sl_str = f"Current Stop Loss:"
+    sl_str = "Current Stop Loss:"
     sl_str2 = f"${stop_loss}"
 
     max_date = vf_data.get("last_max", {}).get("Date", "")
-    md_str = f"Date of last relative max:"
+    md_str = "Date of last relative max:"
     md_str2 = f"{max_date}"
 
     pdf.cell(quad_name, 0.2, txt=sl_str, align='L')
@@ -355,7 +349,7 @@ def fund_volatility(pdf, fund_data: dict):
         if isinstance(altman_z_score, (int, float)):
             altman_z_score = str(np.round(altman_z_score, 5))
 
-        az_str = f"Altman-Z Score:"
+        az_str = "Altman-Z Score:"
         az_str2 = altman_z_score
 
         pdf.cell(quad_name, 0.2, txt=az_str, align='L')
@@ -364,7 +358,7 @@ def fund_volatility(pdf, fund_data: dict):
     return pdf
 
 
-def latest_signals(pdf, fund_data: dict, views: str, **kwargs):
+def latest_signals(pdf: FPDF, fund_data: dict, views: str):
     """Latest Signals
 
     Arguments:
@@ -375,14 +369,15 @@ def latest_signals(pdf, fund_data: dict, views: str, **kwargs):
     Returns:
         pdf-object -- pdf modified
     """
+    # pylint: disable=too-many-locals
     signals = fund_data[views].get('last_signals')
     if signals is None:
         return pdf
 
     signals = signals["signals"]
 
-    SPAN = pdf.w - 2 * pdf.l_margin
-    col_width = SPAN / 4
+    span = pdf.w - 2 * pdf.l_margin
+    col_width = span / 4
     key_width = col_width - 0.5
     val_width = col_width + 0.5
 
@@ -390,7 +385,7 @@ def latest_signals(pdf, fund_data: dict, views: str, **kwargs):
 
     pdf = pdf_set_color_text(pdf, "black")
     pdf.set_font('Arial', style='B', size=14.0)
-    pdf.cell(SPAN, 0.0, f'Latest Signals ({views})', align='C')
+    pdf.cell(span, 0.0, f'Latest Signals ({views})', align='C')
 
     data = [["Time Period", "Date", "Indicator", "Signal Found"]]
     colors = ["black"]
@@ -409,26 +404,23 @@ def latest_signals(pdf, fund_data: dict, views: str, **kwargs):
         else:
             colors.append('green')
 
-    FONT_SIZE = 8.0
-    pdf.set_font('Arial', style='', size=FONT_SIZE)
+    font_size = 8.0
+    pdf.set_font('Arial', style='', size=font_size)
     pdf.ln(0.4)
     height = pdf.font_size
 
     for j, row in enumerate(data):
         for i, col in enumerate(row):
-            if i == 0 or i == 1:
+            if i in (0, 1):
                 pdf = pdf_set_color_text(pdf, colors[j])
-                pdf.set_font('Arial', style='B', size=FONT_SIZE)
-                pdf.cell(key_width, height, str(col),
-                         align='L', border=0)
+                pdf.set_font('Arial', style='B', size=font_size)
+                pdf.cell(key_width, height, str(col), align='L', border=0)
 
             else:
                 col_str = col
                 pdf = pdf_set_color_text(pdf, colors[j])
-                pdf.set_font('Arial', style='B', size=FONT_SIZE)
-                pdf.cell(val_width, height, col_str,
-                         align='L', border=0)
+                pdf.set_font('Arial', style='B', size=font_size)
+                pdf.cell(val_width, height, col_str, align='L', border=0)
 
         pdf.ln(height * 2.0)
-
     return pdf
