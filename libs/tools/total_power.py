@@ -1,4 +1,6 @@
+""" total power """
 import os
+
 import pandas as pd
 import numpy as np
 
@@ -29,17 +31,15 @@ def total_power(position: pd.DataFrame, **kwargs) -> dict:
     p_bar = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
-    tp = dict()
-
-    tp['tabular'] = generate_total_power_signal(
+    total_power_data = {}
+    total_power_data['tabular'] = generate_total_power_signal(
         position, plot_output=plot_output, p_bar=p_bar, name=name, view=view)
 
-    tp = total_power_feature_detection(
-        tp, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
+    total_power_data = total_power_feature_detection(
+        total_power_data, position, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
-    tp['type'] = 'oscillator'
-
-    return tp
+    total_power_data['type'] = 'oscillator'
+    return total_power_data
 
 
 def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
@@ -59,8 +59,9 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- cumulative signals bear, bull, total
     """
-    lookback = kwargs.get('lookback', 45)
-    powerback = kwargs.get('powerback', 10)
+    # pylint: disable=too-many-locals,too-many-branches
+    look_back = kwargs.get('lookback', 45)
+    power_back = kwargs.get('powerback', 10)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
@@ -74,7 +75,7 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
         "bulls": []
     }
 
-    ema = exponential_moving_avg(position, powerback)
+    ema = exponential_moving_avg(position, power_back)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -94,17 +95,17 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
         p_bar.uptick(increment=0.1)
 
     # Create look back period signals
-    for i in range(lookback-1):
+    for i in range(look_back-1):
         signals['bulls'].append(sum(signals['bulls_raw'][0:i+1]))
         signals['bears'].append(sum(signals['bears_raw'][0:i+1]))
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    for i in range(lookback-1, len(ema)):
-        summer = sum(signals['bulls_raw'][i-(lookback-1): i])
+    for i in range(look_back-1, len(ema)):
+        summer = sum(signals['bulls_raw'][i-(look_back-1): i])
         signals['bulls'].append(summer)
-        summer = sum(signals['bears_raw'][i-(lookback-1): i])
+        summer = sum(signals['bears_raw'][i-(look_back-1): i])
         signals['bears'].append(summer)
 
     if p_bar is not None:
@@ -123,15 +124,15 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     signals.pop('bears_raw')
 
     for i, tot in enumerate(signals['total']):
-        signals['total'][i] = 100.0 * tot / float(lookback)
+        signals['total'][i] = 100.0 * tot / float(look_back)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
     for i, bull in enumerate(signals['bulls']):
-        signals['bulls'][i] = 100.0 * bull / float(lookback)
+        signals['bulls'][i] = 100.0 * bull / float(look_back)
     for i, bear in enumerate(signals['bears']):
-        signals['bears'][i] = 100.0 * bear / float(lookback)
+        signals['bears'][i] = 100.0 * bear / float(look_back)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -153,7 +154,7 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     return signals
 
 
-def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) -> dict:
+def total_power_feature_detection(total_power_data: dict, position: pd.DataFrame, **kwargs) -> dict:
     """Total Power Feature Detection / Metrics
 
     Arguments:
@@ -170,13 +171,14 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
     Returns:
         dict -- tp
     """
+    # pylint: disable=too-many-statements,too-many-branches,too-many-locals
     adj_level = kwargs.get('adj_level', 72.0)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('p_bar')
     view = kwargs.get('view')
 
-    tab = tp['tabular']
+    tab = total_power_data['tabular']
     metrics = [0.0] * len(tab['total'])
     features = []
 
@@ -260,6 +262,7 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
             features.append(data)
 
         if i > 0:
+            # pylint: disable=chained-comparison
             if (tab['bulls'][i-1] < adj_level) and (tab['bulls'][i] > adj_level):
                 metrics[i] += 1.0
                 data = {
@@ -284,25 +287,24 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
         p_bar.uptick(increment=0.1)
 
     weights = [1.0, 0.85, 0.6, 0.25]
-
     state2 = [0.0] * len(metrics)
-    for ind, s in enumerate(metrics):
-        if s != 0.0:
-            state2[ind] += s
+    for ind, s_val in enumerate(metrics):
+        if s_val != 0.0:
+            state2[ind] += s_val
 
             # Smooth the curves
             if ind - 1 >= 0:
-                state2[ind-1] += s * weights[1]
+                state2[ind-1] += s_val * weights[1]
             if ind + 1 < len(metrics):
-                state2[ind+1] += s * weights[1]
+                state2[ind+1] += s_val * weights[1]
             if ind - 2 >= 0:
-                state2[ind-2] += s * weights[2]
+                state2[ind-2] += s_val * weights[2]
             if ind + 2 < len(metrics):
-                state2[ind+2] += s * weights[2]
+                state2[ind+2] += s_val * weights[2]
             if ind - 3 >= 0:
-                state2[ind-3] += s * weights[3]
+                state2[ind-3] += s_val * weights[3]
             if ind + 3 < len(metrics):
-                state2[ind+3] += s * weights[3]
+                state2[ind+3] += s_val * weights[3]
 
     metrics = exponential_moving_avg(state2, 7, data_type='list')
     norm = normalize_signals([metrics])
@@ -318,11 +320,11 @@ def total_power_feature_detection(tp: dict, position: pd.DataFrame, **kwargs) ->
         )
     )
 
-    tp['metrics'] = metrics
-    tp['signals'] = features
-    tp['length_of_data'] = len(tp['tabular']['bears'])
+    total_power_data['metrics'] = metrics
+    total_power_data['signals'] = features
+    total_power_data['length_of_data'] = len(total_power_data['tabular']['bears'])
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
 
-    return tp
+    return total_power_data

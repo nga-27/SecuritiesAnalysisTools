@@ -2,6 +2,7 @@
 import os
 import warnings
 import json
+from typing import Union
 
 import pandas as pd
 import numpy as np
@@ -41,7 +42,7 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     Returns:
         trends {dict} -- contains all trend lines determined by algorithm
     """
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     interval = kwargs.get('interval', [4, 8, 16, 32])
@@ -74,27 +75,28 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
 
         # ma = windowed_ma_list(fund['Close'], interval=ma_size)
         weight_strength = 2.0 + (0.1 * float(i))
-        ma = windowed_moving_avg(fund['Close'], ma_size, weight_strength=weight_strength,
+        wma = windowed_moving_avg(fund['Close'], ma_size, weight_strength=weight_strength,
                                  data_type='list', filter_type='exponential')
-        ex = find_filtered_local_extrema(ma)
-        r = reconstruct_extrema(
+        ex = find_filtered_local_extrema(wma)
+        recon = reconstruct_extrema(
             fund, extrema=ex, ma_size=ma_size, ma_type='windowed')
 
         # Cleanse data sample for duplicates and errors
-        r = remove_duplicates(r, method='point')
+        recon = remove_duplicates(recon, method='point')
 
-        for y in r['min']:
-            if y[0] not in mins_x:
-                mins_x.append(y[0])
-                mins_y.append(y[1])
-            if y[0] not in all_x:
-                all_x.append(y[0])
-        for y in r['max']:
-            if y[0] not in maxes_x:
-                maxes_x.append(y[0])
-                maxes_y.append(y[1])
-            if y[0] not in all_x:
-                all_x.append(y[0])
+        for y_list in recon['min']:
+            if y_list[0] not in mins_x:
+                mins_x.append(y_list[0])
+                mins_y.append(y_list[1])
+            if y_list[0] not in all_x:
+                all_x.append(y_list[0])
+
+        for y_list in recon['max']:
+            if y_list[0] not in maxes_x:
+                maxes_x.append(y_list[0])
+                maxes_y.append(y_list[1])
+            if y_list[0] not in all_x:
+                all_x.append(y_list[0])
 
         if progress_bar is not None:
             progress_bar.uptick(increment=increment)
@@ -114,60 +116,61 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     short_term = trend_window[2]
     near_term = trend_window[3]
 
-    X0, Y0 = get_lines_from_period(
+    x_list_0, y_list_0 = get_lines_from_period(
         fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=long_term, vf=volatility)
-    X1, Y1 = get_lines_from_period(
+    x_list_1, y_list_1 = get_lines_from_period(
         fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=intermediate_term, vf=volatility)
-    X2, Y2 = get_lines_from_period(
+    x_list_2, y_list_2 = get_lines_from_period(
         fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=short_term, vf=volatility)
-    X3, Y3 = get_lines_from_period(
+    x_list_3, y_list_3 = get_lines_from_period(
         fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term, vf=volatility)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=increment*4.0)
 
-    X = []
-    Y = []
-    C = []
-    L = []
+    x_list_full = []
+    y_list_full = []
+    color_list = []
+    term_list = []
 
-    for i, x in enumerate(X0):
-        X.append(x)
-        Y.append(Y0[i])
-        C.append('blue')
-        L.append('long')
+    for i, x_val in enumerate(x_list_0):
+        x_list_full.append(x_val)
+        y_list_full.append(y_list_0[i])
+        color_list.append('blue')
+        term_list.append('long')
 
-    for i, x in enumerate(X1):
-        X.append(x)
-        Y.append(Y1[i])
-        C.append('green')
-        L.append('intermediate')
+    for i, x_val in enumerate(x_list_1):
+        x_list_full.append(x_val)
+        y_list_full.append(y_list_1[i])
+        color_list.append('green')
+        term_list.append('intermediate')
 
-    for i, x in enumerate(X2):
-        X.append(x)
-        Y.append(Y2[i])
-        C.append('orange')
-        L.append('short')
+    for i, x_val in enumerate(x_list_2):
+        x_list_full.append(x_val)
+        y_list_full.append(y_list_2[i])
+        color_list.append('orange')
+        term_list.append('short')
 
-    for i, x in enumerate(X3):
-        X.append(x)
-        Y.append(Y3[i])
-        C.append('red')
-        L.append('near')
+    for i, x_val in enumerate(x_list_3):
+        x_list_full.append(x_val)
+        y_list_full.append(y_list_3[i])
+        color_list.append('red')
+        term_list.append('near')
 
     if progress_bar is not None:
         progress_bar.uptick(increment=increment*4.0)
 
-    analysis_list = generate_analysis(fund, x_list=X, y_list=Y, len_list=L, color_list=C)
+    analysis_list = generate_analysis(fund, x_list=x_list_full, y_list=y_list_full,
+        len_list=term_list, color_list=color_list)
 
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
-    X = dates_convert_from_index(fund, X)
+    x_list_full = dates_convert_from_index(fund, x_list_full)
 
-    X.append(fund.index)
-    Y.append(fund['Close'])
-    C.append('black')
+    x_list_full.append(fund.index)
+    y_list_full.append(fund['Close'])
+    color_list.append('black')
 
     name2 = INDEXES.get(name, name)
     if not out_suppress:
@@ -175,13 +178,13 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
             title = f"{name2} Trend Lines for {near_term}, {short_term}, " + \
                 f"{intermediate_term}, and {long_term} Periods"
             generate_plot(
-                PlotType.GENERIC_PLOTTING, Y, **dict(
-                    x=X, colors=C, plot_output=plot_output, title=title, save_fig=True,
-                    filename=os.path.join(name, view, f"{sub_name}.png")
+                PlotType.GENERIC_PLOTTING, y_list_full, **dict(
+                    x=x_list_full, colors=color_list, plot_output=plot_output, title=title,
+                    save_fig=True, filename=os.path.join(name, view, f"{sub_name}.png")
                 )
             )
 
-        except:
+        except: # pylint: disable=bare-except
             print(
                 f"{WARNING}Warning: plot failed to generate in trends.get_trend_lines.{NORMAL}")
 
@@ -213,7 +216,7 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
 
 
 def trend_simple_forecast(trend: dict,
-                          future_periods: list = [5, 10, 20],
+                          future_periods: Union[list, None] = None,
                           return_type='price',
                           current_price: float = None) -> dict:
     """Trend Simple Forecast
@@ -231,6 +234,8 @@ def trend_simple_forecast(trend: dict,
     Returns:
         dict -- forecast data object
     """
+    if not future_periods:
+        future_periods = [5, 10, 20]
     forecast = {
         'return_type': return_type,
         'periods': future_periods,
@@ -281,6 +286,7 @@ def auto_trend(data, **kwargs) -> list:
     Returns:
         list -- list of items desired in 'return_type'
     """
+    # pylint: disable=too-many-locals
     periods = kwargs.get('periods', [])
     weights = kwargs.get('weights', [])
     return_type = kwargs.get('return_type', 'slope')
@@ -291,36 +297,34 @@ def auto_trend(data, **kwargs) -> list:
     try:
         periods = [int(period) for period in periods]
         for j, period in enumerate(periods):
-            trends = []
-            for _ in range(period):
-                trends.append(0.0)
+            trends = [0.0] * period
 
             # X range will always be the same for any given period
-            x = list(range(period))
+            x_period_list = list(range(period))
             for i in range(period, len(data)):
-                y = data[i-period:i].copy()
-                reg = linregress(x, y)
+                y_list = data[i-period:i].copy()
+                reg = linregress(x_period_list, y_list)
 
                 if return_type == 'slope':
                     trends.append(reg[0])
 
-            wt = 1.0
+            weight = 1.0
             if j < len(weights):
-                wt = weights[j]
-            for k, t in enumerate(trends):
-                trend[k] = trend[k] + (wt * t)
+                weight = weights[j]
+            for k, trend_val in enumerate(trends):
+                trend[k] = trend[k] + (weight * trend_val)
 
         if normalize:
             max_factor = max(trend)
             min_factor = min(trend)
-            for i in range(len(trend)):
-                if trend[i] < 0.0:
-                    trend[i] = (trend[i] / min_factor) * -0.35
+            for i, trend_x in enumerate(trend):
+                if trend_x < 0.0:
+                    trend[i] = (trend_x / min_factor) * -0.35
                 else:
-                    trend[i] = (trend[i] / max_factor) * 0.35
+                    trend[i] = (trend_x / max_factor) * 0.35
 
-    except:
-        print(f"Trend for trends.py failed.")
+    except: # pylint: disable=bare-except
+        print("Trend for trends.py failed.")
 
     return trend
 
@@ -351,25 +355,27 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
     Returns:
         dict -- trendline content
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
+    divisors = DIVISORS
     config_path = os.path.join("resources", "config.json")
     if os.path.exists(config_path):
-        with open(config_path, 'r') as cpf:
+        with open(config_path, 'r', encoding='utf-8') as cpf:
             c_data = json.load(cpf)
             cpf.close()
 
         ranges = c_data.get('trendlines', {}).get(
             'divisors', {}).get('ranges', [])
         ranged = 0
-        for rg in ranges:
-            if len(signal) > rg:
+        for range_val in ranges:
+            if len(signal) > range_val:
                 ranged += 1
 
         divs = c_data.get('trendlines', {}).get('divisors', {}).get('divisors')
         if divs is not None:
             if len(divs) > ranged:
-                DIVISORS = divs[ranged]
+                divisors = divs[ranged]
 
-    iterations = kwargs.get('iterations', len(DIVISORS))
+    iterations = kwargs.get('iterations', len(divisors))
     threshold = kwargs.get('threshold', 0.1)
     dates = kwargs.get('dates')
     indicator = kwargs.get('indicator', '')
@@ -396,8 +402,7 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
         period = int(len(signal) / div)
         for i in range(div):
             for k in range(2):
-
-                data = dict()
+                data = {}
                 if i == div-1:
                     data['value'] = signal[period*i: len(signal)].copy()
                     data['x'] = indexes[period*i: len(signal)].copy()
@@ -441,13 +446,10 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
                     lines.append(line_corrected.copy())
                     x_s.append(x_corrected.copy())
                     t_line_content.append(content)
-                    # lines.append(line)
-                    # x_s.append(x_line)
 
         for i in range(period, len(signal), 2):
             for k in range(2):
-
-                data = dict()
+                data = {}
                 data['value'] = signal[i-period: i].copy()
                 data['x'] = indexes[i-period: i].copy()
 

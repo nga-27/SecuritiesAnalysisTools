@@ -91,6 +91,7 @@ def date_extractor(date, _format=None):
     """
     date = str(date)
     date1 = date.split(' ', maxsplit=1)[0]
+    date1 = date1.split('T', maxsplit=1)[0]
     date2 = datetime.strptime(date1, '%Y-%m-%d')
     if _format == 'str':
         date_val = date1

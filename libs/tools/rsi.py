@@ -1,5 +1,8 @@
+""" RSI """
 import os
 import math
+from typing import Union
+
 import pandas as pd
 import numpy as np
 
@@ -32,6 +35,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- contains all rsi information
     """
+    # pylint: disable=too-many-locals
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     period = kwargs.get('period', 14)
@@ -41,17 +45,16 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     oversold = kwargs.get('oversold', 30.0)
     use_auto_trend = kwargs.get('auto_trend', True)
     view = kwargs.get('view', '')
-    trendlines = kwargs.get('trendlines', False)
+    has_trend_lines = kwargs.get('trendlines', False)
 
-    rsi_data = dict()
-
+    rsi_data = {}
     rsi = generate_rsi_signal(position, period=period, p_bar=progress_bar)
     rsi_data['tabular'] = rsi
 
     slope_trend = []
     if use_auto_trend:
-        slope_trend = auto_trend(position['Close'], periods=[
-                                period*3, period*5.5, period*8], weights=[0.45, 0.33, 0.22], normalize=True)
+        slope_trend = auto_trend(position['Close'], periods=[period*3, period*5.5, period*8],
+            weights=[0.45, 0.33, 0.22], normalize=True)
 
     over_thresholds = over_threshold_lists(
         overbought, oversold, len(position['Close']), slope_list=slope_trend)
@@ -67,7 +70,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     rsi_data = rsi_divergence(position, rsi_data, plot_output=plot_output, p_bar=progress_bar)
 
     # Determine metrics, primarily using both indicators
-    rsi_data = rsi_metrics(position, rsi_data, p_bar=progress_bar)
+    rsi_data = rsi_metrics(rsi_data, p_bar=progress_bar)
 
     main_plots = [rsi, over_thresholds['overbought'],
                   over_thresholds['oversold']]
@@ -95,10 +98,11 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
-    if trendlines:
+    if has_trend_lines:
         end = len(rsi)
         rsi_trend = rsi[end-100: end]
-        get_trend_lines_regression(rsi_trend, plot_output=True, indicator='relative_strength_indicator_rsi')
+        get_trend_lines_regression(rsi_trend, plot_output=True,
+            indicator='relative_strength_indicator_rsi')
 
     rsi_data['type'] = 'oscillator'
     rsi_data['length_of_data'] = len(rsi)
@@ -120,10 +124,10 @@ def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
     Returns:
         list -- relative_strength_indicator_rsi signal
     """
+    # pylint: disable=too-many-branches
     period = kwargs.get('period', 14)
     p_bar = kwargs.get('p_bar')
 
-    PERIOD = period
     change = []
     change.append(0.0)
     for i in range(1, len(position['Close'])):
@@ -134,56 +138,59 @@ def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
     if p_bar is not None:
         p_bar.uptick(increment=0.15)
 
-    relative_strength_indicator_rsi = []
+    relative_strength_indicator_rsi_list = []
     # gains, losses, rs
-    RS = []
+    rsi_list = []
 
-    for i in range(0, PERIOD):
-        relative_strength_indicator_rsi.append(50.0)
-        RS.append([0.0, 0.0, 1.0])
+    for i in range(0, period):
+        relative_strength_indicator_rsi_list.append(50.0)
+        rsi_list.append([0.0, 0.0, 1.0])
 
     # Calculate RS for all future points
-    for i in range(PERIOD, len(change)):
+    for i in range(period, len(change)):
         pos = 0.0
         neg = 0.0
-        for j in range(i-PERIOD, i):
+        for j in range(i-period, i):
             if change[j] > 0.0:
                 pos += change[j]
             else:
                 neg += np.abs(change[j])
 
-        if i == PERIOD:
+        if i == period:
             if neg == 0.0:
-                rs = float('inf')
+                rsi_val = float('inf')
             else:
-                rs = np.round(pos / neg, 6)
-            RS.append([np.round(pos/float(PERIOD), 6),
-                       np.round(neg/float(PERIOD), 6), rs])
+                rsi_val = np.round(pos / neg, 6)
+            rsi_list.append([
+                np.round(pos/float(period), 6), np.round(neg/float(period), 6), rsi_val
+            ])
+
         else:
             if change[i] > 0.0:
-                if RS[i-1][1] == 0.0:
-                    rs = float('inf')
+                if rsi_list[i-1][1] == 0.0:
+                    rsi_val = float('inf')
                 else:
-                    rs = (((RS[i-1][0] * float(PERIOD-1)) + change[i]) / float(PERIOD)
-                          ) / (((RS[i-1][1] * float(PERIOD-1)) + 0.0) / float(PERIOD))
+                    rsi_val = (((rsi_list[i-1][0] * float(period-1)) + change[i]) / \
+                        float(period)) / \
+                         (((rsi_list[i-1][1] * float(period-1)) + 0.0) / float(period))
             else:
-                if RS[i-1][1] == 0.0:
-                    rs = float('inf')
+                if rsi_list[i-1][1] == 0.0:
+                    rsi_val = float('inf')
                 else:
-                    rs = (((RS[i-1][0] * float(PERIOD-1)) + 0.00) / float(PERIOD)) / \
-                        (((RS[i-1][1] * float(PERIOD-1)) +
-                          np.abs(change[i])) / float(PERIOD))
+                    rsi_val = (((rsi_list[i-1][0] * float(period-1)) + 0.00) / float(period)) / \
+                        (((rsi_list[i-1][1] * float(period-1)) +
+                          np.abs(change[i])) / float(period))
 
-            RS.append([np.round(pos/float(PERIOD), 6),
-                       np.round(neg/float(PERIOD), 6), rs])
+            rsi_list.append([np.round(pos/float(period), 6),
+                       np.round(neg/float(period), 6), rsi_val])
 
-        rsi = 100.0 - (100.0 / (1.0 + RS[i][2]))
-        relative_strength_indicator_rsi.append(np.round(rsi, 6))
+        rsi = 100.0 - (100.0 / (1.0 + rsi_list[i][2]))
+        relative_strength_indicator_rsi_list.append(np.round(rsi, 6))
 
     if p_bar is not None:
         p_bar.uptick(increment=0.15)
 
-    return relative_strength_indicator_rsi
+    return relative_strength_indicator_rsi_list
 
 
 def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
@@ -205,18 +212,19 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
     Returns:
         dict -- rsi data object
     """
+    # pylint: disable=too-many-statements,too-many-branches
     p_bar = kwargs.get('p_bar', None)
 
     thresholds = rsi_data['thresholds']
     rsi_signal = rsi_data['tabular']
 
     if thresholds is None:
-        thresholds = dict()
+        thresholds = {}
         thresholds['oversold'] = [30.0] * len(position['Close'])
         thresholds['overbought'] = [70.0] * len(position['Close'])
 
-    LOW_TH = thresholds['oversold']
-    HIGH_TH = thresholds['overbought']
+    low_th = thresholds['oversold']
+    high_th = thresholds['overbought']
 
     rsi_data['bullish'] = []
     rsi_data['bearish'] = []
@@ -227,41 +235,40 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
     state = 0
     minima = 0.0
     maxima = 0.0
-    for i in range(len(rsi_signal)):
-
-        if (state == 0) and (rsi_signal[i] <= LOW_TH[i]):
+    for i, sig in enumerate(rsi_signal):
+        if (state == 0) and (sig <= low_th[i]):
             # Start of a bullish signal
             state = 1
             indicator.append(0.0)
 
-        elif (state == 1) and (rsi_signal[i] > LOW_TH[i]):
+        elif (state == 1) and (sig > low_th[i]):
             state = 2
-            maxima = rsi_signal[i]
+            maxima = sig
             indicator.append(0.0)
 
-        elif (state == 2):
-            if rsi_signal[i] >= maxima:
-                if rsi_signal[i] >= HIGH_TH[i]:
+        elif state == 2:
+            if sig >= maxima:
+                if sig >= high_th[i]:
                     state = 5
                 else:
-                    maxima = rsi_signal[i]
+                    maxima = sig
             else:
-                minima = rsi_signal[i]
+                minima = sig
                 state = 3
             indicator.append(0.0)
 
-        elif (state == 3):
-            if rsi_signal[i] <= LOW_TH[i]:
+        elif state == 3:
+            if sig <= low_th[i]:
                 # Failed attempted breakout
                 state = 1
             elif rsi_signal[i] <= minima:
-                minima = rsi_signal[i]
+                minima = sig
             else:
                 state = 4
             indicator.append(0.0)
 
-        elif (state == 4):
-            if rsi_signal[i] > maxima:
+        elif state == 4:
+            if sig > maxima:
                 # Have found a bullish breakout!
                 rsi_data['bullish'].append([
                     date_extractor(position.index[i], _format='str'),
@@ -274,42 +281,42 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
                 maxima = 0.0
                 indicator.append(1.0)
             else:
-                if rsi_signal[i] <= LOW_TH[i]:
+                if sig <= low_th[i]:
                     state = 1
                 indicator.append(0.0)
 
-        elif (state == 0) and (rsi_signal[i] >= HIGH_TH[i]):
+        elif (state == 0) and (sig >= high_th[i]):
             state = 5
             indicator.append(0.0)
 
-        elif (state == 5) and (rsi_signal[i] < HIGH_TH[i]):
+        elif (state == 5) and (sig < high_th[i]):
             state = 6
-            minima = rsi_signal[i]
+            minima = sig
             indicator.append(0.0)
 
-        elif (state == 6):
-            if rsi_signal[i] <= minima:
-                if rsi_signal[i] <= LOW_TH[i]:
+        elif state == 6:
+            if sig <= minima:
+                if sig <= low_th[i]:
                     state = 1
                 else:
-                    minima = rsi_signal[i]
+                    minima = sig
             else:
-                maxima = rsi_signal[i]
+                maxima = sig
                 state = 7
             indicator.append(0.0)
 
-        elif (state == 7):
-            if rsi_signal[i] >= HIGH_TH[i]:
+        elif state == 7:
+            if sig >= high_th[i]:
                 # Failed attempted breakout
                 state = 5
-            elif rsi_signal[i] >= maxima:
-                maxima = rsi_signal[i]
+            elif sig >= maxima:
+                maxima = sig
             else:
                 state = 8
             indicator.append(0.0)
 
-        elif (state == 8):
-            if rsi_signal[i] < minima:
+        elif state == 8:
+            if sig < minima:
                 rsi_data['bearish'].append([
                     date_extractor(position.index[i], _format='str'),
                     position['Close'][i],
@@ -321,7 +328,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
                 maxima = 0.0
                 indicator.append(-1.0)
             else:
-                if rsi_signal[i] >= HIGH_TH[i]:
+                if sig >= high_th[i]:
                     state = 5
                 indicator.append(0.0)
 
@@ -339,7 +346,7 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
 def over_threshold_lists(overbought: float,
                          oversold: float,
                          fund_length: int,
-                         slope_list=[]) -> dict:
+                         slope_list: Union[list, None] = None) -> dict:
     """Over Threshold Lists
 
     Arguments:
@@ -353,31 +360,36 @@ def over_threshold_lists(overbought: float,
     Returns:
         dict -- [description]
     """
-    ovbt = []
-    ovsld = []
+    if not slope_list:
+        slope_list = []
+    over_bought_list = []
+    over_sold_list = []
+
     if len(slope_list) == 0:
-        for _ in range(fund_length):
-            ovbt.append(overbought)
-            ovsld.append(oversold)
+        over_bought_list = [overbought] * len(fund_length)
+        over_sold_list = [oversold] * len(fund_length)
+
     else:
         for slope in slope_list:
             if slope > 0.1:
                 # 'Up' trend, oversold rises proportionally
-                ovbt.append(overbought)
-                sl = (slope - 0.1) * -15.0
-                sld = (10.0 - (10.0 * math.exp(sl))) + oversold
-                ovsld.append(sld)
+                over_bought_list.append(overbought)
+                sl_exp = (slope - 0.1) * -15.0
+                sld = (10.0 - (10.0 * math.exp(sl_exp))) + oversold
+                over_sold_list.append(sld)
+
             elif slope < -0.1:
                 # 'Down' trend, overbought drops proportionally
-                sl = (slope + 0.1) * 15.0
-                bot = overbought - (10.0 - (10.0 * math.exp(sl)))
-                ovbt.append(bot)
-                ovsld.append(oversold)
-            else:
-                ovbt.append(overbought)
-                ovsld.append(oversold)
+                sl_exp = (slope + 0.1) * 15.0
+                bot = overbought - (10.0 - (10.0 * math.exp(sl_exp)))
+                over_bought_list.append(bot)
+                over_sold_list.append(oversold)
 
-    over_th = {"overbought": ovbt, "oversold": ovsld}
+            else:
+                over_bought_list.append(overbought)
+                over_sold_list.append(oversold)
+
+    over_th = {"overbought": over_bought_list, "oversold": over_sold_list}
     return over_th
 
 
@@ -400,6 +412,7 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     Returns:
         dict -- rsi data object
     """
+    # pylint: disable=too-many-statements,too-many-branches,too-many-locals
     plot_output = kwargs.get('plot_output', True)
     p_bar = kwargs.get('p_bar')
 
@@ -414,8 +427,8 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     minima = 0.0
     prices = [0.0, 0.0]
     rsi_vals = [0.0, 0.0]
-    for i, sig in enumerate(signal):
 
+    for i, sig in enumerate(signal):
         # Start with bullish divergence
         if (state == 'n') and (sig <= ovs_th[i]):
             state = 'u1'
@@ -522,11 +535,10 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     return rsi_data
 
 
-def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
+def rsi_metrics(rsi: dict, **kwargs) -> dict:
     """relative_strength_indicator_rsi Metrics
 
     Arguments:
-        position {pd.DataFrame} -- dataset
         rsi {dict} -- rsi data object
 
     Optional Args:
@@ -535,8 +547,8 @@ def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
     Returns:
         dict -- rsi data object
     """
+    # pylint: disable=too-many-branches
     p_bar = kwargs.get('p_bar')
-
     swings = rsi['indicator']
     divs = rsi['divergence']
 
@@ -544,44 +556,44 @@ def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
     weights = [1.0, 0.85, 0.55, 0.1]
     state2 = [0.0] * len(divs)
 
-    for ind, s in enumerate(divs):
-        if s != 0.0:
-            state2[ind] += s
+    for ind, s_val in enumerate(divs):
+        if s_val != 0.0:
+            state2[ind] += s_val
 
             # Smooth the curves
             if ind - 1 >= 0:
-                state2[ind-1] += s * weights[1]
+                state2[ind-1] += s_val * weights[1]
             if ind + 1 < len(divs):
-                state2[ind+1] += s * weights[1]
+                state2[ind+1] += s_val * weights[1]
             if ind - 2 >= 0:
-                state2[ind-2] += s * weights[2]
+                state2[ind-2] += s_val * weights[2]
             if ind + 2 < len(divs):
-                state2[ind+2] += s * weights[2]
+                state2[ind+2] += s_val * weights[2]
             if ind - 3 >= 0:
-                state2[ind-3] += s * weights[3]
+                state2[ind-3] += s_val * weights[3]
             if ind + 3 < len(divs):
-                state2[ind+3] += s * weights[3]
+                state2[ind+3] += s_val * weights[3]
 
     if p_bar is not None:
         p_bar.uptick(increment=0.05)
 
-    for ind, s in enumerate(swings):
-        if s != 0.0:
-            state2[ind] += s
+    for ind, s_val in enumerate(swings):
+        if s_val != 0.0:
+            state2[ind] += s_val
 
             # Smooth the curves
             if ind - 1 >= 0:
-                state2[ind-1] += s * weights[1]
+                state2[ind-1] += s_val * weights[1]
             if ind + 1 < len(swings):
-                state2[ind+1] += s * weights[1]
+                state2[ind+1] += s_val * weights[1]
             if ind - 2 >= 0:
-                state2[ind-2] += s * weights[2]
+                state2[ind-2] += s_val * weights[2]
             if ind + 2 < len(swings):
-                state2[ind+2] += s * weights[2]
+                state2[ind+2] += s_val * weights[2]
             if ind - 3 >= 0:
-                state2[ind-3] += s * weights[3]
+                state2[ind-3] += s_val * weights[3]
             if ind + 3 < len(swings):
-                state2[ind+3] += s * weights[3]
+                state2[ind+3] += s_val * weights[3]
 
     if p_bar is not None:
         p_bar.uptick(increment=0.05)
@@ -594,7 +606,6 @@ def rsi_metrics(position: pd.DataFrame, rsi: dict, **kwargs) -> dict:
         p_bar.uptick(increment=0.1)
 
     rsi['metrics'] = metrics
-
     return rsi
 
 

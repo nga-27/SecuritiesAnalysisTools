@@ -1,4 +1,7 @@
+""" ultimate oscillator """
 import os
+from typing import Union
+
 import pandas as pd
 import numpy as np
 
@@ -9,7 +12,7 @@ from .math_functions import lower_low, higher_high, bull_bear_th
 from .moving_average import exponential_moving_avg
 
 
-def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kwargs) -> dict:
+def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None, **kwargs) -> dict:
     """Ultimate Oscillator
 
     Arguments:
@@ -27,16 +30,16 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
     Returns:
         dict -- ultimate oscillator object
     """
+    if not config:
+        config = [7, 14, 28]
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     name = kwargs.get('name', '')
     p_bar = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
-    ultimate = dict()
-
-    ult_osc = generate_ultimate_osc_signal(
-        position, config=config, p_bar=p_bar)
+    ultimate = {}
+    ult_osc = generate_ultimate_osc_signal(position, config=config, p_bar=p_bar)
     ultimate['tabular'] = ult_osc
 
     ultimate = find_ult_osc_features(position, ultimate, p_bar=p_bar)
@@ -80,7 +83,8 @@ def ultimate_oscillator(position: pd.DataFrame, config: list = [7, 14, 28], **kw
     return ultimate
 
 
-def generate_ultimate_osc_signal(position: pd.DataFrame, config: list = [7, 14, 28], **kwargs) -> list:
+def generate_ultimate_osc_signal(position: pd.DataFrame,
+                                 config: Union[list, None] = None, **kwargs) -> list:
     """Generate Ultimate Oscillator Signal
 
     Arguments:
@@ -97,49 +101,50 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list = [7, 14, 
     Returns:
         list -- signal
     """
+    # pylint: disable=too-many-locals
+    if not config:
+        config = [7, 14, 28]
+
     p_bar = kwargs.get('p_bar')
-
     tot_len = len(position['Close'])
-    SHORT = config[0]
-    MED = config[1]
-    LONG = config[2]
+    short = config[0]
+    medium = config[1]
+    long = config[2]
 
-    bp = [0.0] * tot_len
-    tr = [0.0] * tot_len
-    ushort = [0.0] * tot_len
-    umed = [0.0] * tot_len
-    ulong = [0.0] * tot_len
-
+    bp_val = [0.0] * tot_len
+    tr_val = [0.0] * tot_len
+    u_short = [0.0] * tot_len
+    u_med = [0.0] * tot_len
+    u_long = [0.0] * tot_len
     ult_osc = [50.0] * tot_len
 
     # Generate the ultimate oscillator values
     for i in range(1, tot_len):
-
         low = np.min([position['Low'][i], position['Close'][i-1]])
         high = np.max([position['High'][i], position['Close'][i-1]])
-        bp[i] = np.round(position['Close'][i] - low, 6)
-        tr[i] = np.round(high - low, 6)
+        bp_val[i] = np.round(position['Close'][i] - low, 6)
+        tr_val[i] = np.round(high - low, 6)
 
-        if i >= SHORT-1:
-            shbp = sum(bp[i-SHORT: i+1])
-            shtr = sum(tr[i-SHORT: i+1])
-            if shtr != 0.0:
-                ushort[i] = np.round(shbp / shtr, 6)
+        if i >= short-1:
+            sh_bp = sum(bp_val[i-short: i+1])
+            sh_tr = sum(tr_val[i-short: i+1])
+            if sh_tr != 0.0:
+                u_short[i] = np.round(sh_bp / sh_tr, 6)
 
-        if i >= MED-1:
-            shbp = sum(bp[i-MED: i+1])
-            shtr = sum(tr[i-MED: i+1])
-            if shtr != 0.0:
-                umed[i] = np.round(shbp / shtr, 6)
+        if i >= medium-1:
+            sh_bp = sum(bp_val[i-medium: i+1])
+            sh_tr = sum(tr_val[i-medium: i+1])
+            if sh_tr != 0.0:
+                u_med[i] = np.round(sh_bp / sh_tr, 6)
 
-        if i >= LONG-1:
-            shbp = sum(bp[i-LONG: i+1])
-            shtr = sum(tr[i-LONG: i+1])
-            if shtr != 0.0:
-                ulong[i] = np.round(shbp / shtr, 6)
+        if i >= long-1:
+            sh_bp = sum(bp_val[i-long: i+1])
+            sh_tr = sum(tr_val[i-long: i+1])
+            if sh_tr != 0.0:
+                u_long[i] = np.round(sh_bp / sh_tr, 6)
             ult_osc[i] = \
                 np.round(
-                    100.0 * ((4.0 * ushort[i]) + (2.0 * umed[i]) + ulong[i]) / 7.0, 6)
+                    100.0 * ((4.0 * u_short[i]) + (2.0 * u_med[i]) + u_long[i]) / 7.0, 6)
 
     if p_bar is not None:
         p_bar.uptick(increment=0.2)
@@ -148,7 +153,7 @@ def generate_ultimate_osc_signal(position: pd.DataFrame, config: list = [7, 14, 
 
 
 def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> list:
-    """Find Ultimate Oscilator Features 
+    """Find Ultimate Oscillator Features
 
     Arguments:
         position {pd.DataFrame} -- dataset
@@ -162,9 +167,10 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     Returns:
         dict -- ultimate osc data object
     """
+    # pylint: disable=too-many-locals,too-many-statements,too-many-branches
     p_bar = kwargs.get('p_bar')
-    LOW_TH = kwargs.get('thresh_low', 30)
-    HIGH_TH = kwargs.get('thresh_high', 70)
+    low_th = kwargs.get('thresh_low', 30)
+    high_th = kwargs.get('thresh_high', 70)
 
     ult_osc = ultimate['tabular']
 
@@ -173,9 +179,8 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     marker_ind = 0
 
     for i, close in enumerate(position['Close']):
-
         # Find bullish signal
-        if ult_osc[i] < LOW_TH:
+        if ult_osc[i] < low_th:
             ult1 = ult_osc[i]
             marker_val = close
             marker_ind = i
@@ -201,7 +206,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                         ])
 
         # Find bearish signal
-        if ult_osc[i] > HIGH_TH:
+        if ult_osc[i] > high_th:
             ult1 = ult_osc[i]
             marker_val = position['Close'][i]
             marker_ind = i
@@ -236,7 +241,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     for i, ult in enumerate(ult_osc):
 
         # Find bullish divergence and breakout
-        if (state == 'n') and (ult <= LOW_TH):
+        if (state == 'n') and (ult <= low_th):
             state = 'u1'
             ults[0] = ult
 
@@ -247,7 +252,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                 prices[0] = position['Close'][i-1]
                 state = 'u2'
 
-        elif (state == 'u2') and (ult > LOW_TH):
+        elif (state == 'u2') and (ult > low_th):
             state = 'u3'
             ults[1] = ult
 
@@ -265,20 +270,20 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
             else:
                 # We think we've found the bullish 2nd low
                 prices[1] = position['Close'][i-1]
-                state == 'u5'
+                state = 'u5'
 
         elif state == 'u5':
             if ult > ults[1]:
                 if prices[0] > prices[1]:
                     # Bullish breakout!
-                    trigger.append([
-                        "BULLISH",
-                        date_extractor(
-                            position.index[start_ind], _format='str'),
-                        position['Close'][start_ind],
-                        start_ind,
-                        "divergence"
-                    ])
+                    if start_ind:
+                        trigger.append([
+                            "BULLISH",
+                            date_extractor(position.index[start_ind], _format='str'),
+                            position['Close'][start_ind],
+                            start_ind,
+                            "divergence"
+                        ])
                     state = 'n'
                 else:
                     # False breakout, see if this is the new max:
@@ -291,7 +296,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                 state = 'u4'
 
         # Find bullish divergence and breakout
-        if (state == 'n') and (ult >= HIGH_TH):
+        if (state == 'n') and (ult >= high_th):
             state = 'e1'
             ults[0] = ult
 
@@ -302,7 +307,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                 prices[0] = position['Close'][i-1]
                 state = 'e2'
 
-        elif (state == 'e2') and (ult < HIGH_TH):
+        elif (state == 'e2') and (ult < high_th):
             state = 'e3'
             ults[1] = ult
 
@@ -320,20 +325,20 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
             else:
                 # We think we've found the bullish 2nd high
                 prices[1] = position['Close'][i-1]
-                state == 'e5'
+                state = 'e5'
 
         elif state == 'e5':
             if ult < ults[1]:
                 if prices[0] < prices[1]:
                     # Bullish breakout!
-                    trigger.append([
-                        "BEARISH",
-                        date_extractor(
-                            position.index[start_ind], _format='str'),
-                        position['Close'][start_ind],
-                        start_ind,
-                        "divergence"
-                    ])
+                    if start_ind:
+                        trigger.append([
+                            "BEARISH",
+                            date_extractor(position.index[start_ind], _format='str'),
+                            position['Close'][start_ind],
+                            start_ind,
+                            "divergence"
+                        ])
                     state = 'n'
                 else:
                     # False breakout, see if this is the new max:
@@ -345,11 +350,11 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                 ults[2] = ult
                 state = 'e4'
 
-        elif ult >= HIGH_TH:
+        elif ult >= high_th:
             state = 'e1'
             ults[0] = ult
 
-        elif ult <= LOW_TH:
+        elif ult <= low_th:
             state = 'u1'
             ults[0] = ult
 
@@ -389,8 +394,8 @@ def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
     present = False
 
     for trig in trigger:
-        for j in range(len(simplified)):
-            if simplified[j][3] == trig[3]:
+        for _, simple in enumerate(simplified):
+            if simple[3] == trig[3]:
                 present = True
 
         if not present:
@@ -433,6 +438,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     Returns:
         dict -- ultimate osc data object
     """
+    # pylint: disable=too-many-locals
     p_bar = kwargs.get('p_bar')
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
@@ -445,23 +451,23 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
     weights = [1.0, 0.9, 0.75, 0.45]
     state2 = [0.0] * len(ults)
 
-    for ind, s in enumerate(ults):
-        if s != 0.0:
-            state2[ind] += s
+    for ind, s_val in enumerate(ults):
+        if s_val != 0.0:
+            state2[ind] += s_val
 
             # Smooth the curves
             if ind - 1 >= 0:
-                state2[ind-1] += s * weights[1]
+                state2[ind-1] += s_val * weights[1]
             if ind + 1 < len(ults):
-                state2[ind+1] += s * weights[1]
+                state2[ind+1] += s_val * weights[1]
             if ind - 2 >= 0:
-                state2[ind-2] += s * weights[2]
+                state2[ind-2] += s_val * weights[2]
             if ind + 2 < len(ults):
-                state2[ind+2] += s * weights[2]
+                state2[ind+2] += s_val * weights[2]
             if ind - 3 >= 0:
-                state2[ind-3] += s * weights[3]
+                state2[ind-3] += s_val * weights[3]
             if ind + 3 < len(ults):
-                state2[ind+3] += s * weights[3]
+                state2[ind+3] += s_val * weights[3]
 
     if p_bar is not None:
         p_bar.uptick(increment=0.1)

@@ -1,20 +1,24 @@
+""" True Strength """
 import os
+from typing import Union, Tuple
+
 import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    generate_plot, PlotType, dates_extractor_list, date_extractor, 
+    generate_plot, PlotType, dates_extractor_list, date_extractor,
     INDEXES, api_sector_match, api_sector_funds
 )
 
 
-def normalized_ratio(fundA, fundB, data_type: str = 'dataframe', key: str = 'Adj Close') -> list:
+def normalized_ratio(fund_a: Union[dict, pd.DataFrame], fund_b: Union[dict, pd.DataFrame],
+                     data_type: str = 'dataframe', key: str = 'Adj Close') -> list:
     """Normalized Ratio
 
     Handles both pd.DataFrames (default) and list comparisons
 
     Arguments:
-        fundA {pd.DataFrame, list} -- fund A to compare
+        fund_a {pd.DataFrame, list} -- fund A to compare
         fundB {pd.DataFrame, list} -- fund B to compare
 
     Keyword Arguments:
@@ -25,18 +29,15 @@ def normalized_ratio(fundA, fundB, data_type: str = 'dataframe', key: str = 'Adj
         list -- normalized ratio list of A/B
     """
     ratio = []
-
     if data_type == 'dataframe':
-        divisor = np.round(fundA[key][0] / fundB[key][0], 6)
-        for i, close in enumerate(fundA[key]):
-            ratio.append(np.round(
-                (close / fundB[key][i] / divisor) - 1.0, 6))
+        divisor = np.round(fund_a[key][0] / fund_b[key][0], 6)
+        for i, close in enumerate(fund_a[key]):
+            ratio.append(np.round((close / fund_b[key][i] / divisor) - 1.0, 6))
 
     elif data_type == 'list':
-        divisor = np.round(fundA[0] / fundB[0], 6)
-        for i, close in enumerate(fundA):
-            ratio.append(
-                np.round((close / fundB[i] / divisor) - 1.0, 6))
+        divisor = np.round(fund_a[0] / fund_b[0], 6)
+        for i, close in enumerate(fund_a):
+            ratio.append(np.round((close / fund_b[i] / divisor) - 1.0, 6))
 
     return ratio
 
@@ -59,35 +60,34 @@ def period_strength(fund_name: str, tickers: dict, periods: list, **kwargs) -> l
     Returns:
         list -- list of ratio data objects
     """
+    # pylint: disable=too-many-locals
     sector = kwargs.get('sector', '')
     sector_data = kwargs.get('sector_data')
 
     ratio = []
-    hasSP = False
-    hasSector = False
+    has_sp = False
+    has_sector = False
 
-    sp = get_SP500_df(tickers)
-    if sp is not None:
-        hasSP = True
+    sp_500_data = get_sp_500_df(tickers)
+    if sp_500_data is not None:
+        has_sp = True
     if sector != '':
         if sector_data is not None:
             sec = sector_data
-            hasSector = True
+            has_sector = True
 
     fund = tickers[fund_name]
-
     for period in periods:
         entry = {}
-
         entry['period'] = period
         entry['dates'] = date_extractor(fund.index[len(fund.index)-period], _format='str') + \
             " : " + \
             date_extractor(fund.index[len(fund.index)-1], _format='str')
 
-        if hasSP:
+        if has_sp:
             entry['sp500'] = {}
 
-            sp_temp = list(sp['Adj Close'])
+            sp_temp = list(sp_500_data['Adj Close'])
             sp_temp = sp_temp[len(
                 sp_temp)-period:len(sp_temp)+1]
 
@@ -102,7 +102,7 @@ def period_strength(fund_name: str, tickers: dict, periods: list, **kwargs) -> l
             entry['sp500']['max'] = np.max(rat)
             entry['sp500']['current'] = rat[-1]
 
-        if hasSector:
+        if has_sector:
             entry['sector'] = {}
             entry['sector']['name'] = sector
 
@@ -126,7 +126,7 @@ def period_strength(fund_name: str, tickers: dict, periods: list, **kwargs) -> l
     return ratio
 
 
-def get_SP500_df(tickers: dict) -> pd.DataFrame:
+def get_sp_500_df(tickers: dict) -> Union[pd.DataFrame, None]:
     """Get S&P500 DataFrame
 
     Simple way of getting the S&P-specific frame from the data dict.
@@ -137,13 +137,14 @@ def get_SP500_df(tickers: dict) -> pd.DataFrame:
     Returns:
         pd.DataFrame -- S&P500-specific DataFrame
     """
-    SP500_INDEX = '^GSPC'
-    if SP500_INDEX in tickers:
-        return tickers[SP500_INDEX]
+    sp_500_index = '^GSPC'
+    if sp_500_index in tickers:
+        return tickers[sp_500_index]
     return None
 
 
-def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list:
+def relative_strength(primary_name: str, full_data_dict: dict,
+                      **kwargs) -> Tuple[dict, Union[dict, None]]:
     """Relative Strength
 
     Compare a fund vs. market, sector, and/or other fund
@@ -164,6 +165,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
     Returns:
         list -- dict containing all relative strength information, sector match data
     """
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     secondary_fund_names = kwargs.get('secondary_fund_names', [])
     config = kwargs.get('config', None)
     sector = kwargs.get('sector', '')
@@ -200,7 +202,7 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
 
                 if match_data is None:
                     match_data = full_data_dict
-                elif match_data == {}:
+                elif not match_data:
                     match_data = full_data_dict[match_fund]
                 sector = match_fund
                 sector_data = match_data
@@ -209,21 +211,20 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
     if progress_bar is not None:
         progress_bar.uptick(increment=0.3)
 
-    r_strength = dict()
-
+    r_strength = {}
     rat_sp = []
     rat_sector = []
     rat_secondaries = []
     secondary_names = []
     secondary_fund_names.extend(comp_funds)
 
-    for key in comp_data:
-        if sector_data.get(key) is None:
+    for key, content in comp_data.items():
+        if content is None:
             sector_data[key] = comp_data[key]
 
-    sp = get_SP500_df(full_data_dict)
-    if sp is not None:
-        rat_sp = normalized_ratio(full_data_dict[primary_name], sp)
+    sp_500_data = get_sp_500_df(full_data_dict)
+    if sp_500_data is not None:
+        rat_sp = normalized_ratio(full_data_dict[primary_name], sp_500_data)
     if progress_bar is not None:
         progress_bar.uptick(increment=0.1)
 
@@ -248,16 +249,16 @@ def relative_strength(primary_name: str, full_data_dict: dict, **kwargs) -> list
     if progress_bar is not None:
         progress_bar.uptick(increment=0.2)
 
-    st = period_strength(primary_name,
-                         full_data_dict,
-                         config=config,
-                         periods=[20, 50, 100],
-                         sector=sector,
-                         sector_data=sector_data.get(sector, None))
+    p_strength = period_strength(primary_name,
+                                full_data_dict,
+                                config=config,
+                                periods=[20, 50, 100],
+                                sector=sector,
+                                sector_data=sector_data.get(sector, None))
 
     r_strength['market'] = {'tabular': rat_sp, 'comparison': 'S&P500'}
     r_strength['sector'] = {'tabular': rat_sector, 'comparison': sector}
-    r_strength['period'] = st
+    r_strength['period'] = p_strength
     r_strength['secondary'] = [{'tabular': second, 'comparison': secondary_names[i]}
                                for i, second in enumerate(rat_secondaries)]
 
