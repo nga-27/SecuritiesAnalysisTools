@@ -25,7 +25,7 @@ def get_volatility(ticker_str: str, **kwargs) -> dict:
     out_suppress = kwargs.get('out_suppress', False)
 
     stops = IntelliStop()
-    vf_data = stops.run_analysis_for_ticker(ticker_str)
+    vf_data, _ = stops.run_analysis_for_ticker(ticker_str)
     close = stops.return_data(ticker_str)
     dates = stops.return_data(ticker_str, key='__full__').get('Date', [])
 
