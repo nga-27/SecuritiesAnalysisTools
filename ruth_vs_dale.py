@@ -62,6 +62,7 @@ def basic_ruth_vs_dale_adjusted(avg_return: float):
     # will be 12 indexes, as we will be looking at months (0.05/12)
     ruth2 = [0.0]
     dale2 = [0.0]
+    crossover = START_AGE
     age = [START_AGE]
     for i in range(12 * 42):
         if i < 120:
@@ -75,6 +76,11 @@ def basic_ruth_vs_dale_adjusted(avg_return: float):
             dale2.append(dale_new2)
 
         age.append(START_AGE + (float(i) / 12.0))
+        if dale2[-1] > ruth2[-1] and crossover == START_AGE:
+            crossover = round(age[-1], 1)
+
+    if crossover == START_AGE:
+        crossover = "NEVER"
 
     fig = plt.figure()
     plt.plot(age, ruth2)
@@ -82,7 +88,7 @@ def basic_ruth_vs_dale_adjusted(avg_return: float):
     plt.legend(['Ruth @ 8%', 'Dale @ 8%'])
     plt.ylabel('401K Value')
     plt.xlabel('Age')
-    plt.title(f"Ruth vs. Dale ({round(avg_return * 100, 0)}% Average Growth)")
+    plt.title(f"Ruth vs. Dale {round(avg_return * 100, 3)}% Growth (Crossover at age {crossover})")
     plt.show()
     plt.close(fig)
 
@@ -160,8 +166,10 @@ def stochastic_basic():
     plt.close(fig)
 
 
-basic_ruth_vs_dale()
+basic_ruth_vs_dale_adjusted(0.04)
+basic_ruth_vs_dale_adjusted(0.05)
 basic_ruth_vs_dale_adjusted(0.06)
+basic_ruth_vs_dale_adjusted(0.0625)
 basic_ruth_vs_dale_adjusted(0.07)
 basic_ruth_vs_dale_adjusted(0.08)
 basic_ruth_vs_dale_without_stopping()
