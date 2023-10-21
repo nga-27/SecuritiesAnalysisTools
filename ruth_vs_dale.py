@@ -85,7 +85,7 @@ def basic_ruth_vs_dale_adjusted(avg_return: float):
     fig = plt.figure()
     plt.plot(age, ruth2)
     plt.plot(age, dale2)
-    plt.legend(['Ruth @ 8%', 'Dale @ 8%'])
+    plt.legend([f'Ruth @ {avg_return*100.0}%', f'Dale @ {avg_return*100.0}%'])
     plt.ylabel('401K Value')
     plt.xlabel('Age')
     plt.title(f"Ruth vs. Dale {round(avg_return * 100, 3)}% Growth (Crossover at age {crossover})")
