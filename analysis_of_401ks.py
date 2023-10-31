@@ -143,7 +143,10 @@ def stochastic_basic():
 # basic_ruth_vs_dale_adjusted(0.08)
 # basic_ruth_vs_dale_without_stopping()
 # stochastic_basic()
-
+RMD_LIFE_EXP = [
+    27.4, 26.5, 25.5, 24.6, 23.7, 22.9, 22., 21.1, 20.2, 19.4, 18.5, 17.7, 16.8, 16., 15.2,
+    14.4, 13.7, 12.9, 12.2, 11.5
+]
 
 TAX_TABLE = [
     [
@@ -168,6 +171,8 @@ TAX_TABLE = [
 
 
 def roth_vs_traditional_effective_rate(working_income_yrly: int, tax_year: int) -> Tuple[float, float]:
+    if working_income_yrly <= 0:
+        return 0.0, 0
     total_tax = 0.0
     amount_already_taxed = 0
     for _, tax in enumerate(TAX_TABLE[tax_year]):
@@ -182,15 +187,258 @@ def roth_vs_traditional_effective_rate(working_income_yrly: int, tax_year: int) 
     return effective_rate, total_tax
 
 
-def roth_vs_traditional(max_income: int, trad_pct: float, roth_pct: float, tax_year: int):
+def roth_vs_traditional_meh(max_income: int, trad_pct: float, roth_pct: float, tax_year: int):
+    MAX_YR_CAREER = 43
+    x = np.linspace(1, MAX_YR_CAREER)
+    income = np.log(x) / np.log(MAX_YR_CAREER) * (max_income / 2) + (max_income / 2)
+    fig = plt.figure()
+    plt.plot(x, income)
+    plt.show()
+    plt.close(fig)
+
+
+def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withdrawal: int):
     MAX_YR_CAREER = 43
     x = np.linspace(1, MAX_YR_CAREER)
     income = np.log(x) / np.log(MAX_YR_CAREER) * (max_income / 2) + (max_income / 2)
 
-    # fig = plt.figure()
-    # plt.plot(x, income)
-    # plt.show()
-    # plt.close(fig)
+    traditional_401k = []
+    roth_401k = []
+    missed_out_from_taxes = []
+    taxable_brokerage = []
+    total_tax_traditional = []
+    mixed = []
+    mixed_brokerage = []
+    invested_trad = 0.0
+    invested_roth = 0.0
+    missed_from_roth = 0.0
+    mixed_val = 0.0
+    for year in range(MAX_YR_CAREER):
+        invested_trad += trad_amt
+        invested_trad *= 1.0 + growth
+        traditional_401k.append(invested_trad)
+
+        _, tax_trad = roth_vs_traditional_effective_rate(income[year] - trad_amt, 1)
+        _, tax_roth = roth_vs_traditional_effective_rate(income[year], 1)
+        missed_from_roth += tax_roth - tax_trad
+        missed_from_roth *= 1.0 + growth
+        invested_roth += trad_amt - (tax_roth - tax_trad)
+        invested_roth *= 1.0 + growth
+        roth_401k.append(invested_roth)
+        missed_out_from_taxes.append(missed_from_roth)
+        taxable_brokerage.append(0.0)
+        mixed_brokerage.append(0.0)
+        total_tax_traditional.append(0.0)
+        mixed_val += trad_amt / 2.0
+        mixed_val += trad_amt / 2.0 - (tax_roth - tax_trad) / 2.0
+        mixed_val *= 1.0 + growth
+        mixed.append(mixed_val)
+
+    total_tax_trad = 0.0
+    for _ in range(7):
+        # Same effective withdrawal (tax eats more gap_withdrawal)
+        invested_roth -= gap_withdrawal
+        invested_trad -= gap_withdrawal
+        _, tax_trad = roth_vs_traditional_effective_rate(gap_withdrawal, 1)
+        total_tax_trad += tax_trad
+        invested_trad -= tax_trad
+        invested_trad *= 1.0 + growth / 2.0
+        invested_roth *= 1.0 + growth / 2.0
+        roth_401k.append(invested_roth)
+        traditional_401k.append(invested_trad)
+        missed_out_from_taxes.append(missed_from_roth)
+        taxable_brokerage.append(0.0)
+        mixed_brokerage.append(0.0)
+        total_tax_traditional.append(total_tax_trad)
+        mixed_val -= gap_withdrawal + (tax_trad / 2.0)
+        mixed_val *= 1.0 + growth / 2.0
+        mixed.append(mixed_val)
+
+    brokerage = 0.0
+    mix_broke = 0.0
+    without_rmds = invested_trad
+    needs_to_pull_more = False
+    for _, rmd_year in enumerate(RMD_LIFE_EXP):
+        if invested_trad == 0:
+            withdrawn = 0
+            needs_to_pull_more = True
+        else:
+            rmd_amount = invested_trad * rmd_year / 100.0
+            withdrawn = max(rmd_amount, gap_withdrawal * 3 / 2)
+        rmd_amount_mix = mixed_val * rmd_year / 100.0 + gap_withdrawal * 3 / 4
+        if mixed_val <= 0.0:
+            rmd_amount_mix = 0.0
+            withdrawn_mix = 0.0
+        else:
+            withdrawn_mix = max(rmd_amount_mix, gap_withdrawal * 3 / 2)
+        invested_trad -= withdrawn
+        invested_trad = max(invested_trad, 0)
+        _, tax = roth_vs_traditional_effective_rate(withdrawn, 1)
+        mixed_val -= withdrawn_mix
+        mixed_val = max(mixed_val, 0)
+        _, mixed_tax = roth_vs_traditional_effective_rate(withdrawn_mix, 1)
+
+        total_tax_trad += tax
+        invested_roth -= gap_withdrawal * 3 / 2
+        invested_roth *= 1.0 + growth / 2.0
+        invested_trad *= 1.0 + growth / 2.0
+        mixed_val *= 1.0 + growth / 2.0
+        brokerage += withdrawn - tax
+        brokerage -= gap_withdrawal / 2
+        mix_broke += withdrawn_mix - mixed_tax
+        mix_broke -= gap_withdrawal / 2
+        if mix_broke <= 0.0:
+            mix_broke = 0.0
+        _, b1_tax = roth_vs_traditional_effective_rate(gap_withdrawal / 2, 1)
+        b2_tax = 0.0
+        if needs_to_pull_more:
+            brokerage -= gap_withdrawal
+            _, b2_tax = roth_vs_traditional_effective_rate(gap_withdrawal / 2, 1)
+        brokerage_gain = brokerage * growth / 2.0
+        brokerage_ord_inc = brokerage * 0.7 * 0.03 # 70% bonds/cash w/ yield of 3%
+        brokerage_oi_mix = mix_broke * 0.7 * 0.03
+        mix_broke_gain = mix_broke * growth / 2.0
+        _, b_tax = roth_vs_traditional_effective_rate(brokerage_gain, 1)
+        _, boc_tax = roth_vs_traditional_effective_rate(brokerage_ord_inc, 1)
+        _, bm_tax = roth_vs_traditional_effective_rate(mix_broke_gain, 1)
+        _, bmoc_tax = roth_vs_traditional_effective_rate(brokerage_oi_mix, 1)
+        brokerage += brokerage_gain - b_tax - boc_tax - b1_tax - b2_tax
+        mix_broke += mix_broke_gain - bm_tax - bmoc_tax - b1_tax
+        if brokerage <= 0:
+            brokerage = 0
+        if mix_broke <= 0.0:
+            mix_broke = 0.0
+        total_tax_trad += b_tax + boc_tax + b1_tax + b2_tax
+        without_rmds -= gap_withdrawal
+        without_rmds *= 1.0 + growth / 2.0
+        if invested_roth <= 0.0:
+            invested_roth = 0.0
+
+        roth_401k.append(invested_roth)
+        traditional_401k.append(invested_trad)
+        missed_out_from_taxes.append(missed_from_roth)
+        taxable_brokerage.append(brokerage)
+        total_tax_traditional.append(total_tax_trad)
+        mixed_brokerage.append(mix_broke)
+        mixed.append(mixed_val)
+    return traditional_401k, roth_401k, missed_out_from_taxes, taxable_brokerage, total_tax_traditional, mixed, mixed_brokerage
+
+
+def experiment_with_rmds():
+    trad, roth, missed, broke, total_tax, _, _ = roth_vs_traditional(200000, 20000, 0.05, 36000)
+    fig = plt.figure()
+    plt.plot(range(23, len(trad) + 23), trad)
+    plt.plot(range(23, len(roth) + 23), roth)
+    plt.plot(range(23, len(missed) + 23), missed)
+    plt.plot(range(23, len(broke) + 23), broke)
+    plt.plot(range(23, len(total_tax) + 23), total_tax)
+    # plt.xscale('log')
+    plt.ylabel('Value of 401K')
+    plt.xlabel('Age')
+    plt.legend(
+        ['Traditional 401k', 'Roth 401k', 'Missed Gains from Roth Taxes', 'Taxable Brokerage', 'Total Traditional Tax'])
+    plt.title(f"Tax Implications & RMDs on 401Ks")
+    plt.show()
+    plt.close(fig)
+
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    fig = plt.figure()
+    plt.plot(range(23, len(combined) + 23), combined)
+    plt.plot(range(23, len(roth) + 23), roth)
+    # plt.xscale('log')
+    plt.ylabel('Value of 401K')
+    plt.xlabel('Age')
+    plt.legend(
+        ['Traditional 401k (with RMD Brokerage)', 'Roth 401k'])
+    plt.title(f"Tax Implications & RMDs on 401Ks")
+    plt.show()
+    plt.close(fig)
+
+
+def compare_traditionals():
+    fig = plt.figure()
+    trad, _, _, broke, _, _, _ = roth_vs_traditional(60000, 2000, 0.05, 25000)
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    plt.plot(range(23, len(combined) + 23), combined)
+    trad, _, _, broke, _, _, _ = roth_vs_traditional(60000, 3000, 0.05, 25000)
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    plt.plot(range(23, len(combined) + 23), combined)
+    trad, _, _, broke, _, _, _ = roth_vs_traditional(60000, 4000, 0.05, 25000)
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    plt.plot(range(23, len(combined) + 23), combined)
+    trad, _, _, broke, _, _, _ = roth_vs_traditional(100000, 4000, 0.05, 25000)
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    plt.plot(range(23, len(combined) + 23), combined)
+    trad, _, _, broke, _, _, _ = roth_vs_traditional(200000, 4000, 0.05, 25000)
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    plt.plot(range(23, len(combined) + 23), combined)
+    # trad, _, _, broke, _ = roth_vs_traditional(100000, 10000, 10000, 0.05, 30000)
+    # combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    # plt.plot(range(23, len(combined) + 23), combined)
+
+    plt.ylabel('Value of 401K')
+    plt.xlabel('Age')
+    plt.legend(
+        ['$60K, $2K, $25K', '$60K, $3K, $25K', '$60K, $4K, $25K', '$100K, $4K, $25K', '$200K, $4K, $25K'])
+    plt.title(f"Traditional 401K")
+    plt.show()
+    plt.close(fig)
+
+def compare_roths():
+    fig = plt.figure()
+    _, roth, _, _, _, _, _ = roth_vs_traditional(60000, 2000, 0.05, 25000)
+    plt.plot(range(23, len(roth) + 23), roth)
+    _, roth, _, _, _, _, _ = roth_vs_traditional(60000, 3000, 0.05, 25000)
+    plt.plot(range(23, len(roth) + 23), roth)
+    _, roth, _, _, _, _, _ = roth_vs_traditional(60000, 4000, 0.05, 25000)
+    plt.plot(range(23, len(roth) + 23), roth)
+    _, roth, _, _, _, _, _ = roth_vs_traditional(100000, 4000, 0.05, 25000)
+    plt.plot(range(23, len(roth) + 23), roth)
+    _, roth, _, _, _, _, _ = roth_vs_traditional(200000, 4000, 0.05, 25000)
+    plt.plot(range(23, len(roth) + 23), roth)
+    # trad, _, _, broke, _ = roth_vs_traditional(100000, 10000, 10000, 0.05, 30000)
+    # combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    # plt.plot(range(23, len(combined) + 23), combined)
+
+    plt.ylabel('Value of 401K')
+    plt.xlabel('Age')
+    plt.legend(
+        ['$60K, $2K, $25K', '$60K, $3K, $25K', '$60K, $4K, $25K', '$100K, $4K, $25K', '$200K, $4K, $25K'])
+    plt.title(f"Roth 401K Performance")
+    plt.show()
+    plt.close(fig)
+
+
+def compare_mixed():
+    fig = plt.figure()
+    trad, roth, _, broke, _, mixed, mix_broke = roth_vs_traditional(60000, 2000, 0.05, 25000)
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    plt.plot(range(23, len(combined) + 23), combined)
+    plt.plot(range(23, len(roth) + 23), roth)
+    mcombined = [t_val + mix_broke[i] for i, t_val in enumerate(mixed)]
+    plt.plot(range(23, len(mcombined) + 23), mcombined)
+    plt.ylabel('Value of 401K')
+    plt.xlabel('Age')
+    plt.legend(
+        ['Traditional', 'Roth', 'Mixed Trad/Roth'])
+    plt.title(f"Mixed 401K Performance ($60000, $2K/yr)")
+    plt.show()
+    plt.close(fig)
+
+    fig = plt.figure()
+    trad, roth, _, broke, _, mixed, mix_broke = roth_vs_traditional(80000, 5000, 0.05, 25000)
+    combined = [t_val + broke[i] for i, t_val in enumerate(trad)]
+    plt.plot(range(23, len(combined) + 23), combined)
+    plt.plot(range(23, len(roth) + 23), roth)
+    mcombined = [t_val + mix_broke[i] for i, t_val in enumerate(mixed)]
+    plt.plot(range(23, len(mcombined) + 23), mcombined)
+    plt.ylabel('Value of 401K')
+    plt.xlabel('Age')
+    plt.legend(
+        ['Traditional', 'Roth', 'Mixed Trad/Roth'])
+    plt.title(f"Mixed 401K Performance ($80000, $5K/yr)")
+    plt.show()
+    plt.close(fig)
 
 
 def tax_rate_experiment():
@@ -227,5 +475,10 @@ def tax_rate_experiment():
     plt.close(fig)
 
 
-tax_rate_experiment()
-roth_vs_traditional(200000,0,0,0,0)
+# tax_rate_experiment()
+# roth_vs_traditional_meh(200000,0,0,1)
+# roth_vs_traditional(200000, 10000, 10000, 0.05, 24000)
+# experiment_with_rmds()
+compare_traditionals()
+compare_roths()
+compare_mixed()
