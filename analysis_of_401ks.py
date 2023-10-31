@@ -143,6 +143,8 @@ def stochastic_basic():
 # basic_ruth_vs_dale_adjusted(0.08)
 # basic_ruth_vs_dale_without_stopping()
 # stochastic_basic()
+
+# https://www.capitalgroup.com/individual/service-and-support/retirement-distributions/irs-uniform-lifetime-table.html
 RMD_LIFE_EXP = [
     27.4, 26.5, 25.5, 24.6, 23.7, 22.9, 22., 21.1, 20.2, 19.4, 18.5, 17.7, 16.8, 16., 15.2,
     14.4, 13.7, 12.9, 12.2, 11.5
@@ -209,6 +211,7 @@ def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withd
     total_tax_traditional = []
     mixed = []
     mixed_brokerage = []
+
     invested_trad = 0.0
     invested_roth = 0.0
     missed_from_roth = 0.0
@@ -222,37 +225,46 @@ def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withd
         _, tax_roth = roth_vs_traditional_effective_rate(income[year], 1)
         missed_from_roth += tax_roth - tax_trad
         missed_from_roth *= 1.0 + growth
+        missed_out_from_taxes.append(missed_from_roth)
+
         invested_roth += trad_amt - (tax_roth - tax_trad)
         invested_roth *= 1.0 + growth
         roth_401k.append(invested_roth)
-        missed_out_from_taxes.append(missed_from_roth)
-        taxable_brokerage.append(0.0)
-        mixed_brokerage.append(0.0)
-        total_tax_traditional.append(0.0)
+
         mixed_val += trad_amt / 2.0
         mixed_val += trad_amt / 2.0 - (tax_roth - tax_trad) / 2.0
         mixed_val *= 1.0 + growth
         mixed.append(mixed_val)
 
+    for _ in range(MAX_YR_CAREER):
+        taxable_brokerage.append(0.0)
+        mixed_brokerage.append(0.0)
+        total_tax_traditional.append(0.0)
+
     total_tax_trad = 0.0
     for _ in range(7):
         # Same effective withdrawal (tax eats more gap_withdrawal)
-        invested_roth -= gap_withdrawal
         invested_trad -= gap_withdrawal
         _, tax_trad = roth_vs_traditional_effective_rate(gap_withdrawal, 1)
-        total_tax_trad += tax_trad
         invested_trad -= tax_trad
         invested_trad *= 1.0 + growth / 2.0
+        traditional_401k.append(invested_trad)
+
+        invested_roth -= gap_withdrawal
         invested_roth *= 1.0 + growth / 2.0
         roth_401k.append(invested_roth)
-        traditional_401k.append(invested_trad)
-        missed_out_from_taxes.append(missed_from_roth)
-        taxable_brokerage.append(0.0)
-        mixed_brokerage.append(0.0)
+
+        total_tax_trad += tax_trad
         total_tax_traditional.append(total_tax_trad)
+        
         mixed_val -= gap_withdrawal + (tax_trad / 2.0)
         mixed_val *= 1.0 + growth / 2.0
         mixed.append(mixed_val)
+
+    for _ in range(7):
+        missed_out_from_taxes.append(missed_from_roth)
+        taxable_brokerage.append(0.0)
+        mixed_brokerage.append(0.0)
 
     brokerage = 0.0
     mix_broke = 0.0
