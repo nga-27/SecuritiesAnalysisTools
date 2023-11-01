@@ -215,7 +215,7 @@ def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withd
     invested_trad = 0.0
     invested_roth = 0.0
     missed_from_roth = 0.0
-    mixed_val = 0.0
+    invested_mix = 0.0
     for year in range(MAX_YR_CAREER):
         invested_trad += trad_amt
         invested_trad *= 1.0 + growth
@@ -231,10 +231,10 @@ def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withd
         invested_roth *= 1.0 + growth
         roth_401k.append(invested_roth)
 
-        mixed_val += trad_amt / 2.0
-        mixed_val += trad_amt / 2.0 - (tax_roth - tax_trad) / 2.0
-        mixed_val *= 1.0 + growth
-        mixed.append(mixed_val)
+        invested_mix += trad_amt / 2.0
+        invested_mix += trad_amt / 2.0 - (tax_roth - tax_trad) / 2.0
+        invested_mix *= 1.0 + growth
+        mixed.append(invested_mix)
 
     for _ in range(MAX_YR_CAREER):
         taxable_brokerage.append(0.0)
@@ -257,82 +257,111 @@ def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withd
         total_tax_trad += tax_trad
         total_tax_traditional.append(total_tax_trad)
         
-        mixed_val -= gap_withdrawal + (tax_trad / 2.0)
-        mixed_val *= 1.0 + growth / 2.0
-        mixed.append(mixed_val)
+        invested_mix -= gap_withdrawal + (tax_trad / 2.0)
+        invested_mix *= 1.0 + growth / 2.0
+        mixed.append(invested_mix)
 
     for _ in range(7):
         missed_out_from_taxes.append(missed_from_roth)
         taxable_brokerage.append(0.0)
         mixed_brokerage.append(0.0)
 
+    # RMD is taken from traditional (or 1.5 * withdrawal, whichever is max). This is removed from
+    # the 401K. Anything more than 1.5 * withdrawal will go to Brokerage.
     brokerage = 0.0
-    mix_broke = 0.0
-    without_rmds = invested_trad
-    needs_to_pull_more = False
+    LONG_TERM_GAP = gap_withdrawal * 3 / 2
+    LONG_TERM_GROWTH = 1.0 + growth / 2.0
+    withdrawn = 0.0
     for _, rmd_year in enumerate(RMD_LIFE_EXP):
-        if invested_trad == 0:
-            withdrawn = 0
-            needs_to_pull_more = True
+        amount_missing = 0.0
+        if invested_trad <= 0.0:
+            amount_missing = LONG_TERM_GAP
         else:
-            rmd_amount = invested_trad * rmd_year / 100.0
-            withdrawn = max(rmd_amount, gap_withdrawal * 3 / 2)
-        rmd_amount_mix = mixed_val * rmd_year / 100.0 + gap_withdrawal * 3 / 4
-        if mixed_val <= 0.0:
-            rmd_amount_mix = 0.0
-            withdrawn_mix = 0.0
-        else:
-            withdrawn_mix = max(rmd_amount_mix, gap_withdrawal * 3 / 2)
-        invested_trad -= withdrawn
-        invested_trad = max(invested_trad, 0)
-        _, tax = roth_vs_traditional_effective_rate(withdrawn, 1)
-        mixed_val -= withdrawn_mix
-        mixed_val = max(mixed_val, 0)
-        _, mixed_tax = roth_vs_traditional_effective_rate(withdrawn_mix, 1)
+            if invested_trad <= LONG_TERM_GAP:
+                withdrawn = invested_trad
+                amount_missing = LONG_TERM_GAP - withdrawn
+            else:
+                rmd_amount = invested_trad * rmd_year / 100.0
+                withdrawn = LONG_TERM_GAP
+                if rmd_amount > LONG_TERM_GAP:
+                    withdrawn = rmd_amount
+                    # amount missing will be negative so as to add to brokerage
+                    amount_missing = LONG_TERM_GAP - rmd_amount 
+                
+            invested_trad -= withdrawn
+            _, tax = roth_vs_traditional_effective_rate(withdrawn, 1)
+            invested_trad *= LONG_TERM_GROWTH
+            total_tax_trad += tax
+            brokerage -= tax
 
-        total_tax_trad += tax
-        invested_roth -= gap_withdrawal * 3 / 2
-        invested_roth *= 1.0 + growth / 2.0
-        invested_trad *= 1.0 + growth / 2.0
-        mixed_val *= 1.0 + growth / 2.0
-        brokerage += withdrawn - tax
-        brokerage -= gap_withdrawal / 2
-        mix_broke += withdrawn_mix - mixed_tax
-        mix_broke -= gap_withdrawal / 2
-        if mix_broke <= 0.0:
-            mix_broke = 0.0
-        _, b1_tax = roth_vs_traditional_effective_rate(gap_withdrawal / 2, 1)
-        b2_tax = 0.0
-        if needs_to_pull_more:
-            brokerage -= gap_withdrawal
-            _, b2_tax = roth_vs_traditional_effective_rate(gap_withdrawal / 2, 1)
-        brokerage_gain = brokerage * growth / 2.0
-        brokerage_ord_inc = brokerage * 0.7 * 0.03 # 70% bonds/cash w/ yield of 3%
-        brokerage_oi_mix = mix_broke * 0.7 * 0.03
-        mix_broke_gain = mix_broke * growth / 2.0
-        _, b_tax = roth_vs_traditional_effective_rate(brokerage_gain, 1)
-        _, boc_tax = roth_vs_traditional_effective_rate(brokerage_ord_inc, 1)
-        _, bm_tax = roth_vs_traditional_effective_rate(mix_broke_gain, 1)
-        _, bmoc_tax = roth_vs_traditional_effective_rate(brokerage_oi_mix, 1)
-        brokerage += brokerage_gain - b_tax - boc_tax - b1_tax - b2_tax
-        mix_broke += mix_broke_gain - bm_tax - bmoc_tax - b1_tax
-        if brokerage <= 0:
-            brokerage = 0
-        if mix_broke <= 0.0:
-            mix_broke = 0.0
-        total_tax_trad += b_tax + boc_tax + b1_tax + b2_tax
-        without_rmds -= gap_withdrawal
-        without_rmds *= 1.0 + growth / 2.0
-        if invested_roth <= 0.0:
-            invested_roth = 0.0
+        if brokerage > 0.0:
+            brokerage -= amount_missing
+            if amount_missing > 0:
+                _, tax = roth_vs_traditional_effective_rate(amount_missing, 1)
+                total_tax_trad += tax
+                brokerage -= tax
+            brokerage *= LONG_TERM_GROWTH
+            brokerage_ord_inc = brokerage * 0.7 * 0.03
+            _, brokerage_inc_tax = roth_vs_traditional_effective_rate(brokerage_ord_inc, 1)
+            brokerage += brokerage_ord_inc - brokerage_inc_tax
+            total_tax_trad += brokerage_inc_tax
 
-        roth_401k.append(invested_roth)
+        if brokerage < 0.0:
+            brokerage = 0.0
+
         traditional_401k.append(invested_trad)
         missed_out_from_taxes.append(missed_from_roth)
         taxable_brokerage.append(brokerage)
         total_tax_traditional.append(total_tax_trad)
+
+    for _, rmd_year in enumerate(RMD_LIFE_EXP):
+        invested_roth -= gap_withdrawal * 3 / 2
+        invested_roth *= 1.0 + growth / 2.0
+        if invested_roth <= 0.0:
+            invested_roth = 0.0
+        roth_401k.append(invested_roth)
+
+    mix_broke = 0.0
+    for _, rmd_year in enumerate(RMD_LIFE_EXP):
+        rmd_used = False
+        amount_missing = 0.0
+        if invested_mix <= 0.0:
+            amount_missing = LONG_TERM_GAP
+        else:
+            if invested_mix <= LONG_TERM_GAP:
+                withdrawn = invested_mix
+                amount_missing = LONG_TERM_GAP - invested_mix
+            else:
+                rmd_amount = invested_mix * rmd_year / 100.0 / 2.0
+                withdrawn = LONG_TERM_GAP
+                if rmd_amount > LONG_TERM_GAP:
+                    withdrawn = rmd_amount
+                    rmd_used = True
+                    # amount missing will be negative so as to add to brokerage
+                    amount_missing = LONG_TERM_GAP - rmd_amount
+            
+            invested_mix -= withdrawn
+            _, tax = roth_vs_traditional_effective_rate(withdrawn / 2, 1)
+            if rmd_used:
+                _, tax = roth_vs_traditional_effective_rate(withdrawn, 1)
+            invested_mix -= tax
+            invested_mix *= LONG_TERM_GROWTH
+
+        mix_broke -= amount_missing
+        if amount_missing > 0:
+            _, tax = roth_vs_traditional_effective_rate(amount_missing, 1)
+            mix_broke -= tax
+        mix_broke *= LONG_TERM_GROWTH
+        mix_broke_inc = mix_broke * 0.7 * 0.03
+        _, tax = roth_vs_traditional_effective_rate(mix_broke_inc, 1)
+        mix_broke += mix_broke_inc - tax
+
+        if mix_broke < 0.0:
+            mix_broke = 0.0
+
         mixed_brokerage.append(mix_broke)
-        mixed.append(mixed_val)
+        mixed.append(invested_mix)
+
     return traditional_401k, roth_401k, missed_out_from_taxes, taxable_brokerage, total_tax_traditional, mixed, mixed_brokerage
 
 
