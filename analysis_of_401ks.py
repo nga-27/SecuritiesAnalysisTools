@@ -241,24 +241,33 @@ def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withd
         mixed_brokerage.append(0.0)
         total_tax_traditional.append(0.0)
 
+    LONG_TERM_GROWTH = 1.0 + growth / 1.5
     total_tax_trad = 0.0
     for _ in range(7):
         # Same effective withdrawal (tax eats more gap_withdrawal)
         invested_trad -= gap_withdrawal
         _, tax_trad = roth_vs_traditional_effective_rate(gap_withdrawal, 1)
         invested_trad -= tax_trad
-        invested_trad *= 1.0 + growth / 2.0
+        invested_trad *= LONG_TERM_GROWTH
+        if invested_trad < 0.0:
+            invested_trad = 0.0
         traditional_401k.append(invested_trad)
 
         invested_roth -= gap_withdrawal
-        invested_roth *= 1.0 + growth / 2.0
+        invested_roth *= LONG_TERM_GROWTH
+        if invested_roth < 0.0:
+            invested_roth = 0.0
         roth_401k.append(invested_roth)
 
         total_tax_trad += tax_trad
         total_tax_traditional.append(total_tax_trad)
         
-        invested_mix -= gap_withdrawal + (tax_trad / 2.0)
-        invested_mix *= 1.0 + growth / 2.0
+        invested_mix -= gap_withdrawal
+        _, tax_trad = roth_vs_traditional_effective_rate(gap_withdrawal / 2, 1)
+        invested_mix -= tax_trad
+        invested_mix *= LONG_TERM_GROWTH
+        if invested_mix < 0.0:
+            invested_mix = 0.0
         mixed.append(invested_mix)
 
     for _ in range(7):
@@ -270,7 +279,6 @@ def roth_vs_traditional(max_income: int, trad_amt: int, growth: float, gap_withd
     # the 401K. Anything more than 1.5 * withdrawal will go to Brokerage.
     brokerage = 0.0
     LONG_TERM_GAP = gap_withdrawal * 3 / 2
-    LONG_TERM_GROWTH = 1.0 + growth / 2.0
     withdrawn = 0.0
     for _, rmd_year in enumerate(RMD_LIFE_EXP):
         amount_missing = 0.0
@@ -516,10 +524,63 @@ def tax_rate_experiment():
     plt.close(fig)
 
 
+def mixes_with_inputs():
+    fig = plt.figure()
+    legend = []
+    for contrib in [500 + 500 * i for i in range(20)]:
+        trad, roth, _, broke, _, mixed, mix_broke = roth_vs_traditional(100000, contrib, 0.05, 25000)
+        combined = [mix + mix_broke[t] for t, mix in enumerate(mixed)]
+        plt.plot(range(23, len(combined) + 23), combined)
+        legend.append(f"${contrib}")
+    plt.legend(legend)
+    plt.title("Mixed 401K (50%) vs. Contribution at $100k Income")
+    plt.show()
+    plt.close(fig)
+
+    fig = plt.figure()
+    legend = []
+    for income in [50000 + 10000 * i for i in range(20)]:
+        trad, roth, _, broke, _, mixed, mix_broke = roth_vs_traditional(income, 5000, 0.05, 25000)
+        combined = [mix + mix_broke[t] for t, mix in enumerate(mixed)]
+        plt.plot(range(23, len(combined) + 23), combined)
+        legend.append(f"${income}")
+    plt.legend(legend)
+    plt.title("Mixed 401k (50%) vs. Income at $5K Contribution")
+    plt.show()
+    plt.close(fig)
+
+    fig = plt.figure()
+    legend = []
+    for growth in [0.01 + 0.005 * i for i in range(20)]:
+        trad, roth, _, broke, _, mixed, mix_broke = roth_vs_traditional(100000, 5000, growth, 25000)
+        combined = [mix + mix_broke[t] for t, mix in enumerate(mixed)]
+        plt.plot(range(23, len(combined) + 23), combined)
+        legend.append(f"{round(growth * 100.0, 2)}%")
+    plt.legend(legend)
+    plt.title("Mixed 401k (50%) vs. Growth Percent at $5K Contribution ($100K Income)")
+    plt.show()
+    plt.close(fig)
+
+    fig = plt.figure()
+    legend = []
+    for growth in [0.01 + 0.005 * i for i in range(20)]:
+        trad, roth, _, broke, _, mixed, mix_broke = roth_vs_traditional(100000, 6000, growth, 25000)
+        combined = [mix + mix_broke[t] for t, mix in enumerate(mixed)]
+        plt.plot(range(23, len(combined) + 23), combined)
+        legend.append(f"{round(growth * 100.0, 2)}%")
+    plt.legend(legend)
+    plt.title("Mixed 401k (50%) vs. Growth Percent at $6K Contribution ($100K Income)")
+    plt.show()
+    plt.close(fig)
+
+
+
 # tax_rate_experiment()
 # roth_vs_traditional_meh(200000,0,0,1)
 # roth_vs_traditional(200000, 10000, 10000, 0.05, 24000)
 # experiment_with_rmds()
-compare_traditionals()
-compare_roths()
-compare_mixed()
+
+# compare_traditionals()
+# compare_roths()
+# compare_mixed()
+mixes_with_inputs()
