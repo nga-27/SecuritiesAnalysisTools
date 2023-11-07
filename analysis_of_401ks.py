@@ -757,15 +757,40 @@ def compare_mix_ratios(ranger: list = list(range(11))):
     plt.close(fig)
 
 
+def compare_contributions():
+    fig = plt.figure()
+    legend = []
+    for i, contrib in enumerate([4000, 8000, 12000, 16000]):
+        legend.extend([f"{contrib}-Mix", f"{contrib}-Trad", f"{contrib}-Roth"])
+        withdraw = 25000 + i * 15000
+        retire, broke, _, _, _, _ = calculate_401K(60000, contrib, (0.08, 0.03), withdraw, mix_ratio=(0.5, 0.5))
+        retire_t, broke_t, _, _, _, _ = calculate_401K(60000, contrib, (0.08, 0.03), withdraw, mix_ratio=TRADITIONAL_MIX)
+        retire_r, broke_r, _, _, _, _ = calculate_401K(60000, contrib, (0.08, 0.03), withdraw, mix_ratio=ROTH_MIX)
+        combined = [r_val + broke[i] for i, r_val in enumerate(retire)]
+        plt.plot(range(23, len(combined) + 23), combined)
+        combined_t = [r_val + broke_t[i] for i, r_val in enumerate(retire_t)]
+        plt.plot(range(23, len(combined_t) + 23), combined_t)
+        combined_r = [r_val + broke_r[i] for i, r_val in enumerate(retire_r)]
+        plt.plot(range(23, len(combined_r) + 23), combined_r)
+
+    plt.legend(legend)
+    plt.title("Mixed 401K Ratios (Roth / Traditional)")
+    plt.ylabel('Value of 401K')
+    plt.xlabel('Age')
+    plt.show()
+    plt.close(fig)
+
+
 # tax_rate_experiment()
 # experiment_with_rmds()
 # compare_traditionals()
 # compare_roths()
 # compare_mixed()
 # compare_all()
-compare_mix_ratios()
+# compare_mix_ratios()
 # compare_mix_ratios([0, 1, 10])
 # mixes_with_inputs()
 # mixes_with_inputs_and_growth()
+compare_contributions()
 
 # contribution vs. growth = line; line_f(contribution) vs. end of life; different lines of age (75, 80, 90, 100)
