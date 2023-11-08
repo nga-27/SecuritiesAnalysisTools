@@ -698,38 +698,40 @@ def mixes_with_inputs():
 def mixes_with_inputs_and_growth():
     fig = plt.figure()
     legend = []
-    plot_colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
-    for contrib in [500 + 500 * z for z in range(20)]:
-        mixed, mix_broke, _, _, _, _ = calculate_401K(100000, contrib, (0.08, 0.03), 25000)
+    for contrib in [1000 + 500 * z for z in range(24)]:
+        mixed, mix_broke, _, _, _, _ = calculate_401K(100000, contrib, (0.08, 0.03), 40000)
         combined = [mix + mix_broke[t] for t, mix in enumerate(mixed)]
         plt.plot(range(23, len(combined) + 23), combined)
         legend.append(f"${contrib}")
-    # plt.legend(legend)
-    plt.title("Mixed 401K (50%): Contribution & Growth")
+    plt.legend(legend, loc='upper left')
+    plt.title("Mixed 401K (50%): Contribution & Growth @ $40K Withdrawal")
     plt.show()
     plt.close(fig)
 
     fig = plt.figure()
     legend = []
-    plot_colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
-    all_contribs = []
-    all_eols = []
-    for contrib in [500 + 500 * z for z in range(20)]:
-        mixed, mix_broke, _, _, _, _ = calculate_401K(100000, contrib, (0.08, 0.03), 25000)
-        combined = [mix + mix_broke[t] for t, mix in enumerate(mixed)]
-        all_contribs.append(contrib)
-        index = -1
-        eol_val = 65
-        while index > -1 * len(combined):
-            if combined[index] > 0.0:
-                eol_val = 101 + index
-                break
-            index -= 1
-        all_eols.append(eol_val)
-        plt.plot(all_contribs, all_eols)
-        legend.append(f"Avg 401K Growth")
-    plt.legend(legend)
-    plt.title("Mixed 401K (50%): Contribution & Growth (Max 100 yrs)")
+    all_contribs = [1000 + 500 * z for z in range(24)]
+    for mix_ratio in range(11):
+        ratio = (mix_ratio / 10.0, (10 - mix_ratio) / 10.0)
+        all_eols = []
+        for contrib in all_contribs:
+            mixed, mix_broke, _, _, _, _ = calculate_401K(100000, contrib, (0.08, 0.03), 40000, mix_ratio=ratio)
+            combined = [mix + mix_broke[t] for t, mix in enumerate(mixed)]
+            index = -1
+            eol_val = 65
+            while index > -1 * len(combined):
+                if combined[index] > 0.0:
+                    eol_val = 101 + index
+                    break
+                index -= 1
+            all_eols.append(eol_val)
+        if mix_ratio == 10:
+            plt.plot(all_contribs, all_eols, color='black')
+        else:
+            plt.plot(all_contribs, all_eols)
+        legend.append(f"{round(ratio[0], 1)}R, {round(ratio[1], 1)}T")
+    plt.legend(legend, loc='upper left')
+    plt.title("401K Mix Ratio vs. Contribution @ $40K Withdrawal")
     plt.ylabel('Emptied 401k Age (Yrs)')
     plt.xlabel('Annual 401K Mixed Contribution ($)')
     plt.show()
@@ -791,6 +793,6 @@ def compare_contributions():
 # compare_mix_ratios([0, 1, 10])
 # mixes_with_inputs()
 # mixes_with_inputs_and_growth()
-compare_contributions()
+# compare_contributions()
 
 # contribution vs. growth = line; line_f(contribution) vs. end of life; different lines of age (75, 80, 90, 100)
