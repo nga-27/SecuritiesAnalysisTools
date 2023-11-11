@@ -528,8 +528,8 @@ def calculate_401K(max_income: int, annual_contribution: int, growth_range: Tupl
 
 
 def experiment_with_rmds():
-    _, broke, _, trad, _, total_tax = calculate_401K(200000, 13000, (0.08, 0.03), 36000, mix_ratio=TRADITIONAL_MIX)
-    _, _, roth, _, missed, _ = calculate_401K(200000, 13000, (0.08, 0.03), 36000, mix_ratio=ROTH_MIX)
+    _, broke, _, trad, _, total_tax = calculate_401K(200000, 13000, (0.08, 0.03), 40000, mix_ratio=TRADITIONAL_MIX)
+    _, _, roth, _, missed, _ = calculate_401K(200000, 13000, (0.08, 0.03), 40000, mix_ratio=ROTH_MIX)
     fig = plt.figure()
     plt.plot(range(23, len(trad) + 23), trad)
     plt.plot(range(23, len(roth) + 23), roth)
@@ -541,7 +541,7 @@ def experiment_with_rmds():
     plt.xlabel('Age')
     plt.legend(
         ['Traditional 401k', 'Roth 401k', 'Missed Gains from Roth Taxes', 'Taxable Brokerage', 'Total Traditional Tax'])
-    plt.title(f"Tax Implications & RMDs on 401Ks")
+    plt.title(f"Tax Implications & RMDs on 401Ks ($13K Contribution)")
     plt.show()
     plt.close(fig)
 
@@ -554,7 +554,7 @@ def experiment_with_rmds():
     plt.xlabel('Age')
     plt.legend(
         ['Traditional 401k (with RMD Brokerage)', 'Roth 401k'])
-    plt.title(f"Tax Implications & RMDs on 401Ks")
+    plt.title(f"Tax Implications & RMDs on 401Ks ($13K Contribution)")
     plt.show()
     plt.close(fig)
 
@@ -783,16 +783,17 @@ def compare_contributions():
     plt.close(fig)
 
 
+print(get_tax_on_income(40000))
 # tax_rate_experiment()
 # experiment_with_rmds()
 # compare_traditionals()
 # compare_roths()
 # compare_mixed()
 # compare_all()
-# compare_mix_ratios()
+compare_mix_ratios()
 # compare_mix_ratios([0, 1, 10])
-# mixes_with_inputs()
-# mixes_with_inputs_and_growth()
-# compare_contributions()
+mixes_with_inputs()
+mixes_with_inputs_and_growth()
+compare_contributions()
 
 # contribution vs. growth = line; line_f(contribution) vs. end of life; different lines of age (75, 80, 90, 100)
