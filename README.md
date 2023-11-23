@@ -66,6 +66,7 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 * `0.2.14`, `2023-01-01` - Integration of `Intellistop` (replacement for VQ)
 * **`1.0.0`, `2023-02-25`** - Release 3 - the first full release
 * `1.0.1`, `2023-07-19` - Upgrade to `intellistops==1.1`
+* `1.0.3`, `2023-11-23` - Upgrade to `intellistops==1.2.1`; 401K analysis tools.
 
 
 ---
