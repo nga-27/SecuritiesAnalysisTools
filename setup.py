@@ -24,7 +24,7 @@ URL = 'https://github.mmm.com/nga-27/SecuritiesAnalysisTools'
 EMAIL = 'namell91@gmail.com'
 AUTHOR = 'Nick Amell'
 REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '1.0.2'
+VERSION = '1.0.3'
 
 # What packages are required for this module to be executed?
 REQUIRES = [
@@ -38,7 +38,7 @@ REQUIRES = [
     "python-pptx==0.6.21",
     'colorama==0.4.3',
     "yfinance==0.2.9",
-    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@v1.2.0"
+    "intellistop @ git+ssh://git@github.com/nga-27/intellistop.git@v1.2.1"
 ]
 
 REQUIRES_DEV = [
