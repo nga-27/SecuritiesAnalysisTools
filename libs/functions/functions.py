@@ -54,7 +54,7 @@ FUNCTION_MAP = {
     'support_resistance': [run_function, find_resistance_support_lines],
     'clustered_oscs': [run_function, cluster_oscillators, {'function': 'all'}],
     'head_shoulders': [run_function, feature_detection_head_and_shoulders],
-    'correlation': correlation_index_function,
+    'correlation': [correlation_index_function],
     'rsi': [
         run_function, relative_strength_indicator_rsi,
         {'out_suppress': False, 'trendlines': True}

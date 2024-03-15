@@ -10,7 +10,7 @@ BAR_COLOR = TEXT_COLOR_MAP["white"]
 NORMAL = STANDARD_COLORS["normal"]
 FUND_COLOR = TEXT_COLOR_MAP["cyan"]
 
-EFFECTIVE_TIME_START = 120
+EFFECTIVE_TIME_START = 96
 
 
 class ProgressBar():
@@ -71,7 +71,7 @@ class ProgressBar():
                            prefix: str = 'Progress',
                            suffix: str = 'Complete',
                            decimals: int = 1,
-                           length: int = 50,
+                           length: int = 30,
                            fill: str = '█'):
         """Print Progress Bar
 

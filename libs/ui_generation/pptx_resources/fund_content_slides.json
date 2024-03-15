@@ -21,16 +21,16 @@
             "location": 0
         },
         "overall_metrics": {
-            "index": 3,
-            "location": 1
+            "index": 5,
+            "location": 0
         },
         "macd_bar": {
-            "index": 3,
+            "index": 9,
             "location": 2
         },
         "clustered_osc_metrics": {
-            "index": 3,
-            "location": 3
+            "index": 8,
+            "location": 1
         },
         "relative_strength": {
             "index": 4,
@@ -49,8 +49,8 @@
             "location": 3
         },
         "ultimate_osc_metrics": {
-            "index": 5,
-            "location": 0
+            "index": 3,
+            "location": 1
         },
         "swing_trades_sma": {
             "index": 5,
@@ -101,8 +101,8 @@
             "location": 0
         },
         "RSI_standard": {
-            "index": 8,
-            "location": 1
+            "index": 3,
+            "location": 3
         },
         "bollinger_bands": {
             "index": 8,
@@ -121,7 +121,7 @@
             "location": 1
         },
         "adx_tabular": {
-            "index": 9,
+            "index": 3,
             "location": 2
         },
         "parabolic_sar": {
