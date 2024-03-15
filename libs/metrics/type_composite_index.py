@@ -197,7 +197,6 @@ def get_metrics_content() -> dict:
 
     with open(metrics_file, encoding='utf-8') as m_file:
         m_data = json.load(m_file)
-        m_file.close()
         m_data = m_data.get("Type_Composite")
 
     return m_data

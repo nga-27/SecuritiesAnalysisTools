@@ -11,7 +11,7 @@ Newer - compares this metric with a correlation metric of each sector.
 
 import os
 import json
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict, List
 
 import pandas as pd
 import numpy as np
@@ -72,17 +72,18 @@ def market_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[lis
                 if props['Market Sector']:
                     mci = {}
                     if data is None or sectors is None:
-                        data, sectors = metrics_initializer(period=period)
+                        data, sectors, t_data = metrics_initializer(period=period)
 
                     if data:
-                        prog_bar = ProgressBar(len(sectors) * 2 + 5,
+                        prog_bar = ProgressBar(len(sectors) * 2 + 6,
                                         name='Market Composite Index', offset=clock)
                         prog_bar.start()
 
                         composite = composite_index(
                             data, sectors, plot_output=plot_output, progress_bar=prog_bar)
                         correlations = composite_correlation(
-                            data, sectors, plot_output=plot_output, progress_bar=prog_bar)
+                            data, sectors, plot_output=plot_output,
+                            progress_bar=prog_bar, t_data=t_data)
 
                         mci['tabular'] = {'mci': composite}
                         mci['correlations'] = correlations
@@ -92,7 +93,7 @@ def market_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[lis
     return {}, None, None
 
 
-def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dict, list]:
+def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dict, list, dict]:
     """Metrics Initializer
 
     Keyword Arguments:
@@ -110,9 +111,10 @@ def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dic
         return None, []
 
     with open(metrics_file, 'r', encoding='utf-8') as m_file:
-        m_data = json.load(m_file)
+        mci_data = json.load(m_file)
         m_file.close()
-        m_data = m_data.get("Market_Composite")
+        m_data = mci_data.get("Market_Composite")
+        t_data = mci_data.get("Type_Composite")
 
     sectors = m_data['tickers']
     tickers = " ".join(m_data['tickers'])
@@ -129,7 +131,7 @@ def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dic
         indexes=all_tickers, tickers=tickers, period=period, interval='1d')
     print(" ")
 
-    return data, sectors
+    return data, sectors, t_data
 
 
 def simple_beta_rsq(fund: pd.DataFrame,
@@ -226,7 +228,19 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
     return composite2
 
 
-def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_output=True) -> dict:
+def type_composite_correlation(type_data: Dict[str, Union[Dict[str, float], List[str]]], corr_data: Dict[str, List[float]]) -> Dict[str, List[float]]:
+    type_corrs = {}
+    for sector_type in ('Defensive', 'Sensitive', 'Cyclical'):
+        type_corrs[sector_type] = [0.0] * len(corr_data['VGT'])
+        for ticker, ratio in type_data[sector_type].items():
+            for i, val in enumerate(corr_data[ticker]):
+                type_corrs[sector_type][i] += ratio * val
+    return type_corrs
+
+
+def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_output=True,
+                          t_data: Union[Dict[str, Union[Dict[str, float], List[str]]], None] = None
+                          ) -> dict:
     """Composite Correlation
 
     Betas and r-squared for 2 time periods for each sector (full, 1/2 time); plot of r-squared
@@ -239,6 +253,8 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
     Keyword Arguments:
         progress_bar {ProgressBar} -- (default: {None})
         plot_output {bool} -- (default: {True})
+        t_data (Union[Dict[str, Union[Dict[str, float], List]], None], optional) -- type composite
+                                            data from sectors.json
 
     Returns:
         dict -- correlation dictionary
@@ -269,7 +285,6 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
 
             corrs[sector] = []
             for i in range(start_pt, tot_len):
-
                 _, rsqd = beta_comparison_list(
                     data[sector]['Close'][i-start_pt:i], data['^GSPC']['Close'][i-start_pt:i])
 
@@ -292,6 +307,18 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         )
         progress_bar.uptick()
 
+        if t_data is not None:
+            t_corrs = type_composite_correlation(t_data, corrs)
+            plots = [value for _, value in t_corrs.items()]
+            legend = list(t_corrs)
+            generate_plot(
+                PlotType.GENERIC_PLOTTING, plots, **dict(
+                    x=dates, title='MCI Correlations by Type', legend=legend, plot_output=plot_output,
+                    filename='MCI_type_correlations.png'
+                )
+            )
+
+        progress_bar.uptick()
         max_ = np.max(net_correlation)
         net_correlation = [x / max_ for x in net_correlation]
 
