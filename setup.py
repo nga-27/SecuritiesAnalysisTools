@@ -23,8 +23,8 @@ DESCRIPTION = 'Technical analysis tools app for analyzing securities (funds, sto
 URL = 'https://github.mmm.com/nga-27/SecuritiesAnalysisTools'
 EMAIL = 'namell91@gmail.com'
 AUTHOR = 'Nick Amell'
-REQUIRES_PYTHON = '>=3.7.0'
-VERSION = '1.0.3'
+REQUIRES_PYTHON = '>=3.8.0, <3.12.0'
+VERSION = '1.1.0'
 
 # What packages are required for this module to be executed?
 REQUIRES = [
@@ -42,7 +42,7 @@ REQUIRES = [
 ]
 
 REQUIRES_DEV = [
-    'pylint==2.15.0',
+    'pylint==3.1.0',
 ]
 
 def has_ssh() -> bool:

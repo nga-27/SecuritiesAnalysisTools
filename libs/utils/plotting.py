@@ -173,7 +173,7 @@ def volatility_factor_plot(prices: list, dates: list, vf_data: VFStopsResultType
         new_start = minimum - (y_range * 0.2)
         new_end = minimum + (y_range * 1.02)
         ax_handle.set_ylim(new_start, new_end)
-        props = dict(boxstyle='round', facecolor='white', alpha=0.25)
+        props = {"boxstyle": 'round', "facecolor": 'white', "alpha": 0.25}
         ax_handle.text(
             0.02,
             0.02,
@@ -184,7 +184,7 @@ def volatility_factor_plot(prices: list, dates: list, vf_data: VFStopsResultType
         )
 
     if len(shown_stop_loss) > 0:
-        props = dict(boxstyle='round', facecolor='white', alpha=0.25)
+        props = {"boxstyle": 'round', "facecolor": 'white', "alpha": 0.25}
         ax_handle.text(
             0.02,
             0.90,

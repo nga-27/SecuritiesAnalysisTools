@@ -21,7 +21,5 @@ def run_exports(analysis: dict, script: list):
     create_slides(analysis, config=config)
     output_to_json(analysis, config)
     create_pdf(analysis, config=config)
-
     metadata_to_dataset(config=config)
-
     remove_temp_dir()

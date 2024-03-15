@@ -27,7 +27,8 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
         sectors {list} -- list of sectors (default: {None})
 
     returns:
-        list -- dict contains all tci information, data, sectors
+        Tuple[dict, Union[dict, None], Union[list, None]] -- dict contains all tci information,
+                                                            data, sectors
     """
     # pylint: disable=too-many-locals,too-many-statements,too-many-nested-blocks
     config = kwargs.get('config')

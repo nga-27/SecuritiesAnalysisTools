@@ -36,7 +36,7 @@ def technical_analysis(config: dict) -> Union[float, None]:
         config {dict} -- app control object
 
     Returns:
-        float -- clock time
+        Union[float, None] -- clock time
     """
     script = init_script(config)
 
@@ -48,7 +48,6 @@ def technical_analysis(config: dict) -> Union[float, None]:
     analysis, clock = run_prod(script)
     analysis, clock = run_indexes(analysis, script, clock=clock)
     run_exports(analysis, script)
-
     return clock
 
 

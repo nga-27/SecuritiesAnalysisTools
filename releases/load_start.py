@@ -23,7 +23,8 @@ def init_script(config: dict) -> Tuple[
         config {dict} -- startup config object to control application
 
     Returns:
-        list -- script: dataset, funds, periods, config
+        Tuple[Union[dict, None], Union[List[str], None], Union[List[str], None], Union[dict, None]]
+                                            -- script: dataset, funds, periods, config
     """
     config['process_steps'] = PROCESS_STEPS_PROD
     if config['state'] == 'halt':
