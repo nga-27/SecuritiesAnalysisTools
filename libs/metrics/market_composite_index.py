@@ -81,12 +81,13 @@ def market_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[lis
 
                         composite = composite_index(
                             data, sectors, plot_output=plot_output, progress_bar=prog_bar)
-                        correlations = composite_correlation(
+                        correlations, type_beta_rsq = composite_correlation(
                             data, sectors, plot_output=plot_output,
                             progress_bar=prog_bar, t_data=t_data)
 
                         mci['tabular'] = {'mci': composite}
                         mci['correlations'] = correlations
+                        mci['type_correlations'] = type_beta_rsq
                         prog_bar.end()
 
                         return mci, data, sectors
@@ -101,14 +102,14 @@ def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dic
         name {str} -- (default: {'Market Composite Index'})
 
     Returns:
-        list -- data downloaded, sector list
+        Tuple[dict, list, dict] -- data downloaded, sector list, type composite dict
     """
     metrics_file = os.path.join("resources", "sectors.json")
     if not os.path.exists(metrics_file):
         print(
             f"{WARNING}WARNING: '{metrics_file}' not found for " +
             f"'metrics_initializer'. Failed.{NORMAL_COLOR}")
-        return None, []
+        return None, [], {}
 
     with open(metrics_file, 'r', encoding='utf-8') as m_file:
         mci_data = json.load(m_file)
@@ -228,14 +229,42 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
     return composite2
 
 
-def type_composite_correlation(type_data: Dict[str, Union[Dict[str, float], List[str]]], corr_data: Dict[str, List[float]]) -> Dict[str, List[float]]:
+def type_composite_correlation(type_data: Dict[str, Union[Dict[str, float], List[str]]],
+                               corr_tabular_data: Dict[str, List[float]],
+                               sector_beta_rsq_data: Dict[str, List[Dict[str, float]]]
+                               ) -> Tuple[Dict[str, List[float]], Dict[str, List[Dict[str, float]]]]: # pylint: disable=line-too-long
+    """generates composite correlation information for types (sensitive, defensive, cyclical)
+
+    Args:
+        type_data (Dict[str, Union[Dict[str, float], List[str]]]): type data from sectors.json
+        corr_tabular_data (Dict[str, List[float]]): correlation plot data (for MCI plot)
+        sector_beta_rsq_data (Dict[str, List[Dict[str, float]]]): sector data from sectors.json
+
+    Returns:
+        Tuple[Dict[str, List[float]], Dict[str, List[Dict[str, float]]]]: plot-able data,
+                                                                    rsqd/beta data for types
+    """
     type_corrs = {}
+    type_beta_rsq = {}
     for sector_type in ('Defensive', 'Sensitive', 'Cyclical'):
-        type_corrs[sector_type] = [0.0] * len(corr_data['VGT'])
+        type_corrs[sector_type] = [0.0] * len(corr_tabular_data['VGT'])
+        type_beta_rsq[sector_type] = [
+            {'period': 0, 'beta': 0.0, 'r_squared': 0.0},
+            {'period': 0, 'beta': 0.0, 'r_squared': 0.0}
+        ]
         for ticker, ratio in type_data[sector_type].items():
-            for i, val in enumerate(corr_data[ticker]):
+            for i, val in enumerate(corr_tabular_data[ticker]):
                 type_corrs[sector_type][i] += ratio * val
-    return type_corrs
+            for i, period_object in enumerate(sector_beta_rsq_data[ticker]):
+                type_beta_rsq[sector_type][i]['period'] = period_object['period']
+                type_beta_rsq[sector_type][i]['beta'] += round(period_object['beta'] * ratio, 5)
+                type_beta_rsq[sector_type][i]['r_squared'] += \
+                    round(period_object['r_squared'] * ratio, 5)
+    for _, sector_data in type_beta_rsq.items():
+        for period in sector_data:
+            period['beta'] = round(period['beta'], 5)
+            period['r_squared'] = round(period['r_squared'], 5)
+    return type_corrs, type_beta_rsq
 
 
 def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_output=True,
@@ -307,13 +336,15 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         )
         progress_bar.uptick()
 
+        t_beta_rsq = {}
         if t_data is not None:
-            t_corrs = type_composite_correlation(t_data, corrs)
+            t_corrs, t_beta_rsq = type_composite_correlation(t_data, corrs, correlations)
             plots = [value for _, value in t_corrs.items()]
             legend = list(t_corrs)
             generate_plot(
                 PlotType.GENERIC_PLOTTING, plots, **dict(
-                    x=dates, title='MCI Correlations by Type', legend=legend, plot_output=plot_output,
+                    x=dates, title='MCI Correlations by Type', legend=legend,
+                    plot_output=plot_output,
                     filename='MCI_type_correlations.png'
                 )
             )
@@ -338,4 +369,4 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         )
         progress_bar.uptick()
 
-    return correlations
+    return correlations, t_beta_rsq
