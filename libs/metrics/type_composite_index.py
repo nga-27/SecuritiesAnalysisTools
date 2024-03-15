@@ -37,9 +37,10 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
     data = kwargs.get('data')
     sectors = kwargs.get('sectors')
 
+    properties = {}
     if config is not None:
         period = config['period']
-        properties = config['properties']
+        properties = config.get('properties', {})
 
     elif period is None:
         print(
@@ -49,109 +50,103 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
 
     else:
         # Support for release 1 versions
-        properties = {}
-        properties['Indexes'] = {}
-        properties['Indexes']['Type Sector'] = True
+        properties['Indexes'] = {'Type Sector': True}
 
     #  Validate each index key is set to True in the --core file
-    if properties is not None:
-        if 'Indexes' in properties.keys():
-            props = properties['Indexes']
-            if 'Type Sector' in props.keys():
-                if props['Type Sector']:
-                    m_data = get_metrics_content()
-                    if data is None or sectors is None:
-                        data, sectors = metrics_initializer(
-                            m_data, period='2y')
+    if properties.get('Indexes', {}).get('Type Sector', False):
+        m_data = get_metrics_content()
+        if data is None or sectors is None:
+            data, sectors = metrics_initializer(
+                m_data, period='2y')
 
-                    if data:
-                        prog_bar = ProgressBar(
-                            19, name='Type Composite Index', offset=clock)
-                        prog_bar.start()
+        if data:
+            prog_bar = ProgressBar(
+                19, name='Type Composite Index', offset=clock)
+            prog_bar.start()
 
-                        tci = {}
-                        composite = {}
-                        for sect in sectors:
-                            cluster = cluster_oscillators(
-                                data[sect],
-                                plot_output=False,
-                                function='market',
-                                wma=False,
-                                progress_bar=prog_bar
-                            )
+            tci = {}
+            composite = {}
+            for sect in sectors:
+                cluster = cluster_oscillators(
+                    data[sect],
+                    plot_output=False,
+                    function='market',
+                    wma=False,
+                    progress_bar=prog_bar
+                )
 
-                            graph = cluster['tabular']
-                            composite[sect] = graph
+                graph = cluster['tabular']
+                composite[sect] = graph
 
-                        defensive = type_composites(
-                            composite, m_data, type_type='Defensive')
-                        prog_bar.uptick()
+            defensive = type_composites(
+                composite, m_data, type_type='Defensive')
+            prog_bar.uptick()
 
-                        sensitive = type_composites(
-                            composite, m_data, type_type='Sensitive')
-                        prog_bar.uptick()
+            sensitive = type_composites(
+                composite, m_data, type_type='Sensitive')
+            prog_bar.uptick()
 
-                        cyclical = type_composites(
-                            composite, m_data, type_type='Cyclical')
-                        prog_bar.uptick()
+            cyclical = type_composites(
+                composite, m_data, type_type='Cyclical')
+            prog_bar.uptick()
 
-                        d_val = weighted_signals(
-                            data, m_data, type_type='Defensive')
-                        prog_bar.uptick()
+            d_val = weighted_signals(
+                data, m_data, type_type='Defensive')
+            prog_bar.uptick()
 
-                        s_val = weighted_signals(
-                            data, m_data, type_type='Sensitive')
-                        prog_bar.uptick()
+            s_val = weighted_signals(
+                data, m_data, type_type='Sensitive')
+            prog_bar.uptick()
 
-                        c_val = weighted_signals(
-                            data, m_data, type_type='Cyclical')
-                        prog_bar.uptick()
+            c_val = weighted_signals(
+                data, m_data, type_type='Cyclical')
+            prog_bar.uptick()
 
-                        d_val = windowed_moving_avg(d_val, 3, data_type='list')
-                        c_val = windowed_moving_avg(c_val, 3, data_type='list')
-                        s_val = windowed_moving_avg(s_val, 3, data_type='list')
-                        prog_bar.uptick()
+            d_val = windowed_moving_avg(d_val, 3, data_type='list')
+            c_val = windowed_moving_avg(c_val, 3, data_type='list')
+            s_val = windowed_moving_avg(s_val, 3, data_type='list')
+            prog_bar.uptick()
 
-                        tci['defensive'] = {
-                            "tabular": d_val,
-                            "clusters": defensive
-                        }
-                        tci['sensitive'] = {
-                            "tabular": s_val,
-                            "clusters": sensitive
-                        }
-                        tci['cyclical'] = {
-                            "tabular": c_val,
-                            "clusters": cyclical
-                        }
+            tci['defensive'] = {
+                "tabular": d_val,
+                "clusters": defensive
+            }
+            tci['sensitive'] = {
+                "tabular": s_val,
+                "clusters": sensitive
+            }
+            tci['cyclical'] = {
+                "tabular": c_val,
+                "clusters": cyclical
+            }
 
-                        dates = data['VGT'].index
-                        if plot_output:
-                            plot_config = dict(
-                                y_list_2=defensive, y1_label='Defensive Index',
-                                y2_label='Clustered Osc', title='Defensive Index',
-                                x=dates, plot_output=plot_output
-                            )
-                            generate_plot(PlotType.DUAL_PLOTTING, d_val, **plot_config)
-                            plot_config.update(dict(
-                                y2=sensitive, y1_label='Sensitive Index', title='Sensitive Index'
-                            ))
-                            generate_plot(PlotType.DUAL_PLOTTING, s_val, **plot_config)
-                            plot_config.update(dict(
-                                y_list_2=cyclical, y1_label='Cyclical Index', title='Cyclical Index'
-                            ))
-                            generate_plot(PlotType.DUAL_PLOTTING, c_val, **plot_config)
-                        
-                        generate_plot(
-                            PlotType.GENERIC_PLOTTING, [d_val, s_val, c_val], **dict(
-                                legend=['Defensive', 'Sensitive', 'Cyclical'], title='Type Indexes',
-                                x=dates, plot_output=plot_output, ylabel='Normalized "Price"',
-                                filename='tci.png'
-                            )
-                        )
+            dates = data['VGT'].index
+            if plot_output:
+                plot_config = dict(
+                    y_list_2=defensive, y1_label='Defensive Index',
+                    y2_label='Clustered Osc', title='Defensive Index',
+                    x=dates, plot_output=plot_output
+                )
+                generate_plot(PlotType.DUAL_PLOTTING, d_val, **plot_config)
+                plot_config.update(dict(
+                    y2=sensitive, y1_label='Sensitive Index', title='Sensitive Index'
+                ))
+                generate_plot(PlotType.DUAL_PLOTTING, s_val, **plot_config)
+                plot_config.update(dict(
+                    y_list_2=cyclical, y1_label='Cyclical Index', title='Cyclical Index'
+                ))
+                generate_plot(PlotType.DUAL_PLOTTING, c_val, **plot_config)
+            
+            generate_plot(
+                PlotType.GENERIC_PLOTTING, [d_val, s_val, c_val], **dict(
+                    legend=['Defensive', 'Sensitive', 'Cyclical'], title='Type Indexes',
+                    x=dates, plot_output=plot_output, ylabel='Normalized "Price"',
+                    filename='tci.png'
+                )
+            )
 
-                        prog_bar.end()
-                        return tci, data, sectors
+            prog_bar.end()
+            return tci, data, sectors
     return {}, None, None
 
 

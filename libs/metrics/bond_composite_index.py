@@ -8,7 +8,7 @@ as market oscillators, but the metrics can still provide buy-sell signals.
 """
 import os
 import json
-from typing import Tuple, Union
+from typing import Tuple, Union, Dict
 
 import pandas as pd
 import numpy as np
@@ -27,7 +27,7 @@ BOND_NAME_MAP = {
 }
 
 
-def bond_composite_index(config: dict, **kwargs):
+def bond_composite_index(config: dict, **kwargs) -> None:
     """Bond Composite Index (BCI)
 
     Arguments:
@@ -42,36 +42,34 @@ def bond_composite_index(config: dict, **kwargs):
     clock = kwargs.get('clock')
 
     period = config['period']
-    properties = config['properties']
+    properties = config.get('properties', {})
     plots = []
     legend = []
 
     # Validate each index key is set to True in the --core file
-    if properties is not None:
-        if 'Indexes' in properties:
-            props = properties['Indexes']
-            for bond_type in ('Treasury Bond', 'Corporate Bond', 'International Bond'):
-                if bond_type in props:
-                    bond_type_name = bond_type.split(' ', maxsplit=1)[0]
-                    data, sectors, index_type, m_data = metrics_initializer(
-                        period=period, bond_type=bond_type_name)
-                    if m_data:
-                        _, data, dates = composite_index(data, sectors, m_data,
-                                                            plot_output=plot_output,
-                                                            bond_type=bond_type_name,
-                                                            index_type=index_type,
-                                                            clock=clock)
-                        plots.append(data)
-                        legend.append(bond_type_name)
+    props: Dict[str, bool] = properties.get('Indexes', {})
+    for bond_type in ('Treasury Bond', 'Corporate Bond', 'International Bond'):
+        if props.get(bond_type, False):
+            bond_type_name = bond_type.split(' ', maxsplit=1)[0]
+            data, sectors, index_type, m_data = metrics_initializer(
+                period=period, bond_type=bond_type_name)
+            if m_data:
+                _, data, dates = composite_index(data, sectors, m_data,
+                                                    plot_output=plot_output,
+                                                    bond_type=bond_type_name,
+                                                    index_type=index_type,
+                                                    clock=clock)
+                plots.append(data)
+                legend.append(bond_type_name)
 
-            if len(plots) > 0:
-                generate_plot(
-                    PlotType.GENERIC_PLOTTING, plots, **dict(
-                        x=dates, title='Bond Composite Indexes', legend=legend,
-                        ylabel='Normalized Price', plot_output=plot_output,
-                        filename="combined_BCI.png"
-                    )
-                )
+    if len(plots) > 0:
+        generate_plot(
+            PlotType.GENERIC_PLOTTING, plots, **dict(
+                x=dates, title='Bond Composite Indexes', legend=legend,
+                ylabel='Normalized Price', plot_output=plot_output,
+                filename="combined_BCI.png"
+            )
+        )
 
 
 def metrics_initializer(period='2y',

@@ -48,9 +48,10 @@ def market_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[lis
     data = kwargs.get('data')
     sectors = kwargs.get('sectors')
 
+    properties = {}
     if config is not None:
-        period = config['period']
-        properties = config['properties']
+        period = config.get('period')
+        properties = config.get('properties', {})
 
     elif period is None:
         print(
@@ -60,37 +61,31 @@ def market_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[lis
 
     else:
         # Support for release 1 versions
-        properties = {}
-        properties['Indexes'] = {}
-        properties['Indexes']['Market Sector'] = True
+        properties['Indexes'] = {'Market Sector': True}
 
     # Validate each index key is set to True in the --core file
-    if properties is not None:
-        if 'Indexes' in properties.keys():
-            props = properties['Indexes']
-            if 'Market Sector' in props.keys():
-                if props['Market Sector']:
-                    mci = {}
-                    if data is None or sectors is None:
-                        data, sectors, t_data = metrics_initializer(period=period)
+    if properties.get('Indexes', {}).get('Market Sector', False):
+        mci = {}
+        if data is None or sectors is None:
+            data, sectors, t_data = metrics_initializer(period=period)
 
-                    if data:
-                        prog_bar = ProgressBar(len(sectors) * 2 + 6,
-                                        name='Market Composite Index', offset=clock)
-                        prog_bar.start()
+        if data:
+            prog_bar = ProgressBar(len(sectors) * 2 + 6,
+                            name='Market Composite Index', offset=clock)
+            prog_bar.start()
 
-                        composite = composite_index(
-                            data, sectors, plot_output=plot_output, progress_bar=prog_bar)
-                        correlations, type_beta_rsq = composite_correlation(
-                            data, sectors, plot_output=plot_output,
-                            progress_bar=prog_bar, t_data=t_data)
+            composite = composite_index(
+                data, sectors, plot_output=plot_output, progress_bar=prog_bar)
+            correlations, type_beta_rsq = composite_correlation(
+                data, sectors, plot_output=plot_output,
+                progress_bar=prog_bar, t_data=t_data)
 
-                        mci['tabular'] = {'mci': composite}
-                        mci['correlations'] = correlations
-                        mci['type_correlations'] = type_beta_rsq
-                        prog_bar.end()
+            mci['tabular'] = {'mci': composite}
+            mci['correlations'] = correlations
+            mci['type_correlations'] = type_beta_rsq
+            prog_bar.end()
 
-                        return mci, data, sectors
+            return mci, data, sectors
     return {}, None, None
 
 
