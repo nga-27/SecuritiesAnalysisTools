@@ -1,8 +1,11 @@
 """ Average True Range """
 import os
+from typing import Union
+
 import pandas as pd
 
 from libs.utils import generate_plot, PlotType, INDEXES
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
@@ -26,7 +29,7 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     out_suppress = kwargs.get('out_suppress', False)
 
     atr = {}
@@ -37,8 +40,7 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
     atr['length_of_signal'] = len(atr['tabular'])
     atr['type'] = 'oscillator'
 
-    if p_bar is not None:
-        p_bar.uptick(increment=1.0)
+    update_progress_bar(p_bar)
 
     return atr
 

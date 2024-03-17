@@ -55,7 +55,5 @@ def has_critical_error(item: dict, e_type: str) -> bool:
                     "deprecated ticker symbol.")
                 print(f"{NOTE}Exiting...{NORMAL}")
                 return True
-
         return False
-
     return False

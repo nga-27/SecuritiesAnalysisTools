@@ -1,11 +1,12 @@
 """ candlesticks """
 import os
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, generate_plot, PlotType
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 
 from .full_stochastic import generate_full_stoch_signal
 from .moving_averages_lib.utils import adjust_signals
@@ -90,20 +91,18 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    pbar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
 
     candles = {}
 
     candles['thresholds'] = determine_threshold(fund, plot_output=plot_output)
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     candles['classification'] = day_classification(fund, candles['thresholds'])
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     candles = pattern_detection(
-        fund, candles, plot_output=plot_output, pbar=pbar)
+        fund, candles, plot_output=plot_output, pbar=p_bar)
 
     candles['signals'] = get_pattern_signals(candles, fund)
     candles['length_of_data'] = len(fund.index)
@@ -132,9 +131,7 @@ def candlesticks(fund: pd.DataFrame, **kwargs) -> dict:
             "filename": os.path.join(name, view, f"candlestick_{name}.png")
         }
     )
-
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
     return candles
 
 
@@ -156,9 +153,9 @@ def pattern_detection(fund: pd.DataFrame, candles: dict, **kwargs) -> dict:
     """
     # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
-    pbar = kwargs.get('pbar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('pbar')
 
-    if pbar is not None:
+    if p_bar is not None:
         divisor = 0.7 / float(len(candles['classification']))
 
     patterns = []
@@ -177,9 +174,7 @@ def pattern_detection(fund: pd.DataFrame, candles: dict, **kwargs) -> dict:
                 modified_pattern = f"{pattern}: {vol[1]}"
                 value['patterns'].append(modified_pattern)
 
-        if pbar is not None:
-            pbar.uptick(increment=divisor)
-
+        update_progress_bar(p_bar, divisor)
         patterns.append(value)
 
     patterns2 = filtered_reversal_patterns(fund, candles)
@@ -215,7 +210,6 @@ def pattern_detection(fund: pd.DataFrame, candles: dict, **kwargs) -> dict:
 
     candles['patterns'] = patterns
     candles['tabular'] = tabular
-
     return candles
 
 

@@ -1,10 +1,12 @@
 """ Bear / Bull Power Signal """
 import os
+from typing import Union
 
 import pandas as pd
 from scipy.stats import linregress
 
 from libs.utils import dates_extractor_list, INDEXES, generate_plot, PlotType
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 from libs.tools.moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
@@ -24,7 +26,7 @@ def bear_bull_power(position: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- [description]
     """
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -57,22 +59,18 @@ def generate_bear_bull_signal(position: pd.DataFrame, **kwargs) -> dict:
     interval = kwargs.get('interval', 13)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('p_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('p_bar')
 
     bb_signal = {'bulls': [], 'bears': []}
     ema = exponential_moving_avg(position, interval)
 
     for i, high in enumerate(position['High']):
         bb_signal['bulls'].append(high - ema[i])
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     for i, low in enumerate(position['Low']):
         bb_signal['bears'].append(low - ema[i])
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     x_dates = dates_extractor_list(position)
     if plot_output:
@@ -116,7 +114,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     bb_interval = kwargs.get('bb_interval', [4, 5, 6, 7, 8])
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('p_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('p_bar')
     view = kwargs.get('view')
 
     # Determine the slope of the ema at given points
@@ -129,11 +127,9 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
         reg = linregress(x_list, y=y_list)
         ema_slopes.append(reg[0])
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     incr = 0.6 / float(len(bb_interval))
-
     state = [0.0] * len(ema)
     features = []
 
@@ -196,14 +192,12 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
             if data is not None:
                 features.append(data)
 
-        if p_bar is not None:
-            p_bar.uptick(increment=incr)
+        update_progress_bar(p_bar, incr)
 
     bear_bull['signals'] = filter_features(features, plot_output=plot_output)
     bear_bull['length_of_data'] = len(bear_bull['tabular']['bears'])
 
     weights = [1.0, 0.75, 0.45, 0.1]
-
     state2 = [0.0] * len(state)
     for ind, state_val in enumerate(state):
         if state_val != 0.0:
@@ -237,9 +231,7 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
     )
 
     bear_bull['metrics'] = state4
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return bear_bull
 
 

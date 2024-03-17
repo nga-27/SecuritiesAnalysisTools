@@ -1,9 +1,11 @@
 """ Awesome Oscillator """
 import os
+from typing import Union
 
 import pandas as pd
 
 from libs.utils import PlotType, generate_plot, dates_extractor_list
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 from libs.utils import INDEXES
 
@@ -27,7 +29,7 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
-    progress_bar = kwargs.get('progress_bar')
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     awesome = {}
@@ -40,20 +42,16 @@ def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
         signal, position=position, progress_bar=progress_bar)
 
     plus_minus, x_index = integrator_differentiator(awesome['signals'], position)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     awesome['pm'] = {'pm_data': plus_minus, 'indexes': x_index}
-
     awesome = awesome_metrics(position, awesome, plot_output=plot_output,
                          name=name, progress_bar=progress_bar, view=view)
 
     awesome['length_of_data'] = len(awesome['tabular'])
     awesome['type'] = 'oscillator'
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
     return awesome
 
 
@@ -79,7 +77,7 @@ def get_awesome_signal(position: pd.DataFrame, **kwargs) -> list:
     long_period = kwargs.get('long_period', 34)
     filter_style = kwargs.get('filter_style', 'sma')
     plot_output = kwargs.get('plot_output', True)
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     name = kwargs.get('name', '')
     view = kwargs.get('view')
 
@@ -89,8 +87,7 @@ def get_awesome_signal(position: pd.DataFrame, **kwargs) -> list:
         mid = (high + position['Low'][i]) / 2
         mid_points.append(mid)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     if filter_style == 'sma':
         short_signal = simple_moving_avg(mid_points, short_period, data_type='list')
@@ -104,26 +101,19 @@ def get_awesome_signal(position: pd.DataFrame, **kwargs) -> list:
         short_signal = []
         long_signal = []
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     for i in range(long_period):
         signal.append(0.0)
     for i in range(long_period, len(long_signal)):
         diff = short_signal[i] - long_signal[i]
         signal.append(diff)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     med_term = simple_moving_avg(signal, 14, data_type='list')
     long_term = simple_moving_avg(signal, long_period, data_type='list')
 
-    signal, med_term, long_term = normalize_signals(
-        [signal, med_term, long_term])
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    signal, med_term, long_term = normalize_signals([signal, med_term, long_term])
+    update_progress_bar(p_bar, 0.1)
 
     triggers = ao_signal_trigger(signal, med_term, long_term)
 
@@ -146,10 +136,7 @@ def get_awesome_signal(position: pd.DataFrame, **kwargs) -> list:
             PlotType.DUAL_PLOTTING, [signal, triggers], y_list_2=position['Close'],
             y1_label=['Awesome', 'Triggers'], y2_label='Price', plot_output=plot_output
         )
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return signal
 
 
@@ -188,8 +175,7 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
     Returns:
         list -- list of dictionaries describing features
     """
-    p_bar = kwargs.get('progress_bar')
-
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     features = []
 
     # Zero-crossover feature detection
@@ -216,8 +202,7 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
             features.append(feat)
             is_positive = True
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     # "Twin Peaks" feature detection
     features.extend(twin_peaks_detection(signal, position))
@@ -226,9 +211,7 @@ def ao_feature_detection(signal: list, position: pd.DataFrame = None, **kwargs) 
     features.extend(saucer_detection(signal, position))
 
     features.sort(key=lambda x: x['index'])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return features
 
 
@@ -439,7 +422,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
     # pylint: disable=too-many-locals
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     period_change = kwargs.get('period_change', 5)
     view = kwargs.get('view')
 
@@ -472,9 +455,7 @@ def awesome_metrics(position: pd.DataFrame, ao_dict: dict, **kwargs) -> dict:
     norm = normalize_signals([metrics2])
     metrics3 = norm[0]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     ao_signal = ao_dict['tabular']
 
     metrics4 = []
