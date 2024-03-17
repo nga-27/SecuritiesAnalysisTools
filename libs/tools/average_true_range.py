@@ -89,14 +89,14 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
         generate_plot(
             PlotType.DUAL_PLOTTING,
             fund['Close'],
-            **dict(
-                y_list_2=signal,
-                y1_label='Price',
-                y2_label='ATR',
-                title=title,
-                filename=os.path.join(name, views, f"atr_{name}.png"),
-                plot_output=plot_output
-            )
+            **{
+                "y_list_2": signal,
+                "y1_label": 'Price',
+                "y2_label": 'ATR',
+                "title": title,
+                "filename": os.path.join(name, views, f"atr_{name}.png"),
+                "plot_output": plot_output
+            }
         )
 
     return signal
@@ -204,11 +204,11 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
         generate_plot(
             PlotType.DUAL_PLOTTING,
             fund['Close'],
-            **dict(
-                y_list_2=[atr_dict['tabular'], ema_1, ema_2],
-                y1_label='Price', y2_label='ATRs', title=title,
-                plot_output=plot_output
-            )
+            **{
+                "y_list_2": [atr_dict['tabular'], ema_1, ema_2],
+                "y1_label": 'Price', "y2_label": 'ATRs', "title": title,
+                "plot_output": plot_output
+            }
         )
 
     return atr_dict

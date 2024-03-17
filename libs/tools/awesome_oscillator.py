@@ -131,10 +131,10 @@ def get_awesome_signal(position: pd.DataFrame, **kwargs) -> list:
     name2 = name3 + ' - Awesome Oscillator'
 
     generate_plot(
-        PlotType.BAR_CHART, signal, **dict(
-            position=position, x=x_dates, save_fig=True, title=name2, bar_delta=True,
-            plot_output=plot_output, filename=os.path.join(name, view, f"awesome_bar_{name}")
-        )
+        PlotType.BAR_CHART, signal, **{
+            "position": position, "x": x_dates, "save_fig": True, "title": name2, "bar_delta": True,
+            "plot_output": plot_output, "filename": os.path.join(name, view, f"awesome_bar_{name}")
+        }
     )
     if plot_output:
         generate_plot(

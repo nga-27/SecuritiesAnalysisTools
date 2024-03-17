@@ -159,14 +159,14 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
     generate_plot(
         PlotType.DUAL_PLOTTING,
         fund['Close'],
-        **dict(
-            y_list_2=plots,
-            y1_label='Price',
-            y2_label=['No Trend', 'Over Trend', 'Strong Trend', 'ADX'],
-            title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"adx_tabular_{name}.png")
-        )
+        **{
+            "y_list_2": plots,
+            "y1_label": 'Price',
+            "y2_label": ['No Trend', 'Over Trend', 'Strong Trend', 'ADX'],
+            "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"adx_tabular_{name}.png")
+        }
     )
 
     if pbar is not None:
@@ -289,14 +289,14 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
     generate_plot(
         PlotType.DUAL_PLOTTING,
         fund['Close'],
-        **dict(
-            y_list_2=adx['metrics'],
-            y1_label='Price',
-            y2_label='Metrics',
-            title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"adx_metrics_{name}.png")
-        )
+        **{
+            "y_list_2": adx['metrics'],
+            "y1_label": 'Price',
+            "y2_label": 'Metrics',
+            "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"adx_metrics_{name}.png")
+        }
     )
 
     if pbar is not None:

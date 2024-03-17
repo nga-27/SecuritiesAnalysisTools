@@ -79,15 +79,15 @@ def generate_bear_bull_signal(position: pd.DataFrame, **kwargs) -> dict:
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Bull Power'
         generate_plot(
-            PlotType.BAR_CHART, bb_signal['bulls'], **dict(
-                position=position, title=name2, x=x_dates, plot_output=plot_output
-            )
+            PlotType.BAR_CHART, bb_signal['bulls'], **{
+                "position": position, "title": name2, "x": x_dates, "plot_output": plot_output
+            }
         )
         name2 = name3 + ' - Bear Power'
         generate_plot(
-            PlotType.BAR_CHART, bb_signal['bears'], **dict(
-                position=position, title=name2, x=x_dates, plot_output=plot_output
-            )
+            PlotType.BAR_CHART, bb_signal['bears'], **{
+                "position": position, "title": name2, "x": x_dates, "plot_output": plot_output
+            }
         )
 
     return bb_signal
@@ -229,11 +229,11 @@ def bear_bull_feature_detection(bear_bull: dict, position: pd.DataFrame, **kwarg
 
     title = 'Bear Bull Power Metrics'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=state4, y1_label='Price', y2_label='Bear Bull Power', title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"bear_bull_power_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": state4, "y1_label": 'Price', "y2_label": 'Bear Bull Power', "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"bear_bull_power_{name}.png")
+        }
     )
 
     bear_bull['metrics'] = state4

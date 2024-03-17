@@ -136,11 +136,11 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
     name3 = INDEXES.get(name, name)
     name2 = name3 + " - Bollinger Band Metrics"
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=norm_signal, y1_label='Price', y2_label='Indicators', title=name2,
-            plot_output=plot_output, filename=os.path.join(
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": norm_signal, "y1_label": 'Price', "y2_label": 'Indicators', "title": name2,
+            "plot_output": plot_output, "filename": os.path.join(
                 name, view, f"bollinger_band_metrics_{name}.png")
-        )
+        }
     )
 
     return bol_bands
