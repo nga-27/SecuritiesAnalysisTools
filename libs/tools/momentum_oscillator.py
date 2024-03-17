@@ -7,7 +7,7 @@ import numpy as np
 from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import find_local_extrema, normalize_signals
 
-from .moving_average import simple_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:

@@ -16,12 +16,11 @@ from typing import Tuple, Union, Dict, List
 import pandas as pd
 import numpy as np
 
-from libs.tools import (
-    cluster_oscillators, beta_comparison_list, windowed_moving_avg
-)
+from libs.tools import cluster_oscillators, beta_comparison_list
 from libs.utils import (
     generate_plot, ProgressBar, index_appender, download_data_indexes, STANDARD_COLORS, PlotType
 )
+from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 
 ERROR_COLOR = STANDARD_COLORS["error"]
 WARNING = STANDARD_COLORS["warning"]

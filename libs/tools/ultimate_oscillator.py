@@ -9,7 +9,7 @@ from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .math_functions import lower_low, higher_high, bull_bear_th
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None, **kwargs) -> dict:

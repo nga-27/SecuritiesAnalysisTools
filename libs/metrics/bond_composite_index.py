@@ -13,7 +13,8 @@ from typing import Tuple, Union, Dict
 import pandas as pd
 import numpy as np
 
-from libs.tools import cluster_oscillators, windowed_moving_avg
+from libs.tools import cluster_oscillators
+from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 from libs.utils import (
     generate_plot, ProgressBar, dates_extractor_list, download_data_indexes, STANDARD_COLORS,
     PlotType

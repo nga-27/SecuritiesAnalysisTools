@@ -10,7 +10,7 @@ from libs.utils import date_extractor, INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
 from .trends import auto_trend
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 from .trends import get_trend_lines_regression
 
 

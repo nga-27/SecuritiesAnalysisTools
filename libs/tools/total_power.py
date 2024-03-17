@@ -6,7 +6,7 @@ import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
-from libs.tools.moving_average_utils.exponential_moving_avg import exponential_moving_avg
+from libs.tools.moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def total_power(position: pd.DataFrame, **kwargs) -> dict:

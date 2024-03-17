@@ -3,10 +3,11 @@ import os
 import json
 from typing import Tuple, Union
 
-from libs.tools import cluster_oscillators, windowed_moving_avg
+from libs.tools import cluster_oscillators
 from libs.utils import (
     download_data_indexes, ProgressBar, index_appender, PlotType, STANDARD_COLORS, generate_plot
 )
+from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 
 ERROR_COLOR = STANDARD_COLORS["error"]
 WARNING = STANDARD_COLORS["warning"]

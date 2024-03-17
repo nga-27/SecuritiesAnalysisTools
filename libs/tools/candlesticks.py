@@ -7,9 +7,10 @@ import numpy as np
 
 from libs.utils import INDEXES, generate_plot, PlotType
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
-from .moving_average import adjust_signals
 from .full_stochastic import generate_full_stoch_signal
+from .moving_averages_lib.utils import adjust_signals
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 from .candlestick_patterns import (
     doji_pattern, dark_cloud_or_piercing_line, inside_outside, neckline, three_methods,

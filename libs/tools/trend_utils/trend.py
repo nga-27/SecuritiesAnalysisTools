@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 
-from libs.tools import simple_moving_avg
+from libs.tools.moving_averages_lib.simple_moving_avg import simple_moving_avg
 from .trend_of_dates import trend_of_dates
 
 

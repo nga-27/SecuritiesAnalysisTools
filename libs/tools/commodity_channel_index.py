@@ -8,8 +8,9 @@ import numpy as np
 from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
-from .moving_average import typical_price_signal, simple_moving_avg
-from .moving_average import exponential_moving_avg
+from .moving_average import typical_price_signal
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:

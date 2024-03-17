@@ -14,7 +14,7 @@ from .ultimate_oscillator import ultimate_oscillator
 from .rsi import relative_strength_indicator_rsi
 from .full_stochastic import full_stochastic
 
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 from .trends import auto_trend
 
 WARNING = STANDARD_COLORS["warning"]

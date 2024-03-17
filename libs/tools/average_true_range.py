@@ -4,7 +4,7 @@ import pandas as pd
 
 from libs.utils import generate_plot, PlotType, INDEXES
 from libs.features import normalize_signals
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:

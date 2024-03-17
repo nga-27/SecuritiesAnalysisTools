@@ -4,7 +4,7 @@ from typing import List, Tuple
 import pandas as pd
 import numpy as np
 
-from libs.tools import windowed_moving_avg
+from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 
 from .feature_utils import (
     add_date_range, remove_duplicates, reconstruct_extrema, remove_empty_keys

@@ -7,7 +7,8 @@ import numpy as np
 from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:

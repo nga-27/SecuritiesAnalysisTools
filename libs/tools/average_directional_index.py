@@ -8,7 +8,7 @@ from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
 from .trends import auto_trend
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 from .average_true_range import average_true_range
 
 

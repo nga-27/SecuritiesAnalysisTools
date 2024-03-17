@@ -10,7 +10,7 @@ from libs.utils import (
 )
 from libs.features import normalize_signals
 
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 RED = TREND_COLORS.get('bad')

@@ -8,7 +8,7 @@ import numpy as np
 from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def full_stochastic(position: pd.DataFrame, config: Union[list, None] = None, **kwargs) -> dict:

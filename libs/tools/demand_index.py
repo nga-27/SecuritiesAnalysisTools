@@ -6,8 +6,9 @@ import pandas as pd
 from libs.utils import INDEXES, generate_plot, PlotType
 from libs.features import normalize_signals
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
 from .trends import get_trend_lines_regression
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def demand_index(fund: pd.DataFrame, **kwargs) -> dict:

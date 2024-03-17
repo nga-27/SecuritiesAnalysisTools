@@ -9,8 +9,8 @@ from libs.utils import (
     dates_extractor_list, INDEXES, generate_plot, PlotType
 )
 
-from .moving_average import simple_moving_avg
 from .trends import get_trend_lines, get_trend_lines_regression
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:

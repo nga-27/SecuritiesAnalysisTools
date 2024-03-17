@@ -7,7 +7,8 @@ import numpy as np
 from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
 
-from .moving_average import weighted_moving_avg, simple_moving_avg
+from .moving_averages_lib.weighted_moving_avg import weighted_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:

@@ -8,7 +8,8 @@ import numpy as np
 from libs.utils import (
     download_data_indexes, index_appender, ProgressBar, PlotType, generate_plot
 )
-from libs.tools import beta_comparison_list, simple_moving_avg
+from libs.tools import beta_comparison_list
+from libs.tools.moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def correlation_composite_index(config: dict, **kwargs) -> dict:

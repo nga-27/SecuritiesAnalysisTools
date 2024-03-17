@@ -11,7 +11,7 @@ from scipy.stats import linregress
 from libs.utils import generate_plot, PlotType, dates_convert_from_index, INDEXES, STANDARD_COLORS
 from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
 
-from .moving_average import windowed_moving_avg
+from .moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 from .trend_utils import (
     get_lines_from_period, generate_analysis, filter_nearest_to_signal, consolidate_lines
 )

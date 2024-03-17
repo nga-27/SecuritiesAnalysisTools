@@ -7,7 +7,8 @@ from libs.utils import PlotType, generate_plot, dates_extractor_list
 from libs.features import normalize_signals
 from libs.utils import INDEXES
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def awesome_oscillator(position: pd.DataFrame, **kwargs) -> dict:
