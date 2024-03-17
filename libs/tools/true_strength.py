@@ -293,11 +293,12 @@ def relative_strength(primary_name: str, full_data_dict: dict,
         progress_bar.uptick(increment=0.1)
 
     generate_plot(
-        PlotType.GENERIC_PLOTTING, output_data, **dict(
-            x=dates, title=title, save_fig=True, legend=legend, ylabel='Difference Ratio',
-            plot_output=plot_output,
-            filename=os.path.join(primary_name, view, f"relative_strength_{primary_name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, output_data, **{
+            "x": dates, "title": title, "save_fig": True, "legend": legend,
+            "ylabel": 'Difference Ratio',
+            "plot_output": plot_output,
+            "filename": os.path.join(primary_name, view, f"relative_strength_{primary_name}.png")
+        }
     )
 
     if progress_bar is not None:

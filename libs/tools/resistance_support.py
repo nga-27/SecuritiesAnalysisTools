@@ -98,10 +98,12 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
 
     name2 = INDEXES.get(name, name)
     generate_plot(
-        PlotType.GENERIC_PLOTTING, y_p, **dict(
-            x=x_p2, colors=colors, title=f'{name2} Major Resistance & Support', save_fig=True,
-            plot_output=plot_output, filename=os.path.join(name, view, f"resist_support_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, y_p, **{
+            "x": x_p2, "colors": colors, "title": f'{name2} Major Resistance & Support',
+            "save_fig": True,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"resist_support_{name}.png")
+        }
     )
 
     if progress_bar is not None:

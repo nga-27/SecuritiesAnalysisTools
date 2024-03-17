@@ -83,11 +83,11 @@ def cluster_oscillators(position: pd.DataFrame, **kwargs):
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Clustering: ' + function
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=clusters, y1_label='Position Price', y2_label='Clustered Oscillator',
-            x_label='Trading Days', title=name2, plot_output=plot_output,
-            filename=os.path.join(name, view, f"clustering_{name}_{function}")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": clusters, "y1_label": 'Position Price', "y2_label": 'Clustered Oscillator',
+            "x_label": 'Trading Days', "title": name2, "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"clustering_{name}_{function}")
+        }
     )
 
     if prog_bar is not None:
@@ -388,11 +388,11 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscillator: dict, **kwargs
     name3 = INDEXES.get(name, name)
     name2 = name3 + " - Clustered Oscillator Metrics"
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"clustered_osc_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": name2,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"clustered_osc_metrics_{name}.png")
+        }
     )
 
     return cluster_oscillator

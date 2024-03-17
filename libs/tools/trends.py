@@ -178,10 +178,11 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
             title = f"{name2} Trend Lines for {near_term}, {short_term}, " + \
                 f"{intermediate_term}, and {long_term} Periods"
             generate_plot(
-                PlotType.GENERIC_PLOTTING, y_list_full, **dict(
-                    x=x_list_full, colors=color_list, plot_output=plot_output, title=title,
-                    save_fig=True, filename=os.path.join(name, view, f"{sub_name}.png")
-                )
+                PlotType.GENERIC_PLOTTING, y_list_full, **{
+                    "x": x_list_full, "colors": color_list, "plot_output": plot_output,
+                    "title": title,
+                    "save_fig": True, "filename": os.path.join(name, view, f"{sub_name}.png")
+                }
             )
 
         except: # pylint: disable=bare-except
@@ -384,9 +385,7 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
     views = kwargs.get('views', '')
 
     indexes = list(range(len(signal)))
-
-    if iterations > len(DIVISORS):
-        iterations = len(DIVISORS)
+    iterations = min(iterations, len(DIVISORS))
     divisors = DIVISORS[0:iterations]
 
     lines = []
@@ -520,10 +519,10 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
 
     title = f"{indicator.capitalize()} Trendlines"
     generate_plot(
-        PlotType.GENERIC_PLOTTING, plots, **dict(
-            x=x_plots, title=title, plot_output=plot_output, save_fig=True,
-            filename=os.path.join(name, views, f"{indicator}_trendlines_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, plots, **{
+            "x": x_plots, "title": title, "plot_output": plot_output, "save_fig": True,
+            "filename": os.path.join(name, views, f"{indicator}_trendlines_{name}.png")
+        }
     )
 
     trends = {}

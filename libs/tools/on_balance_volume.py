@@ -157,26 +157,29 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
 
     filename2 = os.path.join(name, view, f"obv_standard_{name}.png")
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=obv, x=x_dates, y1_label='Position Price', y2_label='On Balance Volume',
-            x_label='Trading Days', title=name2, plot_output=plot_output,
-            filename=filename2
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": obv, "x": x_dates, "y1_label": 'Position Price',
+            "y2_label": 'On Balance Volume',
+            "x_label": 'Trading Days', "title": name2, "plot_output": plot_output,
+            "filename": filename2
+        }
     )
 
     generate_plot(
-        PlotType.BAR_CHART, volume, **dict(
-            x=x_dates, position=fund, title=name5, save_fig=True, plot_output=plot_output,
-            filename=os.path.join(name, view, f"volume_{name}.png"), all_positive=True
-        )
+        PlotType.BAR_CHART, volume, **{
+            "x": x_dates, "position": fund, "title": name5, "save_fig": True,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"volume_{name}.png"), "all_positive": True
+        }
     )
 
     if not plot_output:
         generate_plot(
-            PlotType.BAR_CHART, o_filter, **dict(
-                x=x_dates, position=fund, title=name4, save_fig=True, plot_output=plot_output,
-                filename=os.path.join(name, view, f"obv_diff_{name}.png")
-            )
+            PlotType.BAR_CHART, o_filter, **{
+                "x": x_dates, "position": fund, "title": name4, "save_fig": True,
+                "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"obv_diff_{name}.png")
+            }
         )
 
     if progress_bar is not None:
@@ -248,12 +251,12 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> Tuple[
 
     if plot_output:
         generate_plot(
-            PlotType.GENERIC_PLOTTING, [obv, obv_sig, obv_sig2, obv_sig3], **dict(
-                title='OBV Signal Line',
-                legend=[
+            PlotType.GENERIC_PLOTTING, [obv, obv_sig, obv_sig2, obv_sig3], **{
+                "title": 'OBV Signal Line',
+                "legend": [
                     'obv', f'sma-{sma_interval}', f"sma-{sma_interval2}", f"sma-{sma_interval3}"
                 ]
-            )
+            }
         )
 
     if progress_bar is not None:

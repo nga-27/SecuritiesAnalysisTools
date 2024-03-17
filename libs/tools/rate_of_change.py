@@ -69,19 +69,21 @@ def rate_of_change_oscillator(fund: pd.DataFrame,
     x_s = [tsx, tmx, tlx]
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=[t_short, t_med, t_long], y1_label='Price', y2_label='Rate of Change',
-            title=title, legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
-            plot_output=plot_output, filename=os.path.join(name, views, f"rate_of_change_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": [t_short, t_med, t_long], "y1_label": 'Price', "y2_label": 'Rate of Change',
+            "title": title,
+            "legend": [f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
+            "plot_output": plot_output,
+            "filename": os.path.join(name, views, f"rate_of_change_{name}")
+        }
     )
 
     generate_plot(
-        PlotType.GENERIC_PLOTTING, plots, **dict(
-            x=x_s, title=title,
-            legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
-            plot_output=plot_output
-        )
+        PlotType.GENERIC_PLOTTING, plots, **{
+            "x": x_s, "title": title,
+            "legend": [f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
+            "plot_output": plot_output
+        }
     )
 
     if p_bar is not None:
@@ -169,10 +171,11 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
     title = f"{name2} - Rate of Change Metrics"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=roc_dict['metrics'], y1_label='Price', y2_label='ROC Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(name, views, f"roc_metrics_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": roc_dict['metrics'], "y1_label": 'Price', "y2_label": 'ROC Metrics',
+            "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, views, f"roc_metrics_{name}")
+        }
     )
 
     return roc_dict

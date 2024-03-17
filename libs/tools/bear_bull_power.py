@@ -5,8 +5,8 @@ import pandas as pd
 from scipy.stats import linregress
 
 from libs.utils import dates_extractor_list, INDEXES, generate_plot, PlotType
-from libs.tools import exponential_moving_avg
 from libs.features import normalize_signals
+from libs.tools.moving_average_utils.exponential_moving_avg import exponential_moving_avg
 
 
 def bear_bull_power(position: pd.DataFrame, **kwargs) -> dict:

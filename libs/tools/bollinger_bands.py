@@ -246,10 +246,10 @@ def volatility_calculation(position: pd.DataFrame, **kwargs) -> list:
 
     if plot_output:
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=std_correction, y1_label='Price', y2_label='Volatility',
-                title='Standard Deviation Volatility'
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": std_correction, "y1_label": 'Price', "y2_label": 'Volatility',
+                "title": 'Standard Deviation Volatility'
+            }
         )
 
     return std_correction
@@ -302,11 +302,12 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Bollinger Bands'
     generate_plot(
-        PlotType.GENERIC_PLOTTING, [position['Close'], moving_average, upper, lower], **dict(
-            title=name2, x=position.index,
-            legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'], plot_output=plot_output,
-            filename=os.path.join(name, view, f"bollinger_bands_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, [position['Close'], moving_average, upper, lower], **{
+            "title": name2, "x": position.index,
+            "legend": ['Price', 'Moving Avg', 'Upper Band', 'Lower Band'],
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"bollinger_bands_{name}.png")
+        }
     )
 
     return signals

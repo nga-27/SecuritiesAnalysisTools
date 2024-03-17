@@ -151,10 +151,11 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Demand Index"
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Demand Index Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(name, view, f"di_metrics_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Demand Index Metrics',
+            "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, view, f"di_metrics_{name}")
+        }
     )
 
     return metrics
@@ -252,10 +253,10 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Demand Index"
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=signal, y1_label='Price', y2_label='Demand Index', title=title,
-            plot_output=plot_output, filename=os.path.join(name, view, f"demand_index_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": signal, "y1_label": 'Price', "y2_label": 'Demand Index', "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, view, f"demand_index_{name}")
+        }
     )
 
     if pbar is not None:

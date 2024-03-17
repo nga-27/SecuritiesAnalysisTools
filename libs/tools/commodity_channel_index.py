@@ -119,10 +119,11 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     title = f'{name2} - Commodity Channel Index ({period_strs} periods)'
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=plots, y1_label='Price', y2_label='CCI', title=title, plot_output=plot_output,
-            filename=os.path.join(name, view, f"commodity_channel_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": plots, "y1_label": 'Price', "y2_label": 'CCI', "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"commodity_channel_{name}.png")
+        }
     )
 
     return tabular
@@ -194,11 +195,11 @@ def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
     title = f"{name2} - Commodity Channel Index Metrics"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": title,
+            "plot_output": plot_output, "filename": os.path.join(
                 name, view, f"commodity_metrics_{name}.png")
-        )
+        }
     )
 
     return metrics

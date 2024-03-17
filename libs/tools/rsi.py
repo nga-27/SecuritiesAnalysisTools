@@ -80,19 +80,20 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
         name2 = name3 + ' - relative_strength_indicator_rsi'
 
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=main_plots, y1_label='Position Price',
-                y2_label='relative_strength_indicator_rsi', title=name2, plot_output=plot_output,
-                filename=os.path.join(name, view, f"RSI_standard_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": main_plots, "y1_label": 'Position Price',
+                "y2_label": 'relative_strength_indicator_rsi', "title": name2,
+                "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"RSI_standard_{name}.png")
+            }
         )
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=main_plots, y1_label='Position Price',
-                y2_label='relative_strength_indicator_rsi Metrics', title=name2,
-                plot_output=plot_output,
-                filename=os.path.join(name, view, f"RSI_indicator_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": main_plots, "y1_label": 'Position Price',
+                "y2_label": 'relative_strength_indicator_rsi Metrics', "title": name2,
+                "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"RSI_indicator_{name}.png")
+            }
         )
 
     if progress_bar is not None:
@@ -523,10 +524,11 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
 
     if plot_output:
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=divs, y1_label='Price', y2_label='relative_strength_indicator_rsi',
-                title='Divs'
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": divs, "y1_label": 'Price',
+                "y2_label": 'relative_strength_indicator_rsi',
+                "title": 'Divs'
+            }
         )
 
     if p_bar is not None:

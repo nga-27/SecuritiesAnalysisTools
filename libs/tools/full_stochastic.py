@@ -136,10 +136,10 @@ def generate_full_stoch_signal(position: pd.DataFrame,
 
     if not out_suppress and plot_output:
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=[k_instant, k_smooth, d_sma], y1_label='Price',
-                y2_label=['Fast %K, Slow %K, Slow %D']
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": [k_instant, k_smooth, d_sma], "y1_label": 'Price',
+                "y2_label": ['Fast %K, Slow %K, Slow %D']
+            }
         )
 
     signals = {"fast_k": k_instant, "smooth_k": k_smooth, "slow_d": d_sma}
@@ -434,11 +434,11 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
         name2 = name3 + ' - Stochastic'
 
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=full_stoch['indicator'], y1_label='Position Price',
-                y2_label='Oscillator Signal', title=name2, plot_output=plot_output,
-                filename=os.path.join(name, view, f"stochastic_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": full_stoch['indicator'], "y1_label": 'Position Price',
+                "y2_label": 'Oscillator Signal', "title": name2, "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"stochastic_{name}.png")
+            }
         )
 
     return full_stoch
@@ -502,9 +502,10 @@ def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dic
 
     if plot_output:
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=metrics, y1_label='Price', y2_label='Metrics', title='Stochastic Metrics',
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics',
+                "title": 'Stochastic Metrics',
+            }
         )
 
     return full_stoch

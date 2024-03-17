@@ -61,18 +61,19 @@ def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None
         name2 = name3 + ' - Ultimate Oscillator'
 
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=ult_osc, y1_label='Position Price', y2_label='Ultimate Oscillator',
-                title=name2, plot_output=plot_output, subplot=True,
-                filename=os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": ult_osc, "y1_label": 'Position Price',
+                "y2_label": 'Ultimate Oscillator',
+                "title": name2, "plot_output": plot_output, "subplot": True,
+                "filename": os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
+            }
         )
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=ultimate['plots'], y1_label='Position Price',
-                y2_label='Buy-Sell Signal', title=name2, plot_output=plot_output,
-                filename=os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": ultimate['plots'], "y1_label": 'Position Price',
+                "y2_label": 'Buy-Sell Signal', "title": name2, "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
+            }
         )
 
     ultimate['type'] = 'oscillator'
@@ -484,11 +485,11 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
         name2 = name3 + ' - Ultimate Oscillator Metrics'
 
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
-                plot_output=plot_output,
-                filename=os.path.join(name, view, f"ultimate_osc_metrics_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": name2,
+                "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"ultimate_osc_metrics_{name}.png")
+            }
         )
 
     ultimate['metrics'] = metrics

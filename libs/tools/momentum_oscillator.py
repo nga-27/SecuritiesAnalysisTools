@@ -99,11 +99,11 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
 
     name2 = INDEXES.get(name, name)
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=signal, y1_label='Price', y2_label='CMO',
-            title=f'{name2} - (Chande) Momentum Oscillator',
-            filename=os.path.join(name, view, f"momentum_oscillator_{name}.png"),
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": signal, "y1_label": 'Price', "y2_label": 'CMO',
+            "title": f'{name2} - (Chande) Momentum Oscillator',
+            "filename": os.path.join(name, view, f"momentum_oscillator_{name}.png"),
+        }
     )
 
     return signal
@@ -141,9 +141,10 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
 
     if plot_output and len(position) > 0:
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=bear_bull, y1_label='Price', y2_label='Bear_Bull', title='Bear Bull'
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": bear_bull, "y1_label": 'Price', "y2_label": 'Bear_Bull',
+                "title": 'Bear Bull'
+            }
         )
 
     return bear_bull
@@ -293,11 +294,11 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
 
     title = '(Chande) Momentum Oscillator Metrics'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics4, y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"momentum_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics4, "y1_label": 'Price', "y2_label": 'Metrics', "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"momentum_metrics_{name}.png")
+        }
     )
 
     return mo_dict

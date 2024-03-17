@@ -108,10 +108,12 @@ def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
     title = f"{name2} - Know Sure Thing"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=[signal, signal_line], y1_label='Price', y2_label='KST', title=title,
-            plot_output=plot_output, filename=os.path.join(name, views, f"kst_oscillator_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": [signal, signal_line], "y1_label": 'Price', "y2_label": 'KST',
+            "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, views, f"kst_oscillator_{name}")
+        }
     )
 
     return signal, signal_line
@@ -265,10 +267,11 @@ def kst_metrics(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
     title = f"{name2} - KST Metrics"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=kst_dict['metrics'], y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(name, views, f"kst_metrics_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": kst_dict['metrics'], "y1_label": 'Price', "y2_label": 'Metrics',
+            "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, views, f"kst_metrics_{name}")
+        }
     )
 
     return kst_dict

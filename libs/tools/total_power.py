@@ -4,9 +4,9 @@ import os
 import pandas as pd
 import numpy as np
 
-from libs.tools import exponential_moving_avg
 from libs.utils import INDEXES, PlotType, generate_plot
 from libs.features import normalize_signals
+from libs.tools.moving_average_utils.exponential_moving_avg import exponential_moving_avg
 
 
 def total_power(position: pd.DataFrame, **kwargs) -> dict:
@@ -140,12 +140,12 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     name2 = INDEXES.get(name, name)
     title = name2 + ' - Total Power'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=[signals['bears'], signals['bulls'], signals['total']],
-            y1_label='Price', y2_label=['Bear', 'Bull', 'Total'], title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"total_power_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": [signals['bears'], signals['bulls'], signals['total']],
+            "y1_label": 'Price', "y2_label": ['Bear', 'Bull', 'Total'], "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"total_power_{name}.png")
+        }
     )
 
     if p_bar is not None:
@@ -313,11 +313,11 @@ def total_power_feature_detection(total_power_data: dict, position: pd.DataFrame
     name2 = INDEXES.get(name, name)
     title = name2 + ' - Total Power Metrics'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"total_pwr_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"total_pwr_metrics_{name}.png")
+        }
     )
 
     total_power_data['metrics'] = metrics

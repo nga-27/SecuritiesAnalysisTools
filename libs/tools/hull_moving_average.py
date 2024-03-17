@@ -115,10 +115,10 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     legend = ['Price', 'HMA-short', 'HMA-medium', 'HMA-long']
 
     generate_plot(
-        PlotType.GENERIC_PLOTTING, [position['Close'], plots[0], plots[1], plots[2]], **dict(
-            legend=legend, title=name2, plot_output=plot_output,
-            filename=os.path.join(name, view, f"hull_moving_average_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, [position['Close'], plots[0], plots[1], plots[2]], **{
+            "legend": legend, "title": name2, "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"hull_moving_average_{name}.png")
+        }
     )
 
     if p_bar is not None:
@@ -329,11 +329,11 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     name2 = name3 + ' - Hull Moving Average Metrics'
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=swings['metrics']['metrics'], y1_label='Price', y2_label='Metrics',
-            title=name2, plot_output=plot_output,
-            filename=os.path.join(name, view, f"hull_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": swings['metrics']['metrics'], "y1_label": 'Price', "y2_label": 'Metrics',
+            "title": name2, "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"hull_metrics_{name}.png")
+        }
     )
 
     if p_bar is not None:

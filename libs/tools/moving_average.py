@@ -7,42 +7,7 @@ import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
 from .moving_average_utils import adjust_signals, find_crossovers, normalize_signals_local
-
-
-def exponential_moving_avg(dataset: Union[list, pd.DataFrame],
-                           interval: int,
-                           data_type: str = 'DataFrame',
-                           key: str = 'Close',
-                           ema_factor: float = 2.0) -> list:
-    """Exponential Moving Average
-
-    Arguments:
-        dataset -- tabular data, either list or pd.DataFrame
-        interval {int} -- window to exponential moving average
-
-    Optional Args:
-        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
-        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
-        ema_factor {float} -- exponential smoothing factor; (default: {2.0})
-
-    Returns:
-        list -- filtered data
-    """
-    if data_type == 'DataFrame':
-        data = list(dataset[key])
-    else:
-        data = dataset
-
-    ema = []
-    if interval < len(data) - 3:
-        k = ema_factor / (float(interval) + 1.0)
-        for i in range(interval-1):
-            ema.append(data[i])
-        for i in range(interval-1, len(data)):
-            ema.append(np.mean(data[i-(interval-1):i+1]))
-            if i != interval-1:
-                ema[i] = ema[i-1] * (1.0 - k) + data[i] * k
-    return ema
+from .moving_average_utils.exponential_moving_avg import exponential_moving_avg
 
 
 def windowed_moving_avg(dataset: Union[list, pd.DataFrame],
@@ -285,11 +250,11 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         name2 = name3 + f' - Simple Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
         generate_plot(
-            PlotType.CANDLESTICKS, fund, **dict(
-                title=name2, plot_output=plot_output, save_fig=True,
-                additional_plots=[plot_short, plot_med, plot_long],
-                filename=os.path.join(name, view, f"simple_moving_averages_{name}.png")
-            )
+            PlotType.CANDLESTICKS, fund, **{
+                "title": name2, "plot_output": plot_output, "save_fig": True,
+                "additional_plots": [plot_short, plot_med, plot_long],
+                "filename": os.path.join(name, view, f"simple_moving_averages_{name}.png")
+            }
         )
 
     tma = {}
@@ -387,11 +352,11 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
         name2 = name3 + f' - Exp Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
         generate_plot(
-            PlotType.CANDLESTICKS, fund, **dict(
-                title=name2, plot_output=plot_output, save_fig=True,
-                additional_plots=[plot_short, plot_med, plot_long],
-                filename=os.path.join(name, view, f"exp_moving_averages_{name}.png")
-            )
+            PlotType.CANDLESTICKS, fund, **{
+                "title": name2, "plot_output": plot_output, "save_fig": True,
+                "additional_plots": [plot_short, plot_med, plot_long],
+                "filename": os.path.join(name, view, f"exp_moving_averages_{name}.png")
+            }
         )
 
     if p_bar is not None:
@@ -490,15 +455,15 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     if plot_output:
         generate_plot(
             PlotType.SPECIALITY, [fund['Close'], short, med, long, swings],
-            **dict(alt_ax_index=[4], legend=legend, title=name2, plot_output=plot_output)
+            **{"alt_ax_index": [4], "legend": legend, "title": name2, "plot_output": plot_output}
         )
     else:
         filename = os.path.join(name, view, f"swing_trades_{function}_{name}.png")
         generate_plot(
-            PlotType.SPECIALITY, [fund['Close'], short, med, long, swings], **dict(
-                alt_ax_index=[4], legend=['Swing Signal'], title=name2, save_fig=True,
-                plot_output=plot_output, filename=filename
-            )
+            PlotType.SPECIALITY, [fund['Close'], short, med, long, swings], **{
+                "alt_ax_index": [4], "legend": ['Swing Signal'], "title": name2, "save_fig": True,
+                "plot_output": plot_output, "filename": filename
+            }
         )
 
     if progress_bar is not None:

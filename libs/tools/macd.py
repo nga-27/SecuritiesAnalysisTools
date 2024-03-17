@@ -57,11 +57,11 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=[macd_sig, sig_line], y1_label='Position Price',
-            y2_label=['MACD', 'Signal Line'], title=name2, plot_output=plot_output,
-            filename=os.path.join(name, view, f"macd_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": [macd_sig, sig_line], "y1_label": 'Position Price',
+            "y2_label": ['MACD', 'Signal Line'], "title": name2, "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"macd_{name}.png")
+        }
     )
     if plot_output:
         print_macd_statistics(macd)
@@ -124,10 +124,11 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     name2 = name3 + ' - MACD'
 
     generate_plot(
-        PlotType.BAR_CHART, m_bar, **dict(
-            position=fund, x=x_dates, title=name2, save_fig=True, plot_output=plotting,
-            filename=os.path.join(name, view, f"macd_bar_{name}.png")
-        )
+        PlotType.BAR_CHART, m_bar, **{
+            "position": fund, "x": x_dates, "title": name2, "save_fig": True,
+            "plot_output": plotting,
+            "filename": os.path.join(name, view, f"macd_bar_{name}.png")
+        }
     )
 
     return macd
@@ -204,10 +205,11 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD Metrics'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
-            plot_output=plot_output, filename=os.path.join(name, view, f"macd_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": name2,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"macd_metrics_{name}.png")
+        }
     )
 
     return macd
@@ -605,6 +607,8 @@ def get_macd_trend(macd: list, trend_type: str = 'current') -> Union[str, None]:
         print(
             f"{WARNING}WARNING - no valid 'trend_type' provided in 'get_macd_trend'.{NORMAL}")
         return None
+    # Final catch-all of states, neither rising nor falling, nor error
+    return None
 
 
 def macd_divergences(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
