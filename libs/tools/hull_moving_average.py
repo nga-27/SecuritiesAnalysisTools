@@ -1,10 +1,12 @@
 """ hull moving average """
 import os
+from typing import Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 
 from .moving_averages_lib.weighted_moving_avg import weighted_moving_avg
@@ -34,7 +36,7 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     hull = generate_hull_signal(
@@ -44,9 +46,7 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     hull = swing_trade_metrics(
         position, hull, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     hull['type'] = 'trend'
 
     return hull
@@ -122,9 +122,7 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
         }
     )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     return hull
 
 
@@ -245,9 +243,7 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         if data is not None:
             features.append(data)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     swings['tabular']['swing'] = signal
     swings['length_of_data'] = len(swings['tabular']['swing'])
     swings['signals'] = features
@@ -284,7 +280,6 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     metrics = [0.0] * tot_len
 
     for i, val in enumerate(swings['tabular']['swing']):
-
         metrics[i] += val * weights[0]
 
         # Smooth the curves
@@ -337,7 +332,5 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
         }
     )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     return swings

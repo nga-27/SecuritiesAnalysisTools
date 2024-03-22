@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
@@ -37,7 +38,7 @@ def full_stochastic(position: pd.DataFrame, config: Union[list, None] = None, **
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     out_suppress = kwargs.get('out_suppress', True)
-    progress_bar = kwargs.get('progress_bar')
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     full_stoch = {}
@@ -92,7 +93,7 @@ def generate_full_stoch_signal(position: pd.DataFrame,
 
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
-    p_bar = kwargs.get('p_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('p_bar')
 
     fast_k = periods[0]
     slow_k = periods[1]
@@ -107,8 +108,7 @@ def generate_full_stoch_signal(position: pd.DataFrame,
         k_smooth.append(50.0)
         d_sma.append(50.0)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     for i in range(fast_k - 1, len(position['Close'])):
         # Find first lookback of oscillator
@@ -131,8 +131,7 @@ def generate_full_stoch_signal(position: pd.DataFrame,
         # Find 'Simple Moving Average' (SMA) of k2
         d_sma.append(np.average(k_smooth[i-(slow_d-1):i+1]))
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     if not out_suppress and plot_output:
         generate_plot(
@@ -231,9 +230,7 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
                 stochastic[i] += 1.0
                 state = 'n'
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     # Look at crossovers and over-X positions of smooth_k & slow_d
     state = 'n'
     for i, slow in enumerate(smooth_k):
@@ -288,9 +285,7 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
                 stochastic[i] += 1.0
                 state = 'n'
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     full_stoch['indicator'] = stochastic
     full_stoch['bullish'] = bullish
     full_stoch['bearish'] = bearish
@@ -426,9 +421,7 @@ def get_stoch_divergences(position: pd.DataFrame, full_stoch: dict, **kwargs) ->
                     s_vals[0] = fast
                     state = 's1'
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     if not out_suppress:
         name3 = INDEXES.get(name, name)
         name2 = name3 + ' - Stochastic'
@@ -485,9 +478,7 @@ def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dic
             if ind + 3 < len(stochs):
                 state2[ind+3] += stoch * weights[3]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     metrics = exponential_moving_avg(state2, 7, data_type='list')
     if p_bar is not None:
         p_bar.uptick(increment=0.1)
@@ -495,9 +486,7 @@ def get_stoch_metrics(position: pd.DataFrame, full_stoch: dict, **kwargs) -> dic
     norm = normalize_signals([metrics])
     metrics = norm[0]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     full_stoch['metrics'] = metrics
 
     if plot_output:

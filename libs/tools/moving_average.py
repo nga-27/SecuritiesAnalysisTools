@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from .moving_averages_lib.utils import adjust_signals, find_crossovers, normalize_signals_local
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 from .moving_averages_lib.simple_moving_avg import simple_moving_avg
@@ -28,9 +29,6 @@ def typical_price_signal(data: pd.DataFrame) -> list:
         summed /= 3.0
         tps.append(summed)
     return tps
-
-
-###################################################################
 
 
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
@@ -56,20 +54,17 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     config = kwargs.get('config', [12, 50, 200])
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', False)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
     sma_short = simple_moving_avg(fund, config[0])
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     sma_med = simple_moving_avg(fund, config[1])
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     sma_long = simple_moving_avg(fund, config[2])
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     triple_exp_mov_average(fund, config=[9, 21, 50], plot_output=plot_output, name=name, view=view)
 
@@ -135,9 +130,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     tma['long'] = {'period': config[2]}
     tma['tabular'] = {'short': sma_short, 'medium': sma_med, 'long': sma_long}
     tma['metrics'] = {f'{config[0]}-d': m_short, f'{config[1]}-d': m_med, f'{config[2]}-d': m_long}
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     tma['type'] = 'trend'
     tma['length_of_data'] = len(tma['tabular']['short'])
@@ -169,21 +162,18 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     out_suppress = kwargs.get('out_suppress', False)
 
     triple_ema = {}
     t_short = exponential_moving_avg(fund, config[0])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     t_med = exponential_moving_avg(fund, config[1])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     t_long = exponential_moving_avg(fund, config[2])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     triple_ema['tabular'] = {'short': t_short, 'medium': t_med, 'long': t_long}
     triple_ema['short'] = {"period": config[0]}
@@ -210,8 +200,7 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
         m_med.append(np.round((close - t_med[i]) / t_med[i] * 100.0, 3))
         m_long.append(np.round((close - t_long[i]) / t_long[i] * 100.0, 3))
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     triple_ema['metrics'] = {
         f'{config[0]}-d': m_short,
@@ -231,8 +220,7 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
             }
         )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     triple_ema['type'] = 'trend'
     triple_ema['length_of_data'] = len(triple_ema['tabular']['short'])
@@ -264,7 +252,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     config = kwargs.get('config', [4, 9, 18])
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
     if plot_output:
@@ -301,8 +289,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     else:
         return {}
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.4)
+    update_progress_bar(progress_bar, 0.4)
 
     mast = {}
     mast['tabular'] = {}
@@ -316,8 +303,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
 
     swings = mast['metrics']
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.4)
+    update_progress_bar(progress_bar, 0.4)
 
     name3 = INDEXES.get(name, name)
     funct_name = function.upper()
@@ -338,8 +324,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
             }
         )
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     mast['type'] = 'oscillator'
     return mast

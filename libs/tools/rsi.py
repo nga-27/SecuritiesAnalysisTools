@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import date_extractor, INDEXES, generate_plot, PlotType
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 
 from .trends import auto_trend
@@ -40,7 +41,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     period = kwargs.get('period', 14)
     out_suppress = kwargs.get('out_suppress', True)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     overbought = kwargs.get('overbought', 70.0)
     oversold = kwargs.get('oversold', 30.0)
     use_auto_trend = kwargs.get('auto_trend', True)
@@ -58,9 +59,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
 
     over_thresholds = over_threshold_lists(
         overbought, oversold, len(position['Close']), slope_list=slope_trend)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
-
+    update_progress_bar(progress_bar, 0.1)
     rsi_data['thresholds'] = over_thresholds
 
     # Determine indicators, swing rejection and divergences
@@ -71,9 +70,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
 
     # Determine metrics, primarily using both indicators
     rsi_data = rsi_metrics(rsi_data, p_bar=progress_bar)
-
-    main_plots = [rsi, over_thresholds['overbought'],
-                  over_thresholds['oversold']]
+    main_plots = [rsi, over_thresholds['overbought'], over_thresholds['oversold']]
 
     if not out_suppress:
         name3 = INDEXES.get(name, name)
@@ -95,9 +92,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
                 "filename": os.path.join(name, view, f"RSI_indicator_{name}.png")
             }
         )
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     if has_trend_lines:
         end = len(rsi)
@@ -108,7 +103,6 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     rsi_data['type'] = 'oscillator'
     rsi_data['length_of_data'] = len(rsi)
     rsi_data['signals'] = rsi_signals(rsi_data['bullish'], rsi_data['bearish'])
-
     return rsi_data
 
 
@@ -135,9 +129,7 @@ def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
         per = (position['Close'][i] - position['Close']
                [i-1]) / position['Close'][i-1] * 100.0
         change.append(np.round(per, 6))
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.15)
+    update_progress_bar(p_bar, 0.15)
 
     relative_strength_indicator_rsi_list = []
     # gains, losses, rs
@@ -187,10 +179,7 @@ def generate_rsi_signal(position: pd.DataFrame, **kwargs) -> list:
 
         rsi = 100.0 - (100.0 / (1.0 + rsi_list[i][2]))
         relative_strength_indicator_rsi_list.append(np.round(rsi, 6))
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.15)
-
+    update_progress_bar(p_bar, 0.15)
     return relative_strength_indicator_rsi_list
 
 
@@ -215,7 +204,6 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
     """
     # pylint: disable=too-many-statements,too-many-branches
     p_bar = kwargs.get('p_bar', None)
-
     thresholds = rsi_data['thresholds']
     rsi_signal = rsi_data['tabular']
 
@@ -336,11 +324,9 @@ def determine_rsi_swing_rejection(position: pd.DataFrame, rsi_data: dict, **kwar
         else:
             indicator.append(0.0)
 
-        if p_bar is not None:
-            p_bar.uptick(increment=increment)
+        update_progress_bar(p_bar, increment)
 
     rsi_data['indicator'] = indicator
-
     return rsi_data
 
 
@@ -420,9 +406,7 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
     signal = rsi_data['tabular']
     ovb_th = rsi_data['thresholds']['overbought']
     ovs_th = rsi_data['thresholds']['oversold']
-
     divs = [0.0] * len(signal)
-
     state = 'n'
     maxima = 0.0
     minima = 0.0
@@ -531,9 +515,7 @@ def rsi_divergence(position: pd.DataFrame, rsi_data: dict, **kwargs) -> dict:
             }
         )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return rsi_data
 
 
@@ -576,8 +558,7 @@ def rsi_metrics(rsi: dict, **kwargs) -> dict:
             if ind + 3 < len(divs):
                 state2[ind+3] += s_val * weights[3]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.05)
+    update_progress_bar(p_bar, 0.05)
 
     for ind, s_val in enumerate(swings):
         if s_val != 0.0:
@@ -597,15 +578,12 @@ def rsi_metrics(rsi: dict, **kwargs) -> dict:
             if ind + 3 < len(swings):
                 state2[ind+3] += s_val * weights[3]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.05)
+    update_progress_bar(p_bar, 0.05)
 
     metrics = exponential_moving_avg(state2, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     rsi['metrics'] = metrics
     return rsi

@@ -8,6 +8,7 @@ import numpy as np
 from libs.utils import (
     dates_extractor_list, INDEXES, TREND_COLORS, STANDARD_COLORS, PlotType, generate_plot
 )
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
@@ -38,16 +39,13 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
-    macd = generate_macd_signal(
-        fund, plot_output=plot_output, name=name, view=view)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.3)
+    macd = generate_macd_signal(fund, plot_output=plot_output, name=name, view=view)
+    update_progress_bar(progress_bar, 0.3)
 
     macd = get_macd_statistics(macd, progress_bar=progress_bar)
-
     macd = macd_metrics(fund, macd, p_bar=progress_bar,
                         name=name, plot_output=plot_output, view=view)
 
@@ -65,14 +63,11 @@ def mov_avg_convergence_divergence(fund: pd.DataFrame, **kwargs) -> dict:
     )
     if plot_output:
         print_macd_statistics(macd)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.3)
+    update_progress_bar(progress_bar, 0.3)
 
     macd['type'] = 'oscillator'
     macd['signals'] = get_macd_features(macd, fund)
     macd['length_of_data'] = len(macd['tabular']['macd'])
-
     return macd
 
 
@@ -99,7 +94,6 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view')
 
     macd = {}
-
     ema_twelve = exponential_moving_avg(fund, interval=12)
     ema_twenty_six = exponential_moving_avg(fund, interval=26)
     macd_val = []
@@ -118,7 +112,6 @@ def generate_macd_signal(fund: pd.DataFrame, **kwargs) -> dict:
         m_bar.append(macd_val[i] - sig)
 
     macd['tabular'] = {'macd': macd_val, 'signal_line': macd_sig, 'bar': m_bar}
-
     x_dates = dates_extractor_list(fund)
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - MACD'
@@ -190,15 +183,11 @@ def macd_metrics(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
         if ind + 3 < len(m_bar):
             m_bar[ind+3] += s_val * weights[3]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     metrics = exponential_moving_avg(m_bar, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     macd['metrics'] = metrics
 
@@ -333,7 +322,6 @@ def get_macd_features(macd: dict, position: pd.DataFrame) -> list:
 
         if data is not None:
             features.append(data)
-
     return features
 
 
@@ -356,16 +344,13 @@ def get_macd_statistics(macd: dict, **kwargs) -> dict:
 
     macd['period_value'] = get_macd_value(macd_sig, value_type='current')
     macd['group_value'] = get_macd_value(macd_sig, value_type='group')
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     macd['current_trend'] = get_macd_trend(macd_sig, trend_type='current')
     macd['group_trend'] = get_macd_trend(macd_sig, trend_type='group')
 
     macd['change'] = get_macd_value(macd_sig, value_type='change')
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
-
+    update_progress_bar(progress_bar, 0.1)
     return macd
 
 
@@ -377,14 +362,12 @@ def print_macd_statistics(macd: dict):
     """
     # pylint: disable=too-many-branches
     print("\r\nMACD Statistics:")
-
     if np.abs(macd['period_value']) < 7.5:
         color = YELLOW
     elif macd['period_value'] < 0.0:
         color = RED
     else:
         color = GREEN
-
     print(
         f"\r\nPeriod: {color}{np.round(macd['period_value'], 3)}%{NORMAL} of total time window")
 
@@ -394,7 +377,6 @@ def print_macd_statistics(macd: dict):
         color = RED
     else:
         color = GREEN
-
     print(
         f"Group: {color}{np.round(macd['group_value'], 3)}%{NORMAL} of the current +/- grouping")
 
@@ -402,14 +384,12 @@ def print_macd_statistics(macd: dict):
         color = RED
     else:
         color = GREEN
-
     print(f"Current Trend: {color}{macd['current_trend']}{NORMAL}")
 
     if macd['group_trend'] == 'falling':
         color = RED
     else:
         color = GREEN
-
     print(
         f"Group Trend: {color}{macd['group_trend']}{NORMAL} (in relation to rest of +/- grouping)")
 
@@ -551,7 +531,6 @@ def get_group_range(signal: list, index: int) -> Tuple[int, int, int]:
                 end -= 1
                 break
         end += 1
-
     return [start, end, (end-start+1)]
 
 
@@ -724,5 +703,4 @@ def macd_divergences(position: pd.DataFrame, macd: dict, **kwargs) -> dict:
                     state = 'e1'
             else:
                 state = 'e3'
-
     return macd

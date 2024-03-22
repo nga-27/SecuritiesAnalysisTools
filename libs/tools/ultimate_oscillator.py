@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features import normalize_signals
 
 from .math_functions import lower_low, higher_high, bull_bear_th
@@ -35,7 +36,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     ultimate = {}
@@ -43,10 +44,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None
     ultimate['tabular'] = ult_osc
 
     ultimate = find_ult_osc_features(position, ultimate, p_bar=p_bar)
-
-    ultimate = ult_osc_output(
-        ultimate, len(position['Close']), p_bar=p_bar)
-
+    ultimate = ult_osc_output(ultimate, len(position['Close']), p_bar=p_bar)
     ultimate = ultimate_osc_metrics(
         position,
         ultimate,
@@ -80,7 +78,6 @@ def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None
     ultimate['length_of_data'] = len(ultimate['tabular'])
     ultimate['signals'] = ultimate_osc_signals(
         ultimate['bullish'], ultimate['bearish'])
-
     return ultimate
 
 
@@ -147,9 +144,7 @@ def generate_ultimate_osc_signal(position: pd.DataFrame,
                 np.round(
                     100.0 * ((4.0 * u_short[i]) + (2.0 * u_med[i]) + u_long[i]) / 7.0, 6)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     return ult_osc
 
 
@@ -174,7 +169,6 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     high_th = kwargs.get('thresh_high', 70)
 
     ult_osc = ultimate['tabular']
-
     trigger = []
     marker_val = 0.0
     marker_ind = 0
@@ -232,15 +226,13 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
                             "divergence (original)"
                         ])
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     state = 'n'
     prices = [0.0, 0.0]
     ults = [0.0, 0.0, 0.0]
 
     for i, ult in enumerate(ult_osc):
-
         # Find bullish divergence and breakout
         if (state == 'n') and (ult <= low_th):
             state = 'u1'
@@ -359,11 +351,8 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
             state = 'u1'
             ults[0] = ult
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     ultimate['indicator'] = trigger
-
     return ultimate
 
 
@@ -387,7 +376,6 @@ def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
 
     ultimate['bullish'] = []
     ultimate['bearish'] = []
-
     trigger = ultimate['indicator']
 
     simplified = []
@@ -413,12 +401,8 @@ def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
                     [trig[1], trig[2], trig[3], trig[4]])
 
         present = False
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)    
     ultimate['plots'] = plots
-
     return ultimate
 
 
@@ -470,12 +454,9 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
             if ind + 3 < len(ults):
                 state2[ind+3] += s_val * weights[3]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     metrics = exponential_moving_avg(state2, 7, data_type='list')
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     norm = normalize_signals([metrics])
     metrics = norm[0]
@@ -491,9 +472,7 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
                 "filename": os.path.join(name, view, f"ultimate_osc_metrics_{name}.png")
             }
         )
-
     ultimate['metrics'] = metrics
-
     return ultimate
 
 
