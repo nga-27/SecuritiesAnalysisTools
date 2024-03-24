@@ -1,13 +1,15 @@
 """ type composite index """
-import os
 import json
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 from libs.tools import cluster_oscillators
 from libs.utils import (
-    download_data_indexes, ProgressBar, index_appender, PlotType, STANDARD_COLORS, generate_plot
+    download_data_indexes, PlotType, STANDARD_COLORS, generate_plot
 )
+from libs.utils.progress_bar import ProgressBar
 from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
+
+from .metrics_utils import get_metrics_file_path, get_tickers_and_period
 
 ERROR_COLOR = STANDARD_COLORS["error"]
 WARNING = STANDARD_COLORS["warning"]
@@ -62,8 +64,7 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
                 m_data, period='2y')
 
         if data:
-            prog_bar = ProgressBar(
-                19, name='Type Composite Index', offset=clock)
+            prog_bar = ProgressBar(19, name='Type Composite Index', offset=clock)
             prog_bar.start()
 
             tci = {}
@@ -124,27 +125,27 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
 
             dates = data['VGT'].index
             if plot_output:
-                plot_config = dict(
-                    y_list_2=defensive, y1_label='Defensive Index',
-                    y2_label='Clustered Osc', title='Defensive Index',
-                    x=dates, plot_output=plot_output
-                )
+                plot_config = {
+                    "y_list_2": defensive, "y1_label": 'Defensive Index',
+                    "y2_label": 'Clustered Osc', "title": 'Defensive Index',
+                    "x": dates, "plot_output": plot_output
+                }
                 generate_plot(PlotType.DUAL_PLOTTING, d_val, **plot_config)
-                plot_config.update(dict(
-                    y2=sensitive, y1_label='Sensitive Index', title='Sensitive Index'
-                ))
+                plot_config.update({
+                    "y2": sensitive, "y1_label": 'Sensitive Index', "title": 'Sensitive Index'
+                })
                 generate_plot(PlotType.DUAL_PLOTTING, s_val, **plot_config)
-                plot_config.update(dict(
-                    y_list_2=cyclical, y1_label='Cyclical Index', title='Cyclical Index'
-                ))
+                plot_config.update({
+                    "y_list_2": cyclical, "y1_label": 'Cyclical Index', "title": 'Cyclical Index'
+                })
                 generate_plot(PlotType.DUAL_PLOTTING, c_val, **plot_config)
-            
+
             generate_plot(
-                PlotType.GENERIC_PLOTTING, [d_val, s_val, c_val], **dict(
-                    legend=['Defensive', 'Sensitive', 'Cyclical'], title='Type Indexes',
-                    x=dates, plot_output=plot_output, ylabel='Normalized "Price"',
-                    filename='tci.png'
-                )
+                PlotType.GENERIC_PLOTTING, [d_val, s_val, c_val], **{
+                    "legend": ['Defensive', 'Sensitive', 'Cyclical'], "title": 'Type Indexes',
+                    "x": dates, "plot_output": plot_output, "ylabel": 'Normalized "Price"',
+                    "filename": 'tci.png'
+                }
             )
 
             prog_bar.end()
@@ -152,7 +153,7 @@ def type_composite_index(**kwargs) -> Tuple[dict, Union[dict, None], Union[list,
     return {}, None, None
 
 
-def metrics_initializer(m_data: dict, period='2y'):
+def metrics_initializer(m_data: dict, period: Union[List[str], str] = '2y'):
     """Metrics Initializer
 
     Keyword Arguments:
@@ -163,19 +164,11 @@ def metrics_initializer(m_data: dict, period='2y'):
     """
     sectors = m_data['Components']
     tickers = " ".join(sectors)
-    tickers = index_appender(tickers)
-    all_tickers = tickers.split(' ')
-
-    if isinstance(period, (list)):
-        period = period[0]
-
-    # tickers = index_appender(tickers)
-    print(" ")
-    print(f'Fetching Type Composite Index funds for {period}...')
+    all_tickers, period = get_tickers_and_period(tickers, period)
+    print(f'\r\nFetching Type Composite Index funds for {period}...')
     data, _ = download_data_indexes(
         indexes=sectors, tickers=all_tickers, period=period, interval='1d')
-    print(" ")
-
+    print("")
     return data, sectors
 
 
@@ -185,17 +178,13 @@ def get_metrics_content() -> dict:
     Returns:
         dict -- metrics file data
     """
-    metrics_file = os.path.join("resources", "sectors.json")
-    if not os.path.exists(metrics_file):
-        print(
-            f"{WARNING}WARNING: '{metrics_file}' not found for " +
-            f"'metrics_initializer'. Failed.{NORMAL}")
+    metrics_file = get_metrics_file_path()
+    if metrics_file is None:
         return None, [], None
 
     with open(metrics_file, encoding='utf-8') as m_file:
         m_data = json.load(m_file)
         m_data = m_data.get("Type_Composite")
-
     return m_data
 
 
@@ -222,9 +211,7 @@ def type_composites(composite: dict, m_data: dict, type_type='Defensive') -> lis
         value = 0.0
         for fund in sector_data:
             value += float(composite[fund][i]) * sector_data[fund]
-
         new_composite.append(value)
-
     return new_composite
 
 
@@ -253,5 +240,4 @@ def weighted_signals(data: dict, m_data: dict, type_type='Defensive') -> list:
 
         value = new_composite[-1] * (1.0 + value)
         new_composite.append(value)
-
     return new_composite

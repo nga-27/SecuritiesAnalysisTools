@@ -15,7 +15,7 @@ def index_extractor(tickers) -> str:
     return ind
 
 
-def index_appender(tickers: str) -> str:
+def append_index(tickers: str) -> str:
     """ appends ^GSPC to ticker string """
     tickers = tickers + ' ' + '^GSPC' + ' ' + '^IRX'
     return tickers

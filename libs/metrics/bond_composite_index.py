@@ -6,7 +6,6 @@ for various bond types of the bond market represented by the Vanguard ETFs liste
 'tickers' below in 'metrics_initializer'. Note - bond oscillators are not as accurate
 as market oscillators, but the metrics can still provide buy-sell signals.
 """
-import os
 import json
 from typing import Tuple, Union, Dict
 
@@ -15,10 +14,13 @@ import numpy as np
 
 from libs.tools import cluster_oscillators
 from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
+from libs.utils.progress_bar import ProgressBar
 from libs.utils import (
-    generate_plot, ProgressBar, dates_extractor_list, download_data_indexes, STANDARD_COLORS,
+    generate_plot, dates_extractor_list, download_data_indexes, STANDARD_COLORS,
     PlotType
 )
+
+from .metrics_utils import get_metrics_file_path, get_vertical_sum_list
 
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
@@ -65,11 +67,11 @@ def bond_composite_index(config: dict, **kwargs) -> None:
 
     if len(plots) > 0:
         generate_plot(
-            PlotType.GENERIC_PLOTTING, plots, **dict(
-                x=dates, title='Bond Composite Indexes', legend=legend,
-                ylabel='Normalized Price', plot_output=plot_output,
-                filename="combined_BCI.png"
-            )
+            PlotType.GENERIC_PLOTTING, plots, **{
+                "x": dates, "title": 'Bond Composite Indexes', "legend": legend,
+                "ylabel": 'Normalized Price', "plot_output": plot_output,
+                "filename": "combined_BCI.png"
+            }
         )
 
 
@@ -84,11 +86,8 @@ def metrics_initializer(period='2y',
     Returns:
         list -- downloaded_data, sector_list, index, metrics_file data
     """
-    metrics_file = os.path.join("resources", "sectors.json")
-    if not os.path.exists(metrics_file):
-        print(
-            f"{WARNING}WARNING: '{metrics_file}' not found for " +
-            f"'metrics_initializer'. Failed.{NORMAL}")
+    metrics_file = get_metrics_file_path()
+    if metrics_file is None:
         return {}, [], '', None
 
     with open(metrics_file, 'r', encoding='utf-8') as m_file:
@@ -185,13 +184,7 @@ def composite_index(data: dict,
             prog_bar.uptick()
             composite.append(graph)
 
-    composite2 = []
-    for i in range(len(composite[0])):
-        s_val = 0.0
-        for j_val in composite:
-            s_val += float(j_val[i])
-
-        composite2.append(s_val)
+    composite2 = get_vertical_sum_list(composite)
     prog_bar.uptick()
 
     composite2 = windowed_moving_avg(composite2, 3, data_type='list')
@@ -218,5 +211,4 @@ def composite_index(data: dict,
     )
 
     prog_bar.uptick()
-
     return composite2, data_to_plot, dates

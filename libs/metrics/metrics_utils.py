@@ -1,17 +1,22 @@
 """ metrics utils """
 import json
 import os
-from typing import Union
+from typing import Union, Dict, Tuple, List
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDICATOR_NAMES
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.utils.formatting import append_index
+from libs.utils import STANDARD_COLORS
+
+WARNING = STANDARD_COLORS["warning"]
+NORMAL = STANDARD_COLORS["normal"]
 
 SP_500_NAMES = ['^GSPC', 'S&P500', 'SP500', 'GSPC', 'INDEX']
-ACCEPTED_ATTS = INDICATOR_NAMES
 
-""" Utilities for creating data metrics for plotting later """
+# Utilities for creating data metrics for plotting later
 
 
 def future_returns(fund: pd.DataFrame, **kwargs) -> Union[pd.DataFrame, dict]:
@@ -32,10 +37,9 @@ def future_returns(fund: pd.DataFrame, **kwargs) -> Union[pd.DataFrame, dict]:
     """
     futures = kwargs.get('futures', [5, 15, 45, 90])
     to_json = kwargs.get('to_json', True)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
 
     fr_data = {}
-
     increment = 1.0 / float(len(futures) + 1)
     for future in futures:
         f_data = []
@@ -48,9 +52,7 @@ def future_returns(fund: pd.DataFrame, **kwargs) -> Union[pd.DataFrame, dict]:
         for i in range(future):
             f_data.append(0.0)
         fr_data[str(future)] = f_data.copy()
-
-        if progress_bar is not None:
-            progress_bar.uptick(increment=increment)
+        update_progress_bar(progress_bar, increment)
 
     f_data = []
     for index_value in fund.index:
@@ -63,8 +65,7 @@ def future_returns(fund: pd.DataFrame, **kwargs) -> Union[pd.DataFrame, dict]:
         return data_frame
 
     future = {'tabular': fr_data}
-    if progress_bar is not None:
-        progress_bar.uptick(increment=increment)
+    update_progress_bar(progress_bar, increment)
 
     future['type'] = 'future'
     return future
@@ -93,7 +94,6 @@ def metadata_to_dataset(config: dict):
             full_data = collate_data_periods(job, m_data, all_data=full_data)
             groomed_data = groom_data(full_data)
             export_data(groomed_data)
-
             print("Exporting datasets complete.")
 
 
@@ -132,7 +132,7 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
 
     temp_key = job_dict['tickers'][0]
     for key in key_list:
-        if (key.lower() in metadata[temp_key].keys()) and (key.lower() in ACCEPTED_ATTS):
+        if (key.lower() in metadata[temp_key].keys()) and (key.lower() in INDICATOR_NAMES):
             job_dict['attributes'].append(key)
         if key.lower() in metadata.get('_METRICS_', {}).keys():
             job_dict['attributes'].append(key)
@@ -143,11 +143,11 @@ def metadata_key_filter(keys: str, metadata: dict) -> dict:
             if 'y' in key:
                 job_dict['periods'].append(key)
                 for key2 in metadata[temp_key][key]:
-                    if key2 in ACCEPTED_ATTS:
+                    if key2 in INDICATOR_NAMES:
                         job_dict['attributes'].append(key2)
 
         for key in metadata.get('_METRICS_', {}).keys():
-            if key in ACCEPTED_ATTS:
+            if key in INDICATOR_NAMES:
                 job_dict['attributes'].append(key)
 
     return job_dict
@@ -384,8 +384,7 @@ def groom_data(data: dict) -> dict:
     new_data = {}
     for fund in data.keys():
         for key in data[fund].keys():
-            if len(data[fund][key]) > max_len:
-                max_len = len(data[fund][key])
+            max_len = max(max_len, data[fund][key])
 
     for fund in data.keys():
         new_data[fund] = {}
@@ -404,7 +403,7 @@ def export_data(all_data: dict):
     Arguments:
         all_data {dict} -- data object to export
     """
-    exports = {}
+    exports: Dict[str, pd.DataFrame] = {}
     for fund in all_data.keys():
         index = all_data[fund].get('futures-index', [])
         data_frame = pd.DataFrame.from_dict(all_data[fund])
@@ -423,3 +422,42 @@ def export_data(all_data: dict):
     for fund, value in exports.items():
         filepath = os.path.join(pathname, f"{fund}.csv")
         value.to_csv(filepath)
+
+
+def get_metrics_file_path() -> Union[str, None]:
+    """ Returns filepath if valid and present, else None """
+    metrics_file = os.path.join("resources", "sectors.json")
+    if not os.path.exists(metrics_file):
+        print(
+            f"{WARNING}WARNING: '{metrics_file}' not found for " +
+            f"'metrics_initializer'. Failed.{NORMAL}")
+        return None
+    return metrics_file
+
+
+def get_tickers_and_period(ticker_str: str, period: Union[List[str], str]) -> Tuple[List[str], str]:
+    """Configure ticker list and period for metrics initializers
+
+    Args:
+        ticker_str (str): ticker string on startup
+        period (Union[List[str], str]): period as a str or list of periods as strings
+
+    Returns:
+        Tuple[List[str], str]: list of tickers, single period
+    """
+    tickers = append_index(ticker_str)
+    all_tickers = tickers.split(' ')
+    if isinstance(period, list):
+        period = period[0]
+    return all_tickers, period
+
+
+def get_vertical_sum_list(composite: List[List[float]]) -> List[float]:
+    """ Generates a vertical sum of list of lists """
+    composite2 = []
+    for i in range(len(composite[0])):
+        s_val = 0.0
+        for j_val in composite:
+            s_val += float(j_val[i])
+        composite2.append(s_val)
+    return composite2

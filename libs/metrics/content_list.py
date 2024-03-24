@@ -1,7 +1,10 @@
 """ metrics content list """
 import os
+from typing import Union
+
 import pandas as pd
 
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.utils import (
     generate_plot, PlotType, STANDARD_COLORS, TREND_COLORS, INDEXES, EXEMPT_METRICS, INDICATOR_NAMES
 )
@@ -49,7 +52,7 @@ def assemble_last_signals(meta_sub: dict,
     standalone = kwargs.get('standalone', False)
     print_out = kwargs.get('print_out', False)
     name = kwargs.get('name', '')
-    pbar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     plot_output = kwargs.get('plot_output', True)
 
     metadata = []
@@ -112,13 +115,10 @@ def assemble_last_signals(meta_sub: dict,
                                         content["metrics"][i] += met / 10.0
 
         content["signals"].sort(key=lambda x: x['days_ago'])
-
-        if pbar is not None:
-            pbar.uptick(increment=increment)
+        update_progress_bar(p_bar, increment)
 
         if fund is None:
             fund = sub.get(STATS_KEY, {}).get('tabular')
-
         if print_out:
             content_printer(content, meta_keys[top_key], name=name2)
 
@@ -142,7 +142,6 @@ def assemble_last_signals(meta_sub: dict,
                         f"overall_metrics_{name}.png")
                 }
             )
-
     return content
 
 
@@ -168,8 +167,7 @@ def content_printer(content: dict, meta_key: str, **kwargs):
     COL_5_SPACE = 48
 
     print("\r\n")
-    print(
-        f"Content for {NOTIFY}{name}{NORMAL} for {NOTIFY}{meta_key}\r\n{NORMAL}")
+    print(f"Content for {NOTIFY}{name}{NORMAL} for {NOTIFY}{meta_key}\r\n{NORMAL}")
 
     spaces_1 = " " * (COL_1_SPACE - len("(Ago)"))
     spaces_2 = " " * (COL_2_SPACE - len("Type"))

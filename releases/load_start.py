@@ -2,7 +2,7 @@
 from typing import Tuple, Union, List
 
 from libs.utils import (
-    download_data_all, has_critical_error, index_appender, remove_temp_dir, configure_temp_dir,
+    download_data_all, has_critical_error, append_index, remove_temp_dir, configure_temp_dir,
     TEXT_COLOR_MAP
 )
 from libs.functions import only_functions_handler
@@ -36,7 +36,7 @@ def init_script(config: dict) -> Tuple[
         return None, None, None, None
 
     if 'no_index' not in config['state']:
-        config['tickers'] = index_appender(config['tickers'])
+        config['tickers'] = append_index(config['tickers'])
         config['process_steps'] = config['process_steps'] + 2
 
     if 'debug' in config['state']:

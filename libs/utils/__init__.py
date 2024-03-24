@@ -9,7 +9,7 @@ from .api import api_sector_match, api_sector_funds
 from .error_handler import has_critical_error
 
 from .formatting import (
-    index_extractor, fund_list_extractor, index_appender, dates_extractor_list, date_extractor,
+    index_extractor, fund_list_extractor, append_index, dates_extractor_list, date_extractor,
     dates_convert_from_index
 )
 

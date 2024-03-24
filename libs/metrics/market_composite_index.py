@@ -9,7 +9,6 @@ clustered oscillator metric on the S&P500 by itself.
 Newer - compares this metric with a correlation metric of each sector.
 """
 
-import os
 import json
 from typing import Tuple, Union, Dict, List
 
@@ -18,9 +17,12 @@ import numpy as np
 
 from libs.tools import cluster_oscillators, beta_comparison_list
 from libs.utils import (
-    generate_plot, ProgressBar, index_appender, download_data_indexes, STANDARD_COLORS, PlotType
+    generate_plot, download_data_indexes, STANDARD_COLORS, PlotType
 )
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
+
+from .metrics_utils import get_tickers_and_period, get_metrics_file_path, get_vertical_sum_list
 
 ERROR_COLOR = STANDARD_COLORS["error"]
 WARNING = STANDARD_COLORS["warning"]
@@ -98,11 +100,8 @@ def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dic
     Returns:
         Tuple[dict, list, dict] -- data downloaded, sector list, type composite dict
     """
-    metrics_file = os.path.join("resources", "sectors.json")
-    if not os.path.exists(metrics_file):
-        print(
-            f"{WARNING}WARNING: '{metrics_file}' not found for " +
-            f"'metrics_initializer'. Failed.{NORMAL_COLOR}")
+    metrics_file = get_metrics_file_path()
+    if metrics_file is None:
         return None, [], {}
 
     with open(metrics_file, 'r', encoding='utf-8') as m_file:
@@ -113,12 +112,7 @@ def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dic
 
     sectors = m_data['tickers']
     tickers = " ".join(m_data['tickers'])
-
-    tickers = index_appender(tickers)
-    all_tickers = tickers.split(' ')
-
-    if isinstance(period, (list)):
-        period = period[0]
+    all_tickers, period = get_tickers_and_period(tickers, period)
 
     print(" ")
     print(f'Fetching {name} funds for {period}...')
@@ -160,7 +154,6 @@ def simple_beta_rsq(fund: pd.DataFrame,
         val['r_squared'] = np.round(r_squared, 5)
 
         simple_br.append(val.copy())
-
     return simple_br
 
 
@@ -190,16 +183,8 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
         graph = cluster['tabular']
         composite.append(graph)
 
-    composite2 = []
-    for i in range(len(composite[0])):
-        s_val = 0.0
-        for j_val in composite:
-            s_val += float(j_val[i])
-
-        composite2.append(s_val)
-
+    composite2 = get_vertical_sum_list(composite)
     progress_bar.uptick()
-
     composite2 = windowed_moving_avg(composite2, 3, data_type='list')
 
     max_ = np.max(np.abs(composite2))
@@ -209,14 +194,14 @@ def composite_index(data: dict, sectors: list, progress_bar=None, plot_output=Tr
     generate_plot(
         PlotType.DUAL_PLOTTING,
         data['^GSPC']['Close'],
-        **dict(
-            y_list_2=composite2,
-            y1_label='S&P500',
-            y2_label='MCI',
-            title='Market Composite Index',
-            plot_output=plot_output,
-            filename="MCI.png"
-        )
+        **{
+            "y_list_2": composite2,
+            "y1_label": 'S&P500',
+            "y2_label": 'MCI',
+            "title": 'Market Composite Index',
+            "plot_output": plot_output,
+            "filename": "MCI.png"
+        }
     )
 
     progress_bar.uptick()
@@ -261,7 +246,8 @@ def type_composite_correlation(type_data: Dict[str, Union[Dict[str, float], List
     return type_corrs, type_beta_rsq
 
 
-def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_output=True,
+def composite_correlation(data: dict, sectors: list, progress_bar: Union[ProgressBar, None] = None,
+                          plot_output=True,
                           t_data: Union[Dict[str, Union[Dict[str, float], List[str]]], None] = None
                           ) -> dict:
     """Composite Correlation
@@ -274,7 +260,7 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         sectors {list} -- list of sectors
 
     Keyword Arguments:
-        progress_bar {ProgressBar} -- (default: {None})
+        progress_bar {Union[ProgressBar, None], optional} -- (default: {None})
         plot_output {bool} -- (default: {True})
         t_data (Union[Dict[str, Union[Dict[str, float], List]], None], optional) -- type composite
                                             data from sectors.json
@@ -282,22 +268,20 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
     Returns:
         dict -- correlation dictionary
     """
-    # pylint: disable=too-many-locals,invalid-name
-    DIVISOR = 5
+    # pylint: disable=too-many-locals
+    divisor = 5
     correlations = {}
 
     if '^GSPC' in data.keys():
         tot_len = len(data['^GSPC']['Close'])
-        start_pt = min(int(np.floor(tot_len / DIVISOR)), 100)
+        start_pt = min(int(np.floor(tot_len / divisor)), 100)
 
         corrs = {}
         dates = data['^GSPC'].index[start_pt:tot_len]
         net_correlation = [0.0] * (tot_len-start_pt)
-
-        DIVISOR = 10.0
+        divisor = 10.0
         increment = float(len(sectors)) / (float(tot_len -
-                                                 start_pt) / DIVISOR * float(len(sectors)))
-
+                                                 start_pt) / divisor * float(len(sectors)))
         counter = 0
         for sector in sectors:
             correlations[sector] = simple_beta_rsq(
@@ -315,20 +299,20 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
                 net_correlation[i-start_pt] += rsqd
 
                 counter += 1
-                if counter == DIVISOR:
-                    progress_bar.uptick(increment=increment)
+                if counter == divisor:
+                    update_progress_bar(progress_bar, increment)
                     counter = 0
 
         plots = [value for _, value in corrs.items()]
         legend = list(corrs)
 
         generate_plot(
-            PlotType.GENERIC_PLOTTING, plots, **dict(
-                x=dates, title='MCI Correlations', legend=legend, plot_output=plot_output,
-                filename='MCI_correlations.png'
-            )
+            PlotType.GENERIC_PLOTTING, plots, **{
+                "x": dates, "title": 'MCI Correlations', "legend": legend,
+                "plot_output": plot_output, "filename": 'MCI_correlations.png'
+            }
         )
-        progress_bar.uptick()
+        update_progress_bar(progress_bar, 1.0)
 
         t_beta_rsq = {}
         if t_data is not None:
@@ -336,14 +320,14 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
             plots = [value for _, value in t_corrs.items()]
             legend = list(t_corrs)
             generate_plot(
-                PlotType.GENERIC_PLOTTING, plots, **dict(
-                    x=dates, title='MCI Correlations by Type', legend=legend,
-                    plot_output=plot_output,
-                    filename='MCI_type_correlations.png'
-                )
+                PlotType.GENERIC_PLOTTING, plots, **{
+                    "x": dates, "title": 'MCI Correlations by Type', "legend": legend,
+                    "plot_output": plot_output,
+                    "filename": 'MCI_type_correlations.png'
+                }
             )
 
-        progress_bar.uptick()
+        update_progress_bar(progress_bar, 1.0)
         max_ = np.max(net_correlation)
         net_correlation = [x / max_ for x in net_correlation]
 
@@ -351,16 +335,15 @@ def composite_correlation(data: dict, sectors: list, progress_bar=None, plot_out
         generate_plot(
             PlotType.DUAL_PLOTTING,
             net_correlation,
-            **dict(
-                y_list_2=data['^GSPC']['Close'][start_pt:tot_len],
-                x=dates,
-                y1_label=legend[0],
-                y2_label=legend[1],
-                title='MCI Net Correlation',
-                plot_output=plot_output,
-                filename='MCI_net_correlation.png'
-            )
+            **{
+                "y_list_2": data['^GSPC']['Close'][start_pt:tot_len],
+                "x": dates,
+                "y1_label": legend[0],
+                "y2_label": legend[1],
+                "title": 'MCI Net Correlation',
+                "plot_output": plot_output,
+                "filename": 'MCI_net_correlation.png'
+            }
         )
-        progress_bar.uptick()
-
+        update_progress_bar(progress_bar, 1.0)
     return correlations, t_beta_rsq
