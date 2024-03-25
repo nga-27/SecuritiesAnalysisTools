@@ -1,10 +1,10 @@
 """ Custom Indexes """
 from typing import Tuple
 
-from libs.metrics import market_composite_index
-from libs.metrics import bond_composite_index
-from libs.metrics import correlation_composite_index
-from libs.metrics import type_composite_index
+from libs.metrics.market_composite_index import market_composite_index
+from libs.metrics.bond_composite_index import bond_composite_index
+from libs.metrics.correlation_index import correlation_composite_index
+from libs.metrics.type_composite_index import type_composite_index
 
 
 def run_indexes(analysis: dict, script: list, clock=None) -> Tuple[dict, float]:

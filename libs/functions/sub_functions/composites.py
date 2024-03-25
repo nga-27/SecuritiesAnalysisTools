@@ -1,7 +1,8 @@
 """ composite functions """
-from libs.metrics import (
-    market_composite_index, bond_composite_index, correlation_composite_index, type_composite_index
-)
+from libs.metrics.market_composite_index import market_composite_index
+from libs.metrics.bond_composite_index import bond_composite_index
+from libs.metrics.type_composite_index import type_composite_index
+from libs.metrics.correlation_index import correlation_composite_index
 
 
 def mci_function(config: dict):

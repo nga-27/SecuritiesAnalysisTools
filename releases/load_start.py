@@ -5,7 +5,7 @@ from libs.utils import (
     download_data_all, has_critical_error, append_index, remove_temp_dir, configure_temp_dir,
     TEXT_COLOR_MAP
 )
-from libs.functions import only_functions_handler
+from libs.functions.functions import only_functions_handler
 
 
 PROCESS_STEPS_PROD = 30

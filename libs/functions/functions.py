@@ -10,7 +10,8 @@ from libs.tools import (
     know_sure_thing, average_true_range, average_directional_index, parabolic_sar
 )
 
-from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
+from libs.features.head_and_shoulders import feature_detection_head_and_shoulders
+from libs.features.price_gaps import analyze_price_gaps
 
 from libs.functions.sub_functions.utils import (
     function_data_download, NORMAL, TICKER

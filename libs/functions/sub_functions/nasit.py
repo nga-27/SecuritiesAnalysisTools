@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import generate_plot, PlotType
-from libs.nasit import generate_fund_from_ledger
+from libs.nasit.ledger import generate_fund_from_ledger
 
 from .utils import (
     function_data_download, TICKER, NORMAL, WARNING, UP_COLOR, DOWN_COLOR

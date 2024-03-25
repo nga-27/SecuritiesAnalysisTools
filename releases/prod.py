@@ -26,7 +26,8 @@ from libs.tools import (
 )
 
 # Imports that support functions doing feature detection
-from libs.features import feature_detection_head_and_shoulders, analyze_price_gaps
+from libs.features.head_and_shoulders import feature_detection_head_and_shoulders
+from libs.features.price_gaps import analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import (
@@ -34,7 +35,9 @@ from libs.utils import (
 )
 
 # Imports that drive custom metrics for market analysis
-from libs.metrics import future_returns, generate_synopsis, assemble_last_signals
+from libs.metrics.content_list import assemble_last_signals
+from libs.metrics.metrics_utils import future_returns
+from libs.metrics.synopsis import generate_synopsis
 
 ####################################################################
 ####################################################################

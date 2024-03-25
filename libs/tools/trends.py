@@ -10,7 +10,9 @@ from scipy.stats import linregress
 
 from libs.utils import generate_plot, PlotType, dates_convert_from_index, INDEXES, STANDARD_COLORS
 from libs.utils.progress_bar import ProgressBar, update_progress_bar
-from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
+from libs.features.feature_utils import (
+    find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
+)
 
 from .moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 from .trend_utils import (

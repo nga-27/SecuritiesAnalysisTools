@@ -17,7 +17,7 @@ from releases.technical_analysis import technical_analysis, clock_management
 
 ################################
 _VERSION_ = '1.1.00'
-_DATE_REVISION_ = '2024-03-15'
+_DATE_REVISION_ = '2024-03-24'
 ################################
 
 

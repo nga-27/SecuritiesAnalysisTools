@@ -2,9 +2,9 @@
 import json
 import os
 
-from libs.metrics import (
-    metadata_to_dataset, generate_synopsis, assemble_last_signals
-)
+from libs.metrics.metrics_utils import metadata_to_dataset
+from libs.metrics.synopsis import generate_synopsis
+from libs.metrics.content_list import assemble_last_signals
 from libs.ui_generation import create_slides, create_pdf
 from libs.tools import get_api_metadata
 
