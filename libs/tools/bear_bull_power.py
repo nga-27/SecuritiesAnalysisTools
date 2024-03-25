@@ -7,7 +7,7 @@ from scipy.stats import linregress
 
 from libs.utils import dates_extractor_list, INDEXES, generate_plot, PlotType
 from libs.utils.progress_bar import ProgressBar, update_progress_bar
-from libs.features import normalize_signals
+from libs.features.feature_utils import normalize_signals
 from libs.tools.moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 

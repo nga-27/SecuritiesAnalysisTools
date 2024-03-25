@@ -7,7 +7,8 @@ import numpy as np
 
 from libs.utils import INDEXES, generate_plot, PlotType
 from libs.utils.progress_bar import ProgressBar, update_progress_bar
-from libs.features import find_local_extrema, normalize_signals
+from libs.features import find_local_extrema
+from libs.features.feature_utils import normalize_signals
 
 from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 

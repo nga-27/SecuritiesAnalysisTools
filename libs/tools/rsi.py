@@ -8,7 +8,7 @@ import numpy as np
 
 from libs.utils import date_extractor, INDEXES, generate_plot, PlotType
 from libs.utils.progress_bar import ProgressBar, update_progress_bar
-from libs.features import normalize_signals
+from libs.features.feature_utils import normalize_signals
 
 from .trends import auto_trend
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg

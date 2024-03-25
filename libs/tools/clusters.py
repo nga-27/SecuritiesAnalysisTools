@@ -8,7 +8,7 @@ import numpy as np
 from libs.utils import (
     date_extractor, INDEXES, STANDARD_COLORS, PlotType, generate_plot
 )
-from libs.features import normalize_signals
+from libs.features.feature_utils import normalize_signals
 from libs.utils.progress_bar import ProgressBar, update_progress_bar
 
 from .ultimate_oscillator import ultimate_oscillator

@@ -117,7 +117,7 @@ def metrics_initializer(period='5y', name='Market Composite Index') -> Tuple[dic
     print(" ")
     print(f'Fetching {name} funds for {period}...')
     data, _ = download_data_indexes(
-        indexes=all_tickers, tickers=tickers, period=period, interval='1d')
+        indexes=all_tickers, tickers=' '.join(all_tickers), period=period, interval='1d')
     print(" ")
 
     return data, sectors, t_data

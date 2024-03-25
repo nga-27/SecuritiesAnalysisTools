@@ -6,7 +6,7 @@ import pandas as pd
 
 from libs.utils import PlotType, generate_plot, dates_extractor_list
 from libs.utils.progress_bar import ProgressBar, update_progress_bar
-from libs.features import normalize_signals
+from libs.features.feature_utils import normalize_signals
 from libs.utils import INDEXES
 
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg

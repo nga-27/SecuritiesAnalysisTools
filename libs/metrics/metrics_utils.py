@@ -384,7 +384,7 @@ def groom_data(data: dict) -> dict:
     new_data = {}
     for fund in data.keys():
         for key in data[fund].keys():
-            max_len = max(max_len, data[fund][key])
+            max_len = max(max_len, len(data[fund][key]))
 
     for fund in data.keys():
         new_data[fund] = {}
