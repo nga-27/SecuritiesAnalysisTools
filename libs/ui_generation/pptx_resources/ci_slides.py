@@ -4,19 +4,7 @@ import os
 from pptx.presentation import Presentation
 from pptx.util import Inches, Pt
 
-from .slide_utils import slide_title_header
-
-
-# Slide Layouts
-PRES_TITLE_SLIDE = 0
-TITLE_CONTENT_SLIDE = 1
-SECTION_HEADER_SLIDE = 2
-TWO_CONTENT_SLIDE = 3
-COMPARISON_SLIDE = 4
-TITLE_ONLY_SLIDE = 5
-BLANK_SLIDE = 6
-CONTENT_W_CAPTION_SLIDE = 7
-PICTURE_W_CAPTION_SLIDE = 8
+from .slide_utils import slide_title_header, BLANK_SLIDE
 
 TEMP_DIR = os.path.join("output", "temp")
 

@@ -6,16 +6,7 @@ from pptx.presentation import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN  # pylint: disable=no-name-in-module
 
-# Slide Layouts
-PRES_TITLE_SLIDE = 0
-TITLE_CONTENT_SLIDE = 1
-SECTION_HEADER_SLIDE = 2
-TWO_CONTENT_SLIDE = 3
-COMPARISON_SLIDE = 4
-TITLE_ONLY_SLIDE = 5
-BLANK_SLIDE = 6
-CONTENT_W_CAPTION_SLIDE = 7
-PICTURE_W_CAPTION_SLIDE = 8
+from .slide_utils import BLANK_SLIDE
 
 
 def create_presentation_title(prs: Presentation, version: str) -> Presentation:

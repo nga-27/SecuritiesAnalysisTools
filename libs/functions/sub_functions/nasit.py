@@ -183,14 +183,14 @@ def nasit_generation_function(config: dict, print_only=False):
                 names2.append(fund_name)
 
         generate_plot(
-            PlotType.GENERIC_PLOTTING, plot_able, **dict(
-                legend=names, title='NASIT Passives'
-            )
+            PlotType.GENERIC_PLOTTING, plot_able, **{
+                "legend": names, "title": 'NASIT Passives'
+            }
         )
         generate_plot(
-            PlotType.GENERIC_PLOTTING, plot_able2, **dict(
-                legend=names2, title='NASIT Passives [Returns]'
-            )
+            PlotType.GENERIC_PLOTTING, plot_able2, **{
+                "legend": names2, "title": 'NASIT Passives [Returns]'
+            }
         )
 
 def ledger_function(config: dict):

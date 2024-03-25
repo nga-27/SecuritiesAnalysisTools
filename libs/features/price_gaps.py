@@ -1,7 +1,10 @@
 """ Find Price Gaps """
+from typing import Union
+
 import pandas as pd
 
 from libs.tools import trends
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from .feature_utils import feature_plotter
 
 NEXT_STATE = {
@@ -30,25 +33,21 @@ def analyze_price_gaps(fund: pd.DataFrame, **kwargs) -> dict:
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     threshold = 0.0075
     gaps = get_gaps(fund, threshold=threshold)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.25)
+    update_progress_bar(progress_bar, 0.25)
 
     gaps = determine_gap_types(fund, gaps)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.25)
+    update_progress_bar(progress_bar, 0.25)
 
     feature_plotter(fund, shapes=gaps['plot'], name=name,
                     feature='price_gaps', plot_output=plot_output, view=view)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.5)
+    update_progress_bar(progress_bar, 0.5)
 
     gaps['type'] = 'feature'
-
     return gaps
 
 
@@ -70,7 +69,6 @@ def get_gaps(fund: pd.DataFrame, threshold: float = 0.0) -> dict:
     diff = []
 
     for i in range(1, len(fund['Close'])):
-
         if fund['High'][i-1] < fund['Low'][i] * (1.0 - threshold):
             # Positive price gap
             gap_index.append(i)

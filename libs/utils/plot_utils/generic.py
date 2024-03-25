@@ -1,5 +1,4 @@
 """ generic """
-import os
 
 import pandas as pd
 from pandas.plotting import register_matplotlib_converters
@@ -7,7 +6,7 @@ import matplotlib.pyplot as plt
 
 from libs.utils import dates_extractor_list
 
-from .utils import plot_xaxis_disperse, WARNING, NORMAL
+from .utils import plot_xaxis_disperse, WARNING, NORMAL, save_or_render_plot
 
 
 def generic_plotting(list_of_plots: list, **kwargs):
@@ -96,30 +95,7 @@ def generic_plotting(list_of_plots: list, **kwargs):
         plt.ylabel(y_label)
 
     plot_xaxis_disperse(axis)
-
-    try:
-        if save_fig:
-            temp_path = os.path.join("output", "temp")
-            if not os.path.exists(temp_path):
-                # For functions, this directory may not exist.
-                plt.close(fig)
-                plt.clf()
-                return None
-
-            filename = os.path.join(temp_path, filename)
-            if os.path.exists(filename):
-                os.remove(filename)
-
-            plt.savefig(filename)
-
-        else:
-            plt.show()
-
-    except: # pylint: disable=bare-except
-        print(
-            f"{WARNING}Warning: plot failed to render in 'generic_plotting' of title: " +
-            f"{title}{NORMAL}")
-
+    save_or_render_plot(plt, fig, save_fig, title, filename, 'generic plot')
     plt.close('all')
     plt.clf()
     return None

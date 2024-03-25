@@ -150,25 +150,18 @@ def add_fund_content(prs: Presentation, fund: str, analysis: dict, **kwargs) -> 
 
     if 'market' in risk_ratios.get('alpha', {}):
         table.cell(2, 1).text = str(np.round(risk_ratios['alpha']['market'], 5))
-
     if 'sector' in risk_ratios.get('alpha', {}):
         table.cell(3, 1).text = str(np.round(risk_ratios['alpha']['sector'], 5))
-
     if 'market' in risk_ratios.get('beta', {}):
         table.cell(4, 1).text = str(np.round(risk_ratios['beta']['market'], 5))
-
     if 'sector' in risk_ratios.get('beta', {}):
         table.cell(5, 1).text = str(np.round(risk_ratios['beta']['sector'], 5))
-
     if 'market' in risk_ratios.get('r_squared', {}):
         table.cell(6, 1).text = str(np.round(risk_ratios['r_squared']['market'], 5))
-
     if 'sector' in risk_ratios.get('r_squared', {}):
         table.cell(7, 1).text = str(np.round(risk_ratios['r_squared']['sector'], 5))
-
     if 'sharpe' in risk_ratios:
         table.cell(8, 1).text = str(np.round(risk_ratios['sharpe'], 5))
-
     if 'standard_deviation' in risk_ratios:
         table.cell(9, 1).text = str(np.round(risk_ratios['standard_deviation'], 5))
 

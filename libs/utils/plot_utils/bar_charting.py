@@ -1,10 +1,9 @@
 """ bar_charting """
-import os
-
 from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 
-from .utils import plot_xaxis_disperse, WARNING, NORMAL
+from .utils import plot_xaxis_disperse, save_or_render_plot
+
 
 def bar_chart(data: list, **kwargs):
     """Bar Chart
@@ -84,33 +83,11 @@ def bar_chart(data: list, **kwargs):
                     barlist[i].set_alpha(0.3)
 
     plt.title(title)
-
     if len(position) > 0:
         ax2 = ax1.twinx()
         ax2.plot(position['Close'])
 
     plot_xaxis_disperse(ax1)
-
-    try:
-        if save_fig:
-            temp_path = os.path.join("output", "temp")
-            if not os.path.exists(temp_path):
-                # For functions, this directory may not exist.
-                plt.close(fig)
-                plt.clf()
-                return
-
-            filename = os.path.join(temp_path, filename)
-            if os.path.exists(filename):
-                os.remove(filename)
-            plt.savefig(filename)
-
-        else:
-            plt.show()
-
-    except: # pylint: disable=bare-except
-        print(
-            f"{WARNING}Warning: plot failed to render in 'bar_chart' of name: {title}{NORMAL}")
-
+    save_or_render_plot(plt, fig, save_fig, title, filename, 'bar chart')
     plt.close('all')
     plt.clf()

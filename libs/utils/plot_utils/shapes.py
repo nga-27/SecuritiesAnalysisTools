@@ -1,5 +1,4 @@
 """ shapes """
-import os
 from datetime import datetime
 
 import numpy as np
@@ -9,7 +8,7 @@ from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-from .utils import plot_xaxis_disperse, WARNING, NORMAL
+from .utils import plot_xaxis_disperse, save_or_render_plot
 
 
 def shape_plotting(main_plot: pd.DataFrame, **kwargs):
@@ -107,31 +106,8 @@ def shape_plotting(main_plot: pd.DataFrame, **kwargs):
     plt.title(title)
     if len(legend) > 0:
         plt.legend(legend)
-
     plot_xaxis_disperse(axis)
 
-    try:
-        if save_fig:
-            temp_path = os.path.join("output", "temp")
-            if not os.path.exists(temp_path):
-                # For functions, this directory may not exist.
-                plt.close(fig)
-                plt.clf()
-                return
-
-            filename = os.path.join(temp_path, filename)
-            if os.path.exists(filename):
-                os.remove(filename)
-
-            plt.savefig(filename)
-
-        else:
-            plt.show()
-
-    except: # pylint: disable=bare-except
-        print(
-            f"{WARNING}Warning: plot failed to render in 'shape plotting' of title: " +
-            f"{title}{NORMAL}")
-
+    save_or_render_plot(plt, fig, save_fig, title, filename, 'shapes')
     plt.close('all')
     plt.clf()
