@@ -16,18 +16,12 @@ from typing import Tuple
 
 # Imports that are custom tools that are the crux of this program
 from libs.tools import (
-    full_stochastic, ultimate_oscillator, cluster_oscillators, relative_strength_indicator_rsi,
-    awesome_oscillator, momentum_oscillator, relative_strength, moving_average_swing_trade,
-    triple_moving_average, triple_exp_mov_average, hull_moving_average,
-    mov_avg_convergence_divergence, on_balance_volume, demand_index, find_resistance_support_lines,
-    get_trend_lines, get_high_level_stats, bear_bull_power, total_power, bollinger_bands,
-    commodity_channel_index, candlesticks, risk_comparison, rate_of_change_oscillator,
-    know_sure_thing, average_true_range, parabolic_sar, average_directional_index, get_api_metadata
+    ultimate_oscillator, cluster_oscillators, relative_strength_indicator_rsi,
+    relative_strength, moving_average_swing_trade, triple_moving_average, triple_exp_mov_average,
+    mov_avg_convergence_divergence, on_balance_volume, find_resistance_support_lines,
+    get_trend_lines, get_high_level_stats, bollinger_bands, candlesticks, risk_comparison,
+    average_true_range, average_directional_index, get_api_metadata
 )
-
-# Imports that support functions doing feature detection
-from libs.features.head_and_shoulders import feature_detection_head_and_shoulders
-from libs.features.price_gaps import analyze_price_gaps
 
 # Imports that are generic file/string/object/date utility functions
 from libs.utils import (
@@ -104,10 +98,6 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 progress_bar=prog_bar,
                 view=period)
 
-            # fund_data['full_stochastic'] = full_stochastic(
-            #     fund, name=fund_name, plot_output=False,
-            #     out_suppress=False, progress_bar=prog_bar, view=period)
-
             fund_data['rsi'] = relative_strength_indicator_rsi(
                 fund, name=fund_name, plot_output=False,
                 out_suppress=False, progress_bar=prog_bar, view=period)
@@ -115,12 +105,6 @@ def run_prod(script: list) -> Tuple[dict, float]:
             fund_data['ultimate'] = ultimate_oscillator(
                 fund, name=fund_name, plot_output=False,
                 out_suppress=False, progress_bar=prog_bar, view=period)
-
-            # fund_data['awesome'] = awesome_oscillator(
-            #     fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
-
-            # fund_data['momentum_oscillator'] = momentum_oscillator(
-            #     fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             fund_data['on_balance_volume'] = on_balance_volume(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
@@ -138,29 +122,11 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 fund, function='ema', plot_output=False,
                 name=fund_name, progress_bar=prog_bar, view=period)
 
-            # fund_data['hull_moving_average'] = hull_moving_average(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
-
             fund_data['macd'] = mov_avg_convergence_divergence(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
-            # fund_data['bear_bull_power'] = bear_bull_power(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
-
-            # fund_data['total_power'] = total_power(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
-
             fund_data['bollinger_bands'] = bollinger_bands(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
-
-            # fund_data['commodity_channels'] = commodity_channel_index(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
-
-            # fund_data['rate_of_change'] = rate_of_change_oscillator(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
-
-            # fund_data['know_sure_thing'] = know_sure_thing(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['average_true_range'] = average_true_range(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
@@ -168,12 +134,6 @@ def run_prod(script: list) -> Tuple[dict, float]:
             fund_data['adx'] = average_directional_index(
                 fund, atr=fund_data['average_true_range']['tabular'], plot_output=False,
                 name=fund_name, progress_bar=prog_bar, view=period)
-
-            # fund_data['parabolic_sar'] = parabolic_sar(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
-
-            # fund_data['demand_index'] = demand_index(
-            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             if 'no_index' not in config['state']:
                 strength, match_data = relative_strength(

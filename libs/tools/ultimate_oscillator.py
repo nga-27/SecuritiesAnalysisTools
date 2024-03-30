@@ -1,6 +1,6 @@
 """ ultimate oscillator """
 import os
-from typing import Union, List, Dict, Tuple
+from typing import Union, List, Dict
 from enum import Enum
 
 import pandas as pd
@@ -12,10 +12,9 @@ from libs.features.feature_utils import normalize_signals
 
 from .math_functions import get_lower_low, higher_high, get_bull_bear_threshold
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
-from .moving_averages_lib.simple_moving_avg import simple_moving_avg
+from .oscillator_utils.normalize_thresholds import normalize_oscillator_threshold_signals
+from .oscillator_utils.constants import OVERBOUGHT_THRESHOLD, OVERSOLD_THRESHOLD
 
-OVERSOLD_THRESHOLD = 30.0
-OVERBOUGHT_THRESHOLD = 70.0
 
 class MovementType(Enum):
     bullish = 'BULLISH'
@@ -209,40 +208,7 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     return ultimate
 
 
-def normalize_oscillator_threshold_signals(position: pd.DataFrame,
-                                           moving_avg_periods: Union[List[int], int, None] = None,
-                                           base_low: float=OVERSOLD_THRESHOLD,
-                                           base_high: float=OVERBOUGHT_THRESHOLD
-                                           ) -> Tuple[List[float], List[float]]:
-    if moving_avg_periods is None:
-        moving_avg_periods = [20, 50, 100, 200]
-    if isinstance(moving_avg_periods, int):
-        moving_avg_periods = [moving_avg_periods]
-    moving_avg_periods.sort()
 
-    lows = [base_low] * len(position['Close'])
-    highs = [base_high] * len(position['Close'])
-
-    moving_averages = []
-    weights = []
-    max_sum = min(base_low, 100.0 - base_high) / 2.0
-    summed_weights = sum(moving_avg_periods)
-    for period in moving_avg_periods:
-        moving_averages.append(simple_moving_avg(position, period))
-        weights.append(float(period) / float(summed_weights) * float(max_sum))
-
-    for i, price in enumerate(position['Close']):
-        for j, moving_avg in enumerate(moving_averages):
-            if price > moving_avg[i]:
-                highs[i] += weights[j]
-                lows[i] += weights[j]
-            if price < moving_avg[i]:
-                highs[i] -= weights[j]
-                lows[i] -= weights[j]
-
-    smoothed_low = simple_moving_avg(lows, 21, 'list')
-    smoothed_high = simple_moving_avg(highs, 21, 'list')
-    return smoothed_low, smoothed_high
 
 
 def get_ult_osc_features_original(position: pd.DataFrame, ult_osc: List[float],

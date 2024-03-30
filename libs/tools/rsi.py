@@ -13,6 +13,7 @@ from libs.features.feature_utils import normalize_signals
 from .trends import auto_trend
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 from .trends import get_trend_lines_regression
+from .oscillator_utils.constants import OVERBOUGHT_THRESHOLD, OVERSOLD_THRESHOLD
 
 
 def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
@@ -42,8 +43,8 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
     period = kwargs.get('period', 14)
     out_suppress = kwargs.get('out_suppress', True)
     progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
-    overbought = kwargs.get('overbought', 70.0)
-    oversold = kwargs.get('oversold', 30.0)
+    overbought = kwargs.get('overbought', OVERBOUGHT_THRESHOLD)
+    oversold = kwargs.get('oversold', OVERSOLD_THRESHOLD)
     use_auto_trend = kwargs.get('auto_trend', True)
     view = kwargs.get('view', '')
     has_trend_lines = kwargs.get('trendlines', False)

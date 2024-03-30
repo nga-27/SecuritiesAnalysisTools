@@ -10,6 +10,9 @@ from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features.feature_utils import normalize_signals
 
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .oscillator_utils.constants import (
+    STOCHASTIC_OVERSOLD_THRESHOLD, STOCHASTIC_OVERBOUGHT_THRESHOLD
+)
 
 
 def full_stochastic(position: pd.DataFrame, config: Union[list, None] = None, **kwargs) -> dict:
@@ -165,8 +168,8 @@ def get_crossover_features(position: pd.DataFrame, full_stoch: dict, **kwargs) -
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     p_bar = kwargs.get('p_bar')
 
-    over_bought = 80.0
-    over_sold = 20.0
+    over_bought = STOCHASTIC_OVERBOUGHT_THRESHOLD
+    over_sold = STOCHASTIC_OVERSOLD_THRESHOLD
 
     fast_k = full_stoch['tabular']['fast_k']
     smooth_k = full_stoch['tabular']['smooth_k']
