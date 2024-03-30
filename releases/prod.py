@@ -83,13 +83,11 @@ def run_prod(script: list) -> Tuple[dict, float]:
         ###################### START OF PERIOD LOOPING #############################
         for i, period in enumerate(periods):
             fund_data = {}
-
             fund = dataset[period][fund_name]
 
             start = date_extractor(fund.index[0], _format='str')
             end = date_extractor(fund.index[-1], _format='str')
-            fund_data['dates_covered'] = {
-                'start': str(start), 'end': str(end)}
+            fund_data['dates_covered'] = {'start': str(start), 'end': str(end)}
             fund_data['name'] = fund_name
 
             fund_print2 = fund_print + f" ({period}) "
@@ -97,7 +95,6 @@ def run_prod(script: list) -> Tuple[dict, float]:
             prog_bar.start()
 
             fund_data['statistics'] = get_high_level_stats(fund)
-
             fund_data['clustered_osc'] = cluster_oscillators(
                 fund,
                 function='all',
@@ -107,9 +104,9 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 progress_bar=prog_bar,
                 view=period)
 
-            fund_data['full_stochastic'] = full_stochastic(
-                fund, name=fund_name, plot_output=False,
-                out_suppress=False, progress_bar=prog_bar, view=period)
+            # fund_data['full_stochastic'] = full_stochastic(
+            #     fund, name=fund_name, plot_output=False,
+            #     out_suppress=False, progress_bar=prog_bar, view=period)
 
             fund_data['rsi'] = relative_strength_indicator_rsi(
                 fund, name=fund_name, plot_output=False,
@@ -119,11 +116,11 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 fund, name=fund_name, plot_output=False,
                 out_suppress=False, progress_bar=prog_bar, view=period)
 
-            fund_data['awesome'] = awesome_oscillator(
-                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
+            # fund_data['awesome'] = awesome_oscillator(
+            #     fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
-            fund_data['momentum_oscillator'] = momentum_oscillator(
-                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
+            # fund_data['momentum_oscillator'] = momentum_oscillator(
+            #     fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             fund_data['on_balance_volume'] = on_balance_volume(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
@@ -141,29 +138,29 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 fund, function='ema', plot_output=False,
                 name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['hull_moving_average'] = hull_moving_average(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['hull_moving_average'] = hull_moving_average(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['macd'] = mov_avg_convergence_divergence(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['bear_bull_power'] = bear_bull_power(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['bear_bull_power'] = bear_bull_power(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['total_power'] = total_power(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['total_power'] = total_power(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['bollinger_bands'] = bollinger_bands(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['commodity_channels'] = commodity_channel_index(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['commodity_channels'] = commodity_channel_index(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['rate_of_change'] = rate_of_change_oscillator(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['rate_of_change'] = rate_of_change_oscillator(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['know_sure_thing'] = know_sure_thing(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['know_sure_thing'] = know_sure_thing(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             fund_data['average_true_range'] = average_true_range(
                 fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
@@ -172,11 +169,11 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 fund, atr=fund_data['average_true_range']['tabular'], plot_output=False,
                 name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['parabolic_sar'] = parabolic_sar(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['parabolic_sar'] = parabolic_sar(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
-            fund_data['demand_index'] = demand_index(
-                fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
+            # fund_data['demand_index'] = demand_index(
+            #     fund, plot_output=False, name=fund_name, progress_bar=prog_bar, view=period)
 
             if 'no_index' not in config['state']:
                 strength, match_data = relative_strength(
@@ -202,15 +199,15 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             # Feature Detection Block
-            fund_data['features'] = {}
-            fund_data['features']['head_shoulders'] = feature_detection_head_and_shoulders(
-                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
+            # fund_data['features'] = {}
+            # fund_data['features']['head_shoulders'] = feature_detection_head_and_shoulders(
+            #     fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             fund_data['candlesticks'] = candlesticks(
                 fund, name=fund_name, plot_output=False, view=period, progress_bar=prog_bar)
 
-            fund_data['price_gaps'] = analyze_price_gaps(
-                fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
+            # fund_data['price_gaps'] = analyze_price_gaps(
+            #     fund, name=fund_name, plot_output=False, progress_bar=prog_bar, view=period)
 
             # Get Trendlines
             fund_data['trendlines'] = get_trend_lines(
@@ -230,7 +227,6 @@ def run_prod(script: list) -> Tuple[dict, float]:
                 progress_bar=prog_bar, plot_output=False)
 
             prog_bar.end()
-
             analysis[fund_name][period] = fund_data
 
         analysis[fund_name]['synopsis'] = generate_synopsis(

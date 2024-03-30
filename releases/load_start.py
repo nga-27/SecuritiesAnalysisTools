@@ -8,8 +8,7 @@ from libs.utils import (
 from libs.functions.functions import only_functions_handler
 
 
-PROCESS_STEPS_PROD = 30
-
+PROCESS_STEPS_PROD = 17 #30
 HEADER_COLOR = TEXT_COLOR_MAP["blue"]
 PROD_COLOR = TEXT_COLOR_MAP["green"]
 NORMAL_COLOR = TEXT_COLOR_MAP["white"]
