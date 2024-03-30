@@ -74,12 +74,13 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
 
     if not out_suppress:
         name3 = INDEXES.get(name, name)
-        name2 = name3 + ' - relative_strength_indicator_rsi'
+        plot_name = "Relative Strength Indicator (RSI)"
+        name2 = name3 + f' - {plot_name}'
 
         generate_plot(
             PlotType.DUAL_PLOTTING, position['Close'], **{
                 "y_list_2": main_plots, "y1_label": 'Position Price',
-                "y2_label": 'relative_strength_indicator_rsi', "title": name2,
+                "y2_label": plot_name, "title": name2,
                 "plot_output": plot_output,
                 "filename": os.path.join(name, view, f"RSI_standard_{name}.png")
             }
@@ -87,7 +88,7 @@ def relative_strength_indicator_rsi(position: pd.DataFrame, **kwargs) -> dict:
         generate_plot(
             PlotType.DUAL_PLOTTING, position['Close'], **{
                 "y_list_2": main_plots, "y1_label": 'Position Price',
-                "y2_label": 'relative_strength_indicator_rsi Metrics', "title": name2,
+                "y2_label": f'{plot_name} Metrics', "title": name2,
                 "plot_output": plot_output,
                 "filename": os.path.join(name, view, f"RSI_indicator_{name}.png")
             }

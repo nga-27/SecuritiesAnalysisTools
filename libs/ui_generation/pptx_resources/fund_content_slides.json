@@ -82,7 +82,7 @@
             "index": 3,
             "location": 0
         },
-        "ultimate_osc_metrics": {
+        "ultimate_osc_signals": {
             "index": 3,
             "location": 1
         },
@@ -133,6 +133,10 @@
         "obv_diff": {
             "index": 6,
             "location": 1
+        },
+        "ultimate_osc_metrics": {
+            "index": 6,
+            "location": 2
         },
         "resist_support": {
             "index": 7,
