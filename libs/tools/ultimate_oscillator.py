@@ -9,7 +9,7 @@ from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
 from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.features.feature_utils import normalize_signals
 
-from .math_functions import lower_low, higher_high, bull_bear_th
+from .math_functions import get_lower_low, higher_high, bull_bear_th
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
@@ -176,10 +176,11 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     for i, close in enumerate(position['Close']):
         # Find bullish signal
         if ult_osc[i] < low_th:
+            # Initial "oversold" signal
             ult1 = ult_osc[i]
             marker_val = close
             marker_ind = i
-            lows = lower_low(position['Close'], marker_val, marker_ind)
+            lows = get_lower_low(position['Close'], marker_val, marker_ind)
 
             if len(lows) != 0:
                 ult2 = ult_osc[lows[-1][1]]
