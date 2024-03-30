@@ -1,5 +1,5 @@
 """ Main tools """
-from .math_functions import get_lower_low, higher_high, bull_bear_th
+from .math_functions import get_lower_low, higher_high, get_bull_bear_threshold
 from .math_functions import beta_comparison, beta_comparison_list
 from .math_functions import risk_comparison
 

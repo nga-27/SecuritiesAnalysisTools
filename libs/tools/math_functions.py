@@ -1,5 +1,5 @@
 """ math functions """
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 import pandas as pd
 import numpy as np
@@ -7,13 +7,13 @@ import numpy as np
 from scipy.stats import linregress
 
 
-def get_lower_low(data: Union[list, pd.DataFrame], start_val: float,
+def get_lower_low(data: Union[List[float], pd.DataFrame], start_val: float,
                   start_ind: int, use_short: bool = False) -> Tuple[float, int]:
     """Looks for a bounce (rise) then lower low in the signal. If 'use_short' is set to True, then
     signals will be more sensitive and potentially volatile.
 
     Args:
-        data (Union[list, pd.DataFrame]): position or signal data
+        data (Union[List[float], pd.DataFrame]): position or signal data
         start_val (float): value of the starting comparison
         start_ind (int): starting index to start measuring
         use_short (bool, optional): if True, stops searching after completing breakout. True will
@@ -98,13 +98,13 @@ def get_lower_low(data: Union[list, pd.DataFrame], start_val: float,
     # return lows
 
 
-def higher_high(data: Union[list, pd.DataFrame], start_val: float,
+def higher_high(data: Union[List[float], pd.DataFrame], start_val: float,
                 start_ind: int, use_short: bool = False) -> Tuple[float, int]:
     """Looks for a bounce (drop) then higher high. If 'use_short' is set to True, then signals will
     be more sensitive and potentially volatile.
 
     Args:
-        data (Union[list, pd.DataFrame]): position or signal data
+        data (Union[List[float], pd.DataFrame]): position or signal data
         start_val (float): value of the starting comparison
         start_ind (int): starting index to start measuring
         use_short (bool, optional): if True, stops searching after completing breakout. True will
@@ -171,33 +171,31 @@ def higher_high(data: Union[list, pd.DataFrame], start_val: float,
     return highs
 
 
-def bull_bear_th(osc: list, start: int, thresh: float, bull_bear: str = 'bull') -> Union[int, None]:
-    """Bull Bear Thresholding
+def get_bull_bear_threshold(osc: List[float], start_index: int, thresh: float,
+                            bull_bear: str = 'bull') -> Union[int, None]:
+    """Find the breakout pattern when an oscillator breaks a threshold, either higher than (bullish)
+    or lower than (bearish).
 
-    Arguments:
-        osc {list} -- oscillator signal
-        start {int} -- starting index to find the threshold
-        thresh {float} -- threshold for comparison
-
-    Keyword Arguments:
-        bull_bear {str} -- type, either 'bull' or 'bear' (default: {'bull'})
+    Args:
+        osc (List[float]): oscillator signal to analyze
+        start_index (int): integer index where the analysis should start
+        thresh (float): threshold to compare against
+        bull_bear (str, optional): either 'bull' or 'bear'. Defaults to 'bull'.
 
     Returns:
-        int -- index that is above/below threshold
+        Union[int, None]: index of the breakout or None if none is found or invalid 'bull_bear'
     """
-    count = start
+    count = start_index
     if bull_bear == 'bull':
         while count < len(osc):
             if osc[count] > thresh:
                 return count
             count += 1
-
     if bull_bear == 'bear':
         while count < len(osc):
             if osc[count] < thresh:
                 return count
             count += 1
-
     return None
 
 
