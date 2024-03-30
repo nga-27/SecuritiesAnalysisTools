@@ -1,6 +1,6 @@
 """ ultimate oscillator """
 import os
-from typing import Union, List, Dict
+from typing import Union, List, Dict, Tuple
 from enum import Enum
 
 import pandas as pd
@@ -12,6 +12,7 @@ from libs.features.feature_utils import normalize_signals
 
 from .math_functions import get_lower_low, higher_high, get_bull_bear_threshold
 from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 OVERSOLD_THRESHOLD = 30.0
 OVERBOUGHT_THRESHOLD = 70.0
@@ -194,15 +195,40 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     p_bar = kwargs.get('p_bar')
     low_th = float(kwargs.get('thresh_low', OVERSOLD_THRESHOLD))
     high_th = float(kwargs.get('thresh_high', OVERBOUGHT_THRESHOLD))
+    normalize_thresholds = kwargs.get('normalize_thresholds', True)
 
     ult_osc = ultimate['tabular']
     trigger = get_ult_osc_features_original(position, ult_osc, low_th=low_th, high_th=high_th)
-    update_progress_bar(p_bar, 0.3)
+    update_progress_bar(p_bar, 0.2)
 
-    trigger.extend(get_ult_osc_features_new(position, ult_osc, low_th=low_th, high_th=high_th))
+    if normalize_thresholds:
+        price_mvg_avg = simple_moving_avg(position, 200)
+        low_th, high_th = normalize_threshold_signals(position, price_mvg_avg)
+        trigger.extend(
+            get_ult_osc_features_new(
+                position, ult_osc, low_th=low_th, high_th=high_th, moving_average=price_mvg_avg))
     update_progress_bar(p_bar, 0.2)
     ultimate['indicator'] = trigger
     return ultimate
+
+
+def normalize_threshold_signals(position: pd.DataFrame,
+                                moving_avg: List[float],
+                                base_low: float=OVERSOLD_THRESHOLD,
+                                base_high: float=OVERBOUGHT_THRESHOLD
+                                ) -> Tuple[List[float], List[float]]:
+    lows = [base_low] * len(position['Close'])
+    highs = [base_high] * len(position['Close'])
+    for i, price in enumerate(position['Close']):
+        if price > moving_avg[i]:
+            highs[i] = base_high + 10.0
+            lows[i] = base_low + 10.0
+        if price < moving_avg[i]:
+            highs[i] = base_high - 10.0
+            lows[i] = base_low - 10.0
+    smoothed_low = simple_moving_avg(lows, 14, 'list')
+    smoothed_high = simple_moving_avg(highs, 14, 'list')
+    return smoothed_low, smoothed_high
 
 
 def get_ult_osc_features_original(position: pd.DataFrame, ult_osc: List[float],
@@ -271,15 +297,19 @@ def get_ult_osc_features_original(position: pd.DataFrame, ult_osc: List[float],
 
 
 def get_ult_osc_features_new(position: pd.DataFrame, ult_osc: List[float],
-                             low_th: float = OVERSOLD_THRESHOLD,
-                             high_th: float = OVERBOUGHT_THRESHOLD) -> list:
+                             low_th: List[float],
+                             high_th: List[float],
+                             moving_average: Union[List[float], None] = None) -> list:
+    if moving_average is None:
+        moving_average = position['Close']
     trigger = []
     state = 'n'
     prices = [0.0, 0.0]
     ultimate_state2 = {'init_over_thr': 0.0, 'rebound_extreme': 0.0, 'last_point': 0.0}
+
     for i, ult in enumerate(ult_osc):
         # Find bullish divergence and breakout
-        if state == 'n' and ult <= low_th:
+        if state == 'n' and ult <= low_th[i]:
             # 'oversold' state
             state = 'u1'
             ultimate_state2['init_over_thr'] = ult
@@ -291,7 +321,7 @@ def get_ult_osc_features_new(position: pd.DataFrame, ult_osc: List[float],
                 prices[0] = position['Close'][i-1]
                 state = 'u2'
 
-        elif state == 'u2' and ult > low_th:
+        elif state == 'u2' and ult > low_th[i]:
             state = 'u3'
             ultimate_state2['rebound_extreme'] = ult
 
@@ -335,7 +365,7 @@ def get_ult_osc_features_new(position: pd.DataFrame, ult_osc: List[float],
                 state = 'u4'
 
         # Find bearish divergence and breakout
-        if state == 'n' and ult >= high_th:
+        if state == 'n' and ult >= high_th[i]:
             state = 'e1'
             ultimate_state2['init_over_thr'] = ult
 
@@ -346,7 +376,7 @@ def get_ult_osc_features_new(position: pd.DataFrame, ult_osc: List[float],
                 prices[0] = position['Close'][i-1]
                 state = 'e2'
 
-        elif state == 'e2' and ult < high_th:
+        elif state == 'e2' and ult < high_th[i]:
             state = 'e3'
             ultimate_state2['rebound_extreme'] = ult
 
@@ -388,11 +418,11 @@ def get_ult_osc_features_new(position: pd.DataFrame, ult_osc: List[float],
                 ultimate_state2['last_point'] = ult
                 state = 'e4'
 
-        elif ult >= high_th:
+        elif ult >= high_th[i]:
             state = 'e1'
             ultimate_state2['init_over_thr'] = ult
 
-        elif ult <= low_th:
+        elif ult <= low_th[i]:
             state = 'u1'
             ultimate_state2['init_over_thr'] = ult
     return trigger
