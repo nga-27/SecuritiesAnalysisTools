@@ -6,172 +6,10 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
-from .moving_average_utils import adjust_signals, find_crossovers, normalize_signals_local
-
-
-def exponential_moving_avg(dataset: Union[list, pd.DataFrame],
-                           interval: int,
-                           data_type: str = 'DataFrame',
-                           key: str = 'Close',
-                           ema_factor: float = 2.0) -> list:
-    """Exponential Moving Average
-
-    Arguments:
-        dataset -- tabular data, either list or pd.DataFrame
-        interval {int} -- window to exponential moving average
-
-    Optional Args:
-        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
-        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
-        ema_factor {float} -- exponential smoothing factor; (default: {2.0})
-
-    Returns:
-        list -- filtered data
-    """
-    if data_type == 'DataFrame':
-        data = list(dataset[key])
-    else:
-        data = dataset
-
-    ema = []
-    if interval < len(data) - 3:
-        k = ema_factor / (float(interval) + 1.0)
-        for i in range(interval-1):
-            ema.append(data[i])
-        for i in range(interval-1, len(data)):
-            ema.append(np.mean(data[i-(interval-1):i+1]))
-            if i != interval-1:
-                ema[i] = ema[i-1] * (1.0 - k) + data[i] * k
-    return ema
-
-
-def windowed_moving_avg(dataset: Union[list, pd.DataFrame],
-                        interval: int,
-                        data_type: str = 'DataFrame',
-                        key: str = 'Close',
-                        filter_type: str = 'simple',
-                        weight_strength: float = 2.0) -> list:
-    """Windowed Moving Average
-
-    Arguments:
-        dataset -- tabular data, either list or pd.DataFrame
-        interval {int} -- window to windowed moving average
-
-    Optional Args:
-        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
-        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
-        filter_type {str} -- either 'simple' or 'exponential' (default: {'simple'})
-        weight_strength {float} -- numerator for ema weight (default: {2.0})
-
-    Returns:
-        list -- filtered data
-    """
-    # pylint: disable=too-many-arguments,too-many-branches
-    if data_type == 'DataFrame':
-        data = list(dataset[key])
-    else:
-        data = dataset
-
-    wma = []
-    if interval < len(data) - 3:
-        if filter_type == 'simple':
-            left = int(np.floor(float(interval) / 2))
-            if left == 0:
-                return data
-            for i in range(left):
-                wma.append(data[i])
-            for i in range(left, len(data)-left):
-                wma.append(np.mean(data[i-(left):i+(left)]))
-            for i in range(len(data)-left, len(data)):
-                wma.append(data[i])
-
-        elif filter_type == 'exponential':
-            left = int(np.floor(float(interval) / 2))
-            weight = min(weight_strength / (float(interval) + 1.0), 1.0)
-            for i in range(left):
-                wma.append(data[i])
-            for i in range(left, len(data)-left):
-                sum_len = len(data[i-(left):i+(left)]) - 1
-                sum_vals = np.sum(data[i-(left):i+(left)])
-                sum_vals -= data[i]
-                sum_vals = sum_vals / float(sum_len)
-                sum_vals = data[i] * weight + sum_vals * (1.0 - weight)
-                wma.append(sum_vals)
-            for i in range(len(data)-left, len(data)):
-                wma.append(data[i])
-
-    return wma
-
-
-def simple_moving_avg(dataset: Union[list, pd.DataFrame],
-                      interval: int,
-                      data_type: str = 'DataFrame',
-                      key: str = 'Close') -> list:
-    """Simple Moving Average
-
-    Arguments:
-        dataset -- tabular data, either list or pd.DataFrame
-        interval {int} -- window to windowed moving average
-
-    Optional Args:
-        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
-        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
-
-    Returns:
-        list -- filtered data
-    """
-    if data_type == 'DataFrame':
-        data = list(dataset[key])
-    else:
-        data = dataset
-
-    moving_average = []
-    if interval < len(data) - 3:
-        for i in range(interval-1):
-            moving_average.append(data[i])
-        for i in range(interval-1, len(data)):
-            average = np.mean(data[i-(interval-1):i+1])
-            moving_average.append(average)
-    return moving_average
-
-
-def weighted_moving_avg(dataset: Union[list, pd.DataFrame],
-                        interval: int,
-                        data_type: str = 'DataFrame',
-                        key: str = 'Close') -> list:
-    """Weighted Moving Average
-
-    Arguments:
-        dataset -- tabular data, either list or pd.DataFrame
-        interval {int} -- window to windowed moving average
-
-    Optional Args:
-        data_type {str} -- either 'DataFrame' or 'list' (default: {'DataFrame'})
-        key {str} -- column key (if type 'DataFrame'); (default: {'Close'})
-
-    Returns:
-        list -- filtered data
-    """
-    if data_type == 'DataFrame':
-        data = list(dataset[key])
-    else:
-        data = dataset
-
-    wma = []
-    for i in range(interval):
-        wma.append(data[i])
-
-    divisor = 0
-    for i in range(interval):
-        divisor += i+1
-
-    for i in range(interval, len(data)):
-        average = 0.0
-        for j in range(interval):
-            average += float(j+1) * data[i - (interval-1-j)]
-        average = average / float(divisor)
-        wma.append(average)
-    return wma
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from .moving_averages_lib.utils import adjust_signals, find_crossovers, normalize_signals_local
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def typical_price_signal(data: pd.DataFrame) -> list:
@@ -191,9 +29,6 @@ def typical_price_signal(data: pd.DataFrame) -> list:
         summed /= 3.0
         tps.append(summed)
     return tps
-
-
-###################################################################
 
 
 def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
@@ -219,20 +54,17 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     config = kwargs.get('config', [12, 50, 200])
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', False)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
     sma_short = simple_moving_avg(fund, config[0])
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     sma_med = simple_moving_avg(fund, config[1])
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     sma_long = simple_moving_avg(fund, config[2])
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     triple_exp_mov_average(fund, config=[9, 21, 50], plot_output=plot_output, name=name, view=view)
 
@@ -285,11 +117,11 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
         name2 = name3 + f' - Simple Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
         generate_plot(
-            PlotType.CANDLESTICKS, fund, **dict(
-                title=name2, plot_output=plot_output, save_fig=True,
-                additional_plots=[plot_short, plot_med, plot_long],
-                filename=os.path.join(name, view, f"simple_moving_averages_{name}.png")
-            )
+            PlotType.CANDLESTICKS, fund, **{
+                "title": name2, "plot_output": plot_output, "save_fig": True,
+                "additional_plots": [plot_short, plot_med, plot_long],
+                "filename": os.path.join(name, view, f"simple_moving_averages_{name}.png")
+            }
         )
 
     tma = {}
@@ -298,9 +130,7 @@ def triple_moving_average(fund: pd.DataFrame, **kwargs) -> dict:
     tma['long'] = {'period': config[2]}
     tma['tabular'] = {'short': sma_short, 'medium': sma_med, 'long': sma_long}
     tma['metrics'] = {f'{config[0]}-d': m_short, f'{config[1]}-d': m_med, f'{config[2]}-d': m_long}
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     tma['type'] = 'trend'
     tma['length_of_data'] = len(tma['tabular']['short'])
@@ -332,21 +162,18 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     out_suppress = kwargs.get('out_suppress', False)
 
     triple_ema = {}
     t_short = exponential_moving_avg(fund, config[0])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     t_med = exponential_moving_avg(fund, config[1])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     t_long = exponential_moving_avg(fund, config[2])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     triple_ema['tabular'] = {'short': t_short, 'medium': t_med, 'long': t_long}
     triple_ema['short'] = {"period": config[0]}
@@ -373,8 +200,7 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
         m_med.append(np.round((close - t_med[i]) / t_med[i] * 100.0, 3))
         m_long.append(np.round((close - t_long[i]) / t_long[i] * 100.0, 3))
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     triple_ema['metrics'] = {
         f'{config[0]}-d': m_short,
@@ -387,15 +213,14 @@ def triple_exp_mov_average(fund: pd.DataFrame, config: Union[list, None] = None,
         name2 = name3 + f' - Exp Moving Averages [{config[0]}, {config[1]}, {config[2]}]'
 
         generate_plot(
-            PlotType.CANDLESTICKS, fund, **dict(
-                title=name2, plot_output=plot_output, save_fig=True,
-                additional_plots=[plot_short, plot_med, plot_long],
-                filename=os.path.join(name, view, f"exp_moving_averages_{name}.png")
-            )
+            PlotType.CANDLESTICKS, fund, **{
+                "title": name2, "plot_output": plot_output, "save_fig": True,
+                "additional_plots": [plot_short, plot_med, plot_long],
+                "filename": os.path.join(name, view, f"exp_moving_averages_{name}.png")
+            }
         )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     triple_ema['type'] = 'trend'
     triple_ema['length_of_data'] = len(triple_ema['tabular']['short'])
@@ -427,7 +252,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     config = kwargs.get('config', [4, 9, 18])
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
     if plot_output:
@@ -464,8 +289,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     else:
         return {}
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.4)
+    update_progress_bar(progress_bar, 0.4)
 
     mast = {}
     mast['tabular'] = {}
@@ -479,8 +303,7 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
 
     swings = mast['metrics']
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.4)
+    update_progress_bar(progress_bar, 0.4)
 
     name3 = INDEXES.get(name, name)
     funct_name = function.upper()
@@ -490,19 +313,18 @@ def moving_average_swing_trade(fund: pd.DataFrame, **kwargs):
     if plot_output:
         generate_plot(
             PlotType.SPECIALITY, [fund['Close'], short, med, long, swings],
-            **dict(alt_ax_index=[4], legend=legend, title=name2, plot_output=plot_output)
+            **{"alt_ax_index": [4], "legend": legend, "title": name2, "plot_output": plot_output}
         )
     else:
         filename = os.path.join(name, view, f"swing_trades_{function}_{name}.png")
         generate_plot(
-            PlotType.SPECIALITY, [fund['Close'], short, med, long, swings], **dict(
-                alt_ax_index=[4], legend=['Swing Signal'], title=name2, save_fig=True,
-                plot_output=plot_output, filename=filename
-            )
+            PlotType.SPECIALITY, [fund['Close'], short, med, long, swings], **{
+                "alt_ax_index": [4], "legend": ['Swing Signal'], "title": name2, "save_fig": True,
+                "plot_output": plot_output, "filename": filename
+            }
         )
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     mast['type'] = 'oscillator'
     return mast

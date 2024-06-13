@@ -1,13 +1,16 @@
 """ demand index """
 import os
+from typing import Union
 
 import pandas as pd
 
 from libs.utils import INDEXES, generate_plot, PlotType
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
 from .trends import get_trend_lines_regression
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def demand_index(fund: pd.DataFrame, **kwargs) -> dict:
@@ -29,12 +32,12 @@ def demand_index(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    pbar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     trendlines = kwargs.get('trendlines', False)
 
     dmx = {}
     dmx['tabular'] = generate_di_signal(
-        fund, plot_output=plot_output, name=name, view=view, pbar=pbar)
+        fund, plot_output=plot_output, name=name, view=view, pbar=p_bar)
 
     if trendlines:
         end = len(dmx['tabular'])
@@ -44,13 +47,11 @@ def demand_index(fund: pd.DataFrame, **kwargs) -> dict:
 
     dmx['type'] = 'oscillator'
     dmx['length_of_data'] = len(dmx['tabular'])
-    dmx['signals'] = demand_index_indicators(fund, dmx, pbar=pbar)
+    dmx['signals'] = demand_index_indicators(fund, dmx, pbar=p_bar)
     dmx['metrics'] = demand_index_metrics(fund, dmx, plot_output=plot_output,
-        name=name, view=view, pbar=pbar)
+        name=name, view=view, pbar=p_bar)
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return dmx
 
 
@@ -66,16 +67,11 @@ def demand_index_indicators(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
     Returns:
         list -- demand index data object
     """
-    pbar = kwargs.get('pbar')
-
+    p_bar = kwargs.get('pbar')
     signals = di_crossovers(fund, dmx['tabular'])
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     signals.extend(di_divergences(fund, dmx['tabular']))
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return signals
 
 
@@ -99,10 +95,9 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    pbar = kwargs.get('pbar')
+    p_bar = kwargs.get('pbar')
 
     metrics = [0.0] * len(dmx['tabular'])
-
     weight_map = {
         "zero crossover": [1.2, 0.95, 0.6, 0.1],
         "dual-signal-line": [1.0, 0.85, 0.55, 0.1],
@@ -138,25 +133,21 @@ def demand_index_metrics(fund: pd.DataFrame, dmx: dict, **kwargs) -> list:
         if ind + 3 < len(metrics):
             metrics[ind+3] += s_val * weights[3]
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     metrics = exponential_moving_avg(metrics, 7, data_type='list')
     norm = normalize_signals([metrics])
     metrics = norm[0]
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Demand Index"
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Demand Index Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(name, view, f"di_metrics_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Demand Index Metrics',
+            "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, view, f"di_metrics_{name}")
+        }
     )
-
     return metrics
 
 
@@ -179,7 +170,7 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    pbar = kwargs.get('pbar')
+    p_bar = kwargs.get('pbar')
 
     signal = []
 
@@ -190,12 +181,9 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
         low = min([fund['Low'][i], fund['Low'][i-1]])
         vol_hl[i] = high - low
 
-    if pbar is not None:
-        pbar.uptick(increment=0.05)
-
+    update_progress_bar(p_bar, 0.05)
     vol_av = simple_moving_avg(vol_hl, 10, data_type='list')
-    if pbar is not None:
-        pbar.uptick(increment=0.05)
+    update_progress_bar(p_bar, 0.05)
 
     # Calculate the constant 'K'.
     const_k = [0.0] * len(vol_av)
@@ -205,16 +193,13 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
         else:
             const_k[i] = 3.0 * fund['Close'][i] / vol
 
-    if pbar is not None:
-        pbar.uptick(increment=0.05)
+    update_progress_bar(p_bar, 0.05)
 
     # Calculate daily percent change of open-close.
     percent = [0.0] * len(vol_av)
     for i, ope in enumerate(fund['Open']):
         percent[i] = (fund['Close'][i] - ope) / ope * const_k[i]
-
-    if pbar is not None:
-        pbar.uptick(increment=0.05)
+    update_progress_bar(p_bar, 0.05)
 
     # Calculate BP and SP, so we can get DI = BP/SP | SP/BP
     b_p = []
@@ -229,9 +214,7 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
         else:
             b_p.append(vol / percent[i])
             s_p.append(vol)
-
-    if pbar is not None:
-        pbar.uptick(increment=0.05)
+    update_progress_bar(p_bar, 0.05)
 
     for i, bpx in enumerate(b_p):
         if abs(bpx) > abs(s_p[i]):
@@ -242,25 +225,21 @@ def generate_di_signal(fund: pd.DataFrame, **kwargs) -> list:
             else:
                 signal.append(bpx / s_p[i])
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     signal = exponential_moving_avg(signal, 10, data_type='list')
-    if pbar is not None:
-        pbar.uptick(increment=0.05)
+    update_progress_bar(p_bar, 0.05)
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Demand Index"
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=signal, y1_label='Price', y2_label='Demand Index', title=title,
-            plot_output=plot_output, filename=os.path.join(name, view, f"demand_index_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": signal, "y1_label": 'Price', "y2_label": 'Demand Index', "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, view, f"demand_index_{name}")
+        }
     )
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return signal
 
 

@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import generate_plot, PlotType
-from libs.nasit import generate_fund_from_ledger
+from libs.nasit.ledger import generate_fund_from_ledger
 
 from .utils import (
     function_data_download, TICKER, NORMAL, WARNING, UP_COLOR, DOWN_COLOR
@@ -183,14 +183,14 @@ def nasit_generation_function(config: dict, print_only=False):
                 names2.append(fund_name)
 
         generate_plot(
-            PlotType.GENERIC_PLOTTING, plot_able, **dict(
-                legend=names, title='NASIT Passives'
-            )
+            PlotType.GENERIC_PLOTTING, plot_able, **{
+                "legend": names, "title": 'NASIT Passives'
+            }
         )
         generate_plot(
-            PlotType.GENERIC_PLOTTING, plot_able2, **dict(
-                legend=names2, title='NASIT Passives [Returns]'
-            )
+            PlotType.GENERIC_PLOTTING, plot_able2, **{
+                "legend": names2, "title": 'NASIT Passives [Returns]'
+            }
         )
 
 def ledger_function(config: dict):

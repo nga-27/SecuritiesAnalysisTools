@@ -349,10 +349,10 @@ def feature_plotter(fund: pd.DataFrame, shapes: list, **kwargs):
     save_fig = not plot_output
 
     generate_plot(
-        PlotType.SHAPE_PLOTTING, fund['Close'], **dict(
-            shapeXY=shapes, feature=feature, save_fig=save_fig, plot_output=plot_output,
-            title=title, filename=filename
-        )
+        PlotType.SHAPE_PLOTTING, fund['Close'], **{
+            "shapeXY": shapes, "feature": feature, "save_fig": save_fig, "plot_output": plot_output,
+            "title": title, "filename": filename
+        }
     )
 
 

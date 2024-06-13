@@ -6,17 +6,17 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import generate_plot, PlotType, dates_convert_from_index, INDEXES
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 
-# pylint: disable=pointless-string-statement
-"""
-    1. Combine points backward (i.e. for time=34 combine 34's and 21's)
-    2. Sort on y
-    3. Find clusters (< 1-2% change across group); continue only if multiple X's exist
-    4. Find average Y of group, plot horizontal line from first X of group to end of plot
-    4a. Alpha of color should be indicative of number in clusters
-    ...
-    5. Recall that Resistance = Support -> add functionality
-"""
+###
+    # 1. Combine points backward (i.e. for time=34 combine 34's and 21's)
+    # 2. Sort on y
+    # 3. Find clusters (< 1-2% change across group); continue only if multiple X's exist
+    # 4. Find average Y of group, plot horizontal line from first X of group to end of plot
+    # 4a. Alpha of color should be indicative of number in clusters
+    # ...
+    # 5. Recall that Resistance = Support -> add functionality
+###
 
 CLUSTER_THRESHOLD = 0.7
 MAJOR_GROUP_THRESHOLD = 1.1
@@ -43,7 +43,7 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     time_frames = kwargs.get('timeframes', [13, 21, 34, 55])
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
     resist_support_lines = {}
@@ -70,15 +70,11 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
         sorted_resistance = sort_and_group(resistance)
         resist_support_lines['resistance'][str(
             time)] = cluster_notables(sorted_resistance, data)
-
-        if progress_bar is not None:
-            progress_bar.uptick(increment=increment)
+        update_progress_bar(progress_bar, increment)
 
     x_support, y_support, x_resistance, y_resistance = get_plot_content(
         data, resist_support_lines, selected_timeframe=str(time_frames[len(time_frames)-1]))
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     x_combined, y_combined = res_sup_unions(y_resistance, x_resistance, y_support, x_support)
     # Odd list behavior when no res/sup lines drawn on appends, so if-else to fix
@@ -92,28 +88,23 @@ def find_resistance_support_lines(data: pd.DataFrame, **kwargs) -> dict:
         x_p2 = data.index
         y_p = [remove_dates_from_close(data)]
     colors = colorize_plots(len(y_p), primary_plot_index=len(y_p)-1)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     name2 = INDEXES.get(name, name)
     generate_plot(
-        PlotType.GENERIC_PLOTTING, y_p, **dict(
-            x=x_p2, colors=colors, title=f'{name2} Major Resistance & Support', save_fig=True,
-            plot_output=plot_output, filename=os.path.join(name, view, f"resist_support_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, y_p, **{
+            "x": x_p2, "colors": colors, "title": f'{name2} Major Resistance & Support',
+            "save_fig": True,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"resist_support_{name}.png")
+        }
     )
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     analysis = detailed_analysis([y_resistance, y_support, y_combined],
         data, key_args={'Colors': colors})
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
-
+    update_progress_bar(progress_bar, 0.1)
     analysis['type'] = 'trend'
-
     return analysis
 
 
@@ -290,7 +281,6 @@ def cluster_notables(sorted_x: list, data: pd.DataFrame) -> list:
         content['x'] = chunk
         content['start'] = int(np.min(chunk))
         lines.append(content)
-
     return lines
 
 
@@ -583,7 +573,6 @@ def detailed_analysis(zipped_content: list, data: pd.DataFrame,
         maj, analysis['current price'], support_resistance='resistance')
     analysis['major S&R'] = get_nearest_lines(
         maj, analysis['current price'], support_resistance='major', color=colors)
-
     return analysis
 
 
@@ -635,5 +624,4 @@ def colorize_plots(len_of_plots: int, primary_plot_index: int = None) -> list:
 
     if primary_plot_index is not None:
         colors[primary_plot_index] = 'black'
-
     return colors

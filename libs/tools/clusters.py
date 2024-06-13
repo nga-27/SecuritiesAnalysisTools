@@ -6,15 +6,16 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import (
-    date_extractor, INDEXES, STANDARD_COLORS, PlotType, generate_plot, ProgressBar
+    date_extractor, INDEXES, STANDARD_COLORS, PlotType, generate_plot
 )
-from libs.features import normalize_signals
+from libs.features.feature_utils import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 
 from .ultimate_oscillator import ultimate_oscillator
 from .rsi import relative_strength_indicator_rsi
 from .full_stochastic import full_stochastic
 
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 from .trends import auto_trend
 
 WARNING = STANDARD_COLORS["warning"]
@@ -50,7 +51,7 @@ def cluster_oscillators(position: pd.DataFrame, **kwargs):
     plot_output = kwargs.get('plot_output', True)
     function = kwargs.get('function', 'full_stochastic')
     wma = kwargs.get('wma', True)
-    prog_bar = kwargs.get('progress_bar', None)
+    prog_bar: Union[ProgressBar, None] = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
 
     cluster_oscillator = {}
@@ -62,16 +63,13 @@ def cluster_oscillators(position: pd.DataFrame, **kwargs):
     #clusters_filtered = cluster_filtering(clusters, filter_thresh)
     clusters_wma = exponential_moving_avg(
         clusters, interval=3, data_type='list')
-    if prog_bar is not None:
-        prog_bar.uptick(increment=0.1)
+    update_progress_bar(prog_bar, 0.1)
 
     dates = cluster_dates(clusters_wma, position)
-    if prog_bar is not None:
-        prog_bar.uptick(increment=0.1)
+    update_progress_bar(prog_bar, 0.1)
 
     signals = clustered_signals(dates)
-    if prog_bar is not None:
-        prog_bar.uptick(increment=0.1)
+    update_progress_bar(prog_bar, 0.1)
 
     cluster_oscillator['clustered type'] = function
     cluster_oscillator[function] = dates
@@ -83,21 +81,17 @@ def cluster_oscillators(position: pd.DataFrame, **kwargs):
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Clustering: ' + function
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=clusters, y1_label='Position Price', y2_label='Clustered Oscillator',
-            x_label='Trading Days', title=name2, plot_output=plot_output,
-            filename=os.path.join(name, view, f"clustering_{name}_{function}")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": clusters, "y1_label": 'Position Price', "y2_label": 'Clustered Oscillator',
+            "x_label": 'Trading Days', "title": name2, "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"clustering_{name}_{function}")
+        }
     )
-
-    if prog_bar is not None:
-        prog_bar.uptick(increment=0.2)
+    update_progress_bar(prog_bar, 0.2)
 
     if wma:
         cluster_oscillator['tabular'] = clusters_wma
-
     cluster_oscillator['type'] = 'oscillator'
-
     return cluster_oscillator
 
 
@@ -199,7 +193,6 @@ def generate_cluster(position: pd.DataFrame, function: str,
     """
     # pylint: disable=too-many-locals
     clusters = []
-
     for _ in range(len(position)):
         clusters.append(0)
 
@@ -255,8 +248,7 @@ def generate_cluster(position: pd.DataFrame, function: str,
                 f'in cluster_oscillators.{NORMAL}')
         return None
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.25)
+    update_progress_bar(p_bar, 0.25)
 
     if function == 'all':
         weights = generate_weights(position)
@@ -284,9 +276,7 @@ def generate_cluster(position: pd.DataFrame, function: str,
         clusters = clustering(clusters, med)
         clusters = clustering(clusters, slow)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.25)
-
+    update_progress_bar(p_bar, 0.25)
     return clusters
 
 
@@ -388,13 +378,12 @@ def clustered_metrics(position: pd.DataFrame, cluster_oscillator: dict, **kwargs
     name3 = INDEXES.get(name, name)
     name2 = name3 + " - Clustered Oscillator Metrics"
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"clustered_osc_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": name2,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"clustered_osc_metrics_{name}.png")
+        }
     )
-
     return cluster_oscillator
 
 
@@ -415,7 +404,6 @@ def clustered_signals(sig_list: list, **kwargs) -> list:
     """
     upper_thresh = kwargs.get('upper_thresh', 90)
     lower_thresh = kwargs.get('lower_thresh', 10)
-
     quartiles = [x[2] for x in sig_list]
     upper = np.percentile(quartiles, upper_thresh)
     lower = np.percentile(quartiles, lower_thresh)

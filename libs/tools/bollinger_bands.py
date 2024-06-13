@@ -1,13 +1,16 @@
 """ Bollinger Bands """
 import os
+from typing import Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
-from .moving_average import simple_moving_avg, exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
@@ -31,7 +34,7 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
     stdev = kwargs.get('stdev', 2.0)
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     if period == 10:
@@ -40,27 +43,22 @@ def bollinger_bands(position: pd.DataFrame, **kwargs) -> dict:
         stdev = 2.5
 
     bollinger_bands_data = {}
-
     bollinger_bands_data['tabular'] = get_bollinger_signals(
         position, period, stdev, plot_output=plot_output, name=name, view=view)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     bollinger_bands_data['volatility'] = volatility_calculation(
         position, plot_output=plot_output, view=view)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     bollinger_bands_data = bollinger_indicators(position, bollinger_bands_data, period=period)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     bollinger_bands_data = bollinger_metrics(position, bollinger_bands_data, period=period,
                            plot_output=plot_output, name=name, view=view)
     features = bollinger_band_features(bollinger_bands_data, position, plot_output=plot_output)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     bollinger_bands_data['type'] = 'oscillator'
     bollinger_bands_data['signals'] = features
@@ -136,11 +134,11 @@ def bollinger_metrics(position: pd.DataFrame, bol_bands: dict, **kwargs) -> dict
     name3 = INDEXES.get(name, name)
     name2 = name3 + " - Bollinger Band Metrics"
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=norm_signal, y1_label='Price', y2_label='Indicators', title=name2,
-            plot_output=plot_output, filename=os.path.join(
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": norm_signal, "y1_label": 'Price', "y2_label": 'Indicators', "title": name2,
+            "plot_output": plot_output, "filename": os.path.join(
                 name, view, f"bollinger_band_metrics_{name}.png")
-        )
+        }
     )
 
     return bol_bands
@@ -246,10 +244,10 @@ def volatility_calculation(position: pd.DataFrame, **kwargs) -> list:
 
     if plot_output:
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=std_correction, y1_label='Price', y2_label='Volatility',
-                title='Standard Deviation Volatility'
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": std_correction, "y1_label": 'Price', "y2_label": 'Volatility',
+                "title": 'Standard Deviation Volatility'
+            }
         )
 
     return std_correction
@@ -302,11 +300,12 @@ def get_bollinger_signals(position: pd.DataFrame, period: int, stdev: float, **k
     name3 = INDEXES.get(name, name)
     name2 = name3 + ' - Bollinger Bands'
     generate_plot(
-        PlotType.GENERIC_PLOTTING, [position['Close'], moving_average, upper, lower], **dict(
-            title=name2, x=position.index,
-            legend=['Price', 'Moving Avg', 'Upper Band', 'Lower Band'], plot_output=plot_output,
-            filename=os.path.join(name, view, f"bollinger_bands_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, [position['Close'], moving_average, upper, lower], **{
+            "title": name2, "x": position.index,
+            "legend": ['Price', 'Moving Avg', 'Upper Band', 'Lower Band'],
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"bollinger_bands_{name}.png")
+        }
     )
 
     return signals

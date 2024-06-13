@@ -1,10 +1,13 @@
 """ Average True Range """
 import os
+from typing import Union
+
 import pandas as pd
 
 from libs.utils import generate_plot, PlotType, INDEXES
-from libs.features import normalize_signals
-from .moving_average import exponential_moving_avg
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
@@ -26,7 +29,7 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     out_suppress = kwargs.get('out_suppress', False)
 
     atr = {}
@@ -37,8 +40,7 @@ def average_true_range(fund: pd.DataFrame, **kwargs) -> dict:
     atr['length_of_signal'] = len(atr['tabular'])
     atr['type'] = 'oscillator'
 
-    if p_bar is not None:
-        p_bar.uptick(increment=1.0)
+    update_progress_bar(p_bar)
 
     return atr
 
@@ -89,14 +91,14 @@ def get_atr_signal(fund: pd.DataFrame, **kwargs) -> list:
         generate_plot(
             PlotType.DUAL_PLOTTING,
             fund['Close'],
-            **dict(
-                y_list_2=signal,
-                y1_label='Price',
-                y2_label='ATR',
-                title=title,
-                filename=os.path.join(name, views, f"atr_{name}.png"),
-                plot_output=plot_output
-            )
+            **{
+                "y_list_2": signal,
+                "y1_label": 'Price',
+                "y2_label": 'ATR',
+                "title": title,
+                "filename": os.path.join(name, views, f"atr_{name}.png"),
+                "plot_output": plot_output
+            }
         )
 
     return signal
@@ -204,11 +206,11 @@ def atr_indicators(fund: pd.DataFrame, atr_dict: dict, **kwargs) -> dict:
         generate_plot(
             PlotType.DUAL_PLOTTING,
             fund['Close'],
-            **dict(
-                y_list_2=[atr_dict['tabular'], ema_1, ema_2],
-                y1_label='Price', y2_label='ATRs', title=title,
-                plot_output=plot_output
-            )
+            **{
+                "y_list_2": [atr_dict['tabular'], ema_1, ema_2],
+                "y1_label": 'Price', "y2_label": 'ATRs', "title": title,
+                "plot_output": plot_output
+            }
         )
 
     return atr_dict

@@ -6,9 +6,11 @@ import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, generate_plot, PlotType
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
-from .moving_average import adjust_signals, exponential_moving_avg
+from .moving_averages_lib.utils import adjust_signals
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def rate_of_change_oscillator(fund: pd.DataFrame,
@@ -37,20 +39,17 @@ def rate_of_change_oscillator(fund: pd.DataFrame,
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
 
     roc = {}
     t_short = roc_signal(fund, periods[0])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     t_med = roc_signal(fund, periods[1])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     t_long = roc_signal(fund, periods[2])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     roc['tabular'] = {'short': t_short, 'medium': t_med, 'long': t_long}
     roc['short'] = periods[0]
@@ -60,8 +59,7 @@ def rate_of_change_oscillator(fund: pd.DataFrame,
     tsx, ts2 = adjust_signals(fund, t_short, offset=periods[0])
     tmx, tm2 = adjust_signals(fund, t_med, offset=periods[1])
     tlx, tl2 = adjust_signals(fund, t_long, offset=periods[2])
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
+    update_progress_bar(p_bar, 0.2)
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Rate of Change Oscillator"
@@ -69,33 +67,30 @@ def rate_of_change_oscillator(fund: pd.DataFrame,
     x_s = [tsx, tmx, tlx]
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=[t_short, t_med, t_long], y1_label='Price', y2_label='Rate of Change',
-            title=title, legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
-            plot_output=plot_output, filename=os.path.join(name, views, f"rate_of_change_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": [t_short, t_med, t_long], "y1_label": 'Price', "y2_label": 'Rate of Change',
+            "title": title,
+            "legend": [f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
+            "plot_output": plot_output,
+            "filename": os.path.join(name, views, f"rate_of_change_{name}")
+        }
     )
 
     generate_plot(
-        PlotType.GENERIC_PLOTTING, plots, **dict(
-            x=x_s, title=title,
-            legend=[f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
-            plot_output=plot_output
-        )
+        PlotType.GENERIC_PLOTTING, plots, **{
+            "x": x_s, "title": title,
+            "legend": [f'ROC-{periods[0]}', f'ROC-{periods[1]}', f'ROC-{periods[2]}'],
+            "plot_output": plot_output
+        }
     )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     roc = roc_metrics(fund, roc, plot_output=plot_output,
                       name=name, views=views, p_bar=p_bar)
 
     roc['length_of_data'] = len(roc['tabular']['short'])
     roc['type'] = 'oscillator'
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return roc
 
 
@@ -151,28 +146,26 @@ def roc_metrics(fund: pd.DataFrame, roc_dict: dict, **kwargs) -> dict:
 
     # Look at zero crossovers first
     roc_dict = roc_zero_crossovers(fund, roc_dict, map_tabular)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     roc_dict = roc_over_threshold_crossovers(fund, roc_dict, map_tabular)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     roc_dict['metrics'] = exponential_moving_avg(
         roc_dict['metrics'], 7, data_type='list')
 
     roc_dict['metrics'] = normalize_signals([roc_dict['metrics']])[0]
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Rate of Change Metrics"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=roc_dict['metrics'], y1_label='Price', y2_label='ROC Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(name, views, f"roc_metrics_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": roc_dict['metrics'], "y1_label": 'Price', "y2_label": 'ROC Metrics',
+            "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, views, f"roc_metrics_{name}")
+        }
     )
 
     return roc_dict

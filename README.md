@@ -21,7 +21,9 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 
 
 ---
+
 # <a name="getting_started"></a>How to Use / How to Start
+
 1. Pull repository, start local, virtual, and/or global python environment.
 1. Run `pip install .` or `pip install '.'`.  (Validate modules installed from [_Installations_](#installations) section.)
 1. Save file `core_example.json` as `core.json`. Edit new file as desired. This is recommended but not required. [Core details](#core)
@@ -44,7 +46,9 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 
 
 ---
+
 # <a name="versions"></a>Notable Versioning / Releases
+
 * **`0.1.0`, `2019-06-04`** - Release 1: outputting to pptx and json files; basic analysis; primarily plot based
 * `0.1.06`, `2019-07-13` - Wide 16:9 ratio for pptx output
 * `0.1.11`, `2019-08-13` - Upgraded requirements, some better documentation, and mutual fund time frame issue resolved
@@ -67,7 +71,7 @@ Technical analysis tools app for analyzing securities (funds, stocks, bonds, equ
 * **`1.0.0`, `2023-02-25`** - Release 3 - the first full release
 * `1.0.1`, `2023-07-19` - Upgrade to `intellistops==1.1`
 * `1.0.3`, `2023-11-23` - Upgrade to `intellistops==1.2.1`; 401K analysis tools.
-
+- `1.1.0`, 
 
 ---
 # <a name="acknowledgements"></a>Acknowledgements
@@ -196,15 +200,18 @@ Other solutions, employed on all plotting functions, is the `register_matplotlib
 
 
 ---
+
 # <a name="links"></a>Notable links:
+
 [Yahoo Finance Python](https://pypi.org/project/yfinance/)<br />
 [Top 4 Tech Tools](https://www.investopedia.com/articles/active-trading/041814/four-most-commonlyused-indicators-trend-trading.asp) <br />
 [Tip Ranks, Metadata](https://www.tipranks.com/) <br />
 [TradingView - Awesome Charts](https://www.tradingview.com/) <br />
 
-
 ---
-# <a name="metrics"></a>Custom Metrics 
+
+# <a name="metrics"></a>Custom Metrics
+
 * _Clustered Oscillators_ - weighted-aggregate of RSI, Stochastic, and Ultimate Oscillators. **Higher: buy, lower: sell**
 * _Swing Trades_ - logic to create an oscillator signal using various moving averages. **Higher: buy, lower: sell**
 * _Market Composite Index (MCI)_ - equal weight aggregate of all 11 market sectors of clustered oscillators

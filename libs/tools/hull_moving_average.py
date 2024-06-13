@@ -1,13 +1,16 @@
 """ hull moving average """
 import os
+from typing import Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
-from .moving_average import weighted_moving_avg, simple_moving_avg
+from .moving_averages_lib.weighted_moving_avg import weighted_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
@@ -33,7 +36,7 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     hull = generate_hull_signal(
@@ -43,9 +46,7 @@ def hull_moving_average(position: pd.DataFrame, **kwargs) -> dict:
     hull = swing_trade_metrics(
         position, hull, plot_output=plot_output, name=name, p_bar=p_bar, view=view)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     hull['type'] = 'trend'
 
     return hull
@@ -115,15 +116,13 @@ def generate_hull_signal(position: pd.DataFrame, **kwargs) -> list:
     legend = ['Price', 'HMA-short', 'HMA-medium', 'HMA-long']
 
     generate_plot(
-        PlotType.GENERIC_PLOTTING, [position['Close'], plots[0], plots[1], plots[2]], **dict(
-            legend=legend, title=name2, plot_output=plot_output,
-            filename=os.path.join(name, view, f"hull_moving_average_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, [position['Close'], plots[0], plots[1], plots[2]], **{
+            "legend": legend, "title": name2, "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"hull_moving_average_{name}.png")
+        }
     )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     return hull
 
 
@@ -244,9 +243,7 @@ def generate_swing_signal(position: pd.DataFrame, swings: dict, **kwargs) -> dic
         if data is not None:
             features.append(data)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     swings['tabular']['swing'] = signal
     swings['length_of_data'] = len(swings['tabular']['swing'])
     swings['signals'] = features
@@ -283,7 +280,6 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     metrics = [0.0] * tot_len
 
     for i, val in enumerate(swings['tabular']['swing']):
-
         metrics[i] += val * weights[0]
 
         # Smooth the curves
@@ -329,14 +325,12 @@ def swing_trade_metrics(position: pd.DataFrame, swings: dict, **kwargs) -> dict:
     name2 = name3 + ' - Hull Moving Average Metrics'
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=swings['metrics']['metrics'], y1_label='Price', y2_label='Metrics',
-            title=name2, plot_output=plot_output,
-            filename=os.path.join(name, view, f"hull_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": swings['metrics']['metrics'], "y1_label": 'Price', "y2_label": 'Metrics',
+            "title": name2, "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"hull_metrics_{name}.png")
+        }
     )
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     return swings

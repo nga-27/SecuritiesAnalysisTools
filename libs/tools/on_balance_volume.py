@@ -1,6 +1,6 @@
 """ on balance volume """
 import os
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import pandas as pd
 import numpy as np
@@ -8,9 +8,10 @@ import numpy as np
 from libs.utils import (
     dates_extractor_list, INDEXES, generate_plot, PlotType
 )
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 
-from .moving_average import simple_moving_avg
 from .trends import get_trend_lines, get_trend_lines_regression
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
@@ -38,7 +39,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     filter_factor = kwargs.get('filter_factor', 5.0)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar', None)
     view = kwargs.get('view', '')
     trend_lines = kwargs.get('trendlines', False)
 
@@ -71,8 +72,7 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
         interval=[0, 2, 4, 7],
         trend_window=[3, 15, 31, max_window])
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.125)
+    update_progress_bar(progress_bar, 0.125)
 
     end = len(obv_dict['obv'])
     obv = obv_dict['obv'][end-100: end]
@@ -89,11 +89,8 @@ def on_balance_volume(fund: pd.DataFrame, **kwargs) -> dict:
         get_trend_lines_regression(
             obv, dates=None, plot_output=plot_output, indicator='OBV')
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.125)
-
+    update_progress_bar(progress_bar, 0.125)
     obv_dict['type'] = 'trend'
-
     return obv_dict
 
 
@@ -124,12 +121,9 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
     view = kwargs.get('view')
 
     obv_dict = {}
-
     obv = generate_obv_signal(fund)
     obv_dict['obv'] = obv
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.125)
+    update_progress_bar(progress_bar, 0.125)
 
     o_filter, features = obv_feature_detection(
         obv, fund, sma_interval=sma_interval,
@@ -137,9 +131,7 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
 
     obv_dict['tabular'] = o_filter
     obv_dict['signals'] = features
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.125)
+    update_progress_bar(progress_bar, 0.125)
 
     volume = []
     volume.append(fund['Volume'][0])
@@ -157,33 +149,33 @@ def generate_obv_content(fund: pd.DataFrame, **kwargs) -> dict:
 
     filename2 = os.path.join(name, view, f"obv_standard_{name}.png")
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=obv, x=x_dates, y1_label='Position Price', y2_label='On Balance Volume',
-            x_label='Trading Days', title=name2, plot_output=plot_output,
-            filename=filename2
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": obv, "x": x_dates, "y1_label": 'Position Price',
+            "y2_label": 'On Balance Volume',
+            "x_label": 'Trading Days', "title": name2, "plot_output": plot_output,
+            "filename": filename2
+        }
     )
 
     generate_plot(
-        PlotType.BAR_CHART, volume, **dict(
-            x=x_dates, position=fund, title=name5, save_fig=True, plot_output=plot_output,
-            filename=os.path.join(name, view, f"volume_{name}.png"), all_positive=True
-        )
+        PlotType.BAR_CHART, volume, **{
+            "x": x_dates, "position": fund, "title": name5, "save_fig": True,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"volume_{name}.png"), "all_positive": True
+        }
     )
 
     if not plot_output:
         generate_plot(
-            PlotType.BAR_CHART, o_filter, **dict(
-                x=x_dates, position=fund, title=name4, save_fig=True, plot_output=plot_output,
-                filename=os.path.join(name, view, f"obv_diff_{name}.png")
-            )
+            PlotType.BAR_CHART, o_filter, **{
+                "x": x_dates, "position": fund, "title": name4, "save_fig": True,
+                "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"obv_diff_{name}.png")
+            }
         )
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.125)
-
+    update_progress_bar(progress_bar, 0.125)
     obv_dict['length_of_data'] = len(obv_dict['tabular'])
-
     return obv_dict
 
 
@@ -248,16 +240,15 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> Tuple[
 
     if plot_output:
         generate_plot(
-            PlotType.GENERIC_PLOTTING, [obv, obv_sig, obv_sig2, obv_sig3], **dict(
-                title='OBV Signal Line',
-                legend=[
+            PlotType.GENERIC_PLOTTING, [obv, obv_sig, obv_sig2, obv_sig3], **{
+                "title": 'OBV Signal Line',
+                "legend": [
                     'obv', f'sma-{sma_interval}', f"sma-{sma_interval2}", f"sma-{sma_interval3}"
                 ]
-            )
+            }
         )
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.25)
+    update_progress_bar(progress_bar, 0.25)
 
     filter_factor2 = filter_factor / 2.0
     o_filter = generate_obv_o_filter(obv_diff, filter_factor2)
@@ -270,7 +261,6 @@ def obv_feature_detection(obv: list, position: pd.DataFrame, **kwargs) -> Tuple[
         features.append(sma)
 
     o_filter = generate_obv_o_filter(obv_diff, filter_factor)
-
     return o_filter, features
 
 

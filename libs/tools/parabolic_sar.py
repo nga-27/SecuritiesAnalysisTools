@@ -1,5 +1,6 @@
 """ parabolic SAR """
 import os
+from typing import Union
 import pprint
 
 import pandas as pd
@@ -7,6 +8,7 @@ import numpy as np
 
 from libs.utils import INDEXES
 from libs.utils.plot_utils import candlesticks
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 
 from .trends import auto_trend
 
@@ -33,16 +35,14 @@ def parabolic_sar(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
 
     sar = {}
     sar = generate_sar(
         fund, plot_output=plot_output, name=name, view=view, p_bar=p_bar)
 
     sar = sar_metrics(fund, sar)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     sar['type'] = 'trend'
     sar['length_of_data'] = len(sar['tabular']['fast'])
@@ -69,9 +69,7 @@ def parabolic_sar(fund: pd.DataFrame, **kwargs) -> dict:
         print("\r\nParabolic SAR Status:\r\n")
         pprint.pprint(sar['current'])
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return sar
 
 
@@ -84,7 +82,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     Optional Args:
         af {list} -- acceleration factor (default: {[0.02, 0.01]})
         max_factor {float} -- max acceleration factor (default: {0.2})
-        period_offset {int} -- lookback period to establish a trend in starting
+        period_offset {int} -- look back period to establish a trend in starting
                                 (default: {5})
         plot_output {bool} -- (default: {True})
         name {str} -- (default: {''})
@@ -106,7 +104,6 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     p_bar = kwargs.get('pbar')
 
     sar_dict = {}
-
     signals = {"fast": [], "slow": []}
     sig_names = ["fast", "slow"]
     colors = ["blue", "black"]
@@ -120,10 +117,8 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
     ep_low = float('inf')
     for i in range(period_offset):
         signal[i] = fund['Close'][i]
-
         if fund['Low'][i] < ep_low:
             ep_low = fund['Low'][i]
-
         if fund['High'][i] > ep_high:
             ep_high = fund['High'][i]
 
@@ -138,9 +133,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
         signal[period_offset-1] = ep_low
 
     add_plts = []
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     # Begin generating SAR signal, number of signals determined by number of AFs
     for k, afx in enumerate(acc_factor):
@@ -205,8 +198,7 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
             "color": colors[k]
         })
 
-        if p_bar is not None:
-            p_bar.uptick(increment=0.2)
+        update_progress_bar(p_bar, 0.2)
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Parabolic SAR"
@@ -218,12 +210,9 @@ def generate_sar(fund: pd.DataFrame, **kwargs) -> dict:
         candlesticks.candlestick_plot(fund, additional_plots=add_plts, title=title,
                          save_fig=True, filename=filename)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     sar_dict['tabular'] = signals
     sar_dict['signals'] = indicators
-
     return sar_dict
 
 
@@ -248,5 +237,4 @@ def sar_metrics(fund: pd.DataFrame, sar: dict) -> dict:
             np.round((close - tab['slow'][i]) / tab['slow'][i] * 100.0, 3))
 
     sar['metrics'] = metrics
-
     return sar

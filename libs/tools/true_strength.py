@@ -5,6 +5,7 @@ from typing import Union, Tuple
 import pandas as pd
 import numpy as np
 
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
 from libs.utils import (
     generate_plot, PlotType, dates_extractor_list, date_extractor,
     INDEXES, api_sector_match, api_sector_funds
@@ -68,7 +69,7 @@ def period_strength(fund_name: str, tickers: dict, periods: list, **kwargs) -> l
     has_sp = False
     has_sector = False
 
-    sp_500_data = get_sp_500_df(tickers)
+    sp_500_data = tickers.get('^GSPC')
     if sp_500_data is not None:
         has_sp = True
     if sector != '':
@@ -126,23 +127,6 @@ def period_strength(fund_name: str, tickers: dict, periods: list, **kwargs) -> l
     return ratio
 
 
-def get_sp_500_df(tickers: dict) -> Union[pd.DataFrame, None]:
-    """Get S&P500 DataFrame
-
-    Simple way of getting the S&P-specific frame from the data dict.
-
-    Arguments:
-        tickers {dict} -- entire data object
-
-    Returns:
-        pd.DataFrame -- S&P500-specific DataFrame
-    """
-    sp_500_index = '^GSPC'
-    if sp_500_index in tickers:
-        return tickers[sp_500_index]
-    return None
-
-
 def relative_strength(primary_name: str, full_data_dict: dict,
                       **kwargs) -> Tuple[dict, Union[dict, None]]:
     """Relative Strength
@@ -167,11 +151,11 @@ def relative_strength(primary_name: str, full_data_dict: dict,
     """
     # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     secondary_fund_names = kwargs.get('secondary_fund_names', [])
-    config = kwargs.get('config', None)
+    config = kwargs.get('config')
     sector = kwargs.get('sector', '')
     plot_output = kwargs.get('plot_output', True)
-    progress_bar = kwargs.get('progress_bar', None)
-    meta = kwargs.get('meta', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
+    meta = kwargs.get('meta')
     sector_data = kwargs.get('sector_data', {})
     view = kwargs.get('view', '')
 
@@ -208,8 +192,7 @@ def relative_strength(primary_name: str, full_data_dict: dict,
                 sector_data = match_data
                 sector_bench = match_data[match_fund]
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.3)
+    update_progress_bar(progress_bar, 0.3)
 
     r_strength = {}
     rat_sp = []
@@ -222,17 +205,15 @@ def relative_strength(primary_name: str, full_data_dict: dict,
         if content is None:
             sector_data[key] = comp_data[key]
 
-    sp_500_data = get_sp_500_df(full_data_dict)
+    sp_500_data = full_data_dict.get('^GSPC')
     if sp_500_data is not None:
         rat_sp = normalized_ratio(full_data_dict[primary_name], sp_500_data)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     if len(sector_data) > 0:
         rat_sector = normalized_ratio(
             full_data_dict[primary_name], sector_data[sector])
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     if len(secondary_fund_names) > 0:
         for sfund in secondary_fund_names:
@@ -246,8 +227,7 @@ def relative_strength(primary_name: str, full_data_dict: dict,
                     full_data_dict[primary_name], sector_data[sfund]))
                 secondary_names.append(sfund)
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     p_strength = period_strength(primary_name,
                                 full_data_dict,
@@ -289,18 +269,15 @@ def relative_strength(primary_name: str, full_data_dict: dict,
     primary_name2 = INDEXES.get(primary_name, primary_name)
     title = f"Relative Strength of {primary_name2}"
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
-
+    update_progress_bar(progress_bar, 0.1)
     generate_plot(
-        PlotType.GENERIC_PLOTTING, output_data, **dict(
-            x=dates, title=title, save_fig=True, legend=legend, ylabel='Difference Ratio',
-            plot_output=plot_output,
-            filename=os.path.join(primary_name, view, f"relative_strength_{primary_name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, output_data, **{
+            "x": dates, "title": title, "save_fig": True, "legend": legend,
+            "ylabel": 'Difference Ratio',
+            "plot_output": plot_output,
+            "filename": os.path.join(primary_name, view, f"relative_strength_{primary_name}.png")
+        }
     )
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
-
+    update_progress_bar(progress_bar, 0.2)
     return r_strength, sector_bench

@@ -1,5 +1,5 @@
 """ candlesticks """
-import os
+from typing import Union
 from datetime import datetime
 
 import pandas as pd
@@ -9,7 +9,8 @@ from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-from .utils import plot_xaxis_disperse, WARNING, NORMAL
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from .utils import plot_xaxis_disperse, save_or_render_plot
 
 
 def candlestick_plot(data: pd.DataFrame, **kwargs):
@@ -45,7 +46,7 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
     title = kwargs.get('title', '')
     save_fig = kwargs.get('save_fig', False)
     filename = kwargs.get('filename', 'temp_candlestick.png')
-    p_bar = kwargs.get('progress_bar', None)
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     additional_plots = kwargs.get('additional_plots', [])
     threshold_candles = kwargs.get('threshold_candles', None)
 
@@ -113,8 +114,7 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
                         ls='-', alpha=1, color=shadow_color)
         plt.gca().add_line(high_low)
 
-        if p_bar is not None:
-            p_bar.uptick(increment=increment)
+        update_progress_bar(p_bar, increment)
 
     handles = []
     has_legend = False
@@ -150,33 +150,9 @@ def candlestick_plot(data: pd.DataFrame, **kwargs):
         plt.legend(handles=handles)
     elif has_legend:
         plt.legend()
-
     plot_xaxis_disperse(axis)
 
-    try:
-        if save_fig:
-            temp_path = os.path.join("output", "temp")
-            if not os.path.exists(temp_path):
-                # For functions, this directory may not exist.
-                plt.close(fig)
-                plt.clf()
-                return
-
-            filename = os.path.join(temp_path, filename)
-            if os.path.exists(filename):
-                os.remove(filename)
-            plt.savefig(filename)
-
-        else:
-            plt.show()
-
-    except: # pylint: disable=bare-except
-        print(
-            f"{WARNING}Warning: plot failed to render in 'shape plotting' of title: " +
-            f"{title}{NORMAL}")
-
+    save_or_render_plot(plt, fig, save_fig, title, filename, 'candlesticks')
     plt.close('all')
     plt.clf()
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.5)
+    update_progress_bar(p_bar, 0.5)

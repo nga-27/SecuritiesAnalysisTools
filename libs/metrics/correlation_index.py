@@ -6,9 +6,15 @@ from datetime import datetime, timedelta
 import numpy as np
 
 from libs.utils import (
-    download_data_indexes, index_appender, ProgressBar, PlotType, generate_plot
+    download_data_indexes, append_index, PlotType, generate_plot
 )
-from libs.tools import beta_comparison_list, simple_moving_avg
+from libs.utils.progress_bar import ProgressBar
+from libs.tools import beta_comparison_list
+from libs.tools.moving_averages_lib.simple_moving_avg import simple_moving_avg
+
+
+PERIOD_LENGTH = [100, 50, 25]
+WEIGHTS = [1.5, 1.25, 1.0]
 
 
 def correlation_composite_index(config: dict, **kwargs) -> dict:
@@ -32,18 +38,14 @@ def correlation_composite_index(config: dict, **kwargs) -> dict:
     sectors = kwargs.get('sectors')
 
     corr = {}
-    corr_config = config.get('properties', {}).get(
-        'Indexes', {}).get('Correlation', {})
-
+    corr_config = config.get('properties', {}).get('Indexes', {}).get('Correlation', {})
     if corr_config.get('run', False):
         config['duration'] = corr_config.get('type', 'long')
-
         if data is None or sectors is None:
             data, sectors = metrics_initializer(config['duration'])
         if data:
             corr = get_correlation(
                 data, sectors, plot_output=plot_output, clock=clock)
-
     return corr, data, sectors
 
 
@@ -70,7 +72,7 @@ def metrics_initializer(duration: str = 'short') -> list:
     tickers = " ".join(m_data['tickers'])
     START = m_data['start']
 
-    tickers = index_appender(tickers)
+    tickers = append_index(tickers)
     all_tickers = tickers.split(' ')
     date = datetime.now().strftime('%Y-%m-%d')
 
@@ -84,7 +86,6 @@ def metrics_initializer(duration: str = 'short') -> list:
     data, _ = download_data_indexes(
         indexes=all_tickers, tickers=tickers, start=START, end=date, interval='1d')
     print(" ")
-
     return data, sectors
 
 
@@ -102,12 +103,9 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
     Returns:
         dict -- object with correlations
     """
-    # pylint: disable=too-many-locals,invalid-name,too-many-branches,too-many-statements
+    # pylint: disable=too-many-locals,too-many-branches,too-many-statements
     plot_output = kwargs.get('plot_output', True)
     clock = kwargs.get('clock')
-
-    PERIOD_LENGTH = [100, 50, 25]
-    WEIGHTS = [1.5, 1.25, 1.0]
     corr_data = {}
 
     if '^GSPC' in data.keys():
@@ -200,30 +198,30 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
         generate_plot(
             PlotType.DUAL_PLOTTING,
             data['^GSPC']['Close'][start_pt:tot_len],
-            **dict(
-                y_list_2=[overall_signal, signal_line],
-                x=dates,
-                y1_label='S&P500',
-                y2_label=['Overall Signal', '20d-SMA'],
-                title='Overall Correlation Signal',
-                plot_output=plot_output,
-                filename='CCI_overall_correlation.png'
-            )
+            **{
+                "y_list_2": [overall_signal, signal_line],
+                "x": dates,
+                "y1_label": 'S&P500',
+                "y2_label": ['Overall Signal', '20d-SMA'],
+                "title": 'Overall Correlation Signal',
+                "plot_output": plot_output,
+                "filename": 'CCI_overall_correlation.png'
+            }
         )
 
         diff_signal = [x - signal_line[i] for i, x in enumerate(overall_signal)]
         generate_plot(
             PlotType.DUAL_PLOTTING,
             data['^GSPC']['Close'][start_pt:tot_len],
-            **dict(
-                y_list_2=diff_signal,
-                x=dates,
-                y1_label='S&P500',
-                y2_label='Corr - Signal Line',
-                title='Diff Correlation Signal',
-                plot_output=plot_output,
-                filename='CCI_diff_correlation.png'
-            )
+            **{
+                "y_list_2": diff_signal,
+                "x": dates,
+                "y1_label": 'S&P500',
+                "y2_label": 'Corr - Signal Line',
+                "title": 'Diff Correlation Signal',
+                "plot_output": plot_output,
+                "filename": 'CCI_diff_correlation.png'
+            }
         )
 
         corr_data['tabular']['overall'] = overall_signal
@@ -231,5 +229,4 @@ def get_correlation(data: dict, sectors: list, **kwargs) -> dict:
         corr_data['tabular']['diff_signal'] = diff_signal
 
         progress_bar.end()
-
     return corr_data

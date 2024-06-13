@@ -1,10 +1,11 @@
 """ Head And Shoulders Feature Detection"""
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import pandas as pd
 import numpy as np
 
-from libs.tools import windowed_moving_avg
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.tools.moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 
 from .feature_utils import (
     add_date_range, remove_duplicates, reconstruct_extrema, remove_empty_keys
@@ -31,32 +32,28 @@ def feature_detection_head_and_shoulders(fund: pd.DataFrame, **kwargs) -> dict:
     """
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     head_shoulders = []
     shapes = []
+    filter_x = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 19, 26, 35, 51]
+    increment = 1.0 / float(len(filter_x) + 1)
 
-    FILTER = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 16, 17, 19, 26, 35, 51] # pylint: disable=invalid-name
-    increment = 1.0 / float(len(FILTER) + 1)
-
-    for filter_val in FILTER:
+    for filter_val in filter_x:
         d_temp = {'filter_size': filter_val, "content": {}}
         hs2, _, shapes = feature_head_and_shoulders(fund, filter_size=filter_val, shapes=shapes)
         d_temp['content'] = hs2
         d_temp = cleanse_to_json(d_temp)
         head_shoulders.append(d_temp)
-        if progress_bar is not None:
-            progress_bar.uptick(increment=increment)
+        update_progress_bar(progress_bar, increment)
 
     feature_plotter(fund, shapes, name=name,
                     feature='head_and_shoulders', plot_output=plot_output, view=view)
-    if progress_bar is not None:
-        progress_bar.uptick(increment=increment)
+    update_progress_bar(progress_bar, increment)
 
     head_shoulders = {'data': head_shoulders}
     head_shoulders['type'] = 'feature'
-
     return head_shoulders
 
 
@@ -133,7 +130,6 @@ def find_head_shoulders(extrema: dict, fund: pd.DataFrame) -> dict:
 
         if len(feature) == 6:
             extrema['features'].append(feature_detection(feature))
-
     return extrema
 
 
@@ -151,7 +147,6 @@ def feature_detection(features: list) -> dict:
     """
     # pylint: disable=too-many-statements
     detected = {}
-
     if features[0][1] > features[1][1]:
         # potential TOP ('W') case (bearish)
         max1 = features[0][1]
@@ -240,7 +235,6 @@ def feature_detection(features: list) -> dict:
                     detected['stats']['stdev'] = np.round(np.std(feats), 3)
                     detected['stats']['percent'] = np.round(
                         100.0 * np.std(feats) / np.mean(feats), 3)
-
     return detected
 
 
@@ -294,5 +288,4 @@ def feature_head_and_shoulders(fund: pd.DataFrame,
             feature['type'] = feat['type']
             feature['indexes'] = feat['indexes']
             shapes.append(feature)
-
     return head_and_shoulders, wma, shapes

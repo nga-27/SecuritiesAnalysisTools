@@ -1,12 +1,14 @@
 """ total power """
 import os
+from typing import Union
 
 import pandas as pd
 import numpy as np
 
-from libs.tools import exponential_moving_avg
 from libs.utils import INDEXES, PlotType, generate_plot
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
+from libs.tools.moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 
 
 def total_power(position: pd.DataFrame, **kwargs) -> dict:
@@ -28,7 +30,7 @@ def total_power(position: pd.DataFrame, **kwargs) -> dict:
     """
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     total_power_data = {}
@@ -76,48 +78,40 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
     }
 
     ema = exponential_moving_avg(position, power_back)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     for i, high in enumerate(position['High']):
         if high - ema[i] > 0.0:
             signals['bulls_raw'].append(1.0)
         else:
             signals['bulls_raw'].append(0.0)
+    update_progress_bar(p_bar, 0.05)
+
     for i, low in enumerate(position['Low']):
         if low - ema[i] < 0.0:
             signals['bears_raw'].append(1.0)
         else:
             signals['bears_raw'].append(0.0)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.05)
 
     # Create look back period signals
     for i in range(look_back-1):
         signals['bulls'].append(sum(signals['bulls_raw'][0:i+1]))
         signals['bears'].append(sum(signals['bears_raw'][0:i+1]))
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     for i in range(look_back-1, len(ema)):
         summer = sum(signals['bulls_raw'][i-(look_back-1): i])
         signals['bulls'].append(summer)
         summer = sum(signals['bears_raw'][i-(look_back-1): i])
         signals['bears'].append(summer)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     # Compute the total power signal
     for i, bull in enumerate(signals['bulls']):
         total = np.abs(bull - signals['bears'][i])
         signals['total'].append(total)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     # Adjust the signals, pop the 'raw' lists
     signals.pop('bulls_raw')
@@ -125,31 +119,27 @@ def generate_total_power_signal(position: pd.DataFrame, **kwargs) -> dict:
 
     for i, tot in enumerate(signals['total']):
         signals['total'][i] = 100.0 * tot / float(look_back)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     for i, bull in enumerate(signals['bulls']):
         signals['bulls'][i] = 100.0 * bull / float(look_back)
+    update_progress_bar(p_bar, 0.05)
+
     for i, bear in enumerate(signals['bears']):
         signals['bears'][i] = 100.0 * bear / float(look_back)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.05)
 
     name2 = INDEXES.get(name, name)
     title = name2 + ' - Total Power'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=[signals['bears'], signals['bulls'], signals['total']],
-            y1_label='Price', y2_label=['Bear', 'Bull', 'Total'], title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"total_power_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": [signals['bears'], signals['bulls'], signals['total']],
+            "y1_label": 'Price', "y2_label": ['Bear', 'Bull', 'Total'], "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"total_power_{name}.png")
+        }
     )
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     return signals
 
@@ -313,11 +303,11 @@ def total_power_feature_detection(total_power_data: dict, position: pd.DataFrame
     name2 = INDEXES.get(name, name)
     title = name2 + ' - Total Power Metrics'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"total_pwr_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"total_pwr_metrics_{name}.png")
+        }
     )
 
     total_power_data['metrics'] = metrics

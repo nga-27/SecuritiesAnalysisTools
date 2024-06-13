@@ -1,5 +1,5 @@
 """ math functions """
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 
 import pandas as pd
 import numpy as np
@@ -7,118 +7,195 @@ import numpy as np
 from scipy.stats import linregress
 
 
-def lower_low(data: Union[list, pd.DataFrame], start_val: float, start_ind: int) -> list:
-    """Lower Low
+def get_lower_low(data: Union[List[float], pd.DataFrame], start_val: float,
+                  start_ind: int, use_short: bool = False) -> Tuple[float, int]:
+    """Looks for a bounce (rise) then lower low in the signal. If 'use_short' is set to True, then
+    signals will be more sensitive and potentially volatile.
 
-    Looks for a bounce (rise) then lower low
-
-    Arguments:
-        data {list} -- price data
-        start_val {float} -- a low to find a lower
-        start_ind {int} -- starting index where the low exists
+    Args:
+        data (Union[List[float], pd.DataFrame]): position or signal data
+        start_val (float): value of the starting comparison
+        start_ind (int): starting index to start measuring
+        use_short (bool, optional): if True, stops searching after completing breakout. True will
+                                    also result in a more sensitive/volatile signal.
+                                    Defaults to False.
 
     Returns:
-        list - [lower_value, respective_index]
+        Tuple[float, int]: [lowest_low, index of lowest_low]
     """
     data = list(data)
     track_ind = start_ind
     track_val = start_val
+    rebound_val = 0.0
 
-    # 0: first descent or rise; 1: lower low (in progress); 2: rise (lowest low found/not found)
+    # 0: first descent; 1: lower low (in progress); 2: rise (lowest low found/not found)
     bounce_state = 0
     lows = []
 
-    for price in range(start_ind, len(data)):
-        if (data[price] < start_val) and (bounce_state < 2):
-            track_ind = price
-            track_val = data[price]
-            bounce_state = 1
+    for price_ind in range(start_ind, len(data)):
+        if bounce_state == 0:
+            # Start state. Ensure we're still trending down
+            if data[price_ind] < track_val:
+                track_ind = price_ind
+                track_val = data[price_ind]
+                bounce_state = 1
 
-        if (data[price] > track_val) and (bounce_state == 1):
-            bounce_state = 2
+        if bounce_state == 1:
+            # We're dropping and will continue until we bounce upward
+            if data[price_ind] > track_val:
+                rebound_val = data[price_ind]
+                bounce_state = 2
+            else:
+                track_val = data[price_ind]
+                track_ind = price_ind
 
-        if (data[price] < track_val) and (bounce_state > 1):
-            bounce_state = 3
-            track_ind = price
-            track_val = data[price]
+        if bounce_state == 2:
+            # We're rebounding, let's keep an eye out if we see a lower lower
+            if data[price_ind] < track_val:
+                # Found one!
+                track_val = data[price_ind]
+                track_ind = price_ind
+                bounce_state = 3
+            if data[price_ind] > rebound_val:
+                rebound_val = data[price_ind]
 
-        if (data[price] > track_val) and (bounce_state == 3):
-            bounce_state = 4
+        if bounce_state == 3:
+            # Continue setting new lows until rise up, then we reset
+            if data[price_ind] > track_val:
+                bounce_state = 4
+            else:
+                track_val = data[price_ind]
+                track_ind = price_ind
+
+        if bounce_state == 4:
             lows.append([track_val, track_ind])
+            bounce_state = 2
+            if use_short:
+                bounce_state = 5
 
+        if bounce_state == 5:
+            if data[price_ind] > rebound_val:
+                # This is far enough, we can return
+                break
     return lows
 
+        # if data[price_ind] < start_val and bounce_state < 2:
+        #     track_ind = price_ind
+        #     track_val = data[price_ind]
+        #     bounce_state = 1
 
-def higher_high(data: Union[list, pd.DataFrame], start_val: float, start_ind: int) -> list:
-    """Higher High
+        # if data[price_ind] > track_val and bounce_state == 1:
+        #     bounce_state = 2
 
-    Looks for a bounce (drop) then higher high
+        # if data[price_ind] < track_val and bounce_state > 1:
+        #     bounce_state = 3
+        #     track_ind = price_ind
+        #     track_val = data[price_ind]
 
-    Arguments:
-        data {list} -- price data
-        start_val {float} -- a low to find a lower
-        start_ind {int} -- starting index where the low exists
+        # if data[price_ind] > track_val and bounce_state == 3:
+        #     bounce_state = 4
+        #     lows.append([track_val, track_ind])
+    # return lows
+
+
+def higher_high(data: Union[List[float], pd.DataFrame], start_val: float,
+                start_ind: int, use_short: bool = False) -> Tuple[float, int]:
+    """Looks for a bounce (drop) then higher high. If 'use_short' is set to True, then signals will
+    be more sensitive and potentially volatile.
+
+    Args:
+        data (Union[List[float], pd.DataFrame]): position or signal data
+        start_val (float): value of the starting comparison
+        start_ind (int): starting index to start measuring
+        use_short (bool, optional): if True, stops searching after completing breakout. True will
+                                    also result in a more sensitive/volatile signal.
+                                    Defaults to False.
 
     Returns:
-        list - [lower_value, respective_index]
+        Tuple[float, int]: [highest_high, index of highest_high]
     """
     data = list(data)
     track_ind = start_ind
     track_val = start_val
+    rebound_val = np.inf
 
     # 0: first descent or rise; 1: lower low (in progress); 2: rise (lowest low found/not found)
     bounce_state = 0
     highs = []
 
-    for price in range(start_ind, len(data)):
+    for price_ind in range(start_ind, len(data)):
+        if bounce_state == 0:
+            # Start state. Ensure we're still trending up
+            if data[price_ind] > track_val:
+                track_ind = price_ind
+                track_val = data[price_ind]
+                bounce_state = 1
 
-        if (data[price] > start_val) and (bounce_state < 2):
-            track_ind = price
-            track_val = data[price]
-            bounce_state = 1
+        if bounce_state == 1:
+            # We're rising and will continue until we bounce downward
+            if data[price_ind] < track_val:
+                rebound_val = data[price_ind]
+                bounce_state = 2
+            else:
+                track_val = data[price_ind]
+                track_ind = price_ind
 
-        if (data[price] < track_val) and (bounce_state == 1):
-            bounce_state = 2
+        if bounce_state == 2:
+            # We're rebounding down, let's keep an eye out if we see a higher high
+            if data[price_ind] > track_val:
+                # Found one!
+                track_val = data[price_ind]
+                track_ind = price_ind
+                bounce_state = 3
+            if data[price_ind] < rebound_val:
+                rebound_val = data[price_ind]
 
-        if (data[price] > track_val) and (bounce_state > 1):
-            bounce_state = 3
-            track_ind = price
-            track_val = data[price]
+        if bounce_state == 3:
+            # Continue setting new highs until drop down, then we reset
+            if data[price_ind] < track_val:
+                bounce_state = 4
+            else:
+                track_val = data[price_ind]
+                track_ind = price_ind
 
-        if (data[price] < track_val) and (bounce_state == 3):
-            bounce_state = 4
+        if bounce_state == 4:
             highs.append([track_val, track_ind])
+            bounce_state = 2
+            if use_short:
+                bounce_state = 5
 
+        if bounce_state == 5:
+            if data[price_ind] < rebound_val:
+                # This is far enough, we can return
+                break
     return highs
 
 
-def bull_bear_th(osc: list, start: int, thresh: float, bull_bear: str = 'bull') -> Union[int, None]:
-    """Bull Bear Thresholding
+def get_bull_bear_threshold(osc: List[float], start_index: int, thresh: float,
+                            bull_bear: str = 'bull') -> Union[int, None]:
+    """Find the breakout pattern when an oscillator breaks a threshold, either higher than (bullish)
+    or lower than (bearish).
 
-    Arguments:
-        osc {list} -- oscillator signal
-        start {int} -- starting index to find the threshold
-        thresh {float} -- threshold for comparison
-
-    Keyword Arguments:
-        bull_bear {str} -- type, either 'bull' or 'bear' (default: {'bull'})
+    Args:
+        osc (List[float]): oscillator signal to analyze
+        start_index (int): integer index where the analysis should start
+        thresh (float): threshold to compare against
+        bull_bear (str, optional): either 'bull' or 'bear'. Defaults to 'bull'.
 
     Returns:
-        int -- index that is above/below threshold
+        Union[int, None]: index of the breakout or None if none is found or invalid 'bull_bear'
     """
-    count = start
+    count = start_index
     if bull_bear == 'bull':
         while count < len(osc):
             if osc[count] > thresh:
                 return count
             count += 1
-
     if bull_bear == 'bear':
         while count < len(osc):
             if osc[count] < thresh:
                 return count
             count += 1
-
     return None
 
 

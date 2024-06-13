@@ -1,15 +1,43 @@
 """ ultimate oscillator """
 import os
-from typing import Union
+from typing import Union, List, Dict
+from enum import Enum
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import date_extractor, INDEXES, PlotType, generate_plot
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
-from .math_functions import lower_low, higher_high, bull_bear_th
-from .moving_average import exponential_moving_avg
+from .math_functions import get_lower_low, higher_high, get_bull_bear_threshold
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .oscillator_utils.normalize_thresholds import normalize_oscillator_threshold_signals
+from .oscillator_utils.constants import OVERBOUGHT_THRESHOLD, OVERSOLD_THRESHOLD
+
+
+class MovementType(Enum):
+    bullish = 'BULLISH'
+    bearish = 'BEARISH'
+
+class FeatureSource(Enum):
+    divergence_original = 'divergence (original)'
+    divergence_new = 'divergence (new)'
+
+class UltimateOscillatorFeature:
+    feature_type: MovementType
+    date: str
+    price: float
+    position_index: int
+    source: FeatureSource
+
+    def __init__(self, feature_type: MovementType, date: str, price: float,
+                 position_index: int, source: FeatureSource):
+        self.feature_type = feature_type.value
+        self.date = date
+        self.price = price
+        self.position_index = position_index
+        self.source = source.value
 
 
 def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None, **kwargs) -> dict:
@@ -35,7 +63,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None
     plot_output = kwargs.get('plot_output', True)
     out_suppress = kwargs.get('out_suppress', True)
     name = kwargs.get('name', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     view = kwargs.get('view', '')
 
     ultimate = {}
@@ -43,10 +71,7 @@ def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None
     ultimate['tabular'] = ult_osc
 
     ultimate = find_ult_osc_features(position, ultimate, p_bar=p_bar)
-
-    ultimate = ult_osc_output(
-        ultimate, len(position['Close']), p_bar=p_bar)
-
+    ultimate = ult_osc_output(ultimate, len(position['Close']), p_bar=p_bar)
     ultimate = ultimate_osc_metrics(
         position,
         ultimate,
@@ -61,25 +86,25 @@ def ultimate_oscillator(position: pd.DataFrame, config: Union[list, None] = None
         name2 = name3 + ' - Ultimate Oscillator'
 
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=ult_osc, y1_label='Position Price', y2_label='Ultimate Oscillator',
-                title=name2, plot_output=plot_output, subplot=True,
-                filename=os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": ult_osc, "y1_label": 'Position Price',
+                "y2_label": 'Ultimate Oscillator',
+                "title": name2, "plot_output": plot_output, "subplot": True,
+                "filename": os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
+            }
         )
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=ultimate['plots'], y1_label='Position Price',
-                y2_label='Buy-Sell Signal', title=name2, plot_output=plot_output,
-                filename=os.path.join(name, view, f"ultimate_osc_raw_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": ultimate['plots'], "y1_label": 'Position Price',
+                "y2_label": 'Buy-Sell Signal', "title": name2, "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"ultimate_osc_signals_{name}.png")
+            }
         )
 
     ultimate['type'] = 'oscillator'
     ultimate['length_of_data'] = len(ultimate['tabular'])
     ultimate['signals'] = ultimate_osc_signals(
         ultimate['bullish'], ultimate['bearish'])
-
     return ultimate
 
 
@@ -146,9 +171,7 @@ def generate_ultimate_osc_signal(position: pd.DataFrame,
                 np.round(
                     100.0 * ((4.0 * u_short[i]) + (2.0 * u_med[i]) + u_long[i]) / 7.0, 6)
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     return ult_osc
 
 
@@ -167,203 +190,219 @@ def find_ult_osc_features(position: pd.DataFrame, ultimate: dict, **kwargs) -> l
     Returns:
         dict -- ultimate osc data object
     """
-    # pylint: disable=too-many-locals,too-many-statements,too-many-branches
     p_bar = kwargs.get('p_bar')
-    low_th = kwargs.get('thresh_low', 30)
-    high_th = kwargs.get('thresh_high', 70)
+    low_th = float(kwargs.get('thresh_low', OVERSOLD_THRESHOLD))
+    high_th = float(kwargs.get('thresh_high', OVERBOUGHT_THRESHOLD))
+    normalize_thresholds = kwargs.get('normalize_thresholds', True)
 
     ult_osc = ultimate['tabular']
+    trigger = get_ult_osc_features_original(position, ult_osc, low_th=low_th, high_th=high_th)
+    update_progress_bar(p_bar, 0.15)
 
+    if normalize_thresholds:
+        low_th, high_th = normalize_oscillator_threshold_signals(position)
+        trigger.extend(
+            get_ult_osc_features_new(position, ult_osc, low_th=low_th, high_th=high_th))
+    update_progress_bar(p_bar, 0.25)
+    ultimate['indicator'] = trigger
+    return ultimate
+
+
+
+
+
+def get_ult_osc_features_original(position: pd.DataFrame, ult_osc: List[float],
+                                  low_th: float = OVERSOLD_THRESHOLD,
+                                  high_th: float = OVERBOUGHT_THRESHOLD) -> list:
     trigger = []
     marker_val = 0.0
     marker_ind = 0
-
     for i, close in enumerate(position['Close']):
         # Find bullish signal
         if ult_osc[i] < low_th:
+            # Initial "oversold" signal
             ult1 = ult_osc[i]
             marker_val = close
             marker_ind = i
-            lows = lower_low(position['Close'], marker_val, marker_ind)
+            lows = get_lower_low(position['Close'], marker_val, marker_ind)
 
             if len(lows) != 0:
+                # Find the lowest low in price, then compare that with ult's index there.
                 ult2 = ult_osc[lows[-1][1]]
-
                 if ult2 > ult1:
+                    # Looks like a bullish divergence
                     start_ind = lows[-1][1]
-                    interval = np.max(ult_osc[i:start_ind+1])
-                    start_ind = bull_bear_th(
-                        ult_osc, start_ind, interval, bull_bear='bull')
+                    interval_max = np.max(ult_osc[i:start_ind+1])
+                    start_ind = get_bull_bear_threshold(
+                        ult_osc, start_ind, interval_max, bull_bear='bull')
 
                     if start_ind is not None:
-                        trigger.append([
-                            "BULLISH",
-                            date_extractor(
-                                position.index[start_ind], _format='str'),
+                        # We found a bullish divergence!
+                        trigger.append(UltimateOscillatorFeature(
+                            MovementType.bullish,
+                            date_extractor(position.index[start_ind], _format='str'),
                             position['Close'][start_ind],
                             start_ind,
-                            "divergence (original)"
-                        ])
+                            FeatureSource.divergence_original
+                        ).__dict__)
 
         # Find bearish signal
         if ult_osc[i] > high_th:
+            # Initial "overbought" signal
             ult1 = ult_osc[i]
             marker_val = position['Close'][i]
             marker_ind = i
             highs = higher_high(position['Close'], marker_val, marker_ind)
 
             if len(highs) != 0:
+                # There was a higher high in price
                 ult2 = ult_osc[highs[-1][1]]
-
                 if ult2 < ult1:
+                    # Looks like a bearish divergence
                     start_ind = highs[-1][1]
-                    interval = np.min(ult_osc[i:start_ind+1])
-                    start_ind = bull_bear_th(
-                        ult_osc, start_ind, interval, bull_bear='bear')
+                    interval_min = np.min(ult_osc[i:start_ind+1])
+                    start_ind = get_bull_bear_threshold(
+                        ult_osc, start_ind, interval_min, bull_bear='bear')
 
                     if start_ind is not None:
-                        trigger.append([
-                            "BEARISH",
-                            date_extractor(
-                                position.index[start_ind], _format='str'),
+                        # We found a bearish divergence!
+                        trigger.append(UltimateOscillatorFeature(
+                            MovementType.bearish,
+                            date_extractor(position.index[start_ind], _format='str'),
                             position['Close'][start_ind],
                             start_ind,
-                            "divergence (original)"
-                        ])
+                            FeatureSource.divergence_original
+                        ).__dict__)
+    return trigger
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
 
+def get_ult_osc_features_new(position: pd.DataFrame, ult_osc: List[float],
+                             low_th: List[float],
+                             high_th: List[float]) -> list:
+    trigger = []
     state = 'n'
     prices = [0.0, 0.0]
-    ults = [0.0, 0.0, 0.0]
+    ultimate_state = {'init_over_thr': 0.0, 'rebound_extreme': 0.0, 'last_point': 0.0}
 
     for i, ult in enumerate(ult_osc):
-
         # Find bullish divergence and breakout
-        if (state == 'n') and (ult <= low_th):
+        if state == 'n' and ult <= low_th[i]:
+            # 'oversold' state
             state = 'u1'
-            ults[0] = ult
+            ultimate_state['init_over_thr'] = ult
 
         elif state == 'u1':
-            if ult < ults[0]:
-                ults[0] = ult
+            if ult < ultimate_state['init_over_thr']:
+                ultimate_state['init_over_thr'] = ult
             else:
                 prices[0] = position['Close'][i-1]
                 state = 'u2'
 
-        elif (state == 'u2') and (ult > low_th):
+        elif state == 'u2' and ult > low_th[i]:
             state = 'u3'
-            ults[1] = ult
+            ultimate_state['rebound_extreme'] = ult
 
         elif state == 'u3':
-            if ult > ults[1]:
-                ults[1] = ult
+            if ult > ultimate_state['rebound_extreme']:
+                ultimate_state['rebound_extreme'] = ult
             else:
-                # we think we've found a divergent high
+                # we think we've found a rebound high
                 state = 'u4'
-                ults[2] = ult
+                ultimate_state['last_point'] = ult
 
         elif state == 'u4':
-            if ults[2] >= ult:
-                ults[2] = ult
+            if ultimate_state['last_point'] >= ult:
+                ultimate_state['last_point'] = ult
             else:
-                # We think we've found the bullish 2nd low
+                # We think we've found the bullish divergence 2nd low
                 prices[1] = position['Close'][i-1]
                 state = 'u5'
 
         elif state == 'u5':
-            if ult > ults[1]:
+            if ult > ultimate_state['rebound_extreme']:
+                # We've broken out from the recent high
                 if prices[0] > prices[1]:
                     # Bullish breakout!
-                    if start_ind:
-                        trigger.append([
-                            "BULLISH",
-                            date_extractor(position.index[start_ind], _format='str'),
-                            position['Close'][start_ind],
-                            start_ind,
-                            "divergence"
-                        ])
+                    trigger.append(UltimateOscillatorFeature(
+                        MovementType.bullish,
+                        date_extractor(position.index[i], _format='str'),
+                        position['Close'][i],
+                        i,
+                        FeatureSource.divergence_new
+                    ).__dict__)
                     state = 'n'
                 else:
                     # False breakout, see if this is the new max:
                     state = 'u3'
-                    ults[1] = ult
+                    ultimate_state['rebound_extreme'] = ult
 
-            elif ult < ults[2]:
+            elif ult < ultimate_state['last_point']:
                 # There may have been a false signal
-                ults[2] = ult
+                ultimate_state['last_point'] = ult
                 state = 'u4'
 
-        # Find bullish divergence and breakout
-        if (state == 'n') and (ult >= high_th):
+        # Find bearish divergence and breakout
+        if state == 'n' and ult >= high_th[i]:
             state = 'e1'
-            ults[0] = ult
+            ultimate_state['init_over_thr'] = ult
 
         elif state == 'e1':
-            if ult > ults[0]:
-                ults[0] = ult
+            if ult > ultimate_state['init_over_thr']:
+                ultimate_state['init_over_thr'] = ult
             else:
                 prices[0] = position['Close'][i-1]
                 state = 'e2'
 
-        elif (state == 'e2') and (ult < high_th):
+        elif state == 'e2' and ult < high_th[i]:
             state = 'e3'
-            ults[1] = ult
+            ultimate_state['rebound_extreme'] = ult
 
         elif state == 'e3':
-            if ult < ults[1]:
-                ults[1] = ult
+            if ult < ultimate_state['rebound_extreme']:
+                ultimate_state['rebound_extreme'] = ult
             else:
                 # we think we've found a divergent low
                 state = 'e4'
-                ults[2] = ult
+                ultimate_state['last_point'] = ult
 
         elif state == 'e4':
-            if ults[2] <= ult:
-                ults[2] = ult
+            if ultimate_state['last_point'] <= ult:
+                ultimate_state['last_point'] = ult
             else:
                 # We think we've found the bullish 2nd high
                 prices[1] = position['Close'][i-1]
                 state = 'e5'
 
         elif state == 'e5':
-            if ult < ults[1]:
+            if ult < ultimate_state['rebound_extreme']:
                 if prices[0] < prices[1]:
-                    # Bullish breakout!
-                    if start_ind:
-                        trigger.append([
-                            "BEARISH",
-                            date_extractor(position.index[start_ind], _format='str'),
-                            position['Close'][start_ind],
-                            start_ind,
-                            "divergence"
-                        ])
+                    # Bearish breakout!
+                    trigger.append(UltimateOscillatorFeature(
+                        MovementType.bearish,
+                        date_extractor(position.index[i], _format='str'),
+                        position['Close'][i],
+                        i,
+                        FeatureSource.divergence_new
+                    ).__dict__)
                     state = 'n'
                 else:
                     # False breakout, see if this is the new max:
                     state = 'e3'
-                    ults[1] = ult
+                    ultimate_state['rebound_extreme'] = ult
 
-            elif ult > ults[2]:
+            elif ult > ultimate_state['last_point']:
                 # There may have been a false signal
-                ults[2] = ult
+                ultimate_state['last_point'] = ult
                 state = 'e4'
 
-        elif ult >= high_th:
+        elif ult >= high_th[i]:
             state = 'e1'
-            ults[0] = ult
+            ultimate_state['init_over_thr'] = ult
 
-        elif ult <= low_th:
+        elif ult <= low_th[i]:
             state = 'u1'
-            ults[0] = ult
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.2)
-
-    ultimate['indicator'] = trigger
-
-    return ultimate
+            ultimate_state['init_over_thr'] = ult
+    return trigger
 
 
 def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
@@ -386,38 +425,32 @@ def ult_osc_output(ultimate: dict, len_of_position: int, **kwargs) -> list:
 
     ultimate['bullish'] = []
     ultimate['bearish'] = []
-
-    trigger = ultimate['indicator']
+    trigger: List[Dict[str, Union[float, str, int]]] = ultimate['indicator']
 
     simplified = []
     plots = [0.0] * len_of_position
     present = False
 
     for trig in trigger:
+        # Check for duplicates I guess
         for _, simple in enumerate(simplified):
-            if simple[3] == trig[3]:
+            if simple['position_index'] == trig['position_index']:
                 present = True
 
         if not present:
             simplified.append(trig)
-
-            if trig[0] == "BEARISH":
-                plots[trig[3]] = -1.0
+            if trig['feature_type'] == "BEARISH":
+                plots[trig['position_index']] = -1.0
                 ultimate['bearish'].append(
-                    [trig[1], trig[2], trig[3], trig[4]])
-
+                    [trig['date'], trig['price'], trig['position_index'], trig['source']])
             else:
-                plots[trig[3]] = 1.0
+                plots[trig['position_index']] = 1.0
                 ultimate['bullish'].append(
-                    [trig[1], trig[2], trig[3], trig[4]])
+                    [trig['date'], trig['price'], trig['position_index'], trig['source']])
 
         present = False
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)    
     ultimate['plots'] = plots
-
     return ultimate
 
 
@@ -469,12 +502,9 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
             if ind + 3 < len(ults):
                 state2[ind+3] += s_val * weights[3]
 
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     metrics = exponential_moving_avg(state2, 7, data_type='list')
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     norm = normalize_signals([metrics])
     metrics = norm[0]
@@ -484,15 +514,13 @@ def ultimate_osc_metrics(position: pd.DataFrame, ultimate: dict, **kwargs) -> di
         name2 = name3 + ' - Ultimate Oscillator Metrics'
 
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=name2,
-                plot_output=plot_output,
-                filename=os.path.join(name, view, f"ultimate_osc_metrics_{name}.png")
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": name2,
+                "plot_output": plot_output,
+                "filename": os.path.join(name, view, f"ultimate_osc_metrics_{name}.png")
+            }
         )
-
     ultimate['metrics'] = metrics
-
     return ultimate
 
 

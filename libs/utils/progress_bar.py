@@ -2,6 +2,8 @@
 ProgressBar utility class
 """
 import time
+from typing import Union
+
 import numpy as np
 
 from .constants import TEXT_COLOR_MAP, STANDARD_COLORS
@@ -10,7 +12,7 @@ BAR_COLOR = TEXT_COLOR_MAP["white"]
 NORMAL = STANDARD_COLORS["normal"]
 FUND_COLOR = TEXT_COLOR_MAP["cyan"]
 
-EFFECTIVE_TIME_START = 120
+EFFECTIVE_TIME_START = 96
 
 
 class ProgressBar():
@@ -71,7 +73,7 @@ class ProgressBar():
                            prefix: str = 'Progress',
                            suffix: str = 'Complete',
                            decimals: int = 1,
-                           length: int = 50,
+                           length: int = 30,
                            fill: str = '█'):
         """Print Progress Bar
 
@@ -129,3 +131,9 @@ class ProgressBar():
 def start_clock() -> float:
     """ Wrapper function for time keeping """
     return time.time()
+
+
+def update_progress_bar(p_bar: Union[ProgressBar, None], increment: float = 1.0) -> None:
+    """ Safe wrapper function in case p_bar is None """
+    if p_bar:
+        p_bar.uptick(increment=increment)

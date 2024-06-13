@@ -1,15 +1,18 @@
 """ commodity channel index """
 import os
 import datetime
+from typing import Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, generate_plot, PlotType
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
-from .moving_average import typical_price_signal, simple_moving_avg
-from .moving_average import exponential_moving_avg
+from .moving_average import typical_price_signal
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:
@@ -30,36 +33,26 @@ def commodity_channel_index(position: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
 
     cci = {}
-
     periods = [20, 40, 80]
-    cci['periods'] = {'short': periods[0],
-                      'medium': periods[1],
-                      'long': periods[2]}
+    cci['periods'] = {'short': periods[0], 'medium': periods[1], 'long': periods[2]}
     cci['tabular'] = {}
     cci['tabular'] = generate_commodity_signal(
         position, intervals=periods, plot_output=plot_output, name=name, view=view)
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     cci['signals'] = cci_feature_detection(position, cci)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     cci['metrics'] = cci_metrics(
         position, cci, plot_output=plot_output, name=name, view=view)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     cci['type'] = 'oscillator'
     cci['length_of_data'] = len(cci['tabular'][str(periods[0])])
-
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return cci
 
 
@@ -83,7 +76,6 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     view = kwargs.get('view', '')
 
     tabular = {str(per): [] for per in intervals}
-
     tps = typical_price_signal(position)
 
     for interval in intervals:
@@ -119,12 +111,12 @@ def generate_commodity_signal(position: pd.DataFrame, **kwargs) -> list:
     title = f'{name2} - Commodity Channel Index ({period_strs} periods)'
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=plots, y1_label='Price', y2_label='CCI', title=title, plot_output=plot_output,
-            filename=os.path.join(name, view, f"commodity_channel_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": plots, "y1_label": 'Price', "y2_label": 'CCI', "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"commodity_channel_{name}.png")
+        }
     )
-
     return tabular
 
 
@@ -194,13 +186,12 @@ def cci_metrics(position: pd.DataFrame, cci: dict, **kwargs) -> list:
     title = f"{name2} - Commodity Channel Index Metrics"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics, y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics, "y1_label": 'Price', "y2_label": 'Metrics', "title": title,
+            "plot_output": plot_output, "filename": os.path.join(
                 name, view, f"commodity_metrics_{name}.png")
-        )
+        }
     )
-
     return metrics
 
 

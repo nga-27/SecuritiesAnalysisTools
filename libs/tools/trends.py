@@ -9,16 +9,18 @@ import numpy as np
 from scipy.stats import linregress
 
 from libs.utils import generate_plot, PlotType, dates_convert_from_index, INDEXES, STANDARD_COLORS
-from libs.features import find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import (
+    find_filtered_local_extrema, reconstruct_extrema, remove_duplicates
+)
 
-from .moving_average import windowed_moving_avg
+from .moving_averages_lib.windowed_moving_avg import windowed_moving_avg
 from .trend_utils import (
     get_lines_from_period, generate_analysis, filter_nearest_to_signal, consolidate_lines
 )
 
 WARNING = STANDARD_COLORS["warning"]
 NORMAL = STANDARD_COLORS["normal"]
-
 TREND_PTS = [2, 3, 6]
 
 
@@ -46,7 +48,7 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     name = kwargs.get('name', '')
     plot_output = kwargs.get('plot_output', True)
     interval = kwargs.get('interval', [4, 8, 16, 32])
-    progress_bar = kwargs.get('progress_bar', None)
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     sub_name = kwargs.get('sub_name', f"trendline_{name}")
     view = kwargs.get('view', '')
     meta = kwargs.get('meta')
@@ -98,8 +100,7 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
             if y_list[0] not in all_x:
                 all_x.append(y_list[0])
 
-        if progress_bar is not None:
-            progress_bar.uptick(increment=increment)
+        update_progress_bar(progress_bar, increment)
 
     zipped_min = list(zip(mins_x, mins_y))
     zipped_min.sort(key=lambda x: x[0])
@@ -125,8 +126,7 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     x_list_3, y_list_3 = get_lines_from_period(
         fund, [mins_x, mins_y, maxes_x, maxes_y, all_x], interval=near_term, vf=volatility)
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=increment*4.0)
+    update_progress_bar(progress_bar, increment*4.0)
 
     x_list_full = []
     y_list_full = []
@@ -157,17 +157,13 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
         color_list.append('red')
         term_list.append('near')
 
-    if progress_bar is not None:
-        progress_bar.uptick(increment=increment*4.0)
+    update_progress_bar(progress_bar, increment*4.0)
 
     analysis_list = generate_analysis(fund, x_list=x_list_full, y_list=y_list_full,
         len_list=term_list, color_list=color_list)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.1)
+    update_progress_bar(progress_bar, 0.1)
 
     x_list_full = dates_convert_from_index(fund, x_list_full)
-
     x_list_full.append(fund.index)
     y_list_full.append(fund['Close'])
     color_list.append('black')
@@ -178,21 +174,18 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
             title = f"{name2} Trend Lines for {near_term}, {short_term}, " + \
                 f"{intermediate_term}, and {long_term} Periods"
             generate_plot(
-                PlotType.GENERIC_PLOTTING, y_list_full, **dict(
-                    x=x_list_full, colors=color_list, plot_output=plot_output, title=title,
-                    save_fig=True, filename=os.path.join(name, view, f"{sub_name}.png")
-                )
+                PlotType.GENERIC_PLOTTING, y_list_full, **{
+                    "x": x_list_full, "colors": color_list, "plot_output": plot_output,
+                    "title": title,
+                    "save_fig": True, "filename": os.path.join(name, view, f"{sub_name}.png")
+                }
             )
 
         except: # pylint: disable=bare-except
             print(
                 f"{WARNING}Warning: plot failed to generate in trends.get_trend_lines.{NORMAL}")
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
-
+    update_progress_bar(progress_bar, 0.2)
     trends['trendlines'] = analysis_list
-
     current = []
     metrics = []
 
@@ -206,7 +199,6 @@ def get_trend_lines(fund: pd.DataFrame, **kwargs) -> dict:
     trends['current'] = current
     trends['metrics'] = metrics
     trends['type'] = 'trend'
-
     return trends
 
 
@@ -291,7 +283,6 @@ def auto_trend(data, **kwargs) -> list:
     weights = kwargs.get('weights', [])
     return_type = kwargs.get('return_type', 'slope')
     normalize = kwargs.get('normalize', False)
-
     trend = [0.0] * len(data)
 
     try:
@@ -329,7 +320,6 @@ def auto_trend(data, **kwargs) -> list:
     return trend
 
 
-######################################################
 DIVISORS = [1, 2, 4, 8]
 
 
@@ -361,10 +351,8 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
     if os.path.exists(config_path):
         with open(config_path, 'r', encoding='utf-8') as cpf:
             c_data = json.load(cpf)
-            cpf.close()
 
-        ranges = c_data.get('trendlines', {}).get(
-            'divisors', {}).get('ranges', [])
+        ranges = c_data.get('trendlines', {}).get('divisors', {}).get('ranges', [])
         ranged = 0
         for range_val in ranges:
             if len(signal) > range_val:
@@ -384,9 +372,7 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
     views = kwargs.get('views', '')
 
     indexes = list(range(len(signal)))
-
-    if iterations > len(DIVISORS):
-        iterations = len(DIVISORS)
+    iterations = min(iterations, len(DIVISORS))
     divisors = DIVISORS[0:iterations]
 
     lines = []
@@ -520,10 +506,10 @@ def get_trend_lines_regression(signal: list, **kwargs) -> dict:
 
     title = f"{indicator.capitalize()} Trendlines"
     generate_plot(
-        PlotType.GENERIC_PLOTTING, plots, **dict(
-            x=x_plots, title=title, plot_output=plot_output, save_fig=True,
-            filename=os.path.join(name, views, f"{indicator}_trendlines_{name}.png")
-        )
+        PlotType.GENERIC_PLOTTING, plots, **{
+            "x": x_plots, "title": title, "plot_output": plot_output, "save_fig": True,
+            "filename": os.path.join(name, views, f"{indicator}_trendlines_{name}.png")
+        }
     )
 
     trends = {}

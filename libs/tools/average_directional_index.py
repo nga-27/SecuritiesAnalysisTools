@@ -5,10 +5,11 @@ from typing import Union
 import pandas as pd
 
 from libs.utils import INDEXES, PlotType, generate_plot
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
 from .trends import auto_trend
-from .moving_average import exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
 from .average_true_range import average_true_range
 
 
@@ -33,7 +34,7 @@ def average_directional_index(fund: pd.DataFrame, atr: Union[list, None] = None,
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    pbar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
 
     adx = {}
     if not atr or len(atr) == 0:
@@ -45,8 +46,7 @@ def average_directional_index(fund: pd.DataFrame, atr: Union[list, None] = None,
     adx['length_of_data'] = len(adx['tabular']['adx'])
     adx['type'] = 'oscillator'
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     return adx
 
@@ -86,7 +86,7 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    pbar = kwargs.get('pbar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('pbar')
 
     signal = {}
     # Calculate the directional movement signals
@@ -105,8 +105,7 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
         if dmn[i] < 0.0:
             dmn[i] = 0.0
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     # Calculate the dm signals, di signals, dx signal with 'interval' averages
     dma_p = [0.0] * len(fund['Close'])
@@ -126,8 +125,7 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
 
         dx_signal[i] = abs(di_p[i] - di_n[i]) / (di_p[i] + di_n[i]) * 100.0
 
-    if pbar is not None:
-        pbar.uptick(increment=0.3)
+    update_progress_bar(p_bar, 0.3)
 
     # Finally, calculate the adx signal as an 'interval' average of dx
     adx_signal = [adx_default] * len(fund['Close'])
@@ -136,8 +134,7 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
         adx_signal[i] = ((adx_signal[i-1] * 13) +
                          dx_signal[i]) / float(interval)
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     signal['di_+'] = di_p
     signal['di_-'] = di_n
@@ -159,19 +156,17 @@ def get_adx_signal(fund: pd.DataFrame, atr: list, **kwargs) -> dict:
     generate_plot(
         PlotType.DUAL_PLOTTING,
         fund['Close'],
-        **dict(
-            y_list_2=plots,
-            y1_label='Price',
-            y2_label=['No Trend', 'Over Trend', 'Strong Trend', 'ADX'],
-            title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"adx_tabular_{name}.png")
-        )
+        **{
+            "y_list_2": plots,
+            "y1_label": 'Price',
+            "y2_label": ['No Trend', 'Over Trend', 'Strong Trend', 'ADX'],
+            "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"adx_tabular_{name}.png")
+        }
     )
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     return signal
 
 
@@ -195,7 +190,7 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
-    pbar = kwargs.get('pbar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('pbar')
 
     adx['metrics'] = [0.0] * len(fund['Close'])
     adx['signals'] = []
@@ -274,12 +269,9 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
         if data is not None:
             adx['signals'].append(data)
 
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
-
+    update_progress_bar(p_bar, 0.1)
     metrics = exponential_moving_avg(adx['metrics'], 7, data_type='list')
-    if pbar is not None:
-        pbar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     adx['metrics'] = normalize_signals([metrics])[0]
 
@@ -289,17 +281,15 @@ def adx_metrics(fund: pd.DataFrame, adx: dict, **kwargs) -> dict:
     generate_plot(
         PlotType.DUAL_PLOTTING,
         fund['Close'],
-        **dict(
-            y_list_2=adx['metrics'],
-            y1_label='Price',
-            y2_label='Metrics',
-            title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"adx_metrics_{name}.png")
-        )
+        **{
+            "y_list_2": adx['metrics'],
+            "y1_label": 'Price',
+            "y2_label": 'Metrics',
+            "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"adx_metrics_{name}.png")
+        }
     )
 
-    if pbar is not None:
-        pbar.uptick(increment=0.2)
-
+    update_progress_bar(p_bar, 0.2)
     return adx

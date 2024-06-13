@@ -1,14 +1,17 @@
 """ know sure thing """
 import os
+from typing import Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, PlotType, generate_plot
-from libs.features import normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import normalize_signals
 
 from .rate_of_change import roc_signal
-from .moving_average import simple_moving_avg, exponential_moving_avg
+from .moving_averages_lib.exponential_moving_avg import exponential_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def know_sure_thing(fund: pd.DataFrame, **kwargs) -> dict:
@@ -31,27 +34,23 @@ def know_sure_thing(fund: pd.DataFrame, **kwargs) -> dict:
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     views = kwargs.get('views', '')
-    p_bar = kwargs.get('progress_bar')
+    p_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
 
     kst = {}
-
     signal, signal_line = kst_signal(
         fund, plot_output=plot_output, name=name, views=views, p_bar=p_bar)
 
     kst['tabular'] = {'signal': signal, 'signal_line': signal_line}
 
     kst = kst_indicators(fund, kst)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     kst = kst_metrics(fund, kst, plot_output=plot_output,
                       name=name, views=views)
-    if p_bar is not None:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     kst['length_of_data'] = len(kst['tabular']['signal'])
     kst['type'] = 'oscillator'
-
     return kst
 
 
@@ -88,32 +87,29 @@ def kst_signal(fund: pd.DataFrame, **kwargs) -> list:
 
     for i, period in enumerate(periods):
         roc = roc_signal(fund, period)
-        if p_bar:
-            p_bar.uptick(increment=increment)
+        update_progress_bar(p_bar, increment)
 
         sma = simple_moving_avg(roc, sma_intervals[i], data_type='list')
-        if p_bar:
-            p_bar.uptick(increment=increment)
+        update_progress_bar(p_bar, increment)
 
         for j, sig in enumerate(signal):
             sig += float(i + 1) * sma[j]
-        if p_bar:
-            p_bar.uptick(increment=increment)
+        update_progress_bar(p_bar, increment)
 
     signal_line = simple_moving_avg(signal, 9, data_type='list')
-    if p_bar:
-        p_bar.uptick(increment=0.1)
+    update_progress_bar(p_bar, 0.1)
 
     name2 = INDEXES.get(name, name)
     title = f"{name2} - Know Sure Thing"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=[signal, signal_line], y1_label='Price', y2_label='KST', title=title,
-            plot_output=plot_output, filename=os.path.join(name, views, f"kst_oscillator_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": [signal, signal_line], "y1_label": 'Price', "y2_label": 'KST',
+            "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, views, f"kst_oscillator_{name}")
+        }
     )
-
     return signal, signal_line
 
 
@@ -219,7 +215,6 @@ def kst_indicators(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
             signals.append(data)
 
     kst_dict['signals'] = signals
-
     return kst_dict
 
 
@@ -243,7 +238,6 @@ def kst_metrics(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
     views = kwargs.get('views', '')
 
     metrics = [0.0] * len(kst_dict['tabular']['signal'])
-
     for sig in kst_dict['signals']:
         if sig['type'] == 'bullish':
             multiply = 1.0
@@ -252,7 +246,6 @@ def kst_metrics(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
 
         if 'crossover' in sig['value']:
             metrics[sig['index']] += 0.2 * multiply
-
         if 'crossed' in sig['value']:
             metrics[sig['index']] += 1.0 * multiply
 
@@ -265,10 +258,10 @@ def kst_metrics(fund: pd.DataFrame, kst_dict: dict, **kwargs) -> dict:
     title = f"{name2} - KST Metrics"
 
     generate_plot(
-        PlotType.DUAL_PLOTTING, fund['Close'], **dict(
-            y_list_2=kst_dict['metrics'], y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output, filename=os.path.join(name, views, f"kst_metrics_{name}")
-        )
+        PlotType.DUAL_PLOTTING, fund['Close'], **{
+            "y_list_2": kst_dict['metrics'], "y1_label": 'Price', "y2_label": 'Metrics',
+            "title": title,
+            "plot_output": plot_output, "filename": os.path.join(name, views, f"kst_metrics_{name}")
+        }
     )
-
     return kst_dict

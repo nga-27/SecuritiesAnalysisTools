@@ -1,13 +1,16 @@
 """ momentum oscillator """
 import os
+from typing import Union
 
 import pandas as pd
 import numpy as np
 
 from libs.utils import INDEXES, generate_plot, PlotType
-from libs.features import find_local_extrema, normalize_signals
+from libs.utils.progress_bar import ProgressBar, update_progress_bar
+from libs.features.feature_utils import find_local_extrema
+from libs.features.feature_utils import normalize_signals
 
-from .moving_average import simple_moving_avg
+from .moving_averages_lib.simple_moving_avg import simple_moving_avg
 
 
 def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
@@ -24,7 +27,7 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     Returns:
         dict -- momentum object
     """
-    progress_bar = kwargs.get('progress_bar')
+    progress_bar: Union[ProgressBar, None] = kwargs.get('progress_bar')
     plot_output = kwargs.get('plot_output', True)
     name = kwargs.get('name', '')
     view = kwargs.get('view', '')
@@ -38,26 +41,19 @@ def momentum_oscillator(position: pd.DataFrame, **kwargs) -> dict:
     # Check against signal line (9-day MA)
     mom['bear_bull'] = compare_against_signal_line(
         mom['tabular'], position=position, name=name, plot_output=plot_output)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     # Feature detection, primarily divergences (5% drop from peak1 then rise again to peak2?)
     mom['signals'] = mo_feature_detection(mom['tabular'], position)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.3)
+    update_progress_bar(progress_bar, 0.3)
 
     # Metrics creation like in awesome oscillator
     mom = momentum_metrics(
         position, mom, plot_output=plot_output, name=name, view=view)
-
-    if progress_bar is not None:
-        progress_bar.uptick(increment=0.2)
+    update_progress_bar(progress_bar, 0.2)
 
     mom['type'] = 'oscillator'
     mom['length_of_data'] = len(mom['tabular'])
-
     return mom
 
 
@@ -99,13 +95,12 @@ def generate_momentum_signal(position: pd.DataFrame, **kwargs) -> list:
 
     name2 = INDEXES.get(name, name)
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=signal, y1_label='Price', y2_label='CMO',
-            title=f'{name2} - (Chande) Momentum Oscillator',
-            filename=os.path.join(name, view, f"momentum_oscillator_{name}.png"),
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": signal, "y1_label": 'Price', "y2_label": 'CMO',
+            "title": f'{name2} - (Chande) Momentum Oscillator',
+            "filename": os.path.join(name, view, f"momentum_oscillator_{name}.png"),
+        }
     )
-
     return signal
 
 
@@ -141,11 +136,11 @@ def compare_against_signal_line(signal: list, **kwargs) -> list:
 
     if plot_output and len(position) > 0:
         generate_plot(
-            PlotType.DUAL_PLOTTING, position['Close'], **dict(
-                y_list_2=bear_bull, y1_label='Price', y2_label='Bear_Bull', title='Bear Bull'
-            )
+            PlotType.DUAL_PLOTTING, position['Close'], **{
+                "y_list_2": bear_bull, "y1_label": 'Price', "y2_label": 'Bear_Bull',
+                "title": 'Bear Bull'
+            }
         )
-
     return bear_bull
 
 
@@ -165,7 +160,6 @@ def mo_feature_detection(signal: list, position: pd.DataFrame) -> list:
 
     # Compare extrema to find divergences!
     features = feature_matches(signal_extrema, position)
-
     return features
 
 
@@ -214,7 +208,6 @@ def feature_matches(mo_extrema: list, position: pd.DataFrame) -> list:
                     "date": date
                 }
                 features.append(obj)
-
     return features
 
 
@@ -293,11 +286,10 @@ def momentum_metrics(position: pd.DataFrame, mo_dict: dict, **kwargs) -> dict:
 
     title = '(Chande) Momentum Oscillator Metrics'
     generate_plot(
-        PlotType.DUAL_PLOTTING, position['Close'], **dict(
-            y_list_2=metrics4, y1_label='Price', y2_label='Metrics', title=title,
-            plot_output=plot_output,
-            filename=os.path.join(name, view, f"momentum_metrics_{name}.png")
-        )
+        PlotType.DUAL_PLOTTING, position['Close'], **{
+            "y_list_2": metrics4, "y1_label": 'Price', "y2_label": 'Metrics', "title": title,
+            "plot_output": plot_output,
+            "filename": os.path.join(name, view, f"momentum_metrics_{name}.png")
+        }
     )
-
     return mo_dict
