@@ -20,7 +20,7 @@ from setuptools import find_packages, setup
 # Package meta-data.
 NAME = 'SecuritiesAnalysisTools'
 DESCRIPTION = 'Technical analysis tools app for analyzing securities (funds, stocks, bonds, equities).'
-URL = 'https://github.mmm.com/nga-27/SecuritiesAnalysisTools'
+URL = 'https://github.com/nga-27/SecuritiesAnalysisTools'
 EMAIL = 'namell91@gmail.com'
 AUTHOR = 'Nick Amell'
 REQUIRES_PYTHON = '>=3.7.0'
